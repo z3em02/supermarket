@@ -1,0 +1,154 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id            String    @id @default(uuid())
+  nameDe        String
+  nameAr        String
+  descriptionDe String?
+  descriptionAr String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  products      Product[]
+}
+
+model Product {
+  id            String      @id @default(uuid())
+  name          String
+  nameDe        String?
+  nameAr        String?
+  description   String?
+  descriptionDe String?
+  descriptionAr String?
+  sku           String      @unique
+  b2bPrice      Float
+  stock         Int         @default(0)
+  imageUrl      String?
+  categoryId    String?
+  category      Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  orderItems    OrderItem[]
+}
+
+model Customer {
+  id                   String    @id @default(uuid())
+  name                 String
+  email                String    @unique
+  emailVerified        Boolean   @default(false)
+  emailOtp             String?
+  emailOtpExpiry       DateTime?
+  phone                String    @unique
+  phoneVerified        Boolean   @default(false)
+  phoneOtp             String?
+  phoneOtpExpiry       DateTime?
+  password             String
+  street               String?
+  houseNumber          String?
+  postalCode           String?
+  city                 String?
+  floorApartment       String?
+  deliveryNotes        String?
+  preferredLanguage    String    @default("de")
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  orders               Order[]
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  customerId      String?
+  customer        Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerName    String?
+  customerPhone   String?
+  customerEmail   String?
+  deliveryAddress String?
+  deliveryNotes   String?
+  paymentMethod   String      @default("cash_on_delivery")
+  status          String      @default("pending")
+  totalAmount         Float
+  originalTotalAmount Float?
+  modificationReason  String?
+  notes               String?
+  adminNotes          String?
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  orderItems          OrderItem[]
+  accounting          Accounting?
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float
+  subtotal  Float
+}
+
+model Accounting {
+  id              String   @id @default(uuid())
+  orderId         String   @unique
+  order           Order    @relation(fields: [orderId], references: [id])
+  type            String   @default("sale")
+  amount          Float
+  status          String   @default("completed")
+  transactionDate DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model StoreSettings {
+  id                String   @id @default("default")
+  storeName         String   @default("Hajar Supermarkt")
+  storeNameDe       String   @default("Hajar Supermarkt")
+  storeNameAr       String   @default("سوبرماركت هاجر")
+  logoUrl           String?
+  phone             String?  @default("+49 123 4567890")
+  email             String?  @default("info@hajar-supermarkt.de")
+  address           String?  @default("Musterstraße 123, 10115 Berlin")
+  mapUrl            String?  @default("https://maps.google.com")
+  mapEmbedUrl       String?
+  googleReviewsUrl  String?  @default("https://search.google.com/local/reviews")
+  googleRating      Float    @default(5.0)
+  googleReviewCount Int      @default(120)
+  googlePlaceId     String?
+  googleApiKey      String?
+  trustindexWidgetCode String?
+  showGoogleReviews Boolean  @default(true)
+  updatedAt         DateTime @updatedAt
+}
+
+model GoogleReview {
+  id             String   @id @default(uuid())
+  authorName     String
+  authorPhotoUrl String?
+  rating         Int      @default(5)
+  relativeTime   String   @default("vor 1 Woche")
+  text           String
+  textDe         String?
+  textAr         String?
+  reviewUrl      String?
+  verified       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+
