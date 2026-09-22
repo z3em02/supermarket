@@ -675,6 +675,18 @@ export const Orders = () => {
           label: t('shipped'),
           classes: 'bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-950/70 dark:text-blue-300 dark:border-blue-900/60'
         };
+      case 'out_for_delivery':
+        return {
+          icon: Truck,
+          label: language === 'ar' ? 'جاري التوصيل للمنزل' : 'In Zustellung',
+          classes: 'bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-950/70 dark:text-blue-300 dark:border-blue-900/60'
+        };
+      case 'confirmed':
+        return {
+          icon: CheckCircle2,
+          label: t('accepted'),
+          classes: 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/70 dark:text-emerald-300 dark:border-emerald-900/60'
+        };
       case 'delivered':
         return {
           icon: CheckCircle2,
@@ -684,6 +696,8 @@ export const Orders = () => {
       case 'declined':
       case 'rejected':
       case 'decline':
+      case 'canceled':
+      case 'cancelled':
         return {
           icon: XCircle,
           label: t('declined'),

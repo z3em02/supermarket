@@ -3,6 +3,7 @@ import axios from '../utils/adminAxios';
 import { getApiUrl } from '../utils/api';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
+import { getOrderStatusLabel } from '../utils/orderStatus';
 import { 
   LineChart, 
   Line, 
@@ -24,7 +25,7 @@ import {
 } from 'lucide-react';
 
 export const Accounting = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { theme } = useTheme();
   const [data, setData] = useState({
     summary: {
@@ -348,8 +349,8 @@ export const Accounting = () => {
                   <span>&bull;</span>
                   <span>{new Date(tx.transactionDate || tx.createdAt).toLocaleDateString()}</span>
                 </div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-900/50 capitalize shrink-0">
-                  {tx.status || t('completed')}
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-900/50 shrink-0">
+                  {tx.status ? getOrderStatusLabel(tx.status, language) : t('completed')}
                 </span>
               </div>
             </div>
@@ -394,8 +395,8 @@ export const Accounting = () => {
                     {formatCurrency(tx.amount)}
                   </td>
                   <td className="px-5 py-3.5 text-center whitespace-nowrap">
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-900/50 capitalize">
-                      {tx.status || t('completed')}
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-900/50">
+                      {tx.status ? getOrderStatusLabel(tx.status, language) : t('completed')}
                     </span>
                   </td>
                 </tr>

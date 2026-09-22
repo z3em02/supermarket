@@ -69,7 +69,7 @@ export const StoreSettingsProvider = ({ children }) => {
   // Update browser tab title dynamically
   useEffect(() => {
     if (settings?.storeName) {
-      document.title = `${settings.storeName} | B2B `;
+      document.title = settings.storeName;
     }
   }, [settings?.storeName]);
 

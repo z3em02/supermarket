@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 export const Dashboard = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [stats, setStats] = useState({
     totalCustomers: 0,
     totalProducts: 0,
@@ -118,7 +118,7 @@ export const Dashboard = () => {
         </div>
         <div className="flex items-center gap-2 self-start sm:self-auto bg-white/15 dark:bg-blue-950/70 dark:border dark:border-blue-800/60 backdrop-blur px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium">
           <Sparkles className="w-4 h-4 text-amber-300 shrink-0" />
-          <span>Home Delivery Operations</span>
+          <span>{language === 'ar' ? 'إدارة التوصيل المنزلي' : 'Hauszustellung im Überblick'}</span>
         </div>
       </div>
 

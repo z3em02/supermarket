@@ -459,6 +459,12 @@ export const LandingPage = () => {
 
       {/* 2. Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-b from-blue-50/70 via-slate-50 to-white dark:from-gray-900 dark:via-gray-950 dark:to-gray-950 pt-8 pb-12 sm:pt-16 sm:pb-24 border-b border-slate-200/70 dark:border-gray-850">
+        {/* Decorative background glows */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-24 -start-24 w-72 h-72 sm:w-96 sm:h-96 rounded-full bg-emerald-300/30 dark:bg-emerald-600/10 blur-3xl" />
+          <div className="absolute -bottom-32 -end-16 w-72 h-72 sm:w-[28rem] sm:h-[28rem] rounded-full bg-blue-300/30 dark:bg-blue-600/10 blur-3xl" />
+          <div className="absolute top-1/3 start-1/2 w-56 h-56 sm:w-72 sm:h-72 rounded-full bg-amber-200/25 dark:bg-amber-500/10 blur-3xl" />
+        </div>
         <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 relative z-10">
           <div className="max-w-3xl mx-auto text-center space-y-4 sm:space-y-6">
             
