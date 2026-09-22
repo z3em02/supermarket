@@ -50,6 +50,12 @@ export const CustomerAccount = () => {
   const [respondingOrderId, setRespondingOrderId] = useState(null);
   const [actionFeedback, setActionFeedback] = useState({ message: '', isError: false });
 
+  const reportDeliveryFee = reportOrder
+    ? Math.max(0, Number(reportOrder.totalAmount) - (reportOrder.orderItems || []).reduce(
+        (sum, item) => sum + Number(item.subtotal ?? item.price * item.quantity), 0
+      ))
+    : 0;
+
   // Profile Form State
   const [profileForm, setProfileForm] = useState({
     name: customer?.name || '',
@@ -214,6 +220,10 @@ export const CustomerAccount = () => {
     const isArabic = language === 'ar';
     const dir = isArabic ? 'rtl' : 'ltr';
     const storeName = getStoreName();
+    const itemsSubtotal = (order.orderItems || []).reduce(
+      (sum, item) => sum + Number(item.subtotal ?? item.price * item.quantity), 0
+    );
+    const deliveryFeeCharged = Math.max(0, Number(order.totalAmount) - itemsSubtotal);
 
     const escapeHtml = (str) => {
       if (!str) return '';
@@ -340,7 +350,7 @@ export const CustomerAccount = () => {
     <div class="totals-box">
       <div class="totals-row">
         <span>${isArabic ? 'رسوم التوصيل:' : 'Liefergebühr:'}</span>
-        <strong style="color:#16a34a;">${isArabic ? 'مجاناً (0.00 €)' : 'Kostenlos (0,00 €)'}</strong>
+        <strong style="color:#16a34a;">${deliveryFeeCharged > 0 ? `€${deliveryFeeCharged.toFixed(2)}` : (isArabic ? 'مجاناً (0.00 €)' : 'Kostenlos (0,00 €)')}</strong>
       </div>
       <div class="totals-row total">
         <span>${isArabic ? 'المجموع عند الاستلام:' : 'Gesamtbetrag:'}</span>
@@ -505,12 +515,15 @@ export const CustomerAccount = () => {
                   {customer?.phoneVerified ? (
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                   ) : (
-                    <button
-                      onClick={() => handleStartVerify('phone')}
-                      className="underline font-bold text-amber-800 hover:text-amber-900 ms-1 cursor-pointer"
-                    >
-                      {isAr ? 'تحقق الآن' : 'Bestätigen'}
-                    </button>
+                    <>
+                      <span className="text-[10px] opacity-70">({isAr ? 'اختياري' : 'optional'})</span>
+                      <button
+                        onClick={() => handleStartVerify('phone')}
+                        className="underline font-bold text-amber-800 hover:text-amber-900 ms-1 cursor-pointer"
+                      >
+                        {isAr ? 'تحقق الآن' : 'Bestätigen'}
+                      </button>
+                    </>
                   )}
                 </span>
               </div>
@@ -858,7 +871,7 @@ export const CustomerAccount = () => {
                       </span>
                     ) : (
                       <span className="text-[11px] text-amber-600 font-bold">
-                        {isAr ? 'غير مؤكد' : 'Nicht verifiziert'}
+                        {isAr ? 'غير مؤكد (اختياري)' : 'Nicht verifiziert (optional)'}
                       </span>
                     )}
                   </label>
@@ -881,7 +894,7 @@ export const CustomerAccount = () => {
                       </span>
                     ) : (
                       <span className="text-[11px] text-amber-600 font-bold">
-                        {isAr ? 'غير مؤكد' : 'Nicht verifiziert'}
+                        {isAr ? 'غير مؤكد (مطلوب للطلب)' : 'Nicht verifiziert (für Bestellung nötig)'}
                       </span>
                     )}
                   </label>
@@ -904,8 +917,8 @@ export const CustomerAccount = () => {
                     name="password"
                     value={profileForm.password}
                     onChange={handleProfileChange}
-                    placeholder={isAr ? 'اتركه فارغاً للإبقاء على الحالية' : 'Leer lassen, um beizubehalten'}
-                    minLength={6}
+                    placeholder={isAr ? 'اتركه فارغاً للإبقاء على الحالية (8 أحرف على الأقل)' : 'Leer lassen, um beizubehalten (mind. 8 Zeichen)'}
+                    minLength={8}
                     className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
@@ -1130,7 +1143,7 @@ export const CustomerAccount = () => {
                           {isAr ? 'رسوم التوصيل للمنزل:' : 'Lieferkosten (Haustür):'}
                         </td>
                         <td className="p-2.5 sm:p-3 text-end font-bold text-emerald-600 whitespace-nowrap">
-                          {isAr ? 'مجاناً (0.00 €)' : 'Kostenlos (0,00 €)'}
+                          {reportDeliveryFee > 0 ? `€${reportDeliveryFee.toFixed(2)}` : (isAr ? 'مجاناً (0.00 €)' : 'Kostenlos (0,00 €)')}
                         </td>
                       </tr>
                       <tr className="border-t-2 border-slate-200 dark:border-gray-700 bg-slate-100/80 dark:bg-gray-800/80">

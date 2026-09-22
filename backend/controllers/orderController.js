@@ -6,6 +6,28 @@ const {
 } = require('../utils/emailService');
 const { CUSTOMER_PUBLIC_SELECT } = require('../utils/serialize');
 
+// Stock is deducted for every order from creation onward and only ever restored
+// once an order reaches one of these terminal decline states.
+const DECLINED_STATUSES = ['declined', 'rejected', 'canceled', 'cancelled'];
+
+// Machine values for the delivery time-slot picker in the cart.
+const ALLOWED_DELIVERY_SLOTS = ['today_16_18', 'tomorrow_10_12', 'tomorrow_16_18'];
+
+// Atomically decrements stock only if enough is available (guards against two
+// concurrent orders overselling the same product); throws if not. Must run
+// inside a prisma.$transaction so a mid-loop failure rolls back prior decrements.
+const decrementStockOrThrow = async (tx, productId, quantity, productName) => {
+  const result = await tx.product.updateMany({
+    where: { id: productId, stock: { gte: quantity } },
+    data: { stock: { decrement: quantity } }
+  });
+  if (result.count === 0) {
+    const err = new Error(`Insufficient stock for "${productName || productId}"`);
+    err.isStockError = true;
+    throw err;
+  }
+};
+
 const getOrders = async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
@@ -75,9 +97,9 @@ const createOrder = async (req, res) => {
       return res.status(404).json({ error: 'Customer account not found' });
     }
 
-    if (!customer.phoneVerified || !customer.emailVerified) {
+    if (!customer.emailVerified) {
       return res.status(403).json({
-        error: 'Please verify both your phone number and email address before submitting an order.',
+        error: 'Please verify your email address before submitting an order.',
         needsVerification: true,
         emailVerified: customer.emailVerified,
         phoneVerified: customer.phoneVerified
@@ -90,7 +112,7 @@ const createOrder = async (req, res) => {
       return res.status(400).json({ error: 'Order must contain at least one item' });
     }
 
-    let totalAmount = 0;
+    let itemsSubtotal = 0;
     const orderItemsWithDetails = [];
 
     for (const item of rawItems) {
@@ -114,10 +136,11 @@ const createOrder = async (req, res) => {
 
       const qty = parseInt(item.quantity, 10);
       const subtotal = product.b2bPrice * qty;
-      totalAmount += subtotal;
+      itemsSubtotal += subtotal;
 
       orderItemsWithDetails.push({
         productId: item.productId,
+        productName: product.name,
         quantity: qty,
         price: product.b2bPrice,
         subtotal
@@ -128,6 +151,35 @@ const createOrder = async (req, res) => {
       return res.status(400).json({ error: 'Order must contain at least one valid item' });
     }
 
+    // Delivery rules: minimum order value, service area and delivery fee
+    const storeSettings = await prisma.storeSettings.findUnique({ where: { id: 'default' } });
+    const minOrderValue = storeSettings?.minOrderValue || 0;
+    const deliveryFeeSetting = storeSettings?.deliveryFee || 0;
+    const freeDeliveryThreshold = storeSettings?.freeDeliveryThreshold || 0;
+    const allowedPostalCodes = (storeSettings?.allowedPostalCodes || '')
+      .split(',')
+      .map((code) => code.trim())
+      .filter(Boolean);
+
+    if (minOrderValue > 0 && itemsSubtotal < minOrderValue) {
+      return res.status(400).json({
+        error: `Minimum order value is €${minOrderValue.toFixed(2)}. Your cart total is €${itemsSubtotal.toFixed(2)}.`
+      });
+    }
+
+    if (allowedPostalCodes.length > 0 && !allowedPostalCodes.includes((customer.postalCode || '').trim())) {
+      return res.status(400).json({
+        error: 'Sorry, we do not currently deliver to your postal code.'
+      });
+    }
+
+    const deliveryFee = deliveryFeeSetting <= 0
+      ? 0
+      : (freeDeliveryThreshold > 0 && itemsSubtotal >= freeDeliveryThreshold ? 0 : deliveryFeeSetting);
+    const totalAmount = itemsSubtotal + deliveryFee;
+
+    const deliverySlot = ALLOWED_DELIVERY_SLOTS.includes(req.body.deliverySlot) ? req.body.deliverySlot : null;
+
     const addressParts = [
       customer.street && `${customer.street} ${customer.houseNumber || ''}`.trim(),
       customer.postalCode && customer.city && `${customer.postalCode} ${customer.city}`.trim(),
@@ -137,30 +189,44 @@ const createOrder = async (req, res) => {
     const deliveryAddress = req.body.deliveryAddress || addressParts.join(', ') || 'Home Delivery Address';
     const deliveryNotes = req.body.deliveryNotes || customer.deliveryNotes || notes || null;
 
-    const order = await prisma.order.create({
-      data: {
-        customerId: customer.id,
-        customerName: customer.name,
-        customerPhone: customer.phone,
-        customerEmail: customer.email,
-        deliveryAddress,
-        deliveryNotes,
-        paymentMethod: 'cash_on_delivery',
-        status: 'pending',
-        totalAmount,
-        notes: notes || null,
-        orderItems: {
-          create: orderItemsWithDetails
-        }
-      },
-      include: {
-        customer: { select: CUSTOMER_PUBLIC_SELECT },
-        orderItems: {
-          include: {
-            product: true
+    const order = await prisma.$transaction(async (tx) => {
+      // Deduct stock atomically per item before creating the order, so two
+      // customers racing to buy the last unit can't both succeed.
+      for (const item of orderItemsWithDetails) {
+        await decrementStockOrThrow(tx, item.productId, item.quantity, item.productName);
+      }
+
+      return tx.order.create({
+        data: {
+          customerId: customer.id,
+          customerName: customer.name,
+          customerPhone: customer.phone,
+          customerEmail: customer.email,
+          deliveryAddress,
+          deliveryNotes,
+          deliverySlot,
+          paymentMethod: 'cash_on_delivery',
+          status: 'pending',
+          totalAmount,
+          notes: notes || null,
+          orderItems: {
+            create: orderItemsWithDetails.map(({ productId, quantity, price, subtotal }) => ({
+              productId,
+              quantity,
+              price,
+              subtotal
+            }))
+          }
+        },
+        include: {
+          customer: { select: CUSTOMER_PUBLIC_SELECT },
+          orderItems: {
+            include: {
+              product: true
+            }
           }
         }
-      }
+      });
     });
 
     // Send confirmation email to customer
@@ -179,6 +245,9 @@ const createOrder = async (req, res) => {
 
     res.status(201).json(order);
   } catch (error) {
+    if (error.isStockError) {
+      return res.status(400).json({ error: error.message });
+    }
     console.error('Create order error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -212,63 +281,51 @@ const updateOrderStatus = async (req, res) => {
     const finalNotes = notes !== undefined ? notes : order.notes;
     const finalAdminNotes = adminNotes !== undefined ? adminNotes : order.adminNotes;
 
-    const activeDeductionStatuses = ['accepted', 'preparing', 'shipped', 'out_for_delivery', 'delivered', 'confirmed'];
-    const wasStockDeducted = activeDeductionStatuses.includes(order.status);
-    const shouldStockBeDeducted = activeDeductionStatuses.includes(normalizedStatus);
+    const wasStockDeducted = !DECLINED_STATUSES.includes(order.status);
+    const shouldStockBeDeducted = !DECLINED_STATUSES.includes(normalizedStatus);
 
     if (!wasStockDeducted && shouldStockBeDeducted) {
-      // Transitioning into an active fulfilled state: validate stock first
-      for (const item of order.orderItems) {
-        const product = await prisma.product.findUnique({
-          where: { id: item.productId }
-        });
+      // Transitioning out of a declined/cancelled state back into an active one
+      // (e.g. an admin un-declining an order): re-deduct stock atomically.
+      try {
+        await prisma.$transaction(async (tx) => {
+          for (const item of order.orderItems) {
+            await decrementStockOrThrow(tx, item.productId, item.quantity, item.product?.name);
+          }
 
-        if (!product || product.stock < item.quantity) {
-          return res.status(400).json({ 
-            error: `Insufficient stock for product ${product ? product.name : item.productId}. Available: ${product ? product.stock : 0}, Required: ${item.quantity}` 
-          });
-        }
-      }
-
-      await prisma.$transaction(async (tx) => {
-        for (const item of order.orderItems) {
-          await tx.product.update({
-            where: { id: item.productId },
+          await tx.order.update({
+            where: { id },
             data: {
-              stock: {
-                decrement: item.quantity
-              }
+              status: normalizedStatus,
+              notes: finalNotes,
+              adminNotes: finalAdminNotes
             }
           });
-        }
 
-        await tx.order.update({
-          where: { id },
-          data: { 
-            status: normalizedStatus,
-            notes: finalNotes,
-            adminNotes: finalAdminNotes
+          if (!order.accounting) {
+            await tx.accounting.create({
+              data: {
+                orderId: id,
+                type: 'sale',
+                amount: order.totalAmount,
+                status: 'completed'
+              }
+            });
+          } else if (order.accounting.status === 'cancelled') {
+            await tx.accounting.update({
+              where: { orderId: id },
+              data: { status: 'completed' }
+            });
           }
         });
-
-        if (!order.accounting) {
-          await tx.accounting.create({
-            data: {
-              orderId: id,
-              type: 'sale',
-              amount: order.totalAmount,
-              status: 'completed'
-            }
-          });
-        } else if (order.accounting.status === 'cancelled') {
-          await tx.accounting.update({
-            where: { orderId: id },
-            data: { status: 'completed' }
-          });
+      } catch (error) {
+        if (error.isStockError) {
+          return res.status(400).json({ error: error.message });
         }
-      });
+        throw error;
+      }
     } else if (wasStockDeducted && !shouldStockBeDeducted) {
-      // Transitioning out of an active state (e.g. to 'declined'): restore stock!
+      // Transitioning into a declined/cancelled state: restore stock!
       await prisma.$transaction(async (tx) => {
         for (const item of order.orderItems) {
           await tx.product.update({
@@ -298,7 +355,7 @@ const updateOrderStatus = async (req, res) => {
         }
       });
     } else {
-      // Stock state does not change (e.g. accepted -> preparing, or pending -> declined, or notes update only)
+      // Stock state does not change (e.g. accepted -> preparing, declined -> rejected, or notes update only)
       await prisma.order.update({
         where: { id },
         data: { 
@@ -363,9 +420,8 @@ const deleteOrder = async (req, res) => {
     }
 
     await prisma.$transaction(async (tx) => {
-      // If the order was in an active state where stock had been deducted, restore it
-      const activeDeductionStatuses = ['accepted', 'preparing', 'shipped', 'out_for_delivery', 'delivered', 'confirmed'];
-      if (activeDeductionStatuses.includes(order.status)) {
+      // If the order wasn't already declined/cancelled, its stock is still deducted — restore it
+      if (!DECLINED_STATUSES.includes(order.status)) {
         for (const item of order.orderItems) {
           await tx.product.update({
             where: { id: item.productId },
@@ -450,8 +506,7 @@ const editOrder = async (req, res) => {
       return res.status(400).json({ error: 'Cannot edit an order that is already delivered' });
     }
 
-    const activeDeductionStatuses = ['accepted', 'preparing', 'shipped', 'out_for_delivery', 'delivered', 'confirmed'];
-    const wasStockDeducted = activeDeductionStatuses.includes(order.status);
+    const wasStockDeducted = !DECLINED_STATUSES.includes(order.status);
 
     // Map existing items by productId
     const oldItemsMap = new Map();
@@ -520,62 +575,66 @@ const editOrder = async (req, res) => {
     const originalTotal = order.originalTotalAmount || order.totalAmount;
 
     // Perform database transaction
-    await prisma.$transaction(async (tx) => {
-      // Apply stock adjustments if order was active
-      if (wasStockDeducted) {
-        for (const adj of stockAdjustments) {
-          if (adj.delta > 0) {
-            await tx.product.update({
-              where: { id: adj.productId },
-              data: { stock: { decrement: adj.delta } }
-            });
-          } else if (adj.delta < 0) {
-            await tx.product.update({
-              where: { id: adj.productId },
-              data: { stock: { increment: Math.abs(adj.delta) } }
-            });
+    try {
+      await prisma.$transaction(async (tx) => {
+        // Apply stock adjustments if order was active
+        if (wasStockDeducted) {
+          for (const adj of stockAdjustments) {
+            if (adj.delta > 0) {
+              await decrementStockOrThrow(tx, adj.productId, adj.delta);
+            } else if (adj.delta < 0) {
+              await tx.product.update({
+                where: { id: adj.productId },
+                data: { stock: { increment: Math.abs(adj.delta) } }
+              });
+            }
           }
         }
-      }
 
-      // Delete existing order items and create replacement items
-      await tx.orderItem.deleteMany({
-        where: { orderId: id }
-      });
+        // Delete existing order items and create replacement items
+        await tx.orderItem.deleteMany({
+          where: { orderId: id }
+        });
 
-      await tx.orderItem.createMany({
-        data: newItemsToCreate.map(item => ({
-          orderId: id,
-          productId: item.productId,
-          quantity: item.quantity,
-          price: item.price,
-          subtotal: item.subtotal
-        }))
-      });
+        await tx.orderItem.createMany({
+          data: newItemsToCreate.map(item => ({
+            orderId: id,
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.price,
+            subtotal: item.subtotal
+          }))
+        });
 
-      // Update Order
-      await tx.order.update({
-        where: { id },
-        data: {
-          totalAmount: newTotalAmount,
-          originalTotalAmount: originalTotal,
-          modificationReason: reason,
-          status: 'pending_customer_approval',
-          adminNotes: adminNotes !== undefined ? adminNotes : order.adminNotes
-        }
-      });
-
-      // Update Accounting record
-      if (order.accounting) {
-        await tx.accounting.update({
-          where: { orderId: id },
+        // Update Order
+        await tx.order.update({
+          where: { id },
           data: {
-            amount: newTotalAmount,
-            status: 'completed'
+            totalAmount: newTotalAmount,
+            originalTotalAmount: originalTotal,
+            modificationReason: reason,
+            status: 'pending_customer_approval',
+            adminNotes: adminNotes !== undefined ? adminNotes : order.adminNotes
           }
         });
+
+        // Update Accounting record
+        if (order.accounting) {
+          await tx.accounting.update({
+            where: { orderId: id },
+            data: {
+              amount: newTotalAmount,
+              status: 'completed'
+            }
+          });
+        }
+      });
+    } catch (error) {
+      if (error.isStockError) {
+        return res.status(400).json({ error: error.message });
       }
-    });
+      throw error;
+    }
 
     const updatedOrder = await prisma.order.findUnique({
       where: { id },
@@ -655,21 +714,10 @@ const customerRespondToModification = async (req, res) => {
     const customerLang = order.customer?.preferredLanguage || 'de';
 
     if (action === 'accept') {
-      // Customer accepted the modification
-      const activeDeductionStatuses = ['accepted', 'preparing', 'shipped', 'out_for_delivery', 'delivered', 'confirmed'];
-      const wasStockDeducted = activeDeductionStatuses.includes(order.status);
-
+      // Customer accepted the modification. Stock for the (already-modified) order
+      // items was deducted at order creation and adjusted by editOrder's deltas,
+      // so accepting only needs to flip the status — no further stock change.
       await prisma.$transaction(async (tx) => {
-        // If stock wasn't deducted yet, deduct it now for the accepted items
-        if (!wasStockDeducted) {
-          for (const item of order.orderItems) {
-            await tx.product.update({
-              where: { id: item.productId },
-              data: { stock: { decrement: item.quantity } }
-            });
-          }
-        }
-
         const dateStr = new Date().toLocaleString(customerLang === 'ar' ? 'ar-EG' : 'de-DE');
         const noteText = customerLang === 'ar'
           ? `[وافق العميل على التعديل بتاريخ ${dateStr}]`

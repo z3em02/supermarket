@@ -122,9 +122,17 @@ export const CustomerLogin = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 uppercase tracking-wider mb-1.5 sm:mb-2">
-                {isAr ? 'كلمة المرور' : 'Passwort'}
-              </label>
+              <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 uppercase tracking-wider">
+                  {isAr ? 'كلمة المرور' : 'Passwort'}
+                </label>
+                <Link
+                  to="/forgot-password"
+                  className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline"
+                >
+                  {isAr ? 'نسيت كلمة المرور؟' : 'Passwort vergessen?'}
+                </Link>
+              </div>
               <div className="relative">
                 <input
                   type="password"

@@ -322,6 +322,17 @@ const translations = {
     findUs: "So finden Sie uns",
     customerReviews: "Kundenbewertungen",
 
+    // Delivery Rules
+    deliveryRules: "Lieferregeln",
+    deliveryRulesDesc: "Legen Sie Mindestbestellwert, Liefergebühr und das Liefergebiet fest.",
+    minOrderValue: "Mindestbestellwert (€)",
+    deliveryFee: "Liefergebühr (€)",
+    freeDeliveryThreshold: "Kostenlose Lieferung ab (€)",
+    freeDeliveryThresholdHint: "0 = keine Schwelle, Liefergebühr gilt immer",
+    allowedPostalCodes: "Erlaubte Postleitzahlen",
+    allowedPostalCodesPlaceholder: "z.B. 1010, 1020, 1030",
+    allowedPostalCodesHint: "Kommagetrennt. Leer lassen, um überall zu liefern.",
+
     // Google Reviews Extended
     googleReviewsTitle: "Google-Kundenbewertungen",
     googleReviewsSubtitle: "Erfahren Sie, was Gastronomen, Supermärkte und Großhandelskunden über uns sagen.",
@@ -692,6 +703,17 @@ const translations = {
     emailUs: "أرسل بريداً إلكترونياً",
     findUs: "موقعنا",
     customerReviews: "تقييمات العملاء",
+
+    // Delivery Rules
+    deliveryRules: "قواعد التوصيل",
+    deliveryRulesDesc: "حدد الحد الأدنى لقيمة الطلب ورسوم التوصيل ومنطقة التوصيل.",
+    minOrderValue: "الحد الأدنى لقيمة الطلب (€)",
+    deliveryFee: "رسوم التوصيل (€)",
+    freeDeliveryThreshold: "التوصيل المجاني ابتداءً من (€)",
+    freeDeliveryThresholdHint: "0 = بدون حد أدنى، رسوم التوصيل تُطبّق دائماً",
+    allowedPostalCodes: "الرموز البريدية المسموح بها",
+    allowedPostalCodesPlaceholder: "مثال: 1010, 1020, 1030",
+    allowedPostalCodesHint: "مفصولة بفواصل. اتركه فارغاً للتوصيل في كل مكان.",
 
     // Google Reviews Extended
     googleReviewsTitle: "تقييمات العملاء من Google",

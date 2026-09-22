@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import axios from 'axios';
+import axios from '../utils/adminAxios';
 import { getApiUrl } from '../utils/api';
 import { useLanguage } from '../context/LanguageContext';
 import { 

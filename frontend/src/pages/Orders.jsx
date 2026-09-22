@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import axios from 'axios';
+import axios from '../utils/adminAxios';
 import { getApiUrl } from '../utils/api';
 import { useLanguage } from '../context/LanguageContext';
 import { 
@@ -33,6 +33,12 @@ import {
   Phone,
   Mail
 } from 'lucide-react';
+
+export const DELIVERY_SLOT_LABELS = {
+  today_16_18: { de: 'Heute, 16–18 Uhr', ar: 'اليوم، 16–18' },
+  tomorrow_10_12: { de: 'Morgen, 10–12 Uhr', ar: 'غداً، 10–12' },
+  tomorrow_16_18: { de: 'Morgen, 16–18 Uhr', ar: 'غداً، 16–18' }
+};
 
 export const parseOrderNotes = (adminNotes, language) => {
   if (!adminNotes) return { customNotes: '', customerResponse: null };
@@ -976,6 +982,12 @@ export const Orders = () => {
                         <span className="line-clamp-2">{order.deliveryAddress}</span>
                       </div>
                     )}
+                    {order.deliverySlot && DELIVERY_SLOT_LABELS[order.deliverySlot] && (
+                      <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 pt-0.5">
+                        <Clock className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span>{DELIVERY_SLOT_LABELS[order.deliverySlot][language === 'ar' ? 'ar' : 'de']}</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Right Column: Customer Response & Alerts */}
@@ -1397,6 +1409,12 @@ export const Orders = () => {
                         <span>{selectedOrder.deliveryNotes}</span>
                       </span>
                     )}
+                    {selectedOrder.deliverySlot && DELIVERY_SLOT_LABELS[selectedOrder.deliverySlot] && (
+                      <span className="inline-flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span>{DELIVERY_SLOT_LABELS[selectedOrder.deliverySlot][language === 'ar' ? 'ar' : 'de']}</span>
+                      </span>
+                    )}
                   </div>
                 </div>
               )}
@@ -1613,6 +1631,11 @@ export const Orders = () => {
                   <p className="text-xs text-slate-600 dark:text-gray-300 leading-relaxed break-words">
                     {printOrder.deliveryAddress || printOrder.customer?.address || '—'}
                   </p>
+                  {printOrder.deliverySlot && DELIVERY_SLOT_LABELS[printOrder.deliverySlot] && (
+                    <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-1.5">
+                      {DELIVERY_SLOT_LABELS[printOrder.deliverySlot][language === 'ar' ? 'ar' : 'de']}
+                    </p>
+                  )}
                   {printOrder.notes && (
                     <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-2 italic break-words">
                       Hinweis: {printOrder.notes}

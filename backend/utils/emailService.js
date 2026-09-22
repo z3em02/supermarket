@@ -25,6 +25,22 @@ const getStoreSettings = async () => {
   };
 };
 
+const DELIVERY_SLOT_LABELS = {
+  today_16_18: { de: 'Heute, 16–18 Uhr', ar: 'اليوم، 16–18' },
+  tomorrow_10_12: { de: 'Morgen, 10–12 Uhr', ar: 'غداً، 10–12' },
+  tomorrow_16_18: { de: 'Morgen, 16–18 Uhr', ar: 'غداً، 16–18' }
+};
+
+// Delivery fee is folded into order.totalAmount at creation time; derive the
+// charged fee back out for display by subtracting the items' own subtotal.
+const computeDeliveryFeeCharged = (order) => {
+  const itemsSubtotal = (order.orderItems || []).reduce(
+    (sum, item) => sum + Number(item.subtotal ?? item.price * item.quantity), 0
+  );
+  const fee = Number(order.totalAmount) - itemsSubtotal;
+  return fee > 0.001 ? fee : 0;
+};
+
 const getTransporter = () => {
   if (!isEmailConfigured()) return null;
   return nodemailer.createTransport({
@@ -273,6 +289,8 @@ const sendOrderStatusEmail = async (customerEmail, customerName, orderDetails, s
       `;
     }).join('');
 
+    const deliveryFeeCharged = computeDeliveryFeeCharged(orderDetails);
+
     // Highlight block if modification requires approval
     const modificationAlertHtml = isPendingApproval ? `
       <div style="background-color: #fffbeb; border: 2px solid #f59e0b; border-radius: 14px; padding: 18px; margin: 18px 0; direction: ${isAr ? 'rtl' : 'ltr'}; text-align: ${isAr ? 'right' : 'left'};">
@@ -331,6 +349,7 @@ const sendOrderStatusEmail = async (customerEmail, customerName, orderDetails, s
             <td style="font-weight: 700; color: #16a34a;">الدفع عند الاستلام (نقداً أو بالبطاقة عند الباب)</td>
           </tr>
           ${orderDetails.deliveryAddress ? `<tr><td style="color: #64748b; vertical-align: top;">عنوان التوصيل:</td><td style="font-weight: 600; color: #1e293b;">${orderDetails.deliveryAddress}</td></tr>` : ''}
+          ${orderDetails.deliverySlot && DELIVERY_SLOT_LABELS[orderDetails.deliverySlot] ? `<tr><td style="color: #64748b;">موعد التوصيل:</td><td style="font-weight: 600; color: #1e293b;">${DELIVERY_SLOT_LABELS[orderDetails.deliverySlot].ar}</td></tr>` : ''}
           ${orderDetails.deliveryNotes ? `<tr><td style="color: #64748b;">ملاحظات السائق:</td><td style="font-style: italic; color: #475569;">${orderDetails.deliveryNotes}</td></tr>` : ''}
         </table>
       </div>
@@ -355,7 +374,7 @@ const sendOrderStatusEmail = async (customerEmail, customerName, orderDetails, s
           <tfoot>
             <tr style="background: #ffffff; border-top: 1px solid #e2e8f0;">
               <td colspan="3" style="padding: 10px 10px; text-align: left; color: #64748b; font-size: 12px;">رسوم التوصيل المنزلي:</td>
-              <td style="padding: 10px 10px; text-align: right; font-weight: 700; color: #16a34a; font-size: 13px;">مجاناً (0.00 €)</td>
+              <td style="padding: 10px 10px; text-align: right; font-weight: 700; color: #16a34a; font-size: 13px;">${deliveryFeeCharged > 0 ? `€${deliveryFeeCharged.toFixed(2)}` : 'مجاناً (0.00 €)'}</td>
             </tr>
             <tr style="background: #f8fafc; border-top: 2px solid #e2e8f0;">
               <td colspan="3" style="padding: 14px 10px; text-align: left; font-weight: 800; font-size: 15px; color: #0f172a;">المبلغ المطلوب عند الاستلام:</td>
@@ -394,6 +413,7 @@ const sendOrderStatusEmail = async (customerEmail, customerName, orderDetails, s
             <td style="font-weight: 700; color: #16a34a;">Barzahlung / Kartenzahlung an der Haustür (Lieferung)</td>
           </tr>
           ${orderDetails.deliveryAddress ? `<tr><td style="color: #64748b; vertical-align: top;">Lieferadresse:</td><td style="font-weight: 600; color: #1e293b;">${orderDetails.deliveryAddress}</td></tr>` : ''}
+          ${orderDetails.deliverySlot && DELIVERY_SLOT_LABELS[orderDetails.deliverySlot] ? `<tr><td style="color: #64748b;">Lieferzeitfenster:</td><td style="font-weight: 600; color: #1e293b;">${DELIVERY_SLOT_LABELS[orderDetails.deliverySlot].de}</td></tr>` : ''}
           ${orderDetails.deliveryNotes ? `<tr><td style="color: #64748b;">Hinweis für Fahrer:</td><td style="font-style: italic; color: #475569;">${orderDetails.deliveryNotes}</td></tr>` : ''}
         </table>
       </div>
@@ -418,7 +438,7 @@ const sendOrderStatusEmail = async (customerEmail, customerName, orderDetails, s
           <tfoot>
             <tr style="background: #ffffff; border-top: 1px solid #e2e8f0;">
               <td colspan="3" style="padding: 10px 10px; text-align: right; color: #64748b; font-size: 12px;">Lieferkosten:</td>
-              <td style="padding: 10px 10px; text-align: right; font-weight: 700; color: #16a34a; font-size: 13px;">Kostenlos (0,00 €)</td>
+              <td style="padding: 10px 10px; text-align: right; font-weight: 700; color: #16a34a; font-size: 13px;">${deliveryFeeCharged > 0 ? `€${deliveryFeeCharged.toFixed(2)}` : 'Kostenlos (0,00 €)'}</td>
             </tr>
             <tr style="background: #f8fafc; border-top: 2px solid #e2e8f0;">
               <td colspan="3" style="padding: 14px 10px; text-align: right; font-weight: 800; font-size: 15px; color: #0f172a;">Gesamtbetrag bei Lieferung:</td>
@@ -526,6 +546,74 @@ const sendCustomerVerificationEmail = async (customerEmail, customerName, verifi
 };
 
 /**
+ * Send Password Reset Link to Customer Email
+ */
+const sendPasswordResetEmail = async (customerEmail, customerName, resetToken, lang = 'de') => {
+  if (!isEmailConfigured()) {
+    console.log(`[Email skipped - SMTP not configured] Password reset link -> ${customerEmail}`);
+    return;
+  }
+
+  try {
+    const transporter = getTransporter();
+    if (!transporter) return;
+
+    const settings = await getStoreSettings();
+    const isAr = lang === 'ar';
+    const storeName = (isAr ? settings.storeNameAr : settings.storeNameDe) || settings.storeName || 'Hajar Supermarkt';
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
+
+    const title = isAr ? 'إعادة تعيين كلمة المرور' : 'Passwort zurücksetzen';
+    const subtitle = isAr ? 'طلب إعادة تعيين كلمة المرور' : 'Anfrage zum Zurücksetzen des Passworts';
+    const subject = isAr
+      ? `إعادة تعيين كلمة المرور - ${storeName}`
+      : `Passwort zurücksetzen - ${storeName}`;
+
+    const contentHtml = isAr ? `
+      <p style="font-size: 16px; color: #0f172a; margin-top: 0;">مرحباً <strong>${customerName}</strong>،</p>
+      <p style="color: #475569; line-height: 1.8; font-size: 14px;">
+        تلقينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك في <strong>${storeName}</strong>. اضغط على الزر أدناه لتعيين كلمة مرور جديدة:
+      </p>
+      <div style="text-align: center; margin: 28px 0;">
+        <a href="${resetUrl}" class="btn-primary" style="background: #16a34a; color: #ffffff !important; text-decoration: none; padding: 15px 32px; border-radius: 12px; font-weight: 800; font-size: 15px; display: inline-block;">
+          🔑 إعادة تعيين كلمة المرور
+        </a>
+      </div>
+      <p style="color: #64748b; font-size: 13px; line-height: 1.6;">
+        هذا الرابط صالح لمدة 60 دقيقة فقط. إذا لم تطلب إعادة تعيين كلمة المرور، يمكنك تجاهل هذه الرسالة بأمان ولن يتغير شيء في حسابك.
+      </p>
+    ` : `
+      <p style="font-size: 16px; color: #0f172a; margin-top: 0;">Hallo <strong>${customerName}</strong>,</p>
+      <p style="color: #475569; line-height: 1.8; font-size: 14px;">
+        wir haben eine Anfrage zum Zurücksetzen des Passworts für Ihr Konto bei <strong>${storeName}</strong> erhalten. Klicken Sie auf die Schaltfläche unten, um ein neues Passwort festzulegen:
+      </p>
+      <div style="text-align: center; margin: 28px 0;">
+        <a href="${resetUrl}" class="btn-primary" style="background: #16a34a; color: #ffffff !important; text-decoration: none; padding: 15px 32px; border-radius: 12px; font-weight: 800; font-size: 15px; display: inline-block;">
+          🔑 Passwort zurücksetzen
+        </a>
+      </div>
+      <p style="color: #64748b; font-size: 13px; line-height: 1.6;">
+        Dieser Link ist 60 Minuten gültig. Falls Sie kein neues Passwort angefordert haben, können Sie diese E-Mail ignorieren – es ändert sich nichts an Ihrem Konto.
+      </p>
+    `;
+
+    const html = emailWrapper({ lang, title, subtitle, contentHtml, settings });
+
+    await transporter.sendMail({
+      from: `"${storeName}" <${process.env.EMAIL_FROM || process.env.EMAIL_USER || 'noreply@supermarket-b2b.com'}>`,
+      to: customerEmail,
+      subject,
+      html
+    });
+    console.log(`Password reset email (${lang}) sent to ${customerEmail}`);
+  } catch (error) {
+    console.error('Error sending password reset email:', error.message || error);
+  }
+};
+
+/**
  * Send Customer Order Confirmation (Cash on Delivery)
  */
 const sendCustomerOrderConfirmationEmail = async (customerEmail, customerName, order, lang = 'de') => {
@@ -557,6 +645,8 @@ const sendCustomerOrderConfirmationEmail = async (customerEmail, customerName, o
       </tr>
     `).join('');
 
+    const deliveryFeeCharged = computeDeliveryFeeCharged(order);
+
     const contentHtml = isAr ? `
       <p style="font-size: 16px; color: #0f172a; margin-top: 0;">مرحباً <strong>${customerName}</strong>،</p>
       <p style="color: #475569; line-height: 1.8; font-size: 14px;">
@@ -565,6 +655,7 @@ const sendCustomerOrderConfirmationEmail = async (customerEmail, customerName, o
 
       <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin: 18px 0; font-size: 13px;">
         <div><strong>عنوان التوصيل:</strong> ${order.deliveryAddress || 'عنوان العميل'}</div>
+        ${order.deliverySlot && DELIVERY_SLOT_LABELS[order.deliverySlot] ? `<div style="margin-top: 6px;"><strong>موعد التوصيل:</strong> ${DELIVERY_SLOT_LABELS[order.deliverySlot].ar}</div>` : ''}
         ${order.deliveryNotes ? `<div style="margin-top: 6px;"><strong>ملاحظات السائق:</strong> ${order.deliveryNotes}</div>` : ''}
         <div style="margin-top: 6px; color: #16a34a; font-weight: bold;">طريقة الدفع: الدفع عند الاستلام (نقداً أو بالبطاقة عند الباب)</div>
       </div>
@@ -581,6 +672,10 @@ const sendCustomerOrderConfirmationEmail = async (customerEmail, customerName, o
           </thead>
           <tbody>
             ${itemsRows}
+            <tr style="background: #ffffff;">
+              <td colspan="3" style="padding: 8px; text-align: left; color: #64748b;">رسوم التوصيل:</td>
+              <td style="padding: 8px; text-align: right; font-weight: 700; color: #16a34a;">${deliveryFeeCharged > 0 ? `€${deliveryFeeCharged.toFixed(2)}` : 'مجاناً (0.00 €)'}</td>
+            </tr>
             <tr style="background: #f8fafc;">
               <td colspan="3" style="padding: 10px 8px; text-align: left; font-weight: bold;">الإجمالي المطلوب عند الاستلام:</td>
               <td style="padding: 10px 8px; text-align: right; font-weight: 800; font-size: 16px; color: #15803d;">€${Number(order.totalAmount).toFixed(2)}</td>
@@ -596,6 +691,7 @@ const sendCustomerOrderConfirmationEmail = async (customerEmail, customerName, o
 
       <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin: 18px 0; font-size: 13px;">
         <div><strong>Lieferadresse:</strong> ${order.deliveryAddress || 'Ihre hinterlegte Adresse'}</div>
+        ${order.deliverySlot && DELIVERY_SLOT_LABELS[order.deliverySlot] ? `<div style="margin-top: 6px;"><strong>Lieferzeitfenster:</strong> ${DELIVERY_SLOT_LABELS[order.deliverySlot].de}</div>` : ''}
         ${order.deliveryNotes ? `<div style="margin-top: 6px;"><strong>Lieferhinweis für den Fahrer:</strong> ${order.deliveryNotes}</div>` : ''}
         <div style="margin-top: 6px; color: #16a34a; font-weight: bold;">Zahlungsart: Barzahlung / Kartenzahlung an der Haustür (Lieferung)</div>
       </div>
@@ -612,6 +708,10 @@ const sendCustomerOrderConfirmationEmail = async (customerEmail, customerName, o
           </thead>
           <tbody>
             ${itemsRows}
+            <tr style="background: #ffffff;">
+              <td colspan="3" style="padding: 8px; text-align: right; color: #64748b;">Lieferkosten:</td>
+              <td style="padding: 8px; text-align: right; font-weight: 700; color: #16a34a;">${deliveryFeeCharged > 0 ? `€${deliveryFeeCharged.toFixed(2)}` : 'Kostenlos (0,00 €)'}</td>
+            </tr>
             <tr style="background: #f8fafc;">
               <td colspan="3" style="padding: 10px 8px; text-align: right; font-weight: bold;">Gesamtbetrag bei Lieferung:</td>
               <td style="padding: 10px 8px; text-align: right; font-weight: 800; font-size: 16px; color: #15803d;">€${Number(order.totalAmount).toFixed(2)}</td>
@@ -639,5 +739,6 @@ module.exports = {
   sendOrderStatusEmail,
   sendOrderModificationEmail,
   sendCustomerVerificationEmail,
-  sendCustomerOrderConfirmationEmail
+  sendCustomerOrderConfirmationEmail,
+  sendPasswordResetEmail
 };

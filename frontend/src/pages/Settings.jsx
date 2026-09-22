@@ -1,22 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useStoreSettings } from '../context/StoreSettingsContext';
-import { 
-  Store, 
-  Image as ImageIcon, 
-  MapPin, 
-  Star, 
-  Phone, 
-  Mail, 
-  Save, 
-  CheckCircle2, 
-  ExternalLink, 
+import {
+  Store,
+  Image as ImageIcon,
+  MapPin,
+  Star,
+  Phone,
+  Mail,
+  Save,
+  CheckCircle2,
+  ExternalLink,
   AlertCircle,
   Sparkles,
   Building2,
   Navigation,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  Truck
 } from 'lucide-react';
 
 export const Settings = () => {
@@ -41,7 +42,11 @@ export const Settings = () => {
     mapUrl: '',
     mapEmbedUrl: '',
     googleReviewsUrl: '',
-    showGoogleReviews: true
+    showGoogleReviews: true,
+    minOrderValue: '',
+    deliveryFee: '',
+    freeDeliveryThreshold: '',
+    allowedPostalCodes: ''
   });
 
   const [saving, setSaving] = useState(false);
@@ -65,7 +70,11 @@ export const Settings = () => {
         mapUrl: settings.mapUrl || '',
         mapEmbedUrl: settings.mapEmbedUrl || '',
         googleReviewsUrl: settings.googleReviewsUrl || '',
-        showGoogleReviews: settings.showGoogleReviews !== false
+        showGoogleReviews: settings.showGoogleReviews !== false,
+        minOrderValue: settings.minOrderValue ?? 0,
+        deliveryFee: settings.deliveryFee ?? 0,
+        freeDeliveryThreshold: settings.freeDeliveryThreshold ?? 0,
+        allowedPostalCodes: settings.allowedPostalCodes || ''
       });
       setLogoPreviewError(false);
     }
@@ -503,6 +512,86 @@ export const Settings = () => {
                 </p>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Card: Delivery Rules (Full Width) */}
+        <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-gray-850 p-4 sm:p-8 shadow-sm space-y-5 sm:space-y-6">
+          <div className="flex items-center gap-2.5 sm:gap-3 pb-4 border-b border-slate-100 dark:border-gray-800">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <Truck className="w-4 sm:w-5 h-4 sm:h-5" />
+            </div>
+            <div>
+              <h2 className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white">
+                {t('deliveryRules')}
+              </h2>
+              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-gray-400">
+                {t('deliveryRulesDesc')}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-gray-300 mb-1.5">
+                {t('minOrderValue')}
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.minOrderValue}
+                onChange={(e) => handleChange('minOrderValue', e.target.value)}
+                className="w-full px-3.5 sm:px-4 py-2 sm:py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:outline-none transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-gray-300 mb-1.5">
+                {t('deliveryFee')}
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.deliveryFee}
+                onChange={(e) => handleChange('deliveryFee', e.target.value)}
+                className="w-full px-3.5 sm:px-4 py-2 sm:py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:outline-none transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-gray-300 mb-1.5">
+                {t('freeDeliveryThreshold')}
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.freeDeliveryThreshold}
+                onChange={(e) => handleChange('freeDeliveryThreshold', e.target.value)}
+                className="w-full px-3.5 sm:px-4 py-2 sm:py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:outline-none transition"
+              />
+              <p className="text-[11px] text-slate-400 dark:text-gray-500 mt-1">
+                {t('freeDeliveryThresholdHint')}
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-gray-300 mb-1.5">
+              {t('allowedPostalCodes')}
+            </label>
+            <input
+              type="text"
+              value={formData.allowedPostalCodes}
+              onChange={(e) => handleChange('allowedPostalCodes', e.target.value)}
+              placeholder={t('allowedPostalCodesPlaceholder')}
+              className="w-full px-3.5 sm:px-4 py-2 sm:py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-600 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:outline-none transition"
+            />
+            <p className="text-[11px] text-slate-400 dark:text-gray-500 mt-1">
+              {t('allowedPostalCodesHint')}
+            </p>
           </div>
         </div>
 

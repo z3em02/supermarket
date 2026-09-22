@@ -61,6 +61,9 @@ model Customer {
   phoneOtp             String?
   phoneOtpExpiry       DateTime?
   password             String
+  resetToken           String?
+  resetTokenExpiry     DateTime?
+  otpAttempts          Int       @default(0)
   street               String?
   houseNumber          String?
   postalCode           String?
@@ -82,6 +85,7 @@ model Order {
   customerEmail   String?
   deliveryAddress String?
   deliveryNotes   String?
+  deliverySlot    String?
   paymentMethod   String      @default("cash_on_delivery")
   status          String      @default("pending")
   totalAmount         Float
@@ -146,6 +150,10 @@ model StoreSettings {
   googleApiKey      String?
   trustindexWidgetCode String?
   showGoogleReviews Boolean  @default(true)
+  minOrderValue         Float    @default(0)
+  deliveryFee           Float    @default(0)
+  freeDeliveryThreshold Float    @default(0)
+  allowedPostalCodes    String?  @default("")
   updatedAt         DateTime @updatedAt
 }
 

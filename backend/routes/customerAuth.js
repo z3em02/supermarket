@@ -11,6 +11,8 @@ router.post('/verify-email', authLimiter, customerAuthController.verifyEmail);
 router.post('/verify-phone', authLimiter, customerAuthController.verifyPhone);
 router.post('/resend-otp', authLimiter, customerAuthController.resendOtp);
 router.post('/login', authLimiter, customerAuthController.login);
+router.post('/request-password-reset', authLimiter, customerAuthController.requestPasswordReset);
+router.post('/reset-password', authLimiter, customerAuthController.resetPassword);
 
 // Protected customer profile endpoints
 router.get('/profile', customerAuthMiddleware, customerAuthController.getProfile);

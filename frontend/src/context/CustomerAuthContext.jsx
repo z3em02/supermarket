@@ -143,7 +143,20 @@ export const CustomerAuthProvider = ({ children }) => {
     localStorage.removeItem('customer_user');
   };
 
-  const isVerified = Boolean(customer?.emailVerified && customer?.phoneVerified);
+  const requestPasswordReset = async (email) => {
+    const apiUrl = getApiUrl();
+    const res = await axios.post(`${apiUrl}/api/customer/request-password-reset`, { email });
+    return res.data;
+  };
+
+  const resetPassword = async (token, password) => {
+    const apiUrl = getApiUrl();
+    const res = await axios.post(`${apiUrl}/api/customer/reset-password`, { token, password });
+    return res.data;
+  };
+
+  // Only email verification is required to place orders; phone verification is optional.
+  const isVerified = Boolean(customer?.emailVerified);
 
   return (
     <CustomerAuthContext.Provider
@@ -160,7 +173,9 @@ export const CustomerAuthProvider = ({ children }) => {
         verifyPhone,
         resendOtp,
         updateProfile,
-        refreshProfile
+        refreshProfile,
+        requestPasswordReset,
+        resetPassword
       }}
     >
       {children}

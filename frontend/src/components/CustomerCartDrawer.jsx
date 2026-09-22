@@ -1,28 +1,36 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { 
-  ShoppingCart, 
-  X, 
-  Trash2, 
-  Plus, 
-  Minus, 
-  Truck, 
-  MapPin, 
-  CheckCircle2, 
-  AlertCircle, 
-  ShieldCheck, 
-  Lock, 
-  ArrowRight, 
+import {
+  ShoppingCart,
+  X,
+  Trash2,
+  Plus,
+  Minus,
+  Truck,
+  MapPin,
+  CheckCircle2,
+  AlertCircle,
+  ShieldCheck,
+  Lock,
+  ArrowRight,
   ArrowLeft,
   ShoppingBag,
   ExternalLink,
   Phone,
   Mail,
-  Store
+  Store,
+  Clock
 } from 'lucide-react';
 import { useCustomerAuth } from '../context/CustomerAuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useStoreSettings } from '../context/StoreSettingsContext';
 import { getApiUrl } from '../utils/api';
+
+const DELIVERY_SLOTS = [
+  { value: 'today_16_18', labelDe: 'Heute, 16–18 Uhr', labelAr: 'اليوم، 16–18' },
+  { value: 'tomorrow_10_12', labelDe: 'Morgen, 10–12 Uhr', labelAr: 'غداً، 10–12' },
+  { value: 'tomorrow_16_18', labelDe: 'Morgen, 16–18 Uhr', labelAr: 'غداً، 16–18' }
+];
 
 export const CustomerCartDrawer = ({
   isOpen,
@@ -34,6 +42,7 @@ export const CustomerCartDrawer = ({
 }) => {
   const { customer, isAuthenticated, token } = useCustomerAuth();
   const { t, direction, language } = useLanguage();
+  const { settings } = useStoreSettings();
   const navigate = useNavigate();
 
   const isAr = language === 'ar';
@@ -41,6 +50,7 @@ export const CustomerCartDrawer = ({
 
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [deliveryNotes, setDeliveryNotes] = useState('');
+  const [deliverySlot, setDeliverySlot] = useState(DELIVERY_SLOTS[0].value);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [placedOrder, setPlacedOrder] = useState(null);
@@ -60,10 +70,22 @@ export const CustomerCartDrawer = ({
 
   if (!isOpen) return null;
 
-  const totalAmount = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const itemsSubtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const totalItemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  const isVerified = customer?.phoneVerified && customer?.emailVerified;
+  const minOrderValue = Number(settings?.minOrderValue) || 0;
+  const deliveryFeeSetting = Number(settings?.deliveryFee) || 0;
+  const freeDeliveryThreshold = Number(settings?.freeDeliveryThreshold) || 0;
+  const deliveryFee = deliveryFeeSetting <= 0
+    ? 0
+    : (freeDeliveryThreshold > 0 && itemsSubtotal >= freeDeliveryThreshold ? 0 : deliveryFeeSetting);
+  const amountUntilFreeDelivery = deliveryFeeSetting > 0 && freeDeliveryThreshold > 0 && itemsSubtotal < freeDeliveryThreshold
+    ? freeDeliveryThreshold - itemsSubtotal
+    : 0;
+  const totalAmount = itemsSubtotal + deliveryFee;
+  const belowMinOrder = minOrderValue > 0 && itemsSubtotal < minOrderValue;
+
+  const isVerified = Boolean(customer?.emailVerified);
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
@@ -74,9 +96,18 @@ export const CustomerCartDrawer = ({
 
     if (!isVerified) {
       setError(
-        isAr 
-          ? 'يجب تأكيد رقم هاتفك وبريدك الإلكتروني أولاً لتفعيل التوصيل المنزلي.' 
-          : 'Bitte bestätigen Sie zuerst Ihre Telefonnummer und E-Mail für die Hauszustellung.'
+        isAr
+          ? 'يجب تأكيد بريدك الإلكتروني أولاً لتتمكن من تقديم الطلب.'
+          : 'Bitte bestätigen Sie zuerst Ihre E-Mail-Adresse, um eine Bestellung aufgeben zu können.'
+      );
+      return;
+    }
+
+    if (belowMinOrder) {
+      setError(
+        isAr
+          ? `الحد الأدنى للطلب هو €${minOrderValue.toFixed(2)}. يرجى إضافة المزيد من المنتجات.`
+          : `Der Mindestbestellwert beträgt €${minOrderValue.toFixed(2)}. Bitte fügen Sie weitere Artikel hinzu.`
       );
       return;
     }
@@ -97,7 +128,8 @@ export const CustomerCartDrawer = ({
           orderItems: cart.map(i => ({ productId: i.productId, quantity: i.quantity })),
           deliveryAddress: deliveryAddress.trim() || undefined,
           deliveryNotes: deliveryNotes.trim() || undefined,
-          notes: deliveryNotes.trim() || undefined
+          notes: deliveryNotes.trim() || undefined,
+          deliverySlot
         })
       });
 
@@ -382,7 +414,7 @@ export const CustomerCartDrawer = ({
                     <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-850 text-amber-800 dark:text-amber-300 text-xs flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <AlertCircle className="w-4 h-4 text-amber-600" />
-                        <span>{isAr ? 'البريد أو الهاتف غير مؤكد' : 'E-Mail oder Telefon unbestätigt'}</span>
+                        <span>{isAr ? 'البريد الإلكتروني غير مؤكد' : 'E-Mail-Adresse nicht bestätigt'}</span>
                       </div>
                       <Link
                         to="/account"
@@ -390,6 +422,23 @@ export const CustomerCartDrawer = ({
                         className="font-bold underline text-amber-900 dark:text-amber-200"
                       >
                         {isAr ? 'تأكيد الآن' : 'Jetzt bestätigen'}
+                      </Link>
+                    </div>
+                  )}
+
+                  {/* Optional phone verification hint (not required to order) */}
+                  {isVerified && !customer?.phoneVerified && (
+                    <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/40 text-blue-700 dark:text-blue-300 text-xs flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-4 h-4" />
+                        <span>{isAr ? 'رقم الهاتف غير مؤكد (اختياري)' : 'Telefonnummer nicht bestätigt (optional)'}</span>
+                      </div>
+                      <Link
+                        to="/account"
+                        onClick={onClose}
+                        className="font-bold underline"
+                      >
+                        {isAr ? 'تأكيد لاحقاً' : 'Später bestätigen'}
                       </Link>
                     </div>
                   )}
@@ -421,6 +470,29 @@ export const CustomerCartDrawer = ({
                     />
                   </div>
 
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-500 dark:text-gray-400 mb-1.5 flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>{isAr ? 'اختر موعد التوصيل' : 'Lieferzeitfenster wählen'}</span>
+                    </label>
+                    <div className="grid grid-cols-1 xs:grid-cols-3 gap-2">
+                      {DELIVERY_SLOTS.map((slot) => (
+                        <button
+                          key={slot.value}
+                          type="button"
+                          onClick={() => setDeliverySlot(slot.value)}
+                          className={`px-3 py-2.5 rounded-xl border text-xs font-bold transition cursor-pointer touch-manipulation ${
+                            deliverySlot === slot.value
+                              ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm'
+                              : 'bg-slate-50 dark:bg-gray-950 border-slate-200 dark:border-gray-800 text-slate-600 dark:text-gray-300 hover:border-emerald-400'
+                          }`}
+                        >
+                          {isAr ? slot.labelAr : slot.labelDe}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                 </div>
               )}
 
@@ -432,9 +504,27 @@ export const CustomerCartDrawer = ({
         {/* Drawer Footer / Checkout Button */}
         {cart.length > 0 && !placedOrder && (
           <div className="p-6 border-t border-slate-100 dark:border-gray-800 bg-slate-50/50 dark:bg-gray-950/50 space-y-3">
+            {amountUntilFreeDelivery > 0 && (
+              <div className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/40 rounded-xl px-3 py-2 text-center">
+                {isAr
+                  ? `أضف منتجات بقيمة €${amountUntilFreeDelivery.toFixed(2)} أخرى للحصول على توصيل مجاني!`
+                  : `Noch €${amountUntilFreeDelivery.toFixed(2)} bis zur kostenlosen Lieferung!`}
+              </div>
+            )}
+
+            {belowMinOrder && (
+              <div className="text-[11px] font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/40 rounded-xl px-3 py-2 text-center">
+                {isAr
+                  ? `الحد الأدنى للطلب هو €${minOrderValue.toFixed(2)}.`
+                  : `Der Mindestbestellwert beträgt €${minOrderValue.toFixed(2)}.`}
+              </div>
+            )}
+
             <div className="flex items-center justify-between text-xs text-slate-500 dark:text-gray-400">
               <span>{isAr ? 'رسوم التوصيل' : 'Liefergebühr'}</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">{isAr ? 'مجاناً' : 'Kostenlos'}</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                {deliveryFee > 0 ? `€${deliveryFee.toFixed(2)}` : (isAr ? 'مجاناً' : 'Kostenlos')}
+              </span>
             </div>
 
             <div className="flex items-center justify-between text-base font-extrabold text-slate-900 dark:text-white">
@@ -447,7 +537,7 @@ export const CustomerCartDrawer = ({
             <button
               type="button"
               onClick={handlePlaceOrder}
-              disabled={submitting || (isAuthenticated && !isVerified)}
+              disabled={submitting || (isAuthenticated && (!isVerified || belowMinOrder))}
               className="w-full py-4 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-black text-sm shadow-xl shadow-emerald-600/25 transition flex items-center justify-center gap-2 cursor-pointer"
             >
               {submitting ? (

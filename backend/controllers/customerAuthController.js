@@ -1,11 +1,16 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const prisma = require('../lib/prisma');
-const { sendCustomerVerificationEmail } = require('../utils/emailService');
+const { sendCustomerVerificationEmail, sendPasswordResetEmail } = require('../utils/emailService');
 const { JWT_SECRET } = require('../lib/config');
+const { isValidEmail, isValidPhone, isValidPostalCode } = require('../utils/validation');
 
 // Helper to generate 6-digit numeric OTP code
-const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
+const generateOTP = () => crypto.randomInt(100000, 1000000).toString();
+
+// Reset tokens are hashed before storage so a leaked DB row can't be used to reset a password
+const hashResetToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
 
 /**
  * Register a new customer
@@ -28,6 +33,22 @@ const register = async (req, res) => {
 
     if (!name || !email || !phone || !password) {
       return res.status(400).json({ error: 'Name, email, phone number, and password are required' });
+    }
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ error: 'Please provide a valid email address' });
+    }
+
+    if (!isValidPhone(phone)) {
+      return res.status(400).json({ error: 'Please provide a valid phone number' });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+    }
+
+    if (postalCode && !isValidPostalCode(postalCode)) {
+      return res.status(400).json({ error: 'Postal code must contain digits only' });
     }
 
     const trimmedEmail = email.toLowerCase().trim();
@@ -159,8 +180,25 @@ const verifyEmail = async (req, res) => {
       return res.json({ message: 'Email is already verified', emailVerified: true });
     }
 
+    if (customer.otpAttempts >= 5) {
+      return res.status(429).json({ error: 'Too many incorrect attempts. Please request a new code.' });
+    }
+
     if (customer.emailOtp !== code.trim()) {
-      return res.status(400).json({ error: 'Invalid email verification code' });
+      const attempts = customer.otpAttempts + 1;
+      const lockedOut = attempts >= 5;
+      await prisma.customer.update({
+        where: { id: customer.id },
+        data: {
+          otpAttempts: attempts,
+          ...(lockedOut ? { emailOtp: null, emailOtpExpiry: null } : {})
+        }
+      });
+      return res.status(lockedOut ? 429 : 400).json({
+        error: lockedOut
+          ? 'Too many incorrect attempts. Please request a new code.'
+          : 'Invalid email verification code'
+      });
     }
 
     if (customer.emailOtpExpiry && new Date() > customer.emailOtpExpiry) {
@@ -172,7 +210,8 @@ const verifyEmail = async (req, res) => {
       data: {
         emailVerified: true,
         emailOtp: null,
-        emailOtpExpiry: null
+        emailOtpExpiry: null,
+        otpAttempts: 0
       }
     });
 
@@ -211,8 +250,25 @@ const verifyPhone = async (req, res) => {
       return res.json({ message: 'Phone number is already verified', phoneVerified: true });
     }
 
+    if (customer.otpAttempts >= 5) {
+      return res.status(429).json({ error: 'Too many incorrect attempts. Please request a new code.' });
+    }
+
     if (customer.phoneOtp !== code.trim()) {
-      return res.status(400).json({ error: 'Invalid phone verification code' });
+      const attempts = customer.otpAttempts + 1;
+      const lockedOut = attempts >= 5;
+      await prisma.customer.update({
+        where: { id: customer.id },
+        data: {
+          otpAttempts: attempts,
+          ...(lockedOut ? { phoneOtp: null, phoneOtpExpiry: null } : {})
+        }
+      });
+      return res.status(lockedOut ? 429 : 400).json({
+        error: lockedOut
+          ? 'Too many incorrect attempts. Please request a new code.'
+          : 'Invalid phone verification code'
+      });
     }
 
     if (customer.phoneOtpExpiry && new Date() > customer.phoneOtpExpiry) {
@@ -224,7 +280,8 @@ const verifyPhone = async (req, res) => {
       data: {
         phoneVerified: true,
         phoneOtp: null,
-        phoneOtpExpiry: null
+        phoneOtpExpiry: null,
+        otpAttempts: 0
       }
     });
 
@@ -267,7 +324,8 @@ const resendOtp = async (req, res) => {
         where: { id: customer.id },
         data: {
           emailOtp: newCode,
-          emailOtpExpiry: expiry
+          emailOtpExpiry: expiry,
+          otpAttempts: 0
         }
       });
       await sendCustomerVerificationEmail(customer.email, customer.name, newCode, customer.preferredLanguage);
@@ -283,7 +341,8 @@ const resendOtp = async (req, res) => {
         where: { id: customer.id },
         data: {
           phoneOtp: newCode,
-          phoneOtpExpiry: expiry
+          phoneOtpExpiry: expiry,
+          otpAttempts: 0
         }
       });
       if (process.env.NODE_ENV !== 'production') {
@@ -427,6 +486,22 @@ const updateProfile = async (req, res) => {
       return res.status(404).json({ error: 'Customer not found' });
     }
 
+    if (email !== undefined && email && !isValidEmail(email)) {
+      return res.status(400).json({ error: 'Please provide a valid email address' });
+    }
+
+    if (phone !== undefined && phone && !isValidPhone(phone)) {
+      return res.status(400).json({ error: 'Please provide a valid phone number' });
+    }
+
+    if (postalCode !== undefined && postalCode && !isValidPostalCode(postalCode)) {
+      return res.status(400).json({ error: 'Postal code must contain digits only' });
+    }
+
+    if (password && password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+    }
+
     const updateData = {};
     if (name !== undefined) updateData.name = name.trim();
     if (street !== undefined) updateData.street = street.trim();
@@ -449,6 +524,7 @@ const updateProfile = async (req, res) => {
       updateData.emailVerified = false;
       updateData.emailOtp = generateOTP();
       updateData.emailOtpExpiry = new Date(Date.now() + 15 * 60 * 1000);
+      updateData.otpAttempts = 0;
 
       // Send new code
       try {
@@ -468,13 +544,14 @@ const updateProfile = async (req, res) => {
       updateData.phoneVerified = false;
       updateData.phoneOtp = generateOTP();
       updateData.phoneOtpExpiry = new Date(Date.now() + 15 * 60 * 1000);
+      updateData.otpAttempts = 0;
       if (process.env.NODE_ENV !== 'production') {
         console.log(`📲 NEW Phone OTP for ${updateData.phone}: [ ${updateData.phoneOtp} ]`);
       }
     }
 
-    // Password change
-    if (password && password.length >= 6) {
+    // Password change (already validated to be >= 8 chars above, if provided)
+    if (password) {
       const salt = await bcrypt.genSalt(10);
       updateData.password = await bcrypt.hash(password, salt);
     }
@@ -606,6 +683,91 @@ const deleteCustomer = async (req, res) => {
   }
 };
 
+/**
+ * Request Password Reset
+ * Always responds with the same message regardless of whether the account
+ * exists, to avoid leaking which emails are registered.
+ */
+const requestPasswordReset = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    const customer = await prisma.customer.findUnique({
+      where: { email: email.toLowerCase().trim() }
+    });
+
+    if (customer) {
+      const rawToken = crypto.randomBytes(32).toString('hex');
+      const expiry = new Date(Date.now() + 60 * 60 * 1000); // 60 minutes
+
+      await prisma.customer.update({
+        where: { id: customer.id },
+        data: {
+          resetToken: hashResetToken(rawToken),
+          resetTokenExpiry: expiry
+        }
+      });
+
+      try {
+        await sendPasswordResetEmail(customer.email, customer.name, rawToken, customer.preferredLanguage);
+      } catch (err) {
+        console.error('Failed to send password reset email:', err.message);
+      }
+    }
+
+    res.json({ message: 'If an account with this email exists, a password reset link has been sent.' });
+  } catch (error) {
+    console.error('Request password reset error:', error);
+    res.status(500).json({ error: 'Failed to process password reset request' });
+  }
+};
+
+/**
+ * Reset Password using a token from the reset email
+ */
+const resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+    if (!token || !password) {
+      return res.status(400).json({ error: 'Token and new password are required' });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+    }
+
+    const customer = await prisma.customer.findFirst({
+      where: {
+        resetToken: hashResetToken(token),
+        resetTokenExpiry: { gt: new Date() }
+      }
+    });
+
+    if (!customer) {
+      return res.status(400).json({ error: 'This password reset link is invalid or has expired. Please request a new one.' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    await prisma.customer.update({
+      where: { id: customer.id },
+      data: {
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpiry: null
+      }
+    });
+
+    res.json({ message: 'Password has been reset successfully. You can now log in with your new password.' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ error: 'Failed to reset password' });
+  }
+};
+
 module.exports = {
   register,
   verifyEmail,
@@ -615,5 +777,7 @@ module.exports = {
   getProfile,
   updateProfile,
   listCustomers,
-  deleteCustomer
+  deleteCustomer,
+  requestPasswordReset,
+  resetPassword
 };

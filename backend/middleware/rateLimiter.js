@@ -19,7 +19,9 @@ const createRateLimiter = ({ windowMs = 15 * 60 * 1000, max = 15, message = 'Too
   }
 
   return (req, res, next) => {
-    const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress || 'unknown';
+    // req.ip respects Express's `trust proxy` setting, which is configured to trust
+    // exactly one hop (nginx). A client can no longer spoof this via X-Forwarded-For.
+    const ip = req.ip || 'unknown';
     const now = Date.now();
 
     const record = hits.get(ip) || { count: 0, resetTime: now + windowMs };

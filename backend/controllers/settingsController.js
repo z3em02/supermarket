@@ -17,7 +17,11 @@ const DEFAULT_SETTINGS = {
   googleReviewCount: 0,
   googlePlaceId: '',
   googleApiKey: '',
-  showGoogleReviews: true
+  showGoogleReviews: true,
+  minOrderValue: 0,
+  deliveryFee: 0,
+  freeDeliveryThreshold: 0,
+  allowedPostalCodes: ''
 };
 
 // Fields safe to expose on the public settings endpoint.
@@ -36,7 +40,11 @@ const PUBLIC_SETTINGS_SELECT = {
   googleReviewsUrl: true,
   googleRating: true,
   googleReviewCount: true,
-  showGoogleReviews: true
+  showGoogleReviews: true,
+  minOrderValue: true,
+  deliveryFee: true,
+  freeDeliveryThreshold: true,
+  allowedPostalCodes: true
 };
 
 // GET /api/settings - Public
@@ -77,7 +85,11 @@ const updateSettings = async (req, res) => {
       googleReviewsUrl,
       googlePlaceId,
       googleApiKey,
-      showGoogleReviews
+      showGoogleReviews,
+      minOrderValue,
+      deliveryFee,
+      freeDeliveryThreshold,
+      allowedPostalCodes
     } = req.body;
 
     const data = {};
@@ -123,6 +135,18 @@ const updateSettings = async (req, res) => {
     }
     if (googleApiKey !== undefined) {
       data.googleApiKey = String(googleApiKey).trim();
+    }
+    if (minOrderValue !== undefined) {
+      data.minOrderValue = Math.max(0, Number(minOrderValue) || 0);
+    }
+    if (deliveryFee !== undefined) {
+      data.deliveryFee = Math.max(0, Number(deliveryFee) || 0);
+    }
+    if (freeDeliveryThreshold !== undefined) {
+      data.freeDeliveryThreshold = Math.max(0, Number(freeDeliveryThreshold) || 0);
+    }
+    if (allowedPostalCodes !== undefined) {
+      data.allowedPostalCodes = String(allowedPostalCodes).trim();
     }
 
     const updated = await prisma.storeSettings.upsert({

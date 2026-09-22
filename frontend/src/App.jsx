@@ -13,6 +13,8 @@ import { LandingPage } from './pages/LandingPage';
 import { CustomerLogin } from './pages/CustomerLogin';
 import { CustomerRegister } from './pages/CustomerRegister';
 import { CustomerAccount } from './pages/CustomerAccount';
+import { ForgotPassword } from './pages/ForgotPassword';
+import { ResetPassword } from './pages/ResetPassword';
 import { Impressum } from './pages/Impressum';
 import { Datenschutz } from './pages/Datenschutz';
 
@@ -56,6 +58,8 @@ function App() {
                   <Route path="/account" element={<CustomerAccount />} />
                   <Route path="/customer/account" element={<CustomerAccount />} />
                   <Route path="/customer/orders" element={<Navigate to="/account" replace />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
 
                   {/* Legal Pages (Austria compliance) */}
                   <Route path="/impressum" element={<Impressum />} />

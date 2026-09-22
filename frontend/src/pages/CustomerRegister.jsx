@@ -74,8 +74,8 @@ export const CustomerRegister = () => {
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError(isAr ? 'كلمة المرور يجب أن تكون 6 خانات على الأقل' : 'Das Passwort muss mindestens 6 Zeichen lang sein');
+    if (formData.password.length < 8) {
+      setError(isAr ? 'كلمة المرور يجب أن تكون 8 خانات على الأقل' : 'Das Passwort muss mindestens 8 Zeichen lang sein');
       return;
     }
 
@@ -283,7 +283,7 @@ export const CustomerRegister = () => {
                     onChange={handleChange}
                     placeholder="••••••••"
                     required
-                    minLength={6}
+                    minLength={8}
                     className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
@@ -435,9 +435,9 @@ export const CustomerRegister = () => {
                   {isAr ? 'تأكيد الحساب (البريد والهاتف)' : 'Konto verifizieren (E-Mail & Telefon)'}
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 max-w-md mx-auto">
-                  {isAr 
-                    ? 'لضمان دقة التوصيل، يرجى تأكيد رقم هاتفك وبريدك الإلكتروني بإدخال الرموز المكونة من 6 أرقام.' 
-                    : 'Um eine reibungslose Zustellung zu gewährleisten, bestätigen Sie bitte Ihre Telefonnummer und E-Mail.'}
+                  {isAr
+                    ? 'لتتمكن من تقديم الطلبات، يرجى تأكيد بريدك الإلكتروني بإدخال الرمز المكون من 6 أرقام. تأكيد رقم الهاتف اختياري ويمكن إتمامه لاحقاً.'
+                    : 'Um Bestellungen aufgeben zu können, bestätigen Sie bitte Ihre E-Mail-Adresse mit dem 6-stelligen Code. Die Telefonnummer ist optional und kann später bestätigt werden.'}
                 </p>
               </div>
 
@@ -522,7 +522,7 @@ export const CustomerRegister = () => {
                     <div className="flex items-center gap-2 min-w-0">
                       <Phone className="w-4 h-4 text-emerald-600 shrink-0" />
                       <span className="font-bold text-xs sm:text-sm text-slate-800 dark:text-gray-200 truncate">
-                        {isAr ? 'رمز تأكيد رقم الهاتف (SMS)' : 'Telefon-Bestätigungscode (SMS)'}
+                        {isAr ? 'رمز تأكيد رقم الهاتف (SMS) - اختياري' : 'Telefon-Bestätigungscode (SMS) – optional'}
                       </span>
                     </div>
                     {phoneVerified ? (
@@ -574,15 +574,15 @@ export const CustomerRegister = () => {
                   type="button"
                   onClick={() => navigate('/')}
                   className={`w-full py-3.5 sm:py-4 px-6 rounded-xl font-bold text-sm shadow-lg transition flex items-center justify-center gap-2 cursor-pointer touch-manipulation ${
-                    emailVerified && phoneVerified 
-                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/25' 
+                    emailVerified
+                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/25'
                       : 'bg-slate-200 dark:bg-gray-800 text-slate-700 dark:text-gray-300 hover:bg-slate-300 dark:hover:bg-gray-700'
                   }`}
                 >
                   <span className="break-words text-center">
-                    {emailVerified && phoneVerified
+                    {emailVerified
                       ? (isAr ? 'ابدأ التسوق الآن' : 'Jetzt einkaufen')
-                      : (isAr ? 'الدخول للمتجر (يمكنك إكمال التحقق لاحقاً)' : 'Zum Shop (Verifizierung später abschließen)')}
+                      : (isAr ? 'الدخول للمتجر (تأكيد البريد مطلوب لاحقاً للطلب)' : 'Zum Shop (E-Mail-Bestätigung für Bestellungen erforderlich)')}
                   </span>
                   <ArrowIcon className="w-4 h-4 shrink-0" />
                 </button>
