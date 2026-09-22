@@ -1,0 +1,137 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #0b1220; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1200" height="630"></canvas>
+<script>
+async function draw() {
+  await document.fonts.load('900 80px Cairo');
+  await document.fonts.load('700 34px Cairo');
+  await document.fonts.load('600 26px Cairo');
+  await document.fonts.ready;
+
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  const W = 1200, H = 630;
+
+  const bg = ctx.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, '#047857');
+  bg.addColorStop(0.55, '#065f46');
+  bg.addColorStop(1, '#1e3a8a');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  function glow(x, y, r, color, alpha) {
+    ctx.save();
+    ctx.filter = 'blur(70px)';
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+  glow(120, 80, 180, '#34d399', 0.45);
+  glow(1080, 560, 220, '#60a5fa', 0.40);
+  glow(950, 120, 150, '#fbbf24', 0.30);
+
+  ctx.save();
+  ctx.globalAlpha = 0.06;
+  ctx.fillStyle = '#ffffff';
+  for (let gx = 40; gx < W; gx += 28) {
+    for (let gy = 40; gy < H; gy += 28) {
+      ctx.beginPath();
+      ctx.arc(gx, gy, 1.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+
+  ctx.save();
+  ctx.globalAlpha = 0.16;
+  ctx.font = '380px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🛒', 950, 340);
+  ctx.restore();
+
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+  ctx.save();
+  roundRect(80, 90, 76, 76, 20);
+  ctx.fillStyle = 'rgba(255,255,255,0.16)';
+  ctx.fill();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+  ctx.stroke();
+  ctx.font = '38px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText('🏪', 118, 130);
+  ctx.restore();
+
+  function pill(x, y, w, h) {
+    ctx.save();
+    roundRect(x, y, w, h, h / 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.14)';
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(255,255,255,0.30)';
+    ctx.stroke();
+    ctx.restore();
+  }
+  pill(84, 320, 300, 46);
+  ctx.save();
+  ctx.fillStyle = '#fbbf24';
+  ctx.font = '22px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('★★★★★', 104, 344);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '600 20px Cairo, sans-serif';
+  ctx.fillText('4.5 · 246 Google-Bewertungen', 220, 344);
+  ctx.restore();
+
+  ctx.save();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '900 76px Cairo, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('Hajar Supermarkt', 80, 430);
+  ctx.restore();
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(255,255,255,0.92)';
+  ctx.font = '700 34px Cairo, sans-serif';
+  ctx.fillText('Frische Lebensmittel & direkte Hauszustellung', 80, 480);
+  ctx.restore();
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.font = '600 24px Cairo, sans-serif';
+  ctx.fillText('🚚 Schnelle Lieferung     💶 Zahlung bei Erhalt     🥬 100% Frische', 80, 540);
+  ctx.restore();
+
+  window.__done = true;
+}
+draw();
+</script>
+</body>
+</html>
