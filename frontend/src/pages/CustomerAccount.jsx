@@ -188,8 +188,8 @@ export const CustomerAccount = () => {
       );
       setActionFeedback({
         message: isAr 
-          ? (action === 'accept' ? '✅ تم تأكيد موافقتك على تعديل الطلب بنجاح! جاري تحضيره للتوصيل.' : 'تم إلغاء الطلب بناءً على طلبك.')
-          : (action === 'accept' ? '✅ Änderung erfolgreich akzeptiert! Ihre Lieferung wird nun vorbereitet.' : 'Bestellung wurde erfolgreich storniert.'),
+          ? (action === 'accept' ? 'تم تأكيد موافقتك على تعديل الطلب بنجاح! جاري تحضيره للتوصيل.' : 'تم إلغاء الطلب بناءً على طلبك.')
+          : (action === 'accept' ? 'Änderung erfolgreich akzeptiert! Ihre Lieferung wird nun vorbereitet.' : 'Bestellung wurde erfolgreich storniert.'),
         isError: false
       });
       await fetchOrders();
@@ -312,8 +312,8 @@ export const CustomerAccount = () => {
     <div class="meta-box">
       <h4>${isArabic ? 'بيانات العميل' : 'Kunde'}</h4>
       <p><strong>${escapeHtml(order.customerName || order.customer?.name || customer?.name || '—')}</strong></p>
-      ${(order.customerPhone || customer?.phone) ? `<p>📞 ${escapeHtml(order.customerPhone || customer?.phone)}</p>` : ''}
-      ${(order.customerEmail || customer?.email) ? `<p>✉️ ${escapeHtml(order.customerEmail || customer?.email)}</p>` : ''}
+      ${(order.customerPhone || customer?.phone) ? `<p>Tel: ${escapeHtml(order.customerPhone || customer?.phone)}</p>` : ''}
+      ${(order.customerEmail || customer?.email) ? `<p>E-Mail: ${escapeHtml(order.customerEmail || customer?.email)}</p>` : ''}
     </div>
     <div class="meta-box">
       <h4>${isArabic ? 'عنوان التسليم والتعليمات' : 'Lieferadresse &amp; Hinweise'}</h4>
@@ -433,25 +433,25 @@ export const CustomerAccount = () => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-gray-950 text-slate-800 dark:text-gray-100 transition-colors">
       {/* Navigation Header */}
-      <header className="px-6 py-4 flex items-center justify-between border-b border-slate-200/80 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md sticky top-0 z-30">
-        <Link to="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-600/20 group-hover:scale-105 transition">
-            <Truck className="w-5 h-5" />
+      <header className="px-3 xs:px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between border-b border-slate-200/80 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md sticky top-0 z-30">
+        <Link to="/" className="flex items-center gap-1.5 sm:gap-3 group min-w-0">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 shrink-0 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-600/20 group-hover:scale-105 transition">
+            <Truck className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <div>
-            <span className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white block leading-tight">
+          <div className="min-w-0">
+            <span className="font-extrabold text-xs sm:text-base md:text-lg text-slate-900 dark:text-white block leading-tight truncate max-w-[110px] xs:max-w-[160px] sm:max-w-none">
               {getStoreName()}
             </span>
-            <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 block">
+            <span className="text-[9px] xs:text-[10px] sm:text-xs font-semibold text-emerald-600 dark:text-emerald-400 block truncate">
               {isAr ? 'حساب العميل والطلبات' : 'Kundenkonto & Bestellungen'}
             </span>
           </div>
         </Link>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           <Link
             to="/"
-            className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 font-bold text-xs transition"
+            className="hidden sm:flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 font-bold text-xs transition"
           >
             <ShoppingBag className="w-4 h-4" />
             <span>{isAr ? 'متابعة التسوق' : 'Zum Shop'}</span>
@@ -460,28 +460,28 @@ export const CustomerAccount = () => {
           <ThemeToggle />
           <button
             onClick={() => { logout(); navigate('/customer/login'); }}
-            className="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition cursor-pointer"
+            className="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition cursor-pointer touch-manipulation"
             title={isAr ? 'تسجيل الخروج' : 'Abmelden'}
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
       </header>
 
       {/* Main Container */}
-      <main className="max-w-5xl mx-auto px-4 py-8">
+      <main className="max-w-5xl mx-auto px-3 xs:px-4 sm:px-6 py-4 sm:py-8">
         
         {/* Customer Welcome Header */}
-        <div className="bg-white dark:bg-gray-900 rounded-3xl border border-slate-200/80 dark:border-gray-800 p-6 sm:p-8 shadow-sm mb-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-black text-2xl shadow-lg shadow-emerald-600/20">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-gray-800 p-4 sm:p-6 md:p-8 shadow-sm mb-6 flex flex-col md:flex-row md:items-center justify-between gap-5 sm:gap-6">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-black text-xl sm:text-2xl shadow-lg shadow-emerald-600/20">
               {customer?.name?.charAt(0)?.toUpperCase() || 'C'}
             </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 dark:text-white truncate">
                 {customer?.name || (isAr ? 'عزيزي العميل' : 'Kunde')}
               </h1>
-              <div className="flex flex-wrap items-center gap-2 mt-2">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-1.5 sm:mt-2">
                 {/* Email badge */}
                 <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold ${customer?.emailVerified ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200'}`}>
                   <Mail className="w-3.5 h-3.5" />
@@ -517,23 +517,23 @@ export const CustomerAccount = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center w-full md:w-auto">
             <Link
               to="/"
-              className="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition flex items-center gap-2"
+              className="w-full md:w-auto px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-2 touch-manipulation"
             >
-              <ShoppingBag className="w-4 h-4" />
-              <span>{isAr ? 'طلب جديد للتوصيل 🛒' : 'Neue Bestellung aufgeben 🛒'}</span>
+              <ShoppingBag className="w-4 h-4 shrink-0" />
+              <span>{isAr ? 'طلب جديد للتوصيل' : 'Neue Bestellung aufgeben'}</span>
             </Link>
           </div>
         </div>
 
         {/* Verification Modal Triggered */}
         {verifyingType && (
-          <div className="mb-6 p-6 rounded-3xl bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-amber-600" />
+          <div className="mb-6 p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 shadow-sm">
+            <div className="flex items-center justify-between mb-3 gap-2">
+              <h3 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 shrink-0" />
                 <span>
                   {isAr 
                     ? `إدخال رمز التحقق لـ ${verifyingType === 'email' ? 'البريد الإلكتروني' : 'رقم الهاتف'}` 
@@ -542,14 +542,14 @@ export const CustomerAccount = () => {
               </h3>
               <button
                 onClick={() => setVerifyingType(null)}
-                className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer touch-manipulation"
               >
                 {isAr ? 'إلغاء' : 'Abbrechen'}
               </button>
             </div>
 
             {devOtpHint && (
-              <div className="text-xs font-mono bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 px-3 py-1.5 rounded-lg mb-3 inline-block">
+              <div className="text-xs font-mono bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 px-3 py-1.5 rounded-lg mb-3 inline-block break-all">
                 {devOtpHint}
               </div>
             )}
@@ -567,7 +567,7 @@ export const CustomerAccount = () => {
                 type="button"
                 onClick={handleSubmitVerifyOtp}
                 disabled={verifyingLoading || otpInput.length < 6}
-                className="px-6 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition cursor-pointer disabled:opacity-50"
+                className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition cursor-pointer disabled:opacity-50 touch-manipulation"
               >
                 {verifyingLoading ? '...' : (isAr ? 'تأكيد الرمز' : 'Code bestätigen')}
               </button>
@@ -576,31 +576,31 @@ export const CustomerAccount = () => {
         )}
 
         {/* Tab Selection */}
-        <div className="flex border-b border-slate-200 dark:border-gray-800 mb-6 gap-2">
+        <div className="flex border-b border-slate-200 dark:border-gray-800 mb-6 gap-2 overflow-x-auto no-scrollbar pb-0.5">
           <button
             onClick={() => setActiveTab('orders')}
-            className={`pb-3 px-4 font-bold text-sm transition border-b-2 cursor-pointer flex items-center gap-2 ${
+            className={`pb-3 px-3 sm:px-4 font-bold text-xs sm:text-sm transition border-b-2 cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 touch-manipulation ${
               activeTab === 'orders'
                 ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400'
                 : 'border-transparent text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-200'
             }`}
           >
-            <Package className="w-4 h-4" />
+            <Package className="w-4 h-4 shrink-0" />
             <span>{isAr ? 'طلباتي السابقة' : 'Meine Bestellungen'}</span>
-            <span className="px-2 py-0.5 rounded-full text-xs bg-slate-100 dark:bg-gray-800 text-slate-600 dark:text-gray-300">
+            <span className="px-2 py-0.5 rounded-full text-[11px] bg-slate-100 dark:bg-gray-800 text-slate-600 dark:text-gray-300">
               {orders.length}
             </span>
           </button>
 
           <button
             onClick={() => setActiveTab('profile')}
-            className={`pb-3 px-4 font-bold text-sm transition border-b-2 cursor-pointer flex items-center gap-2 ${
+            className={`pb-3 px-3 sm:px-4 font-bold text-xs sm:text-sm transition border-b-2 cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 touch-manipulation ${
               activeTab === 'profile'
                 ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400'
                 : 'border-transparent text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-200'
             }`}
           >
-            <MapPin className="w-4 h-4" />
+            <MapPin className="w-4 h-4 shrink-0" />
             <span>{isAr ? 'تعديل البيانات وعنوان التوصيل' : 'Daten & Lieferadresse'}</span>
           </button>
         </div>
@@ -658,7 +658,7 @@ export const CustomerAccount = () => {
                           <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                           <div>
                             <h4 className="font-bold text-amber-900 dark:text-amber-200 text-sm sm:text-base">
-                              {isAr ? '⚠️ تعديل في الطلب بسبب عدم توفر بعض المنتجات' : '⚠️ Bestelländerung durch Supermarkt (Artikel nicht vorrätig)'}
+                              {isAr ? 'تعديل في الطلب بسبب عدم توفر بعض المنتجات' : 'Bestelländerung durch Supermarkt (Artikel nicht vorrätig)'}
                             </h4>
                             <p className="text-amber-800 dark:text-amber-300 mt-1 text-xs leading-relaxed">
                               {isAr 
@@ -680,15 +680,15 @@ export const CustomerAccount = () => {
                         </div>
 
                         {/* Customer Decision Buttons */}
-                        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-amber-200 dark:border-amber-800/60">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-2 border-t border-amber-200 dark:border-amber-800/60">
                           <button
                             type="button"
                             onClick={() => handleCustomerResponse(order.id, 'accept')}
                             disabled={respondingOrderId === order.id}
-                            className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+                            className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation"
                           >
-                            <CheckCircle2 className="w-4 h-4" />
-                            <span>{isAr ? '✅ قبول التعديل ومتابعة التوصيل' : '✅ Änderung akzeptieren & liefern'}</span>
+                            <CheckCircle2 className="w-4 h-4 shrink-0" />
+                            <span>{isAr ? 'قبول التعديل ومتابعة التوصيل' : 'Änderung akzeptieren & liefern'}</span>
                           </button>
                           <button
                             type="button"
@@ -698,10 +698,10 @@ export const CustomerAccount = () => {
                               }
                             }}
                             disabled={respondingOrderId === order.id}
-                            className="px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 font-bold text-xs border border-rose-200 dark:border-rose-900/60 transition disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+                            className="px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 font-bold text-xs border border-rose-200 dark:border-rose-900/60 transition disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation"
                           >
-                            <XCircle className="w-4 h-4" />
-                            <span>{isAr ? '❌ إلغاء الطلب بالكامل' : '❌ Bestellung stornieren'}</span>
+                            <XCircle className="w-4 h-4 shrink-0" />
+                            <span>{isAr ? 'إلغاء الطلب بالكامل' : 'Bestellung stornieren'}</span>
                           </button>
                         </div>
                       </div>
@@ -710,21 +710,21 @@ export const CustomerAccount = () => {
                     {/* Order Top Bar */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 dark:border-gray-800 gap-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                           <Truck className="w-5 h-5" />
                         </div>
-                        <div>
-                          <div className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white flex items-center gap-2">
+                        <div className="min-w-0">
+                          <div className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white flex items-center gap-2 truncate">
                             <span>{isAr ? 'طلب رقم' : 'Bestellung'} #{order.id.slice(0, 8).toUpperCase()}</span>
                           </div>
-                          <div className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
-                            <Calendar className="w-3.5 h-3.5" />
-                            <span>{new Date(order.createdAt).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'de-DE', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                          <div className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5 truncate">
+                            <Calendar className="w-3.5 h-3.5 shrink-0" />
+                            <span className="truncate">{new Date(order.createdAt).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'de-DE', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between sm:justify-end gap-3">
+                      <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-50 dark:border-gray-800/50">
                         {getStatusBadge(order.status)}
                         <div className="text-end">
                           <div className="text-xs text-slate-400">{isAr ? 'الإجمالي' : 'Gesamt'}</div>
@@ -739,7 +739,7 @@ export const CustomerAccount = () => {
                     <div className="py-3 text-xs text-slate-600 dark:text-gray-300 grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 dark:bg-gray-950 p-3 rounded-2xl my-3">
                       <div>
                         <strong className="block text-slate-400 text-[11px] uppercase tracking-wider">{isAr ? 'عنوان التوصيل' : 'Lieferadresse'}</strong>
-                        <span className="font-medium">{order.deliveryAddress || 'Adresse'}</span>
+                        <span className="font-medium break-words">{order.deliveryAddress || 'Adresse'}</span>
                       </div>
                       <div>
                         <strong className="block text-slate-400 text-[11px] uppercase tracking-wider">{isAr ? 'طريقة الدفع' : 'Zahlung'}</strong>
@@ -750,7 +750,7 @@ export const CustomerAccount = () => {
                       {order.deliveryNotes && (
                         <div className="sm:col-span-2">
                           <strong className="block text-slate-400 text-[11px] uppercase tracking-wider">{isAr ? 'ملاحظة السائق' : 'Lieferhinweis'}</strong>
-                          <span className="italic">{order.deliveryNotes}</span>
+                          <span className="italic break-words">{order.deliveryNotes}</span>
                         </div>
                       )}
                     </div>
@@ -762,16 +762,16 @@ export const CustomerAccount = () => {
                       </span>
                       <div className="divide-y divide-slate-100 dark:divide-gray-800">
                         {(order.orderItems || []).map((item) => (
-                          <div key={item.id} className="py-2 flex items-center justify-between text-xs sm:text-sm">
-                            <div className="flex items-center gap-2">
-                              <span className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-gray-800 flex items-center justify-center font-bold text-xs text-slate-700 dark:text-gray-300">
+                          <div key={item.id} className="py-2 flex items-center justify-between text-xs sm:text-sm gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="w-6 h-6 shrink-0 rounded-lg bg-slate-100 dark:bg-gray-800 flex items-center justify-center font-bold text-xs text-slate-700 dark:text-gray-300">
                                 {item.quantity}x
                               </span>
-                              <span className="font-medium text-slate-800 dark:text-gray-200">
+                              <span className="font-medium text-slate-800 dark:text-gray-200 truncate">
                                 {language === 'ar' && item.product?.nameAr ? item.product.nameAr : item.product?.name}
                               </span>
                             </div>
-                            <span className="font-mono font-bold text-slate-900 dark:text-white">
+                            <span className="font-mono font-bold text-slate-900 dark:text-white shrink-0">
                               €{Number(item.subtotal || item.price * item.quantity).toFixed(2)}
                             </span>
                           </div>
@@ -780,17 +780,17 @@ export const CustomerAccount = () => {
                     </div>
 
                     {/* Footer Actions: Print/View Order Report */}
-                    <div className="mt-4 pt-3 border-t border-slate-100 dark:border-gray-800 flex items-center justify-between">
+                    <div className="mt-4 pt-3 border-t border-slate-100 dark:border-gray-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
                       <button
                         type="button"
                         onClick={() => handleOpenReport(order)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-slate-700 dark:text-gray-300 text-xs font-semibold transition cursor-pointer"
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-slate-700 dark:text-gray-300 text-xs font-semibold transition cursor-pointer touch-manipulation"
                       >
-                        <FileText className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>{isAr ? '📄 عرض تقرير الطلب الرسمي (طباعة)' : '📄 Bestellbericht anzeigen / drucken'}</span>
+                        <FileText className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span>{isAr ? 'عرض تقرير الطلب الرسمي (طباعة)' : 'Bestellbericht anzeigen / drucken'}</span>
                       </button>
 
-                      <span className="text-[11px] text-slate-400">
+                      <span className="text-[11px] text-slate-400 text-center sm:text-end">
                         {order.orderItems?.length || 0} {isAr ? 'منتجات' : 'Positionen'}
                       </span>
                     </div>
@@ -804,7 +804,7 @@ export const CustomerAccount = () => {
 
         {/* TAB 2: Profile & Home Delivery Address */}
         {activeTab === 'profile' && (
-          <div className="bg-white dark:bg-gray-900 rounded-3xl border border-slate-200/80 dark:border-gray-800 p-6 sm:p-10 shadow-sm">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-gray-800 p-4 sm:p-6 md:p-10 shadow-sm">
             
             <div className="mb-6">
               <h2 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
@@ -1005,9 +1005,9 @@ export const CustomerAccount = () => {
                 <button
                   type="submit"
                   disabled={savingProfile}
-                  className="px-8 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 touch-manipulation"
                 >
-                  <Save className="w-4 h-4" />
+                  <Save className="w-4 h-4 shrink-0" />
                   <span>{savingProfile ? (isAr ? 'جارٍ الحفظ...' : 'Wird gespeichert...') : (isAr ? 'حفظ التعديلات' : 'Änderungen speichern')}</span>
                 </button>
               </div>
@@ -1018,37 +1018,37 @@ export const CustomerAccount = () => {
 
         {/* ── Printable Order Report (Bestellbericht) Modal ── */}
         {showReportModal && reportOrder && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs overflow-y-auto">
-            <div className="relative w-full max-w-2xl bg-white dark:bg-gray-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-gray-800 p-6 sm:p-8 my-8 text-slate-900 dark:text-gray-100">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/70 backdrop-blur-xs overflow-y-auto">
+            <div className="relative w-full max-w-2xl max-h-[90dvh] overflow-y-auto bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-gray-800 p-4 sm:p-6 md:p-8 my-auto text-slate-900 dark:text-gray-100">
               {/* Modal Top Bar */}
-              <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-gray-800 mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 dark:border-gray-800 mb-4 sm:mb-6 gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md shrink-0">
                     <Truck className="w-5 h-5" />
                   </div>
-                  <div>
-                    <h3 className="font-extrabold text-lg text-slate-900 dark:text-white">
+                  <div className="min-w-0">
+                    <h3 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white truncate">
                       {isAr ? 'تقرير الطلب الرسمي وإيصال التوصيل' : 'Offizieller Bestellbericht & Lieferschein'}
                     </h3>
-                    <p className="text-xs text-slate-400 font-mono">
+                    <p className="text-xs text-slate-400 font-mono truncate">
                       #{reportOrder.id.slice(0, 8).toUpperCase()} &bull; {getStoreName()}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
                   <button
                     type="button"
                     onClick={() => printReceipt(reportOrder)}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition cursor-pointer"
+                    className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition cursor-pointer touch-manipulation"
                   >
-                    <Printer className="w-4 h-4" />
-                    <span>{isAr ? 'طباعة التقرير' : 'Bericht drucken'}</span>
+                    <Printer className="w-4 h-4 shrink-0" />
+                    <span>{isAr ? 'طباعة' : 'Drucken'}</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowReportModal(false)}
-                    className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-gray-800 transition cursor-pointer"
+                    className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-gray-800 transition cursor-pointer touch-manipulation"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -1056,18 +1056,21 @@ export const CustomerAccount = () => {
               </div>
 
               {/* Printable Body Content */}
-              <div className="space-y-6 text-xs sm:text-sm">
+              <div className="space-y-4 sm:space-y-6 text-xs sm:text-sm">
                 {/* Meta details grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-gray-950 border border-slate-200/80 dark:border-gray-800">
                   <div>
                     <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
                       {isAr ? 'بيانات المستلم والتوصيل:' : 'Empfänger & Adresse:'}
                     </span>
-                    <p className="font-bold text-slate-900 dark:text-white">{reportOrder.customerName || reportOrder.customer?.name || customer?.name}</p>
-                    <p className="text-slate-600 dark:text-gray-300 font-mono mt-0.5">📞 {reportOrder.customerPhone || customer?.phone}</p>
-                    <p className="text-slate-600 dark:text-gray-300 mt-1">{reportOrder.deliveryAddress || 'Adresse'}</p>
+                    <p className="font-bold text-slate-900 dark:text-white break-words">{reportOrder.customerName || reportOrder.customer?.name || customer?.name}</p>
+                    <p className="text-slate-600 dark:text-gray-300 font-mono mt-0.5 flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span>{reportOrder.customerPhone || customer?.phone}</span>
+                    </p>
+                    <p className="text-slate-600 dark:text-gray-300 mt-1 break-words">{reportOrder.deliveryAddress || 'Adresse'}</p>
                     {reportOrder.deliveryNotes && (
-                      <p className="text-slate-500 italic mt-1">{isAr ? 'ملاحظة للسائق:' : 'Hinweis:'} {reportOrder.deliveryNotes}</p>
+                      <p className="text-slate-500 italic mt-1 break-words">{isAr ? 'ملاحظة للسائق:' : 'Hinweis:'} {reportOrder.deliveryNotes}</p>
                     )}
                   </div>
 
@@ -1085,18 +1088,18 @@ export const CustomerAccount = () => {
                   </div>
                 </div>
 
-                {/* Items Table */}
-                <div className="border border-slate-200 dark:border-gray-800 rounded-2xl overflow-hidden">
+                {/* Items Table with horizontal scrolling on small screens */}
+                <div className="border border-slate-200 dark:border-gray-800 rounded-2xl overflow-hidden overflow-x-auto">
                   <div className="bg-slate-100 dark:bg-gray-800 px-4 py-2.5 font-bold text-xs text-slate-700 dark:text-gray-300">
                     {isAr ? 'المنتجات المسجلة في الطلب:' : 'Bestellte Artikel (Aufstellung):'}
                   </div>
-                  <table className="w-full text-xs text-start">
+                  <table className="w-full min-w-[340px] text-xs text-start">
                     <thead>
                       <tr className="border-b border-slate-200 dark:border-gray-800 text-slate-500 dark:text-gray-400 font-semibold text-[11px]">
-                        <th className="p-3 text-start">{isAr ? 'المنتج' : 'Artikel'}</th>
-                        <th className="p-3 text-center">{isAr ? 'الكمية' : 'Menge'}</th>
-                        <th className="p-3 text-end">{isAr ? 'سعر الوحدة' : 'Einzelpreis'}</th>
-                        <th className="p-3 text-end">{isAr ? 'الإجمالي' : 'Gesamt'}</th>
+                        <th className="p-2.5 sm:p-3 text-start">{isAr ? 'المنتج' : 'Artikel'}</th>
+                        <th className="p-2.5 sm:p-3 text-center">{isAr ? 'الكمية' : 'Menge'}</th>
+                        <th className="p-2.5 sm:p-3 text-end">{isAr ? 'سعر الوحدة' : 'Einzelpreis'}</th>
+                        <th className="p-2.5 sm:p-3 text-end">{isAr ? 'الإجمالي' : 'Gesamt'}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-gray-800/60">
@@ -1106,15 +1109,15 @@ export const CustomerAccount = () => {
                           || item.productId;
                         return (
                           <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-gray-800/30">
-                            <td className="p-3 font-medium text-slate-800 dark:text-gray-200">
-                              <div>{prodName}</div>
+                            <td className="p-2.5 sm:p-3 font-medium text-slate-800 dark:text-gray-200">
+                              <div className="break-words max-w-[150px] sm:max-w-none">{prodName}</div>
                               {item.product?.sku && (
-                                <span className="text-[10px] text-slate-400 font-mono">Art.-Nr. {item.product.sku}</span>
+                                <span className="text-[10px] text-slate-400 font-mono block">Art.-Nr. {item.product.sku}</span>
                               )}
                             </td>
-                            <td className="p-3 text-center font-bold text-slate-900 dark:text-white">{item.quantity}x</td>
-                            <td className="p-3 text-end font-mono text-slate-600 dark:text-gray-300">€{Number(item.price).toFixed(2)}</td>
-                            <td className="p-3 text-end font-mono font-bold text-slate-900 dark:text-white">
+                            <td className="p-2.5 sm:p-3 text-center font-bold text-slate-900 dark:text-white whitespace-nowrap">{item.quantity}x</td>
+                            <td className="p-2.5 sm:p-3 text-end font-mono text-slate-600 dark:text-gray-300 whitespace-nowrap">€{Number(item.price).toFixed(2)}</td>
+                            <td className="p-2.5 sm:p-3 text-end font-mono font-bold text-slate-900 dark:text-white whitespace-nowrap">
                               €{Number(item.subtotal || item.price * item.quantity).toFixed(2)}
                             </td>
                           </tr>
@@ -1123,18 +1126,18 @@ export const CustomerAccount = () => {
                     </tbody>
                     <tfoot>
                       <tr className="border-t border-slate-200 dark:border-gray-800 bg-slate-50/60 dark:bg-gray-950/40">
-                        <td colSpan="3" className="p-3 text-end font-medium text-slate-500">
+                        <td colSpan="3" className="p-2.5 sm:p-3 text-end font-medium text-slate-500">
                           {isAr ? 'رسوم التوصيل للمنزل:' : 'Lieferkosten (Haustür):'}
                         </td>
-                        <td className="p-3 text-end font-bold text-emerald-600">
+                        <td className="p-2.5 sm:p-3 text-end font-bold text-emerald-600 whitespace-nowrap">
                           {isAr ? 'مجاناً (0.00 €)' : 'Kostenlos (0,00 €)'}
                         </td>
                       </tr>
                       <tr className="border-t-2 border-slate-200 dark:border-gray-700 bg-slate-100/80 dark:bg-gray-800/80">
-                        <td colSpan="3" className="p-3 text-end font-extrabold text-sm text-slate-900 dark:text-white">
+                        <td colSpan="3" className="p-2.5 sm:p-3 text-end font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white">
                           {isAr ? 'المجموع الإجمالي عند الاستلام:' : 'Gesamtbetrag bei Lieferung:'}
                         </td>
-                        <td className="p-3 text-end font-mono font-black text-base text-emerald-600 dark:text-emerald-400">
+                        <td className="p-2.5 sm:p-3 text-end font-mono font-black text-sm sm:text-base text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                           €{Number(reportOrder.totalAmount).toFixed(2)}
                         </td>
                       </tr>
@@ -1150,11 +1153,11 @@ export const CustomerAccount = () => {
               </div>
 
               {/* Modal Footer */}
-              <div className="mt-6 pt-4 border-t border-slate-100 dark:border-gray-800 flex justify-end">
+              <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-slate-100 dark:border-gray-800 flex justify-end">
                 <button
                   type="button"
                   onClick={() => setShowReportModal(false)}
-                  className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-slate-700 dark:text-gray-300 font-bold text-xs transition cursor-pointer"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-slate-700 dark:text-gray-300 font-bold text-xs transition cursor-pointer touch-manipulation"
                 >
                   {isAr ? 'إغلاق' : 'Schließen'}
                 </button>

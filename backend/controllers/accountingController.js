@@ -1,4 +1,5 @@
 const prisma = require('../lib/prisma');
+const { CUSTOMER_PUBLIC_SELECT } = require('../utils/serialize');
 
 const getAccountingSummary = async (req, res) => {
   try {
@@ -19,7 +20,7 @@ const getAccountingSummary = async (req, res) => {
         ...dateFilter
       },
       include: {
-        customer: true
+        customer: { select: CUSTOMER_PUBLIC_SELECT }
       },
       orderBy: {
         createdAt: 'desc'
@@ -117,7 +118,7 @@ const getAccountingRecords = async (req, res) => {
     const orders = await prisma.order.findMany({
       where,
       include: {
-        customer: true
+        customer: { select: CUSTOMER_PUBLIC_SELECT }
       },
       orderBy: {
         createdAt: 'desc'
@@ -171,7 +172,7 @@ const exportAccountingData = async (req, res) => {
         ...dateFilter
       },
       include: {
-        customer: true
+        customer: { select: CUSTOMER_PUBLIC_SELECT }
       },
       orderBy: {
         createdAt: 'desc'

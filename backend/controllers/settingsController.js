@@ -20,17 +20,38 @@ const DEFAULT_SETTINGS = {
   showGoogleReviews: true
 };
 
+// Fields safe to expose on the public settings endpoint.
+// Excludes googleApiKey, googlePlaceId and trustindexWidgetCode.
+const PUBLIC_SETTINGS_SELECT = {
+  id: true,
+  storeName: true,
+  storeNameDe: true,
+  storeNameAr: true,
+  logoUrl: true,
+  phone: true,
+  email: true,
+  address: true,
+  mapUrl: true,
+  mapEmbedUrl: true,
+  googleReviewsUrl: true,
+  googleRating: true,
+  googleReviewCount: true,
+  showGoogleReviews: true
+};
+
 // GET /api/settings - Public
 const getSettings = async (req, res) => {
   try {
     let settings = await prisma.storeSettings.findUnique({
-      where: { id: 'default' }
+      where: { id: 'default' },
+      select: PUBLIC_SETTINGS_SELECT
     });
 
     if (!settings) {
-      settings = await prisma.storeSettings.create({
+      const created = await prisma.storeSettings.create({
         data: DEFAULT_SETTINGS
       });
+      settings = Object.fromEntries(Object.keys(PUBLIC_SETTINGS_SELECT).map((key) => [key, created[key]]));
     }
 
     res.json(settings);

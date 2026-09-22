@@ -23,7 +23,7 @@ import { ThemeToggle } from './ThemeToggle';
 export const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout } = useAuth();
-  const { t, language } = useLanguage();
+  const { t, language, direction } = useLanguage();
   const { settings, getStoreName } = useStoreSettings();
   const location = useLocation();
 
@@ -131,7 +131,7 @@ export const Layout = () => {
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-opacity"
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 lg:hidden transition-opacity"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -139,8 +139,8 @@ export const Layout = () => {
       {/* Mobile Drawer */}
       <div 
         className={`
-          fixed inset-y-0 start-0 z-50 w-72 max-w-[85vw] transform transition-transform duration-300 ease-in-out lg:hidden
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full'}
+          fixed inset-y-0 start-0 z-50 w-72 max-w-[85vw] transform transition-transform duration-300 ease-in-out lg:hidden shadow-2xl
+          ${sidebarOpen ? 'translate-x-0' : (direction === 'rtl' ? 'translate-x-full' : '-translate-x-full')}
         `}
       >
         {navContent}
@@ -154,24 +154,24 @@ export const Layout = () => {
       {/* Main Content Flow */}
       <div className="flex-1 min-w-0 flex flex-col min-h-screen">
         {/* Top Header */}
-        <header className="bg-white/80 dark:bg-gray-950/80 backdrop-blur border-b border-slate-200/80 dark:border-gray-850 sticky top-0 z-30 transition-colors duration-200">
-          <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 gap-4">
-            <div className="flex items-center gap-3">
+        <header className="bg-white/85 dark:bg-gray-950/85 backdrop-blur-md border-b border-slate-200/80 dark:border-gray-850 sticky top-0 z-30 transition-colors duration-200">
+          <div className="flex items-center justify-between px-3.5 sm:px-6 py-2.5 sm:py-3.5 gap-2 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <button
                 type="button"
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 rounded-lg text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-gray-850"
+                className="lg:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-gray-850 shrink-0 touch-manipulation"
                 aria-label="Open sidebar menu"
               >
-                <Menu className="w-6 h-6" />
+                <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white truncate">
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white truncate">
                 {navigation.find(item => item.href === location.pathname)?.name || t('dashboard')}
               </h2>
             </div>
             
             {/* Controls: Language Selector & Theme Toggle */}
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
               <LanguageSelector />
               <ThemeToggle />
             </div>
@@ -179,7 +179,7 @@ export const Layout = () => {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+        <main className="flex-1 p-3.5 sm:p-6 lg:p-8 overflow-y-auto">
           <div className="max-w-7xl mx-auto">
             <Outlet />
           </div>

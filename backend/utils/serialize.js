@@ -1,5 +1,20 @@
 const toNumber = (value) => (value == null ? value : Number(value));
 
+// Fields safe to expose to admin UI when including a customer relation.
+// Excludes password, emailOtp and phoneOtp.
+const CUSTOMER_PUBLIC_SELECT = {
+  id: true,
+  name: true,
+  email: true,
+  phone: true,
+  street: true,
+  houseNumber: true,
+  postalCode: true,
+  city: true,
+  floorApartment: true,
+  preferredLanguage: true
+};
+
 const serializeProduct = (product) => {
   if (!product) return product;
   return {
@@ -38,6 +53,7 @@ const serializeAccounting = (record) => {
 
 module.exports = {
   toNumber,
+  CUSTOMER_PUBLIC_SELECT,
   serializeProduct,
   serializeOrder,
   serializeAccounting

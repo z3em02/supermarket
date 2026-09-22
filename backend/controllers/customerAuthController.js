@@ -2,8 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../lib/prisma');
 const { sendCustomerVerificationEmail } = require('../utils/emailService');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'b2b-supermarket-secret-key-2024-change-in-production';
+const { JWT_SECRET } = require('../lib/config');
 
 // Helper to generate 6-digit numeric OTP code
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
@@ -88,11 +87,13 @@ const register = async (req, res) => {
       console.error('Failed to send verification email on register:', err.message);
     }
 
-    console.log(`\n==============================================`);
-    console.log(`📱 NEW CUSTOMER REGISTERED: ${customer.name}`);
-    console.log(`✉️ Email OTP for ${customer.email}: [ ${emailOtp} ]`);
-    console.log(`📲 Phone OTP for ${customer.phone}: [ ${phoneOtp} ]`);
-    console.log(`==============================================\n`);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`\n==============================================`);
+      console.log(`📱 NEW CUSTOMER REGISTERED: ${customer.name}`);
+      console.log(`✉️ Email OTP for ${customer.email}: [ ${emailOtp} ]`);
+      console.log(`📲 Phone OTP for ${customer.phone}: [ ${phoneOtp} ]`);
+      console.log(`==============================================\n`);
+    }
 
     // Create a temporary JWT for immediate verification flow
     const token = jwt.sign(
@@ -120,11 +121,13 @@ const register = async (req, res) => {
         deliveryNotes: customer.deliveryNotes,
         preferredLanguage: customer.preferredLanguage
       },
-      // Expose OTP in development to make instant testing simple
-      devOtp: {
-        emailOtp,
-        phoneOtp
-      }
+      // Expose OTP in non-production environments only
+      ...(process.env.NODE_ENV !== 'production' ? {
+        devOtp: {
+          emailOtp,
+          phoneOtp
+        }
+      } : {})
     });
   } catch (error) {
     console.error('Customer register error:', error);
@@ -268,8 +271,13 @@ const resendOtp = async (req, res) => {
         }
       });
       await sendCustomerVerificationEmail(customer.email, customer.name, newCode, customer.preferredLanguage);
-      console.log(`✉️ RESENT Email OTP for ${customer.email}: [ ${newCode} ]`);
-      return res.json({ message: 'New email verification code sent', devOtp: newCode });
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`✉️ RESENT Email OTP for ${customer.email}: [ ${newCode} ]`);
+      }
+      return res.json({ 
+        message: 'New email verification code sent', 
+        ...(process.env.NODE_ENV !== 'production' ? { devOtp: newCode } : {}) 
+      });
     } else {
       await prisma.customer.update({
         where: { id: customer.id },
@@ -278,8 +286,13 @@ const resendOtp = async (req, res) => {
           phoneOtpExpiry: expiry
         }
       });
-      console.log(`📲 RESENT Phone OTP for ${customer.phone}: [ ${newCode} ]`);
-      return res.json({ message: 'New phone verification code sent', devOtp: newCode });
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`📲 RESENT Phone OTP for ${customer.phone}: [ ${newCode} ]`);
+      }
+      return res.json({ 
+        message: 'New phone verification code sent', 
+        ...(process.env.NODE_ENV !== 'production' ? { devOtp: newCode } : {}) 
+      });
     }
   } catch (error) {
     console.error('Resend OTP error:', error);
@@ -455,7 +468,9 @@ const updateProfile = async (req, res) => {
       updateData.phoneVerified = false;
       updateData.phoneOtp = generateOTP();
       updateData.phoneOtpExpiry = new Date(Date.now() + 15 * 60 * 1000);
-      console.log(`📲 NEW Phone OTP for ${updateData.phone}: [ ${updateData.phoneOtp} ]`);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`📲 NEW Phone OTP for ${updateData.phone}: [ ${updateData.phoneOtp} ]`);
+      }
     }
 
     // Password change
@@ -491,10 +506,12 @@ const updateProfile = async (req, res) => {
       customer: updated,
       reverifyEmail: updateData.email !== undefined,
       reverifyPhone: updateData.phone !== undefined,
-      devOtp: {
-        emailOtp: updateData.emailOtp,
-        phoneOtp: updateData.phoneOtp
-      }
+      ...(process.env.NODE_ENV !== 'production' ? {
+        devOtp: {
+          emailOtp: updateData.emailOtp,
+          phoneOtp: updateData.phoneOtp
+        }
+      } : {})
     });
   } catch (error) {
     console.error('Update profile error:', error);

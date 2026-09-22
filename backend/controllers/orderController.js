@@ -1,15 +1,16 @@
 const prisma = require('../lib/prisma');
-const { 
-  sendCustomerOrderConfirmationEmail, 
+const {
+  sendCustomerOrderConfirmationEmail,
   sendOrderStatusEmail,
   sendOrderModificationEmail
 } = require('../utils/emailService');
+const { CUSTOMER_PUBLIC_SELECT } = require('../utils/serialize');
 
 const getOrders = async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
       include: {
-        customer: true,
+        customer: { select: CUSTOMER_PUBLIC_SELECT },
         orderItems: {
           include: {
             product: true
@@ -36,7 +37,7 @@ const getOrderById = async (req, res) => {
     const order = await prisma.order.findUnique({
       where: { id },
       include: {
-        customer: true,
+        customer: { select: CUSTOMER_PUBLIC_SELECT },
         orderItems: {
           include: {
             product: true
@@ -153,7 +154,7 @@ const createOrder = async (req, res) => {
         }
       },
       include: {
-        customer: true,
+        customer: { select: CUSTOMER_PUBLIC_SELECT },
         orderItems: {
           include: {
             product: true
@@ -191,7 +192,7 @@ const updateOrderStatus = async (req, res) => {
     const order = await prisma.order.findUnique({
       where: { id },
       include: {
-        customer: true,
+        customer: { select: CUSTOMER_PUBLIC_SELECT },
         orderItems: {
           include: {
             product: true
@@ -311,7 +312,7 @@ const updateOrderStatus = async (req, res) => {
     const updatedOrder = await prisma.order.findUnique({
       where: { id },
       include: {
-        customer: true,
+        customer: { select: CUSTOMER_PUBLIC_SELECT },
         orderItems: {
           include: {
             product: true
@@ -433,7 +434,7 @@ const editOrder = async (req, res) => {
     const order = await prisma.order.findUnique({
       where: { id },
       include: {
-        customer: true,
+        customer: { select: CUSTOMER_PUBLIC_SELECT },
         orderItems: {
           include: { product: true }
         },
@@ -579,7 +580,7 @@ const editOrder = async (req, res) => {
     const updatedOrder = await prisma.order.findUnique({
       where: { id },
       include: {
-        customer: true,
+        customer: { select: CUSTOMER_PUBLIC_SELECT },
         orderItems: {
           include: { product: true }
         },
@@ -629,7 +630,7 @@ const customerRespondToModification = async (req, res) => {
     const order = await prisma.order.findUnique({
       where: { id },
       include: {
-        customer: true,
+        customer: { select: CUSTOMER_PUBLIC_SELECT },
         orderItems: {
           include: { product: true }
         },
@@ -696,7 +697,7 @@ const customerRespondToModification = async (req, res) => {
       const updatedOrder = await prisma.order.findUnique({
         where: { id },
         include: {
-          customer: true,
+          customer: { select: CUSTOMER_PUBLIC_SELECT },
           orderItems: { include: { product: true } },
           accounting: true
         }
@@ -756,7 +757,7 @@ const customerRespondToModification = async (req, res) => {
       const updatedOrder = await prisma.order.findUnique({
         where: { id },
         include: {
-          customer: true,
+          customer: { select: CUSTOMER_PUBLIC_SELECT },
           orderItems: { include: { product: true } },
           accounting: true
         }

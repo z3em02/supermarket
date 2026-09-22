@@ -1,8 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../lib/prisma');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'b2b-supermarket-secret-key-2024-change-in-production';
+const { JWT_SECRET } = require('../lib/config');
 
 const login = async (req, res) => {
   try {

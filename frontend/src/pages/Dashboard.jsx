@@ -105,43 +105,43 @@ export const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-blue-600 to-indigo-700 dark:from-gray-900 dark:via-blue-950/40 dark:to-gray-900 dark:border dark:border-blue-900/30 text-white rounded-2xl p-6 sm:p-8 shadow-lg shadow-blue-500/10 dark:shadow-none">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-blue-600 to-indigo-700 dark:from-gray-900 dark:via-blue-950/40 dark:to-gray-900 dark:border dark:border-blue-900/30 text-white rounded-2xl p-5 sm:p-8 shadow-lg shadow-blue-500/10 dark:shadow-none">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+          <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight">
             {t('dashboardOverview')}
           </h1>
-          <p className="text-blue-100 dark:text-slate-300 mt-1.5 text-sm sm:text-base">
+          <p className="text-blue-100 dark:text-slate-300 mt-1 text-xs sm:text-base">
             {t('welcomeMessage')}
           </p>
         </div>
-        <div className="flex items-center gap-2 self-start sm:self-auto bg-white/15 dark:bg-blue-950/70 dark:border dark:border-blue-800/60 backdrop-blur px-4 py-2 rounded-xl text-xs sm:text-sm font-medium">
-          <Sparkles className="w-4 h-4 text-amber-300" />
+        <div className="flex items-center gap-2 self-start sm:self-auto bg-white/15 dark:bg-blue-950/70 dark:border dark:border-blue-800/60 backdrop-blur px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium">
+          <Sparkles className="w-4 h-4 text-amber-300 shrink-0" />
           <span>Home Delivery Operations</span>
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-5">
         {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
             <div 
               key={stat.title} 
-              className={`bg-white dark:bg-gray-900 rounded-2xl p-5 border ${stat.borderColor} shadow-xs hover:shadow-md dark:hover:border-gray-700 transition-all duration-200`}
+              className={`bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-5 border ${stat.borderColor} shadow-xs hover:shadow-md dark:hover:border-gray-700 transition-all duration-200`}
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
                     {stat.title}
                   </p>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1.5">
+                  <p className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-1 truncate">
                     {stat.value}
                   </p>
                 </div>
-                <div className={`p-3 rounded-2xl ${stat.color}`}>
-                  <Icon className="w-6 h-6" />
+                <div className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl ${stat.color} shrink-0`}>
+                  <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
               </div>
             </div>
@@ -150,11 +150,11 @@ export const Dashboard = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-slate-200/80 dark:border-gray-850 shadow-xs">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-xs">
+        <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white mb-3 sm:mb-4">
           {t('quickActions')}
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <button
             onClick={() => navigate('/')}
             className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-gray-800 hover:border-blue-500 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/30 group transition"

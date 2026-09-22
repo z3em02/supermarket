@@ -44,6 +44,9 @@ model Product {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   orderItems    OrderItem[]
+
+  @@index([categoryId])
+  @@index([stock])
 }
 
 model Customer {
@@ -90,6 +93,10 @@ model Order {
   updatedAt           DateTime    @updatedAt
   orderItems          OrderItem[]
   accounting          Accounting?
+
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model OrderItem {
@@ -101,6 +108,9 @@ model OrderItem {
   quantity  Int
   price     Float
   subtotal  Float
+
+  @@index([orderId])
+  @@index([productId])
 }
 
 model Accounting {
@@ -113,6 +123,9 @@ model Accounting {
   transactionDate DateTime @default(now())
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  @@index([status])
+  @@index([transactionDate])
 }
 
 model StoreSettings {

@@ -120,17 +120,17 @@ export const CustomerCartDrawer = ({
     <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/60 backdrop-blur-xs transition-opacity animate-fadeIn">
       {/* Drawer Container */}
       <div 
-        className="w-full max-w-lg bg-white dark:bg-gray-900 h-full shadow-2xl flex flex-col justify-between overflow-hidden border-s border-slate-200 dark:border-gray-800"
+        className="w-full sm:max-w-md md:max-w-lg bg-white dark:bg-gray-900 h-full shadow-2xl flex flex-col justify-between overflow-hidden border-s border-slate-200 dark:border-gray-800"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drawer Header */}
-        <div className="px-6 py-5 border-b border-slate-100 dark:border-gray-800 flex items-center justify-between bg-slate-50/50 dark:bg-gray-950/50">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200 dark:border-emerald-900/40">
-              <Truck className="w-5 h-5" />
+        <div className="px-4 sm:px-6 py-3.5 sm:py-5 border-b border-slate-100 dark:border-gray-800 flex items-center justify-between bg-slate-50/50 dark:bg-gray-950/50 shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200 dark:border-emerald-900/40 shrink-0">
+              <Truck className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
-              <h2 className="font-extrabold text-slate-900 dark:text-white text-base">
+              <h2 className="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">
                 {isAr ? 'سلة التوصيل المنزلي' : 'Liefer-Warenkorb'}
               </h2>
               <span className="text-xs text-slate-500 dark:text-gray-400">
@@ -139,12 +139,12 @@ export const CustomerCartDrawer = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {cart.length > 0 && !placedOrder && (
               <button
                 type="button"
                 onClick={clearCart}
-                className="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
+                className="p-1.5 sm:p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer touch-manipulation"
                 title={isAr ? 'تفريغ السلة' : 'Warenkorb leeren'}
               >
                 <Trash2 className="w-4 h-4" />
@@ -153,7 +153,7 @@ export const CustomerCartDrawer = ({
             <button
               type="button"
               onClick={onClose}
-              className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-gray-800 transition cursor-pointer"
+              className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-gray-800 transition cursor-pointer touch-manipulation"
             >
               <X className="w-5 h-5" />
             </button>
@@ -161,7 +161,7 @@ export const CustomerCartDrawer = ({
         </div>
 
         {/* Drawer Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
 
           {/* If an Order was successfully placed */}
           {placedOrder ? (
@@ -172,7 +172,7 @@ export const CustomerCartDrawer = ({
 
               <div>
                 <h3 className="text-xl font-black text-slate-900 dark:text-white">
-                  {isAr ? 'تم استلام طلبك بنجاح! 🎉' : 'Bestellung erfolgreich eingegangen! 🎉'}
+                  {isAr ? 'تم استلام طلبك بنجاح' : 'Bestellung erfolgreich eingegangen!'}
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-gray-400 mt-1 max-w-sm mx-auto leading-relaxed">
                   {isAr 
@@ -434,7 +434,7 @@ export const CustomerCartDrawer = ({
           <div className="p-6 border-t border-slate-100 dark:border-gray-800 bg-slate-50/50 dark:bg-gray-950/50 space-y-3">
             <div className="flex items-center justify-between text-xs text-slate-500 dark:text-gray-400">
               <span>{isAr ? 'رسوم التوصيل' : 'Liefergebühr'}</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">{isAr ? 'مجاناً 🎁' : 'Kostenlos 🎁'}</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">{isAr ? 'مجاناً' : 'Kostenlos'}</span>
             </div>
 
             <div className="flex items-center justify-between text-base font-extrabold text-slate-900 dark:text-white">

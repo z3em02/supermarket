@@ -218,40 +218,40 @@ export const Products = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
             {t('products')}
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1">
             {t('manageCatalog')}
           </p>
         </div>
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
           <Link
             to="/secret/admin/catalogs"
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-slate-50 dark:hover:bg-gray-850 text-slate-700 dark:text-slate-200 text-sm font-medium shadow-2xs transition"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-slate-50 dark:hover:bg-gray-850 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-medium shadow-2xs transition touch-manipulation"
           >
-            <Layers className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <Layers className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
             <span>{t('catalogs')}</span>
           </Link>
 
           <Link
             to="/"
-            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-slate-50 dark:hover:bg-gray-850 text-slate-700 dark:text-slate-200 text-sm font-medium shadow-2xs transition"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-slate-50 dark:hover:bg-gray-850 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-medium shadow-2xs transition touch-manipulation"
           >
-            <Store className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <Store className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
             <span>{t('viewCatalog')}</span>
-            <ArrowUpRight className="w-3.5 h-3.5 text-slate-400" />
+            <ArrowUpRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
           </Link>
 
           <button
             onClick={handleOpenAddModal}
-            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl shadow-sm transition"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 sm:py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs sm:text-sm rounded-xl shadow-sm transition touch-manipulation cursor-pointer"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
             <span>{t('addProduct')}</span>
           </button>
         </div>
@@ -260,11 +260,11 @@ export const Products = () => {
       {/* Filter Tabs & Search Bar */}
       <div className="space-y-3">
         {/* Low Stock vs All Filter Tabs */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => setStockTab('all')}
-            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition ${
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold transition touch-manipulation cursor-pointer ${
               stockTab === 'all'
                 ? 'bg-blue-600 text-white shadow-sm'
                 : 'bg-white dark:bg-gray-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-gray-800 hover:bg-slate-50 dark:hover:bg-gray-850'
@@ -275,13 +275,13 @@ export const Products = () => {
           <button
             type="button"
             onClick={() => setStockTab('low')}
-            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition ${
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition touch-manipulation cursor-pointer ${
               stockTab === 'low'
                 ? 'bg-amber-600 text-white shadow-sm'
                 : 'bg-white dark:bg-gray-900 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/50 hover:bg-amber-50 dark:hover:bg-amber-950/20'
             }`}
           >
-            <AlertTriangle className="w-4 h-4" />
+            <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>{t('lowStockFilter')}</span>
             <span className="px-1.5 py-0.2 rounded-full text-xs font-bold bg-white/20 dark:bg-amber-900/40">
               {lowStockProductsCount}
@@ -290,20 +290,20 @@ export const Products = () => {
         </div>
 
         {/* Search & Category Dropdown */}
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
           <div className="relative flex-1">
-            <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+            <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 sm:w-5 sm:h-5" />
             <input
               type="text"
               placeholder={`${t('searchProducts')} (DE / AR / SKU)...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full ps-11 pe-4 py-3 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+              className="w-full ps-10 sm:ps-11 pe-4 py-2.5 sm:py-3 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
-                className="absolute end-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                className="absolute end-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 touch-manipulation cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -313,7 +313,7 @@ export const Products = () => {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-4 py-3 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 text-sm transition"
+              className="px-3 sm:px-4 py-2.5 sm:py-3 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm transition"
             >
               <option value="all" className="dark:bg-gray-900 dark:text-white">{t('allCategories')}</option>
               {categories.map((c) => (
@@ -327,7 +327,7 @@ export const Products = () => {
       </div>
 
       {/* Products Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
         {filteredProducts.map((product) => (
           <div 
             key={product.id} 
@@ -519,10 +519,10 @@ export const Products = () => {
 
       {/* Add / Edit Product Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 sm:p-7 w-full max-w-xl max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-gray-800 shadow-2xl">
-            <div className="flex items-center justify-between pb-4 mb-5 border-b border-slate-100 dark:border-gray-800">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-3 sm:p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-7 w-full max-w-xl max-h-[90dvh] overflow-y-auto border border-slate-200 dark:border-gray-800 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 sm:pb-4 mb-4 sm:mb-5 border-b border-slate-100 dark:border-gray-800">
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <Package className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 <span>{editingProduct ? t('editProduct') : t('addProduct')}</span>
               </h2>
@@ -701,17 +701,17 @@ export const Products = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-gray-800">
+              <div className="flex flex-col-reverse xs:flex-row items-center justify-end gap-2 sm:gap-3 pt-4 border-t border-slate-100 dark:border-gray-800">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-xl transition"
+                  className="w-full xs:w-auto px-4 py-2.5 text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-xl transition touch-manipulation cursor-pointer text-center"
                 >
                   {t('cancel')}
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl shadow-sm transition"
+                  className="w-full xs:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium rounded-xl shadow-sm transition touch-manipulation cursor-pointer text-center"
                 >
                   {editingProduct ? t('update') : t('create')}
                 </button>

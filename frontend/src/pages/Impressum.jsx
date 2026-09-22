@@ -32,56 +32,56 @@ export const Impressum = () => {
       
       {/* Top Header */}
       <header className="sticky top-0 z-40 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-gray-800 shadow-2xs">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-3 group">
+        <div className="max-w-5xl mx-auto px-3 xs:px-4 sm:px-6 lg:px-8 h-14 sm:h-20 flex items-center justify-between gap-2 sm:gap-4">
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 group min-w-0">
             {settings?.logoUrl ? (
               <img
                 src={settings.logoUrl}
                 alt={storeName}
-                className="w-10 h-10 object-contain rounded-xl bg-slate-50 dark:bg-gray-850 p-1 border border-slate-200 dark:border-gray-750"
+                className="w-8 h-8 sm:w-10 sm:h-10 object-contain rounded-xl bg-slate-50 dark:bg-gray-850 p-1 border border-slate-200 dark:border-gray-750 shrink-0"
               />
             ) : (
-              <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md">
-                <Store className="w-5 h-5" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shrink-0">
+                <Store className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
             )}
-            <div>
-              <span className="text-base font-black text-slate-900 dark:text-white block leading-tight">
+            <div className="min-w-0">
+              <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white block leading-tight truncate max-w-[120px] xs:max-w-[180px] sm:max-w-none">
                 {storeName}
               </span>
-              <span className="text-[11px] text-blue-600 dark:text-blue-400 font-semibold block">
+              <span className="text-[10px] sm:text-[11px] text-blue-600 dark:text-blue-400 font-semibold block truncate">
                 {language === 'ar' ? 'سوبرماركت وتوصيل منزلي' : 'Supermarkt & Lieferservice'}
               </span>
             </div>
           </Link>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             <ThemeToggle />
             <LanguageSelector />
             <Link
               to="/"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-gray-800 text-slate-700 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-gray-750 text-xs font-bold transition"
+              className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-gray-800 text-slate-700 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-gray-750 text-xs font-bold transition touch-manipulation"
             >
-              {direction === 'rtl' ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
-              <span>{t('backToHome')}</span>
+              {direction === 'rtl' ? <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+              <span className="hidden xs:inline">{t('backToHome')}</span>
             </Link>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 space-y-8">
+      <main className="max-w-4xl mx-auto px-3 xs:px-4 sm:px-6 lg:px-8 py-6 sm:py-14 space-y-6 sm:space-y-8">
         
         {/* Title */}
-        <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200/60 dark:border-blue-800 text-blue-700 dark:text-blue-400 text-xs font-bold uppercase tracking-wider">
-            <Scale className="w-3.5 h-3.5" />
+        <div className="text-center space-y-2.5 sm:space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200/60 dark:border-blue-800 text-blue-700 dark:text-blue-400 text-[11px] sm:text-xs font-bold uppercase tracking-wider">
+            <Scale className="w-3.5 h-3.5 shrink-0" />
             <span>{language === 'ar' ? 'الإشعار القانوني وحقوق النشر (النمسا)' : 'Rechtliche Hinweise & Impressum (Österreich)'}</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-2xl xs:text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
             {t('impressum')}
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
             {language === 'ar' 
               ? 'معلومات قانونية وفقاً لقانون التجارة الإلكترونية النمساوي (§ 5 ECG) وقانون الشركات وقانون الإعلام'
               : 'Informationspflicht laut § 5 E-Commerce Gesetz (ECG), § 14 Unternehmensgesetzbuch (UGB) und § 25 Mediengesetz (MedienG)'}
@@ -93,7 +93,7 @@ export const Impressum = () => {
           <div className="space-y-6 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
             
             {/* Box 1: Store & Operator */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-4">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-4">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <Building2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 <span>بيانات صاحب النشاط والمسؤول عن النشر</span>
@@ -119,7 +119,7 @@ export const Impressum = () => {
             </div>
 
             {/* Box 2: Contact Details */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-4">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-4">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <Phone className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 <span>بيانات التواصل المباشر</span>
@@ -137,7 +137,7 @@ export const Impressum = () => {
             </div>
 
             {/* Box 3: Chamber & Authority */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                 <span>الغرفة التجارية والهيئة الرقابية المختصة</span>
@@ -150,7 +150,7 @@ export const Impressum = () => {
             </div>
 
             {/* Box 4: Copyright */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <Copyright className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                 <span>حقوق الطبع والنشر والملكية الفكرية (Copyright)</span>
@@ -164,7 +164,7 @@ export const Impressum = () => {
             </div>
 
             {/* Box 5: Liability Disclaimer */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <FileText className="w-5 h-5 text-rose-600 dark:text-rose-400" />
                 <span>إخلاء المسؤولية عن المحتوى والروابط الخارجية</span>
@@ -180,7 +180,7 @@ export const Impressum = () => {
           <div className="space-y-6 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
             
             {/* Box 1: Diensteanbieter */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-4">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-4">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <Building2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 <span>Diensteanbieter & Medieninhaber</span>
@@ -206,7 +206,7 @@ export const Impressum = () => {
             </div>
 
             {/* Box 2: Kontakt */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-4">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-4">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <Phone className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 <span>Kontaktdaten</span>
@@ -224,7 +224,7 @@ export const Impressum = () => {
             </div>
 
             {/* Box 3: Kammer & Behörde */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                 <span>Kammerzugehörigkeit & Gewerbebehörde</span>
@@ -237,7 +237,7 @@ export const Impressum = () => {
             </div>
 
             {/* Box 4: Urheberrecht (Copyright) */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <Copyright className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                 <span>Urheberrechtshinweis (Copyright)</span>
@@ -251,7 +251,7 @@ export const Impressum = () => {
             </div>
 
             {/* Box 5: Haftung für Inhalte & Links */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <FileText className="w-5 h-5 text-rose-600 dark:text-rose-400" />
                 <span>Haftung für Inhalte und externe Links</span>
@@ -265,7 +265,7 @@ export const Impressum = () => {
             </div>
 
             {/* Box 6: Streitbeilegung */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <Scale className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 <span>EU-Streitschlichtung</span>

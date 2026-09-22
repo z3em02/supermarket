@@ -29,7 +29,9 @@ import {
   AlertTriangle,
   Minus,
   PlusCircle,
-  RotateCcw
+  RotateCcw,
+  Phone,
+  Mail
 } from 'lucide-react';
 
 export const parseOrderNotes = (adminNotes, language) => {
@@ -719,165 +721,165 @@ export const Orders = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
             {t('orders')}
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1">
             {t('manageTrack')}
           </p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl shadow-sm transition"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 sm:py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs sm:text-sm rounded-xl shadow-sm transition touch-manipulation cursor-pointer"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
           <span>{t('createOrder')}</span>
         </button>
       </div>
 
       {/* Admin Quick Metric Summary Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5">
+      <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-2.5">
         <button
           type="button"
           onClick={() => setStatusFilter('all')}
-          className={`p-3 rounded-xl border text-start transition ${
+          className={`p-2.5 sm:p-3 rounded-xl border text-start transition touch-manipulation cursor-pointer ${
             statusFilter === 'all'
               ? 'bg-blue-50 dark:bg-blue-950/50 border-blue-400 dark:border-blue-700/80 text-blue-900 dark:text-blue-200 shadow-2xs'
               : 'bg-white dark:bg-gray-900 border-slate-200/80 dark:border-gray-850 hover:border-blue-300 dark:hover:border-gray-700'
           }`}
         >
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+          <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 block truncate">
             {t('all')}
           </span>
-          <span className="text-xl font-bold text-slate-900 dark:text-white">{metrics.total}</span>
+          <span className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">{metrics.total}</span>
         </button>
 
         <button
           type="button"
           onClick={() => setStatusFilter('pending')}
-          className={`p-3 rounded-xl border text-start transition ${
+          className={`p-2.5 sm:p-3 rounded-xl border text-start transition touch-manipulation cursor-pointer ${
             statusFilter === 'pending'
               ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-400 dark:border-amber-700/80 text-amber-900 dark:text-amber-200 shadow-2xs'
               : 'bg-white dark:bg-gray-900 border-slate-200/80 dark:border-gray-850 hover:border-amber-300 dark:hover:border-gray-700'
           }`}
         >
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400 block">
+          <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400 block truncate">
             {t('pending')}
           </span>
-          <span className="text-xl font-bold text-slate-900 dark:text-white">{metrics.pending}</span>
+          <span className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">{metrics.pending}</span>
         </button>
 
         <button
           type="button"
           onClick={() => setStatusFilter('pending_customer_approval')}
-          className={`p-3 rounded-xl border text-start transition ${
+          className={`p-2.5 sm:p-3 rounded-xl border text-start transition touch-manipulation cursor-pointer ${
             statusFilter === 'pending_customer_approval'
               ? 'bg-amber-100 dark:bg-amber-950 border-amber-500 text-amber-950 dark:text-amber-200 shadow-2xs'
               : 'bg-white dark:bg-gray-900 border-slate-200/80 dark:border-gray-850 hover:border-amber-400 dark:hover:border-gray-700'
           }`}
         >
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400 block">
+          <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400 block truncate">
             {language === 'ar' ? 'بانتظار العميل' : 'Wartet auf Kunde'}
           </span>
-          <span className="text-xl font-bold text-slate-900 dark:text-white">{metrics.pending_customer_approval}</span>
+          <span className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">{metrics.pending_customer_approval}</span>
         </button>
 
         <button
           type="button"
           onClick={() => setStatusFilter('accepted')}
-          className={`p-3 rounded-xl border text-start transition ${
+          className={`p-2.5 sm:p-3 rounded-xl border text-start transition touch-manipulation cursor-pointer ${
             statusFilter === 'accepted'
               ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-400 dark:border-emerald-700/80 text-emerald-900 dark:text-emerald-200 shadow-2xs'
               : 'bg-white dark:bg-gray-900 border-slate-200/80 dark:border-gray-850 hover:border-emerald-300 dark:hover:border-gray-700'
           }`}
         >
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block">
+          <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block truncate">
             {t('accepted')}
           </span>
-          <span className="text-xl font-bold text-slate-900 dark:text-white">{metrics.accepted}</span>
+          <span className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">{metrics.accepted}</span>
         </button>
 
         <button
           type="button"
           onClick={() => setStatusFilter('preparing')}
-          className={`p-3 rounded-xl border text-start transition ${
+          className={`p-2.5 sm:p-3 rounded-xl border text-start transition touch-manipulation cursor-pointer ${
             statusFilter === 'preparing'
               ? 'bg-indigo-50 dark:bg-indigo-950/50 border-indigo-400 dark:border-indigo-700/80 text-indigo-900 dark:text-indigo-200 shadow-2xs'
               : 'bg-white dark:bg-gray-900 border-slate-200/80 dark:border-gray-850 hover:border-indigo-300 dark:hover:border-gray-700'
           }`}
         >
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 block">
+          <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 block truncate">
             {t('preparing')}
           </span>
-          <span className="text-xl font-bold text-slate-900 dark:text-white">{metrics.preparing}</span>
+          <span className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">{metrics.preparing}</span>
         </button>
 
         <button
           type="button"
           onClick={() => setStatusFilter('shipped')}
-          className={`p-3 rounded-xl border text-start transition ${
+          className={`p-2.5 sm:p-3 rounded-xl border text-start transition touch-manipulation cursor-pointer ${
             statusFilter === 'shipped'
               ? 'bg-blue-50 dark:bg-blue-950/50 border-blue-400 dark:border-blue-700/80 text-blue-900 dark:text-blue-200 shadow-2xs'
               : 'bg-white dark:bg-gray-900 border-slate-200/80 dark:border-gray-850 hover:border-blue-300 dark:hover:border-gray-700'
           }`}
         >
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400 block">
+          <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400 block truncate">
             {t('shipped')}
           </span>
-          <span className="text-xl font-bold text-slate-900 dark:text-white">{metrics.shipped}</span>
+          <span className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">{metrics.shipped}</span>
         </button>
 
         <button
           type="button"
           onClick={() => setStatusFilter('delivered')}
-          className={`p-3 rounded-xl border text-start transition ${
+          className={`p-2.5 sm:p-3 rounded-xl border text-start transition touch-manipulation cursor-pointer ${
             statusFilter === 'delivered'
               ? 'bg-purple-50 dark:bg-purple-950/50 border-purple-400 dark:border-purple-700/80 text-purple-900 dark:text-purple-200 shadow-2xs'
               : 'bg-white dark:bg-gray-900 border-slate-200/80 dark:border-gray-850 hover:border-purple-300 dark:hover:border-gray-700'
           }`}
         >
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-purple-600 dark:text-purple-400 block">
+          <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-purple-600 dark:text-purple-400 block truncate">
             {t('delivered')}
           </span>
-          <span className="text-xl font-bold text-slate-900 dark:text-white">{metrics.delivered}</span>
+          <span className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">{metrics.delivered}</span>
         </button>
 
         <button
           type="button"
           onClick={() => setStatusFilter('declined')}
-          className={`p-3 rounded-xl border text-start transition ${
+          className={`p-2.5 sm:p-3 rounded-xl border text-start transition touch-manipulation cursor-pointer ${
             statusFilter === 'declined'
               ? 'bg-rose-50 dark:bg-rose-950/50 border-rose-400 dark:border-rose-700/80 text-rose-900 dark:text-rose-200 shadow-2xs'
               : 'bg-white dark:bg-gray-900 border-slate-200/80 dark:border-gray-850 hover:border-rose-300 dark:hover:border-gray-700'
           }`}
         >
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-rose-600 dark:text-rose-400 block">
+          <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-rose-600 dark:text-rose-400 block truncate">
             {t('declined')}
           </span>
-          <span className="text-xl font-bold text-slate-900 dark:text-white">{metrics.declined}</span>
+          <span className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">{metrics.declined}</span>
         </button>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
         <div className="relative flex-1">
-          <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+          <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 sm:w-5 sm:h-5" />
           <input
             type="text"
             placeholder={t('searchOrders')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full ps-11 pe-4 py-3 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+            className="w-full ps-10 sm:ps-11 pe-4 py-2.5 sm:py-3 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-3 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 text-sm transition"
+          className="px-3 sm:px-4 py-2.5 sm:py-3 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm transition"
         >
           <option value="all" className="dark:bg-gray-900 dark:text-white">{t('allStatus')}</option>
           <option value="pending" className="dark:bg-gray-900 dark:text-white">{t('pending')}</option>
@@ -960,9 +962,10 @@ export const Orders = () => {
                       {(order.customerPhone || order.customer?.phone) && (
                         <a
                           href={`tel:${order.customerPhone || order.customer?.phone}`}
-                          className="font-mono text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 font-bold"
+                          className="font-mono text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 font-bold inline-flex items-center gap-1"
                         >
-                          📞 {order.customerPhone || order.customer?.phone}
+                          <Phone className="w-3 h-3 text-slate-400" />
+                          <span>{order.customerPhone || order.customer?.phone}</span>
                         </a>
                       )}
                     </div>
@@ -998,7 +1001,7 @@ export const Orders = () => {
                         <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
                         <div>
                           <span className="font-bold block">
-                            {language === 'ar' ? '⚠️ تعديل مقترح (بانتظار موافقة العميل)' : '⚠️ Anpassung vorgeschlagen (Wartet auf Bestätigung)'}
+                            {language === 'ar' ? 'تعديل مقترح (بانتظار موافقة العميل)' : 'Anpassung vorgeschlagen (Wartet auf Bestätigung)'}
                           </span>
                           {order.modificationReason && (
                             <span className="text-[11px] text-amber-800 dark:text-amber-300 italic block mt-0.5">
@@ -1093,12 +1096,12 @@ export const Orders = () => {
               </div>
 
               {/* ── 4. Clean, Grouped Action Footer ── */}
-              <div className="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-2.5 bg-slate-50/80 dark:bg-gray-950/50 border-t border-slate-100 dark:border-gray-850">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-3.5 sm:px-5 py-2.5 bg-slate-50/80 dark:bg-gray-950/50 border-t border-slate-100 dark:border-gray-850">
                 {/* Left: Utilities */}
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <button
                     onClick={() => handleViewDetails(order)}
-                    className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-850 text-slate-700 dark:text-slate-300 font-semibold text-xs transition cursor-pointer"
+                    className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-850 text-slate-700 dark:text-slate-300 font-semibold text-xs transition cursor-pointer touch-manipulation"
                   >
                     {t('viewDetails')}
                   </button>
@@ -1106,7 +1109,7 @@ export const Orders = () => {
                   <button
                     onClick={() => handleOpenPrintModal(order)}
                     title={t('printInvoice')}
-                    className="p-1.5 rounded-lg border border-slate-200 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-850 text-slate-500 dark:text-slate-400 transition cursor-pointer"
+                    className="p-1.5 rounded-lg border border-slate-200 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-850 text-slate-500 dark:text-slate-400 transition cursor-pointer touch-manipulation"
                   >
                     <Printer className="w-3.5 h-3.5" />
                   </button>
@@ -1114,7 +1117,7 @@ export const Orders = () => {
                   {currentStatus !== 'delivered' && currentStatus !== 'declined' && currentStatus !== 'cancelled' && (
                     <button
                       onClick={() => handleOpenEditModal(order)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800/80 transition cursor-pointer"
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800/80 transition cursor-pointer touch-manipulation"
                     >
                       <Edit className="w-3 h-3" />
                       <span>{language === 'ar' ? 'تعديل الطلب' : 'Auftrag bearbeiten'}</span>
@@ -1123,7 +1126,7 @@ export const Orders = () => {
 
                   <button
                     onClick={() => openStatusModal(order, order.status)}
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-gray-700 transition cursor-pointer"
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-gray-700 transition cursor-pointer touch-manipulation"
                   >
                     <SlidersHorizontal className="w-3 h-3" />
                     <span>{t('changeStatus')}</span>
@@ -1131,49 +1134,51 @@ export const Orders = () => {
                 </div>
 
                 {/* Right: Primary Step Workflow Button + Delete */}
-                <div className="flex items-center gap-1.5">
-                  {currentStatus === 'pending' && (
-                    <>
+                <div className="flex items-center justify-between sm:justify-end gap-1.5 flex-wrap pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-200/60 dark:border-gray-800">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {currentStatus === 'pending' && (
+                      <>
+                        <button onClick={() => handleQuickStatusChange(order.id, 'accepted')} disabled={updating}
+                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs transition shadow-2xs cursor-pointer touch-manipulation">
+                          {t('accept')}
+                        </button>
+                        <button onClick={() => openStatusModal(order, 'declined')} disabled={updating}
+                          className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/50 rounded-lg font-bold text-xs transition cursor-pointer touch-manipulation">
+                          {t('decline')}
+                        </button>
+                      </>
+                    )}
+                    {currentStatus === 'accepted' && (
+                      <button onClick={() => handleQuickStatusChange(order.id, 'preparing')} disabled={updating}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold text-xs transition shadow-2xs cursor-pointer touch-manipulation">
+                        <Clock className="w-3 h-3" />
+                        <span>{t('preparing')}</span>
+                      </button>
+                    )}
+                    {currentStatus === 'preparing' && (
+                      <button onClick={() => handleQuickStatusChange(order.id, 'shipped')} disabled={updating}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-xs transition shadow-2xs cursor-pointer touch-manipulation">
+                        <Truck className="w-3 h-3" />
+                        <span>{t('markShipped')}</span>
+                      </button>
+                    )}
+                    {currentStatus === 'shipped' && (
+                      <button onClick={() => handleQuickStatusChange(order.id, 'delivered')} disabled={updating}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs transition shadow-2xs cursor-pointer touch-manipulation">
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span>{t('markDelivered')}</span>
+                      </button>
+                    )}
+                    {currentStatus === 'declined' && (
                       <button onClick={() => handleQuickStatusChange(order.id, 'accepted')} disabled={updating}
-                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs transition shadow-2xs cursor-pointer">
+                        className="px-3 py-1.5 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 rounded-lg font-bold text-xs transition cursor-pointer touch-manipulation">
                         {t('accept')}
                       </button>
-                      <button onClick={() => openStatusModal(order, 'declined')} disabled={updating}
-                        className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/50 rounded-lg font-bold text-xs transition cursor-pointer">
-                        {t('decline')}
-                      </button>
-                    </>
-                  )}
-                  {currentStatus === 'accepted' && (
-                    <button onClick={() => handleQuickStatusChange(order.id, 'preparing')} disabled={updating}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold text-xs transition shadow-2xs cursor-pointer">
-                      <Clock className="w-3 h-3" />
-                      <span>{t('preparing')}</span>
-                    </button>
-                  )}
-                  {currentStatus === 'preparing' && (
-                    <button onClick={() => handleQuickStatusChange(order.id, 'shipped')} disabled={updating}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-xs transition shadow-2xs cursor-pointer">
-                      <Truck className="w-3 h-3" />
-                      <span>{t('markShipped')}</span>
-                    </button>
-                  )}
-                  {currentStatus === 'shipped' && (
-                    <button onClick={() => handleQuickStatusChange(order.id, 'delivered')} disabled={updating}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs transition shadow-2xs cursor-pointer">
-                      <CheckCircle2 className="w-3 h-3" />
-                      <span>{t('markDelivered')}</span>
-                    </button>
-                  )}
-                  {currentStatus === 'declined' && (
-                    <button onClick={() => handleQuickStatusChange(order.id, 'accepted')} disabled={updating}
-                      className="px-3 py-1.5 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 rounded-lg font-bold text-xs transition cursor-pointer">
-                      {t('accept')}
-                    </button>
-                  )}
+                    )}
+                  </div>
 
                   <button onClick={() => handleDeleteOrder(order.id)} title={t('delete')}
-                    className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition cursor-pointer">
+                    className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition cursor-pointer touch-manipulation ms-auto sm:ms-0">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -1299,17 +1304,17 @@ export const Orders = () => {
 
       {/* Order Detail Modal */}
       {showDetailModal && selectedOrder && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 sm:p-7 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-gray-800 shadow-2xl">
-            <div className="flex items-center justify-between pb-4 mb-5 border-b border-slate-100 dark:border-gray-800">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-7 w-full max-w-2xl max-h-[90dvh] overflow-y-auto border border-slate-200 dark:border-gray-800 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 sm:pb-4 mb-4 sm:mb-5 border-b border-slate-100 dark:border-gray-800">
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
                   {t('orderDetails')}
                 </h2>
                 <button
                   type="button"
                   onClick={() => handleOpenPrintModal(selectedOrder)}
-                  className="p-1.5 rounded-xl border border-slate-200 dark:border-gray-800 hover:bg-slate-50 dark:hover:bg-gray-850 text-slate-600 dark:text-slate-300 transition"
+                  className="p-1.5 rounded-xl border border-slate-200 dark:border-gray-800 hover:bg-slate-50 dark:hover:bg-gray-850 text-slate-600 dark:text-slate-300 transition cursor-pointer touch-manipulation"
                   title={t('printInvoice')}
                 >
                   <Printer className="w-4 h-4" />
@@ -1317,15 +1322,15 @@ export const Orders = () => {
               </div>
               <button
                 onClick={() => setShowDetailModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-gray-800"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-gray-800 cursor-pointer touch-manipulation"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-5 sm:space-y-6">
               {/* Order Info Cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-xl bg-slate-50 dark:bg-gray-950/60 border border-slate-100 dark:border-gray-800">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 sm:p-4 rounded-xl bg-slate-50 dark:bg-gray-950/60 border border-slate-100 dark:border-gray-800">
                 <div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('orderId')}</p>
                   <p className="font-mono text-sm font-semibold text-slate-900 dark:text-white truncate">
@@ -1339,7 +1344,7 @@ export const Orders = () => {
                     const ModalStatusIcon = modalBadge.icon;
                     return (
                       <div
-                      className={`appearance-none ps-7 pe-6 py-1 rounded-full text-xs font-bold border shadow-2xs cursor-pointer outline-none transition capitalize ${modalBadge.classes}`}
+                      className={`appearance-none ps-6 pe-5 sm:ps-7 sm:pe-6 py-1 rounded-full text-xs font-bold border shadow-2xs outline-none transition capitalize truncate ${modalBadge.classes}`}
                       >
 {['rejected', 'decline', 'declined'].includes(selectedOrder.status?.toLowerCase()) ? 'declined' : selectedOrder.status?.toLowerCase()}
                       </div>
@@ -1364,24 +1369,33 @@ export const Orders = () => {
 
               {/* Home Delivery Information Box */}
               {(selectedOrder.deliveryAddress || selectedOrder.customer || selectedOrder.orderType === 'home_delivery') && (
-                <div className="p-4 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-850 text-xs space-y-1.5">
+                <div className="p-3.5 sm:p-4 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-850 text-xs space-y-1.5">
                   <div className="flex items-center gap-2 font-bold text-emerald-800 dark:text-emerald-300">
-                    <Truck className="w-4 h-4" />
+                    <Truck className="w-4 h-4 shrink-0" />
                     <span>{language === 'ar' ? 'بيانات التوصيل المنزلي (الدفع عند الاستلام)' : 'Hauszustellung (Zahlung an der Haustür)'}</span>
                   </div>
                   <div>
                     <span className="font-semibold text-slate-500 dark:text-gray-400">{language === 'ar' ? 'عنوان التوصيل:' : 'Lieferadresse:'} </span>
-                    <span className="font-bold text-slate-800 dark:text-gray-200">{selectedOrder.deliveryAddress || '—'}</span>
+                    <span className="font-bold text-slate-800 dark:text-gray-200 break-words">{selectedOrder.deliveryAddress || '—'}</span>
                   </div>
-                  <div className="flex flex-wrap gap-4 text-slate-600 dark:text-gray-300 pt-1">
+                  <div className="flex flex-wrap gap-3 sm:gap-4 text-slate-600 dark:text-gray-300 pt-1">
                     {(selectedOrder.customerPhone || selectedOrder.customer?.phone) && (
-                      <span className="font-mono">📞 {selectedOrder.customerPhone || selectedOrder.customer?.phone}</span>
+                      <span className="font-mono inline-flex items-center gap-1.5">
+                        <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span>{selectedOrder.customerPhone || selectedOrder.customer?.phone}</span>
+                      </span>
                     )}
                     {(selectedOrder.customerEmail || selectedOrder.customer?.email) && (
-                      <span>✉️ {selectedOrder.customerEmail || selectedOrder.customer?.email}</span>
+                      <span className="break-all inline-flex items-center gap-1.5">
+                        <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span>{selectedOrder.customerEmail || selectedOrder.customer?.email}</span>
+                      </span>
                     )}
                     {selectedOrder.deliveryNotes && (
-                      <span className="italic">📝 {selectedOrder.deliveryNotes}</span>
+                      <span className="italic break-words inline-flex items-center gap-1.5">
+                        <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span>{selectedOrder.deliveryNotes}</span>
+                      </span>
                     )}
                   </div>
                 </div>
@@ -1389,32 +1403,32 @@ export const Orders = () => {
 
               {/* Order Items Table */}
               <div>
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-2.5 sm:mb-3">
                   {t('orderItems')}
                 </h4>
                 <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-gray-800">
-                  <table className="w-full text-sm text-left rtl:text-right">
-                    <thead className="bg-slate-100 dark:bg-gray-850 text-xs uppercase text-slate-600 dark:text-slate-400">
+                  <table className="w-full text-xs sm:text-sm text-left rtl:text-right min-w-[320px]">
+                    <thead className="bg-slate-100 dark:bg-gray-850 text-[11px] sm:text-xs uppercase text-slate-600 dark:text-slate-400">
                       <tr>
-                        <th className="px-4 py-3">{t('product')}</th>
-                        <th className="px-4 py-3 text-center">{t('quantity')}</th>
-                        <th className="px-4 py-3 text-end">{t('price')}</th>
-                        <th className="px-4 py-3 text-end">{t('subtotal')}</th>
+                        <th className="px-3 sm:px-4 py-2.5 sm:py-3">{t('product')}</th>
+                        <th className="px-3 sm:px-4 py-2.5 sm:py-3 text-center">{t('quantity')}</th>
+                        <th className="px-3 sm:px-4 py-2.5 sm:py-3 text-end">{t('price')}</th>
+                        <th className="px-3 sm:px-4 py-2.5 sm:py-3 text-end">{t('subtotal')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-gray-800">
                       {(selectedOrder.orderItems || []).map((item) => (
                         <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-gray-800/40">
-                          <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">
+                          <td className="px-3 sm:px-4 py-2.5 sm:py-3 font-medium text-slate-900 dark:text-white">
                             {((language === 'ar' ? item.product?.nameAr : item.product?.nameDe) || item.product?.name || item.productId)}
                           </td>
-                          <td className="px-4 py-3 text-center text-slate-700 dark:text-slate-300">
+                          <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-center text-slate-700 dark:text-slate-300">
                             {item.quantity}
                           </td>
-                          <td className="px-4 py-3 text-end text-slate-700 dark:text-slate-300">
+                          <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-end text-slate-700 dark:text-slate-300 font-mono">
                             €{Number(item.price).toFixed(2)}
                           </td>
-                          <td className="px-4 py-3 text-end font-semibold text-slate-900 dark:text-white">
+                          <td className="px-3 sm:px-4 py-2.5 sm:py-3 text-end font-semibold text-slate-900 dark:text-white font-mono">
                             €{Number(item.subtotal).toFixed(2)}
                           </td>
                         </tr>
@@ -1463,44 +1477,46 @@ export const Orders = () => {
               {selectedOrder.notes && (
                 <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-gray-950/60 border border-slate-100 dark:border-gray-800 text-xs text-slate-600 dark:text-slate-300">
                   <p className="font-bold text-slate-700 dark:text-slate-200 mb-1">{t('customerNotes')}:</p>
-                  <p>{selectedOrder.notes}</p>
+                  <p className="break-words">{selectedOrder.notes}</p>
                 </div>
               )}
 
               {/* Modal Actions */}
-              <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-100 dark:border-gray-800">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const orderToEdit = selectedOrder;
-                    setShowDetailModal(false);
-                    openStatusModal(orderToEdit, orderToEdit.status);
-                  }}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 dark:text-blue-300 border border-blue-200/80 dark:border-blue-900/50 transition shadow-2xs"
-                  title={t('alwaysChangeStatusHint')}
-                >
-                  <SlidersHorizontal className="w-4 h-4" />
-                  <span>{t('changeStatus')} & {t('adminNotes')}</span>
-                </button>
-                {selectedOrder.status !== 'delivered' && selectedOrder.status !== 'declined' && selectedOrder.status !== 'cancelled' && (
+              <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 pt-4 border-t border-slate-100 dark:border-gray-800">
+                <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
                     onClick={() => {
                       const orderToEdit = selectedOrder;
                       setShowDetailModal(false);
-                      handleOpenEditModal(orderToEdit);
+                      openStatusModal(orderToEdit, orderToEdit.status);
                     }}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800/80 transition"
+                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 dark:text-blue-300 border border-blue-200/80 dark:border-blue-900/50 transition shadow-2xs touch-manipulation cursor-pointer flex-1 sm:flex-none"
+                    title={t('alwaysChangeStatusHint')}
                   >
-                    <Edit className="w-4 h-4" />
-                    <span>{language === 'ar' ? 'تعديل المنتجات' : 'Bestellung anpassen'}</span>
+                    <SlidersHorizontal className="w-4 h-4" />
+                    <span>{t('changeStatus')} & {t('adminNotes')}</span>
                   </button>
-                )}
+                  {selectedOrder.status !== 'delivered' && selectedOrder.status !== 'declined' && selectedOrder.status !== 'cancelled' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const orderToEdit = selectedOrder;
+                        setShowDetailModal(false);
+                        handleOpenEditModal(orderToEdit);
+                      }}
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800/80 transition touch-manipulation cursor-pointer flex-1 sm:flex-none"
+                    >
+                      <Edit className="w-4 h-4" />
+                      <span>{language === 'ar' ? 'تعديل المنتجات' : 'Bestellung anpassen'}</span>
+                    </button>
+                  )}
+                </div>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => handleOpenPrintModal(selectedOrder)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium border border-slate-200 dark:border-gray-800 hover:bg-slate-50 dark:hover:bg-gray-850 text-slate-700 dark:text-slate-300 transition"
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium border border-slate-200 dark:border-gray-800 hover:bg-slate-50 dark:hover:bg-gray-850 text-slate-700 dark:text-slate-300 transition touch-manipulation cursor-pointer flex-1 sm:flex-none"
                   >
                     <Printer className="w-4 h-4" />
                     <span>{t('printInvoice')}</span>
@@ -1508,7 +1524,7 @@ export const Orders = () => {
                   <button
                     type="button"
                     onClick={() => setShowDetailModal(false)}
-                    className="px-4 py-2 rounded-xl text-xs sm:text-sm font-medium bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-750 text-slate-800 dark:text-slate-200 transition"
+                    className="px-4 py-2 rounded-xl text-xs sm:text-sm font-medium bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-750 text-slate-800 dark:text-slate-200 transition touch-manipulation cursor-pointer flex-1 sm:flex-none"
                   >
                     {t('close')}
                   </button>
@@ -1521,16 +1537,16 @@ export const Orders = () => {
 
       {/* Printable Invoice / Packing Slip Modal */}
       {showPrintModal && printOrder && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-gray-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-gray-800 rounded-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl flex flex-col">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-gray-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-gray-800 rounded-2xl w-full max-w-2xl max-h-[92dvh] overflow-y-auto shadow-2xl flex flex-col">
             {/* Modal toolbar */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-gray-800 shrink-0">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 dark:border-gray-800 shrink-0">
+              <div className="flex items-center gap-2 sm:gap-2.5">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
                   <Printer className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 dark:text-white text-sm">{t('printInvoice')}</h3>
+                  <h3 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">{t('printInvoice')}</h3>
                   <p className="text-[11px] text-slate-400 dark:text-gray-500 font-mono">INV-{printOrder.id.slice(0,8).toUpperCase()}</p>
                 </div>
               </div>
@@ -1538,15 +1554,15 @@ export const Orders = () => {
                 <button
                   type="button"
                   onClick={() => printReceipt(printOrder)}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition"
+                  className="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition touch-manipulation cursor-pointer"
                 >
                   <Printer className="w-3.5 h-3.5" />
-                  {t('printInvoice')}
+                  <span className="hidden xs:inline">{t('printInvoice')}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowPrintModal(false)}
-                  className="p-2 rounded-xl border border-slate-200 dark:border-gray-800 hover:bg-slate-100 dark:hover:bg-gray-800 text-slate-500 dark:text-slate-400"
+                  className="p-2 rounded-xl border border-slate-200 dark:border-gray-800 hover:bg-slate-100 dark:hover:bg-gray-800 text-slate-500 dark:text-slate-400 touch-manipulation cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -1554,13 +1570,13 @@ export const Orders = () => {
             </div>
 
             {/* Receipt Preview */}
-            <div className="p-6 overflow-y-auto space-y-5">
+            <div className="p-4 sm:p-6 overflow-y-auto space-y-4 sm:space-y-5">
               {/* Header */}
-              <div className="flex items-start justify-between pb-5 border-b-2 border-blue-600 dark:border-blue-500">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-4 sm:pb-5 border-b-2 border-blue-600 dark:border-blue-500">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <Truck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                    <span className="font-black text-lg text-slate-900 dark:text-white tracking-tight">Supermarkt Lieferservice</span>
+                    <Truck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span className="font-black text-base sm:text-lg text-slate-900 dark:text-white tracking-tight">Supermarkt Lieferservice</span>
                   </div>
                   <p className="text-xs text-slate-500 dark:text-gray-400">Hauszustellung &amp; Frische Produkte</p>
                   <p className="text-xs text-slate-400 dark:text-gray-500 font-mono mt-1">
@@ -1581,24 +1597,24 @@ export const Orders = () => {
               </div>
 
               {/* Billing + Delivery */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-slate-50 dark:bg-gray-950/60 rounded-xl border border-slate-100 dark:border-gray-800 p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-gray-500 mb-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div className="bg-slate-50 dark:bg-gray-950/60 rounded-xl border border-slate-100 dark:border-gray-800 p-3.5 sm:p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-gray-500 mb-1.5 sm:mb-2">
                     {language === 'ar' ? 'بيانات العميل' : 'Kundeninformation'}
                   </p>
-                  <p className="text-sm font-bold text-slate-900 dark:text-white">{printOrder.customer?.name || printOrder.customerName || '—'}</p>
-                  {(printOrder.customer?.email || printOrder.customerEmail) && <p className="text-xs text-slate-500 dark:text-gray-400">{printOrder.customer?.email || printOrder.customerEmail}</p>}
-                  {(printOrder.customer?.phone || printOrder.customerPhone) && <p className="text-xs text-slate-500 dark:text-gray-400">📞 {printOrder.customer?.phone || printOrder.customerPhone}</p>}
+                  <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{printOrder.customer?.name || printOrder.customerName || '—'}</p>
+                  {(printOrder.customer?.email || printOrder.customerEmail) && <p className="text-xs text-slate-500 dark:text-gray-400 break-all">{printOrder.customer?.email || printOrder.customerEmail}</p>}
+                  {(printOrder.customer?.phone || printOrder.customerPhone) && <p className="text-xs text-slate-500 dark:text-gray-400 font-mono">Tel: {printOrder.customer?.phone || printOrder.customerPhone}</p>}
                 </div>
-                <div className="bg-slate-50 dark:bg-gray-950/60 rounded-xl border border-slate-100 dark:border-gray-800 p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-gray-500 mb-2">
+                <div className="bg-slate-50 dark:bg-gray-950/60 rounded-xl border border-slate-100 dark:border-gray-800 p-3.5 sm:p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-gray-500 mb-1.5 sm:mb-2">
                     {language === 'ar' ? 'عنوان التسليم' : 'Lieferadresse'}
                   </p>
-                  <p className="text-xs text-slate-600 dark:text-gray-300 leading-relaxed">
+                  <p className="text-xs text-slate-600 dark:text-gray-300 leading-relaxed break-words">
                     {printOrder.deliveryAddress || printOrder.customer?.address || '—'}
                   </p>
                   {printOrder.notes && (
-                    <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-2 italic">
+                    <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-2 italic break-words">
                       Hinweis: {printOrder.notes}
                     </p>
                   )}
@@ -1606,8 +1622,8 @@ export const Orders = () => {
               </div>
 
               {/* Items Table */}
-              <div className="rounded-xl border border-slate-200 dark:border-gray-800 overflow-hidden">
-                <table className="w-full text-xs" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+              <div className="rounded-xl border border-slate-200 dark:border-gray-800 overflow-x-auto">
+                <table className="w-full text-xs min-w-[340px]" dir={language === 'ar' ? 'rtl' : 'ltr'}>
                   <thead>
                     <tr className="bg-blue-900 dark:bg-blue-950 text-white">
                       <th className="px-3 py-3 text-start font-semibold">{language === 'ar' ? 'المنتج' : 'Artikel'}</th>
@@ -1675,22 +1691,21 @@ export const Orders = () => {
 
       {/* Create Order Modal */}
       {showCreateModal && (
-
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 sm:p-7 w-full max-w-xl max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-gray-800 shadow-2xl">
-            <div className="flex items-center justify-between pb-4 mb-5 border-b border-slate-100 dark:border-gray-800">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-7 w-full max-w-xl max-h-[90dvh] overflow-y-auto border border-slate-200 dark:border-gray-800 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 sm:pb-4 mb-4 sm:mb-5 border-b border-slate-100 dark:border-gray-800">
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
                 {t('createOrder')}
               </h2>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-gray-800"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-gray-800 cursor-pointer touch-manipulation"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateOrder} className="space-y-5">
+            <form onSubmit={handleCreateOrder} className="space-y-4 sm:space-y-5">
               {/* Customer Selection */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
@@ -1710,7 +1725,7 @@ export const Orders = () => {
                       deliveryAddress: addr
                     });
                   }}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition text-sm cursor-pointer"
                 >
                   <option value="" className="dark:bg-gray-900 dark:text-white">-- {language === 'ar' ? 'اختر العميل' : 'Kunde auswählen'} --</option>
                   {customers.map((c) => (
@@ -1722,7 +1737,7 @@ export const Orders = () => {
               </div>
 
               {/* Delivery Address & Phone Fields */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                     {language === 'ar' ? 'رقم الهاتف' : 'Telefonnummer'} *
@@ -1763,7 +1778,7 @@ export const Orders = () => {
                       ...orderForm,
                       items: [...orderForm.items, { productId: '', quantity: 1 }]
                     })}
-                    className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                    className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer touch-manipulation"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>{t('addItem')}</span>
@@ -1772,7 +1787,7 @@ export const Orders = () => {
 
                 <div className="space-y-3">
                   {orderForm.items.map((item, index) => (
-                    <div key={index} className="flex items-center gap-3">
+                    <div key={index} className="flex items-center gap-2 sm:gap-3">
                       <select
                         required
                         value={item.productId}
@@ -1781,7 +1796,7 @@ export const Orders = () => {
                           nextItems[index].productId = e.target.value;
                           setOrderForm({ ...orderForm, items: nextItems });
                         }}
-                        className="flex-1 px-3 py-2 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex-1 min-w-0 px-2.5 sm:px-3 py-2 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="" className="dark:bg-gray-900 dark:text-white">-- {t('selectProduct')} --</option>
                         {products.map((p) => (
@@ -1801,7 +1816,7 @@ export const Orders = () => {
                           nextItems[index].quantity = Math.max(1, parseInt(e.target.value, 10) || 1);
                           setOrderForm({ ...orderForm, items: nextItems });
                         }}
-                        className="w-20 px-3 py-2 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 text-center font-semibold"
+                        className="w-16 sm:w-20 px-2 sm:px-3 py-2 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 text-center font-semibold shrink-0"
                       />
 
                       {orderForm.items.length > 1 && (
@@ -1811,7 +1826,7 @@ export const Orders = () => {
                             const nextItems = orderForm.items.filter((_, i) => i !== index);
                             setOrderForm({ ...orderForm, items: nextItems });
                           }}
-                          className="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-slate-100 dark:hover:bg-gray-800 transition"
+                          className="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-slate-100 dark:hover:bg-gray-800 transition shrink-0 cursor-pointer touch-manipulation"
                           title={t('remove')}
                         >
                           <Trash2 className="w-4 h-4" />
@@ -1836,17 +1851,17 @@ export const Orders = () => {
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-gray-800">
+              <div className="flex items-center justify-end gap-2.5 sm:gap-3 pt-3 sm:pt-4 border-t border-slate-100 dark:border-gray-800">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-xl transition"
+                  className="px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-xl transition cursor-pointer touch-manipulation"
                 >
                   {t('cancel')}
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl shadow-sm transition"
+                  className="px-5 py-2 sm:py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium rounded-xl shadow-sm transition cursor-pointer touch-manipulation"
                 >
                   {t('create')}
                 </button>
@@ -1857,13 +1872,13 @@ export const Orders = () => {
       )}
       {/* ── Edit Order Modal (Unavailable items & customer approval) ── */}
       {showEditModal && editingOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
-          <div className="relative w-full max-w-3xl bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-gray-800 p-6 sm:p-7 my-8 animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
+          <div className="relative w-full max-w-3xl bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-gray-800 p-4 sm:p-7 my-4 sm:my-8 max-h-[90dvh] overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
             {/* Modal Header */}
-            <div className="flex items-start justify-between pb-4 border-b border-slate-100 dark:border-gray-800 mb-5">
+            <div className="flex items-start justify-between pb-3 sm:pb-4 border-b border-slate-100 dark:border-gray-800 mb-4 sm:mb-5">
               <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <Edit className="w-5 h-5 text-amber-600" />
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Edit className="w-4 sm:w-5 h-4 sm:h-5 text-amber-600 shrink-0" />
                   <span>{language === 'ar' ? 'تعديل المنتجات بالطلب (غير متوفرة بالمخزن)' : 'Bestellung anpassen (Artikel nicht vorrätig)'}</span>
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
@@ -1873,7 +1888,7 @@ export const Orders = () => {
               <button
                 type="button"
                 onClick={() => setShowEditModal(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-gray-800 transition"
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-gray-800 transition cursor-pointer touch-manipulation"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1968,8 +1983,9 @@ export const Orders = () => {
                 {/* Menu Header / Toggle Button */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
-                    <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
-                      {language === 'ar' ? '➕ إضافة منتج بديل أو عنصر إضافي:' : '➕ Ersatzprodukt oder weiteren Artikel hinzufügen:'}
+                    <label className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                      <Plus className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                      <span>{language === 'ar' ? 'إضافة منتج بديل أو عنصر إضافي:' : 'Ersatzprodukt oder weiteren Artikel hinzufügen:'}</span>
                     </label>
                     <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-0.5">
                       {language === 'ar'
@@ -2061,7 +2077,7 @@ export const Orders = () => {
                           className="w-full px-2.5 py-1.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                         >
                           <option value="all">
-                            📂 {language === 'ar' ? 'جميع الفئات' : 'Alle Kategorien'} ({products.length})
+                            {language === 'ar' ? 'جميع الفئات' : 'Alle Kategorien'} ({products.length})
                           </option>
                           {pickerCategories.map((c) => (
                             <option key={c.id} value={c.id}>
@@ -2078,10 +2094,10 @@ export const Orders = () => {
                           onChange={(e) => setPickerStockFilter(e.target.value)}
                           className="w-full px-2.5 py-1.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                         >
-                          <option value="all">📦 {language === 'ar' ? 'جميع المخازن' : 'Alle Bestände'}</option>
-                          <option value="in_stock">🟢 {language === 'ar' ? 'متوفر بالمخزن فقط (> 0)' : 'Nur vorrätig (> 0)'}</option>
-                          <option value="low_stock">🟡 {language === 'ar' ? 'مخزون منخفض (≤ 5)' : 'Geringer Bestand (≤ 5)'}</option>
-                          <option value="out_of_stock">🔴 {language === 'ar' ? 'غير متوفر (0)' : 'Ausverkauft (0)'}</option>
+                          <option value="all">{language === 'ar' ? 'جميع المخازن' : 'Alle Bestände'}</option>
+                          <option value="in_stock">{language === 'ar' ? 'متوفر بالمخزن فقط (> 0)' : 'Nur vorrätig (> 0)'}</option>
+                          <option value="low_stock">{language === 'ar' ? 'مخزون منخفض (≤ 5)' : 'Geringer Bestand (≤ 5)'}</option>
+                          <option value="out_of_stock">{language === 'ar' ? 'غير متوفر (0)' : 'Ausverkauft (0)'}</option>
                         </select>
                       </div>
 
@@ -2092,12 +2108,12 @@ export const Orders = () => {
                           onChange={(e) => setPickerSort(e.target.value)}
                           className="w-full px-2.5 py-1.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                         >
-                          <option value="default">⚡ {language === 'ar' ? 'الترتيب: الافتراضي' : 'Sortierung: Standard'}</option>
-                          <option value="name_asc">🔤 {language === 'ar' ? 'الاسم (أ – ي)' : 'Name (A → Z)'}</option>
-                          <option value="name_desc">🔤 {language === 'ar' ? 'الاسم (ي – أ)' : 'Name (Z → A)'}</option>
-                          <option value="price_asc">💶 {language === 'ar' ? 'السعر (الأقل أولاً)' : 'Preis (aufsteigend)'}</option>
-                          <option value="price_desc">💶 {language === 'ar' ? 'السعر (الأعلى أولاً)' : 'Preis (absteigend)'}</option>
-                          <option value="stock_desc">📊 {language === 'ar' ? 'الأعلى مخزوناً' : 'Höchster Lagerbestand'}</option>
+                          <option value="default">{language === 'ar' ? 'الترتيب: الافتراضي' : 'Sortierung: Standard'}</option>
+                          <option value="name_asc">{language === 'ar' ? 'الاسم (أ – ي)' : 'Name (A → Z)'}</option>
+                          <option value="name_desc">{language === 'ar' ? 'الاسم (ي – أ)' : 'Name (Z → A)'}</option>
+                          <option value="price_asc">{language === 'ar' ? 'السعر (تصاعدي)' : 'Preis (aufsteigend)'}</option>
+                          <option value="price_desc">{language === 'ar' ? 'السعر (تنازلي)' : 'Preis (absteigend)'}</option>
+                          <option value="stock_desc">{language === 'ar' ? 'الأعلى مخزوناً' : 'Höchster Lagerbestand'}</option>
                         </select>
                       </div>
                     </div>
@@ -2320,18 +2336,18 @@ export const Orders = () => {
               })()}
 
               {/* Modal Actions */}
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-gray-800">
+              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3 pt-3 border-t border-slate-100 dark:border-gray-800">
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="px-4 py-2.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-xl transition"
+                  className="px-4 py-2.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-xl transition text-center cursor-pointer touch-manipulation"
                 >
                   {t('cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={savingEdit || editItems.length === 0}
-                  className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation"
                 >
                   {savingEdit ? '...' : (language === 'ar' ? 'حفظ التعديل وإرسال إشعار للعميل' : 'Änderung speichern & Bestätigung anfordern')}
                 </button>

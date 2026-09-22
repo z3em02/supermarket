@@ -35,16 +35,16 @@ export default function TrustindexWidget({
         </p>
 
         {/* Live Rating Pill */}
-        <div className="mt-6 inline-flex flex-wrap items-center justify-center gap-3 px-6 py-3 rounded-2xl bg-white dark:bg-gray-850 border border-slate-200 dark:border-gray-800 shadow-sm">
-          <div className="flex items-center gap-1">
+        <div className="mt-5 sm:mt-6 inline-flex flex-wrap items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl bg-white dark:bg-gray-850 border border-slate-200 dark:border-gray-800 shadow-sm max-w-full">
+          <div className="flex items-center gap-0.5 sm:gap-1">
             {[...Array(5)].map((_, i) => (
-              <Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />
+              <Star key={i} className="w-4 h-4 sm:w-5 sm:h-5 fill-amber-400 text-amber-400" />
             ))}
           </div>
-          <span className="text-lg font-black text-slate-900 dark:text-white">
+          <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
             {ratingNum ? ratingNum.toFixed(1) : '5.0'} / 5.0
           </span>
-          <span className="text-xs text-slate-400 dark:text-slate-500">•</span>
+          <span className="text-xs text-slate-400 dark:text-slate-500 hidden xs:inline">•</span>
           <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
             {countNum === 1
               ? (language === 'ar' ? 'تقييم حقيقي واحد' : '1 echte Bewertung')
@@ -55,7 +55,7 @@ export default function TrustindexWidget({
               href={settings.googleReviewsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="ms-2 inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 underline underline-offset-2"
+              className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 underline underline-offset-2"
             >
               <span>{t('writeGoogleReview')}</span>
               <ExternalLink className="w-3 h-3" />
@@ -66,7 +66,7 @@ export default function TrustindexWidget({
 
       {/* Review Cards Grid */}
       {reviews && reviews.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {reviews.map((review) => {
             const reviewText = language === 'ar'
               ? (review.textAr || review.text)
@@ -76,7 +76,7 @@ export default function TrustindexWidget({
             return (
               <div
                 key={review.id}
-                className="bg-white dark:bg-gray-850 rounded-3xl p-6 border border-slate-200/80 dark:border-gray-850 shadow-xs hover:shadow-md transition flex flex-col justify-between group"
+                className="bg-white dark:bg-gray-850 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-xs hover:shadow-md transition flex flex-col justify-between group"
               >
                 <div className="space-y-4">
                   {/* Author Row */}

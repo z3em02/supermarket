@@ -3,13 +3,14 @@ const router = express.Router();
 const customerAuthController = require('../controllers/customerAuthController');
 const { customerAuthMiddleware } = require('../middleware/customerAuth');
 const { authMiddleware } = require('../middleware/auth');
+const { authLimiter } = require('../middleware/rateLimiter');
 
-// Public customer auth & verification endpoints
-router.post('/register', customerAuthController.register);
-router.post('/verify-email', customerAuthController.verifyEmail);
-router.post('/verify-phone', customerAuthController.verifyPhone);
-router.post('/resend-otp', customerAuthController.resendOtp);
-router.post('/login', customerAuthController.login);
+// Public customer auth & verification endpoints (protected by authLimiter against brute-force)
+router.post('/register', authLimiter, customerAuthController.register);
+router.post('/verify-email', authLimiter, customerAuthController.verifyEmail);
+router.post('/verify-phone', authLimiter, customerAuthController.verifyPhone);
+router.post('/resend-otp', authLimiter, customerAuthController.resendOtp);
+router.post('/login', authLimiter, customerAuthController.login);
 
 // Protected customer profile endpoints
 router.get('/profile', customerAuthMiddleware, customerAuthController.getProfile);

@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'b2b-supermarket-secret-key-2024-change-in-production';
+const { JWT_SECRET } = require('../lib/config');
 
 const customerAuthMiddleware = (req, res, next) => {
   try {

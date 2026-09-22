@@ -42,10 +42,10 @@ app.use(express.urlencoded({ extended: true }));
 // Trust proxy for nginx
 app.set('trust proxy', 1);
 
-// Security warning for production JWT secret
-if (process.env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || process.env.JWT_SECRET.includes('change-this-in-production') || process.env.JWT_SECRET.includes('change-in-production'))) {
-  console.warn('⚠️  SECURITY WARNING: Using default or insecure JWT_SECRET in production! Please set a strong, random JWT_SECRET in your .env file.');
-}
+const { apiLimiter } = require('./middleware/rateLimiter');
+
+// Global API rate limiting
+app.use('/api', apiLimiter);
 
 // Routes
 app.use('/api/auth', authRoutes);

@@ -256,33 +256,33 @@ export const LandingPage = () => {
       
       {/* 1. Header / Navbar */}
       <header className="sticky top-0 z-40 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-gray-800 transition-colors shadow-2xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-20 flex items-center justify-between gap-2 sm:gap-4">
           
           {/* Logo & Brand */}
-          <Link to="/" className="flex items-center gap-3 group shrink-0">
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 group min-w-0">
             {settings?.logoUrl ? (
               <img
                 src={settings.logoUrl}
                 alt={getStoreName(language)}
-                className="w-10 h-10 sm:w-12 sm:h-12 object-contain rounded-xl bg-slate-50 dark:bg-gray-850 p-1 border border-slate-200 dark:border-gray-750 shadow-xs"
+                className="w-8 h-8 sm:w-11 sm:h-11 object-contain rounded-xl bg-slate-50 dark:bg-gray-850 p-1 border border-slate-200 dark:border-gray-750 shadow-xs shrink-0"
               />
             ) : (
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-700 flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform duration-200">
-                <Store className="w-5 h-5 sm:w-6 sm:h-6" />
+              <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-700 flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform duration-200 shrink-0">
+                <Store className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
             )}
-            <div>
-              <span className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white block leading-tight">
+            <div className="min-w-0">
+              <span className="text-sm sm:text-base md:text-lg font-black tracking-tight text-slate-900 dark:text-white block leading-tight truncate max-w-[130px] xs:max-w-[180px] sm:max-w-none">
                 {getStoreName(language) || 'Hajar Supermarkt'}
               </span>
-              <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 block">
+              <span className="text-[10px] sm:text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hidden xs:block truncate">
                 {language === 'ar' ? 'سوبرماركت وخدمة التوصيل المنزلي' : 'Supermarkt & Lieferservice'}
               </span>
             </div>
           </Link>
 
-          {/* Center Navigation Links (Desktop) */}
-          <nav className="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-600 dark:text-gray-300">
+          {/* Center Navigation Links (Desktop lg+) */}
+          <nav className="hidden lg:flex items-center gap-6 text-sm font-semibold text-slate-600 dark:text-gray-300">
             <a href="#catalog" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               {t('catalog')}
             </a>
@@ -295,100 +295,176 @@ export const LandingPage = () => {
           </nav>
 
           {/* Right Actions */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            <ThemeToggle />
-            <LanguageSelector />
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+            {/* Desktop / Tablet switches (hidden on phone, available inside mobile menu) */}
+            <div className="hidden sm:flex items-center gap-1.5 sm:gap-2">
+              <ThemeToggle />
+              <LanguageSelector />
+            </div>
 
-            {/* Cart Button */}
+            {/* Cart Button (Always visible on phone & desktop) */}
             <button
               type="button"
               onClick={() => setCartOpen(true)}
-              className="relative inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-sm shadow-emerald-600/20 transition cursor-pointer"
+              className="relative inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-sm shadow-emerald-600/20 transition cursor-pointer touch-manipulation shrink-0"
+              aria-label={language === 'ar' ? 'سلة المشتريات' : 'Warenkorb'}
             >
               <ShoppingCart className="w-4 h-4" />
-              <span className="hidden xs:inline">{language === 'ar' ? 'السلة' : 'Warenkorb'}</span>
+              <span className="hidden md:inline">{language === 'ar' ? 'السلة' : 'Warenkorb'}</span>
               {totalCartCount > 0 && (
-                <span className="w-5 h-5 rounded-full bg-white text-emerald-700 text-[11px] font-black flex items-center justify-center font-mono">
+                <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-white text-emerald-700 text-[10px] sm:text-[11px] font-black flex items-center justify-center font-mono">
                   {totalCartCount}
                 </span>
               )}
             </button>
 
-            {/* Customer Account / Login */}
-            {isCustomerLoggedIn ? (
-              <Link
-                to="/account"
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-750 text-slate-800 dark:text-gray-100 text-xs sm:text-sm font-bold transition"
-              >
-                <User className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <span className="hidden md:inline">{customer?.name || (language === 'ar' ? 'حسابي' : 'Mein Konto')}</span>
-              </Link>
-            ) : (
-              <div className="flex items-center gap-1.5">
+            {/* Desktop / Tablet Customer Auth */}
+            <div className="hidden sm:flex items-center">
+              {isCustomerLoggedIn ? (
                 <Link
-                  to="/customer/login"
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-750 text-slate-800 dark:text-gray-100 text-xs sm:text-sm font-bold transition"
+                  to="/account"
+                  className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-750 text-slate-800 dark:text-gray-100 text-xs sm:text-sm font-bold transition touch-manipulation"
                 >
-                  <LogIn className="w-4 h-4" />
-                  <span className="hidden sm:inline">{language === 'ar' ? 'دخول' : 'Anmelden'}</span>
+                  <User className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  <span className="hidden md:inline">{customer?.name || (language === 'ar' ? 'حسابي' : 'Mein Konto')}</span>
                 </Link>
-                <Link
-                  to="/customer/register"
-                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-850 text-xs sm:text-sm font-bold transition"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  <span>{language === 'ar' ? 'تسجيل' : 'Registrieren'}</span>
-                </Link>
-              </div>
-            )}
+              ) : (
+                <div className="flex items-center gap-1">
+                  <Link
+                    to="/customer/login"
+                    className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-750 text-slate-800 dark:text-gray-100 text-xs sm:text-sm font-bold transition touch-manipulation"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    <span className="hidden md:inline">{language === 'ar' ? 'دخول' : 'Anmelden'}</span>
+                  </Link>
+                  <Link
+                    to="/customer/register"
+                    className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-850 text-xs sm:text-sm font-bold transition"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    <span>{language === 'ar' ? 'تسجيل' : 'Registrieren'}</span>
+                  </Link>
+                </div>
+              )}
+            </div>
 
-            {/* Mobile Menu Trigger */}
+            {/* Mobile Menu Trigger (Phones & Tablets < lg) */}
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-xl text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-800"
+              className="lg:hidden p-2 rounded-xl text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-gray-800 border border-slate-200/80 dark:border-gray-800 touch-manipulation cursor-pointer transition shrink-0"
+              aria-label="Toggle navigation menu"
             >
-              <Menu className="w-5 h-5" />
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Dropdown Nav */}
+        {/* Mobile Dropdown Nav Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-3 space-y-2">
-            <a
-              href="#catalog"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block py-2 text-sm font-semibold text-slate-700 dark:text-gray-200 hover:text-blue-600"
-            >
-              {t('catalog')}
-            </a>
-            <a
-              href="#reviews"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block py-2 text-sm font-semibold text-slate-700 dark:text-gray-200 hover:text-blue-600"
-            >
-              {t('googleReviewsTitle') || 'Google Reviews'}
-            </a>
-            <a
-              href="#contact"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block py-2 text-sm font-semibold text-slate-700 dark:text-gray-200 hover:text-blue-600"
-            >
-              {t('contactAndLocation')}
-            </a>
+          <div className="lg:hidden border-t border-slate-200 dark:border-gray-800 bg-white/98 dark:bg-gray-900/98 backdrop-blur-lg px-4 py-4 space-y-3 shadow-xl animate-in slide-in-from-top-2 duration-150">
+            {/* Phone Controls: Language Selector & Theme Toggle */}
+            <div className="sm:hidden flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 dark:bg-gray-850 border border-slate-200/80 dark:border-gray-800">
+              <span className="text-xs font-bold text-slate-600 dark:text-gray-400">
+                {language === 'ar' ? 'اللغة والمظهر' : 'Sprache & Design'}
+              </span>
+              <div className="flex items-center gap-2">
+                <LanguageSelector />
+                <ThemeToggle />
+              </div>
+            </div>
+
+            {/* Customer Account / Auth Box */}
+            <div className="p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-900/60">
+              {isCustomerLoggedIn ? (
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-sm shadow-emerald-600/30">
+                      {customer?.name?.charAt(0)?.toUpperCase() || 'C'}
+                    </div>
+                    <div className="min-w-0">
+                      <span className="block text-xs font-bold text-slate-900 dark:text-white truncate">
+                        {customer?.name || (language === 'ar' ? 'العميل' : 'Kunde')}
+                      </span>
+                      <span className="block text-[11px] text-emerald-700 dark:text-emerald-400 font-medium truncate">
+                        {customer?.phone || customer?.email}
+                      </span>
+                    </div>
+                  </div>
+                  <Link
+                    to="/account"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shrink-0 touch-manipulation shadow-sm"
+                  >
+                    {language === 'ar' ? 'حسابي' : 'Mein Konto'}
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-slate-700 dark:text-gray-300">
+                    {language === 'ar' ? 'خدمة التوصيل السريع للمنزل' : 'Lieferservice & Kundenkonto'}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Link
+                      to="/customer/login"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="px-3 py-2 rounded-xl bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-900 dark:text-white font-bold text-xs flex items-center justify-center gap-1.5 transition touch-manipulation shadow-2xs"
+                    >
+                      <LogIn className="w-3.5 h-3.5" />
+                      <span>{language === 'ar' ? 'تسجيل الدخول' : 'Anmelden'}</span>
+                    </Link>
+                    <Link
+                      to="/customer/register"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition touch-manipulation shadow-2xs"
+                    >
+                      <UserPlus className="w-3.5 h-3.5" />
+                      <span>{language === 'ar' ? 'حساب جديد' : 'Registrieren'}</span>
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Navigation Anchor Links */}
+            <div className="space-y-1 pt-1">
+              <a
+                href="#catalog"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-800 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-gray-800 transition touch-manipulation"
+              >
+                <Package className="w-4 h-4 text-emerald-600" />
+                <span>{t('catalog')}</span>
+              </a>
+              <a
+                href="#reviews"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-800 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-gray-800 transition touch-manipulation"
+              >
+                <Star className="w-4 h-4 text-amber-500" />
+                <span>{t('googleReviewsTitle') || 'Google Reviews'}</span>
+              </a>
+              <a
+                href="#contact"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-800 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-gray-800 transition touch-manipulation"
+              >
+                <MapPin className="w-4 h-4 text-blue-500" />
+                <span>{t('contactAndLocation')}</span>
+              </a>
+            </div>
           </div>
         )}
       </header>
 
       {/* 2. Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-blue-50/70 via-slate-50 to-white dark:from-gray-900 dark:via-gray-950 dark:to-gray-950 pt-10 pb-16 sm:pt-16 sm:pb-24 border-b border-slate-200/70 dark:border-gray-850">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="max-w-3xl mx-auto text-center space-y-6">
+      <section className="relative overflow-hidden bg-gradient-to-b from-blue-50/70 via-slate-50 to-white dark:from-gray-900 dark:via-gray-950 dark:to-gray-950 pt-8 pb-12 sm:pt-16 sm:pb-24 border-b border-slate-200/70 dark:border-gray-850">
+        <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 relative z-10">
+          <div className="max-w-3xl mx-auto text-center space-y-4 sm:space-y-6">
             
             {/* Google Rating Trust Badge */}
-            <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white dark:bg-gray-850 border border-slate-200/80 dark:border-gray-750 shadow-xs text-xs">
-              <div className="flex items-center gap-1">
+            <div className="inline-flex flex-wrap items-center justify-center gap-1.5 sm:gap-2.5 px-3 sm:px-4 py-1.5 rounded-full bg-white dark:bg-gray-850 border border-slate-200/80 dark:border-gray-750 shadow-xs text-xs max-w-full">
+              <div className="flex items-center gap-0.5 sm:gap-1">
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                 ))}
@@ -396,8 +472,8 @@ export const LandingPage = () => {
               <span className="font-extrabold text-slate-900 dark:text-white">
                 {ratingNum ? ratingNum.toFixed(1) : '5.0'}
               </span>
-              <span className="text-slate-400 dark:text-slate-500">•</span>
-              <span className="font-semibold text-slate-700 dark:text-slate-300">
+              <span className="text-slate-400 dark:text-slate-500 hidden xs:inline">•</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-300 text-[11px] sm:text-xs">
                 {countNum === 1
                   ? (language === 'ar' ? 'تقييم حقيقي واحد على Google' : '1 verifizierte Google-Bewertung')
                   : `${countNum} ${language === 'ar' ? (countNum <= 10 ? 'تقييمات حقيقية على Google' : 'تقييم حقيقي على Google') : 'verifizierte Google-Bewertungen'}`}
@@ -415,20 +491,20 @@ export const LandingPage = () => {
             </div>
 
             {/* Main Headline */}
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.15]">
+            <h1 className="text-2xl xs:text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.18] sm:leading-[1.15]">
               {t('heroTitle')}
             </h1>
 
             {/* Subtitle */}
-            <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl mx-auto">
+            <p className="text-sm sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl mx-auto px-2">
               {t('heroSubtitle')}
             </p>
 
             {/* Hero CTAs */}
-            <div className="pt-2 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+            <div className="pt-2 flex flex-col xs:flex-row flex-wrap items-center justify-center gap-2.5 sm:gap-4 w-full">
               <a
                 href="#catalog"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm sm:text-base shadow-sm hover:shadow transition-all cursor-pointer"
+                className="w-full xs:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm sm:text-base shadow-sm hover:shadow transition-all cursor-pointer touch-manipulation"
               >
                 <span>{t('exploreProducts')}</span>
                 {direction === 'rtl' ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
@@ -437,7 +513,7 @@ export const LandingPage = () => {
               {isCustomerLoggedIn ? (
                 <Link
                   to="/account"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white dark:bg-gray-850 hover:bg-slate-100 dark:hover:bg-gray-800 text-slate-800 dark:text-white font-bold text-sm sm:text-base border border-slate-200 dark:border-gray-750 shadow-2xs transition-all cursor-pointer"
+                  className="w-full xs:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white dark:bg-gray-850 hover:bg-slate-100 dark:hover:bg-gray-800 text-slate-800 dark:text-white font-bold text-sm sm:text-base border border-slate-200 dark:border-gray-750 shadow-2xs transition-all cursor-pointer touch-manipulation"
                 >
                   <User className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   <span>{language === 'ar' ? 'حسابي وطلباتي' : 'Mein Konto & Bestellungen'}</span>
@@ -445,7 +521,7 @@ export const LandingPage = () => {
               ) : (
                 <Link
                   to="/customer/login"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white dark:bg-gray-850 hover:bg-slate-100 dark:hover:bg-gray-800 text-slate-800 dark:text-white font-bold text-sm sm:text-base border border-slate-200 dark:border-gray-750 shadow-2xs transition-all cursor-pointer"
+                  className="w-full xs:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white dark:bg-gray-850 hover:bg-slate-100 dark:hover:bg-gray-800 text-slate-800 dark:text-white font-bold text-sm sm:text-base border border-slate-200 dark:border-gray-750 shadow-2xs transition-all cursor-pointer touch-manipulation"
                 >
                   <User className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   <span>{language === 'ar' ? 'دخول العملاء / تسجيل' : 'Kunden-Login / Registrieren'}</span>
@@ -1190,27 +1266,27 @@ export const LandingPage = () => {
 
       {/* 8. Product Detail Modal */}
       {selectedProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
           <div
-            className="bg-white dark:bg-gray-900 rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 dark:border-gray-800 space-y-6 max-h-[90vh] overflow-y-auto"
+            className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl max-w-xl w-full p-4 sm:p-6 shadow-2xl border border-slate-200 dark:border-gray-800 space-y-4 sm:space-y-6 max-h-[90dvh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
             <div className="flex items-center justify-between">
-              <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-400">
+              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-400">
                 {selectedProduct.category ? (language === 'ar' ? selectedProduct.category.nameAr : selectedProduct.category.nameDe) : t('allCategories')}
               </span>
               <button
                 type="button"
                 onClick={() => setSelectedProduct(null)}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                className="p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-gray-800 transition-colors cursor-pointer touch-manipulation"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Modal Image */}
-            <div className="w-full h-56 rounded-2xl bg-slate-50 dark:bg-gray-950 border border-slate-100 dark:border-gray-800 overflow-hidden flex items-center justify-center">
+            <div className="w-full h-44 sm:h-56 rounded-2xl bg-slate-50 dark:bg-gray-950 border border-slate-100 dark:border-gray-800 overflow-hidden flex items-center justify-center">
               {selectedProduct.imageUrl ? (
                 <img
                   src={selectedProduct.imageUrl}
@@ -1219,17 +1295,17 @@ export const LandingPage = () => {
                   onError={(e) => { e.target.style.display = 'none'; }}
                 />
               ) : (
-                <Package className="w-16 h-16 text-blue-600 dark:text-blue-400" />
+                <Package className="w-12 h-12 sm:w-16 sm:h-16 text-blue-600 dark:text-blue-400" />
               )}
             </div>
 
             {/* Modal Content */}
             <div className="space-y-4">
               <div>
-                <h3 className="text-xl font-black text-slate-900 dark:text-white">
+                <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
                   {(language === 'ar' ? selectedProduct.nameAr : selectedProduct.nameDe) || selectedProduct.name}
                 </h3>
-                <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-400 dark:text-gray-500 font-mono">
+                <div className="flex items-center gap-2 sm:gap-3 mt-1.5 text-xs text-slate-400 dark:text-gray-500 font-mono flex-wrap">
                   <span>SKU: {selectedProduct.sku}</span>
                   <span>•</span>
                   <div>{getStockBadge(selectedProduct.stock)}</div>
@@ -1237,15 +1313,15 @@ export const LandingPage = () => {
               </div>
 
               {((language === 'ar' ? selectedProduct.descriptionAr : selectedProduct.descriptionDe) || selectedProduct.description) && (
-                <p className="text-sm text-slate-600 dark:text-gray-300 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-gray-300 leading-relaxed">
                   {(language === 'ar' ? selectedProduct.descriptionAr : selectedProduct.descriptionDe) || selectedProduct.description}
                 </p>
               )}
 
-              <div className="pt-4 border-t border-slate-100 dark:border-gray-800 flex items-center justify-between gap-3">
+              <div className="pt-4 border-t border-slate-100 dark:border-gray-800 flex flex-col xs:flex-row items-stretch xs:items-center justify-between gap-3">
                 <div>
-                  <span className="block text-xs text-slate-400 font-semibold">{isAr ? 'السعر للتوصيل' : 'Preis für Hauszustellung'}</span>
-                  <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                  <span className="block text-[11px] text-slate-400 font-semibold">{isAr ? 'السعر للتوصيل' : 'Preis für Hauszustellung'}</span>
+                  <span className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
                     €{Number(selectedProduct.b2bPrice).toFixed(2)}
                   </span>
                 </div>
@@ -1257,7 +1333,7 @@ export const LandingPage = () => {
                     setSelectedProduct(null);
                   }}
                   disabled={selectedProduct.stock <= 0}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white text-xs sm:text-sm font-bold shadow-md shadow-emerald-600/20 transition cursor-pointer"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white text-xs sm:text-sm font-bold shadow-md shadow-emerald-600/20 transition cursor-pointer touch-manipulation"
                 >
                   <ShoppingCart className="w-4 h-4" />
                   <span>{selectedProduct.stock <= 0 ? t('outOfStock') : (language === 'ar' ? 'أضف للسلة والتوصيل' : 'In den Warenkorb')}</span>
@@ -1272,21 +1348,21 @@ export const LandingPage = () => {
       {totalCartCount > 0 && !cartOpen && (
         <aside 
           aria-label={language === 'ar' ? 'سلة التسوق السريعة' : 'Schneller Warenkorb'}
-          className="fixed bottom-6 end-6 z-40"
+          className="fixed bottom-4 end-4 sm:bottom-6 sm:end-6 z-40 max-w-[calc(100vw-2rem)]"
         >
           <button
             type="button"
             onClick={() => setCartOpen(true)}
-            className="px-5 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm shadow-2xl shadow-emerald-600/50 flex items-center gap-3 transition-transform hover:scale-105 cursor-pointer"
+            className="px-3.5 sm:px-5 py-2.5 sm:py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm shadow-2xl shadow-emerald-600/50 flex items-center gap-2 sm:gap-3 transition-transform hover:scale-105 cursor-pointer touch-manipulation"
           >
             <div className="relative">
-              <ShoppingCart className="w-5 h-5" />
+              <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
               <span className="absolute -top-2 -end-2 w-4 h-4 rounded-full bg-white text-emerald-700 text-[10px] font-black flex items-center justify-center font-mono">
                 {totalCartCount}
               </span>
             </div>
-            <span>{language === 'ar' ? 'سلة التوصيل المنزلي' : 'Zur Kasse'}</span>
-            <span className="font-mono bg-emerald-800/60 px-2 py-0.5 rounded-lg text-xs">
+            <span className="truncate">{language === 'ar' ? 'سلة التوصيل' : 'Zur Kasse'}</span>
+            <span className="font-mono bg-emerald-800/60 px-2 py-0.5 rounded-lg text-xs shrink-0">
               €{Number(totalCartAmount).toFixed(2)}
             </span>
           </button>
