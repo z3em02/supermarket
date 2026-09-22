@@ -5,6 +5,10 @@ const {
   sendOrderModificationEmail
 } = require('../utils/emailService');
 const { CUSTOMER_PUBLIC_SELECT } = require('../utils/serialize');
+const {
+  calculatePromotionForItem,
+  validateAndCalculateCoupon
+} = require('../utils/pricingService');
 
 // Stock is deducted for every order from creation onward and only ever restored
 // once an order reaches one of these terminal decline states.
@@ -38,7 +42,8 @@ const getOrders = async (req, res) => {
             product: true
           }
         },
-        accounting: true
+        accounting: true,
+        coupon: true
       },
       orderBy: {
         createdAt: 'desc'
@@ -65,7 +70,8 @@ const getOrderById = async (req, res) => {
             product: true
           }
         },
-        accounting: true
+        accounting: true,
+        coupon: true
       }
     });
 
@@ -112,7 +118,27 @@ const createOrder = async (req, res) => {
       return res.status(400).json({ error: 'Order must contain at least one item' });
     }
 
+    const cleanCouponCode = req.body.couponCode
+      ? String(req.body.couponCode).trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '')
+      : null;
+
+    // Fetch product details and active promotions
+    const productIds = rawItems.map(i => i.productId).filter(Boolean);
+    const [dbProducts, activePromotions] = await Promise.all([
+      prisma.product.findMany({ where: { id: { in: productIds } } }),
+      prisma.promotion.findMany({
+        where: {
+          productId: { in: productIds },
+          isActive: true
+        }
+      })
+    ]);
+
+    const productMap = new Map(dbProducts.map(p => [p.id, p]));
+    const promoMap = new Map(activePromotions.map(pr => [pr.productId, pr]));
+
     let itemsSubtotal = 0;
+    let totalPromoSavings = 0;
     const orderItemsWithDetails = [];
 
     for (const item of rawItems) {
@@ -120,36 +146,42 @@ const createOrder = async (req, res) => {
         continue;
       }
 
-      const product = await prisma.product.findUnique({
-        where: { id: item.productId }
-      });
-
+      const product = productMap.get(item.productId);
       if (!product) {
         return res.status(404).json({ error: `Product with id ${item.productId} not found` });
       }
 
-      if (product.stock < item.quantity) {
+      const qty = parseInt(item.quantity, 10);
+      if (product.stock < qty) {
         return res.status(400).json({
-          error: `Insufficient stock for "${product.name}". Available: ${product.stock}, Requested: ${item.quantity}`
+          error: `Insufficient stock for "${product.name}". Available: ${product.stock}, Requested: ${qty}`
         });
       }
 
-      const qty = parseInt(item.quantity, 10);
-      const subtotal = product.b2bPrice * qty;
-      itemsSubtotal += subtotal;
+      const promo = promoMap.get(item.productId);
+      const promoResult = calculatePromotionForItem(product, qty, promo);
+
+      itemsSubtotal += promoResult.subtotal;
+      totalPromoSavings += promoResult.appliedSavings;
 
       orderItemsWithDetails.push({
         productId: item.productId,
         productName: product.name,
         quantity: qty,
-        price: product.b2bPrice,
-        subtotal
+        price: promoResult.price,
+        originalPrice: promoResult.originalPrice,
+        discountAmount: promoResult.discountAmount,
+        promotionType: promoResult.promotionType,
+        subtotal: promoResult.subtotal
       });
     }
 
     if (orderItemsWithDetails.length === 0) {
       return res.status(400).json({ error: 'Order must contain at least one valid item' });
     }
+
+    itemsSubtotal = Number(itemsSubtotal.toFixed(2));
+    totalPromoSavings = Number(totalPromoSavings.toFixed(2));
 
     // Delivery rules: minimum order value, service area and delivery fee
     const storeSettings = await prisma.storeSettings.findUnique({ where: { id: 'default' } });
@@ -173,10 +205,49 @@ const createOrder = async (req, res) => {
       });
     }
 
-    const deliveryFee = deliveryFeeSetting <= 0
+    // Coupon evaluation
+    let appliedCoupon = null;
+    let couponDiscount = 0;
+    let isFreeShipping = false;
+
+    if (cleanCouponCode) {
+      const couponRecord = await prisma.coupon.findUnique({
+        where: { code: cleanCouponCode }
+      });
+
+      if (!couponRecord) {
+        return res.status(400).json({ error: `Ungültiger Gutscheincode "${cleanCouponCode}" / Invalid coupon code.` });
+      }
+
+      const userUsageCount = await prisma.couponUsage.count({
+        where: { couponId: couponRecord.id, customerId: customer.id }
+      });
+
+      const couponEval = validateAndCalculateCoupon(
+        couponRecord,
+        rawItems,
+        itemsSubtotal,
+        customer.id,
+        userUsageCount
+      );
+
+      if (!couponEval.valid) {
+        return res.status(400).json({ error: couponEval.error });
+      }
+
+      appliedCoupon = couponRecord;
+      couponDiscount = couponEval.discountAmount;
+      isFreeShipping = couponEval.isFreeShipping;
+    }
+
+    const deliveryFee = isFreeShipping
       ? 0
-      : (freeDeliveryThreshold > 0 && itemsSubtotal >= freeDeliveryThreshold ? 0 : deliveryFeeSetting);
-    const totalAmount = itemsSubtotal + deliveryFee;
+      : (deliveryFeeSetting <= 0
+        ? 0
+        : (freeDeliveryThreshold > 0 && itemsSubtotal >= freeDeliveryThreshold ? 0 : deliveryFeeSetting));
+
+    const finalItemsTotal = Math.max(0, Number((itemsSubtotal - couponDiscount).toFixed(2)));
+    const totalAmount = Number((finalItemsTotal + deliveryFee).toFixed(2));
 
     const deliverySlot = ALLOWED_DELIVERY_SLOTS.includes(req.body.deliverySlot) ? req.body.deliverySlot : null;
 
@@ -190,13 +261,41 @@ const createOrder = async (req, res) => {
     const deliveryNotes = req.body.deliveryNotes || customer.deliveryNotes || notes || null;
 
     const order = await prisma.$transaction(async (tx) => {
-      // Deduct stock atomically per item before creating the order, so two
-      // customers racing to buy the last unit can't both succeed.
+      // Re-verify coupon atomically inside transaction to eliminate race conditions
+      if (appliedCoupon) {
+        const freshCoupon = await tx.coupon.findUnique({
+          where: { id: appliedCoupon.id }
+        });
+
+        if (!freshCoupon || !freshCoupon.isActive) {
+          throw new Error('Gutschein ist nicht mehr aktiv / Coupon is no longer active.');
+        }
+
+        if (freshCoupon.usageLimit && freshCoupon.usedCount >= freshCoupon.usageLimit) {
+          throw new Error('Gutschein-Limit wurde soeben erreicht / Coupon usage limit reached.');
+        }
+
+        if (freshCoupon.usageLimitPerCustomer) {
+          const freshCustCount = await tx.couponUsage.count({
+            where: { couponId: freshCoupon.id, customerId: customer.id }
+          });
+          if (freshCustCount >= freshCoupon.usageLimitPerCustomer) {
+            throw new Error('Sie haben diesen Gutschein bereits maximal eingelöst / Coupon already redeemed.');
+          }
+        }
+
+        await tx.coupon.update({
+          where: { id: freshCoupon.id },
+          data: { usedCount: { increment: 1 } }
+        });
+      }
+
+      // Deduct stock atomically per item before creating the order
       for (const item of orderItemsWithDetails) {
         await decrementStockOrThrow(tx, item.productId, item.quantity, item.productName);
       }
 
-      return tx.order.create({
+      const createdOrder = await tx.order.create({
         data: {
           customerId: customer.id,
           customerName: customer.name,
@@ -207,13 +306,22 @@ const createOrder = async (req, res) => {
           deliverySlot,
           paymentMethod: 'cash_on_delivery',
           status: 'pending',
+          itemsSubtotal,
+          couponId: appliedCoupon ? appliedCoupon.id : null,
+          couponCode: appliedCoupon ? appliedCoupon.code : null,
+          couponDiscount,
+          promotionDiscount: totalPromoSavings,
+          isFreeShipping,
           totalAmount,
           notes: notes || null,
           orderItems: {
-            create: orderItemsWithDetails.map(({ productId, quantity, price, subtotal }) => ({
+            create: orderItemsWithDetails.map(({ productId, quantity, price, originalPrice, discountAmount, promotionType, subtotal }) => ({
               productId,
               quantity,
               price,
+              originalPrice,
+              discountAmount,
+              promotionType,
               subtotal
             }))
           }
@@ -224,9 +332,23 @@ const createOrder = async (req, res) => {
             include: {
               product: true
             }
-          }
+          },
+          coupon: true
         }
       });
+
+      // Log coupon usage
+      if (appliedCoupon) {
+        await tx.couponUsage.create({
+          data: {
+            couponId: appliedCoupon.id,
+            customerId: customer.id,
+            orderId: createdOrder.id
+          }
+        });
+      }
+
+      return createdOrder;
     });
 
     // Send confirmation email to customer
@@ -459,7 +581,8 @@ const getCustomerOrders = async (req, res) => {
           include: {
             product: true
           }
-        }
+        },
+        coupon: true
       },
       orderBy: {
         createdAt: 'desc'

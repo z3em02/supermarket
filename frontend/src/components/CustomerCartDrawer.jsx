@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ShoppingCart,
@@ -19,7 +19,12 @@ import {
   Phone,
   Mail,
   Store,
-  Clock
+  Clock,
+  Tag,
+  Gift,
+  Check,
+  Percent,
+  Sparkles
 } from 'lucide-react';
 import { useCustomerAuth } from '../context/CustomerAuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -55,8 +60,34 @@ export const CustomerCartDrawer = ({
   const [error, setError] = useState('');
   const [placedOrder, setPlacedOrder] = useState(null);
 
+  // Promotions & Coupon state
+  const [activePromos, setActivePromos] = useState([]);
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState('');
+
+  // Fetch active promotions
+  useEffect(() => {
+    const fetchPromos = async () => {
+      try {
+        const apiUrl = getApiUrl();
+        const res = await fetch(`${apiUrl}/api/promotions/active`);
+        if (res.ok) {
+          const data = await res.json();
+          setActivePromos(data);
+        }
+      } catch (err) {
+        console.error('Cart drawer active promos error:', err);
+      }
+    };
+    if (isOpen) {
+      fetchPromos();
+    }
+  }, [isOpen]);
+
   // Initialize address from customer profile when customer changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (customer) {
       const parts = [
         customer.street && `${customer.street} ${customer.houseNumber || ''}`.trim(),
@@ -68,21 +99,162 @@ export const CustomerCartDrawer = ({
     }
   }, [customer]);
 
-  if (!isOpen) return null;
+  const promoMap = useMemo(() => {
+    return new Map(activePromos.map(p => [p.productId, p]));
+  }, [activePromos]);
 
-  const itemsSubtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  // Calculate cart items with promotions applied
+  const cartWithPromos = useMemo(() => {
+    return cart.map((item) => {
+      const promo = promoMap.get(item.productId);
+      let freeUnits = 0;
+      let effectivePrice = Number(item.price);
+      let itemSavings = 0;
+      let lineTotal = Number(item.price) * item.quantity;
+      let badge = null;
+
+      if (promo && promo.isActive) {
+        if (promo.type === 'BUY_X_GET_Y') {
+          const buyQty = promo.buyQuantity || 2;
+          const getYQty = promo.getYQuantity || 1;
+          const groupSize = buyQty + getYQty;
+          freeUnits = Math.floor(item.quantity / groupSize) * getYQty;
+          const paidUnits = Math.max(0, item.quantity - freeUnits);
+          lineTotal = paidUnits * Number(item.price);
+          itemSavings = freeUnits * Number(item.price);
+          badge = isAr ? promo.badgeTextAr || `${buyQty}+${getYQty} مجاناً` : promo.badgeTextDe || `${buyQty}+${getYQty} Gratis`;
+        } else if (promo.type === 'PRODUCT_DISCOUNT') {
+          if (promo.promotionalPrice != null) {
+            effectivePrice = Number(promo.promotionalPrice);
+            lineTotal = effectivePrice * item.quantity;
+            itemSavings = Math.max(0, (Number(item.price) - effectivePrice) * item.quantity);
+          } else if (promo.discountPercent) {
+            const pct = Number(promo.discountPercent);
+            effectivePrice = Number((Number(item.price) * (1 - pct / 100)).toFixed(2));
+            lineTotal = effectivePrice * item.quantity;
+            itemSavings = Math.max(0, (Number(item.price) - effectivePrice) * item.quantity);
+          }
+          badge = isAr ? promo.badgeTextAr || 'عرض خاص' : promo.badgeTextDe || 'Angebot';
+        }
+      }
+
+      return {
+        ...item,
+        promo,
+        freeUnits,
+        effectivePrice,
+        itemSavings,
+        lineTotal,
+        badge
+      };
+    });
+  }, [cart, promoMap, isAr]);
+
+  const rawSubtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const totalPromoSavings = cartWithPromos.reduce((sum, item) => sum + item.itemSavings, 0);
+  const itemsSubtotal = Math.max(0, Number((rawSubtotal - totalPromoSavings).toFixed(2)));
   const totalItemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  // Coupon Validation Handler
+  const handleApplyCoupon = async (e) => {
+    if (e) e.preventDefault();
+    const clean = couponInput.trim().toUpperCase();
+    if (!clean) return;
+
+    try {
+      setValidatingCoupon(true);
+      setCouponError('');
+      const apiUrl = getApiUrl();
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch(`${apiUrl}/api/coupons/validate`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          code: clean,
+          items: cart.map(i => ({ productId: i.productId, quantity: i.quantity }))
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.valid) {
+        throw new Error(data.error || (isAr ? 'رمز الكوبون غير صالح' : 'Ungültiger Gutscheincode'));
+      }
+
+      setAppliedCoupon({
+        code: data.coupon.code,
+        discountType: data.coupon.discountType,
+        discountValue: data.coupon.discountValue,
+        discountAmount: data.discountAmount,
+        isFreeShipping: data.isFreeShipping
+      });
+      setCouponInput('');
+    } catch (err) {
+      setCouponError(err.message || 'Gutschein konnte nicht angewendet werden');
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponError('');
+  };
+
+  // Revalidate coupon when cart items change
+  useEffect(() => {
+    if (appliedCoupon && cart.length > 0) {
+      const apiUrl = getApiUrl();
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      fetch(`${apiUrl}/api/coupons/validate`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          code: appliedCoupon.code,
+          items: cart.map(i => ({ productId: i.productId, quantity: i.quantity }))
+        })
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.valid) {
+            setAppliedCoupon(prev => ({
+              ...prev,
+              discountAmount: data.discountAmount,
+              isFreeShipping: data.isFreeShipping
+            }));
+          } else {
+            setAppliedCoupon(null);
+            setCouponError(data.error);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [cart, token]);
+
+  if (!isOpen) return null;
 
   const minOrderValue = Number(settings?.minOrderValue) || 0;
   const deliveryFeeSetting = Number(settings?.deliveryFee) || 0;
   const freeDeliveryThreshold = Number(settings?.freeDeliveryThreshold) || 0;
-  const deliveryFee = deliveryFeeSetting <= 0
+
+  // Free shipping perk from combo coupon or threshold
+  const isFreeDeliveryApplied = Boolean(appliedCoupon?.isFreeShipping);
+  const deliveryFee = isFreeDeliveryApplied
     ? 0
-    : (freeDeliveryThreshold > 0 && itemsSubtotal >= freeDeliveryThreshold ? 0 : deliveryFeeSetting);
-  const amountUntilFreeDelivery = deliveryFeeSetting > 0 && freeDeliveryThreshold > 0 && itemsSubtotal < freeDeliveryThreshold
+    : (deliveryFeeSetting <= 0
+      ? 0
+      : (freeDeliveryThreshold > 0 && itemsSubtotal >= freeDeliveryThreshold ? 0 : deliveryFeeSetting));
+
+  const amountUntilFreeDelivery = !isFreeDeliveryApplied && deliveryFeeSetting > 0 && freeDeliveryThreshold > 0 && itemsSubtotal < freeDeliveryThreshold
     ? freeDeliveryThreshold - itemsSubtotal
     : 0;
-  const totalAmount = itemsSubtotal + deliveryFee;
+
+  const couponDiscount = appliedCoupon?.discountAmount || 0;
+  const finalItemsTotal = Math.max(0, Number((itemsSubtotal - couponDiscount).toFixed(2)));
+  const totalAmount = Number((finalItemsTotal + deliveryFee).toFixed(2));
   const belowMinOrder = minOrderValue > 0 && itemsSubtotal < minOrderValue;
 
   const isVerified = Boolean(customer?.emailVerified);
@@ -126,6 +298,7 @@ export const CustomerCartDrawer = ({
         },
         body: JSON.stringify({
           orderItems: cart.map(i => ({ productId: i.productId, quantity: i.quantity })),
+          couponCode: appliedCoupon?.code || undefined,
           deliveryAddress: deliveryAddress.trim() || undefined,
           deliveryNotes: deliveryNotes.trim() || undefined,
           notes: deliveryNotes.trim() || undefined,
@@ -139,6 +312,7 @@ export const CustomerCartDrawer = ({
       }
 
       setPlacedOrder(data);
+      setAppliedCoupon(null);
       clearCart();
     } catch (err) {
       console.error('Order checkout error:', err);
@@ -273,7 +447,7 @@ export const CustomerCartDrawer = ({
               
               {/* Product items */}
               <div className="space-y-3">
-                {cart.map((item) => {
+                {cartWithPromos.map((item) => {
                   const localizedName = (language === 'ar' ? item.nameAr : item.nameDe) || item.name;
                   return (
                     <div 
@@ -288,13 +462,36 @@ export const CustomerCartDrawer = ({
                             <ShoppingCart className="w-5 h-5 text-slate-400" />
                           )}
                         </div>
-                        <div className="min-w-0">
+                        <div className="min-w-0 space-y-0.5">
                           <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate" title={localizedName}>
                             {localizedName}
                           </h4>
-                          <span className="font-mono text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                            €{Number(item.price).toFixed(2)}
-                          </span>
+                          
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                              €{Number(item.effectivePrice).toFixed(2)}
+                            </span>
+                            {item.effectivePrice < item.price && (
+                              <span className="line-through text-[10px] text-slate-400">
+                                €{Number(item.price).toFixed(2)}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Promotion Badges on Line Item */}
+                          {item.freeUnits > 0 && (
+                            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 text-[10px] font-bold border border-purple-200 dark:border-purple-800">
+                              <Gift className="w-3 h-3" />
+                              <span>{item.freeUnits}x {isAr ? 'مجاناً (عرض 2+1)' : 'GRATIS (2+1 Aktion)'}</span>
+                            </div>
+                          )}
+
+                          {item.freeUnits === 0 && item.badge && (
+                            <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 text-[10px] font-bold border border-amber-200 dark:border-amber-800">
+                              <Sparkles className="w-3 h-3" />
+                              <span>{item.badge}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -503,9 +700,64 @@ export const CustomerCartDrawer = ({
 
         {/* Drawer Footer / Checkout Button */}
         {cart.length > 0 && !placedOrder && (
-          <div className="p-6 border-t border-slate-100 dark:border-gray-800 bg-slate-50/50 dark:bg-gray-950/50 space-y-3">
+          <div className="p-5 sm:p-6 border-t border-slate-100 dark:border-gray-800 bg-slate-50/70 dark:bg-gray-950/70 space-y-3 shrink-0">
+            {/* Coupon Code Input & Applied Pill */}
+            <div className="space-y-2">
+              {!appliedCoupon ? (
+                <form onSubmit={handleApplyCoupon} className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Tag className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder={isAr ? 'أدخل رمز الكوبون...' : 'Gutscheincode eingeben...'}
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                      className="w-full pl-8 pr-3 py-2 text-xs font-mono font-bold uppercase bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white placeholder:normal-case placeholder:font-normal placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={validatingCoupon || !couponInput.trim()}
+                    className="px-3.5 py-2 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-900 dark:bg-gray-800 dark:hover:bg-gray-700 text-white disabled:opacity-40 transition cursor-pointer shrink-0"
+                  >
+                    {validatingCoupon ? '...' : (isAr ? 'تطبيق' : 'Anwenden')}
+                  </button>
+                </form>
+              ) : (
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Tag className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <div className="min-w-0 truncate">
+                      <span className="font-mono font-bold text-emerald-900 dark:text-emerald-300">
+                        {appliedCoupon.code}
+                      </span>
+                      <span className="text-[11px] text-emerald-700 dark:text-emerald-400 ml-1.5">
+                        (-€{Number(appliedCoupon.discountAmount).toFixed(2)})
+                        {appliedCoupon.isFreeShipping && ` + ${isAr ? 'شحن مجاني' : 'Gratis Lieferung'}`}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemoveCoupon}
+                    className="p-1 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 rounded-lg text-emerald-800 dark:text-emerald-300 transition cursor-pointer shrink-0"
+                    title={isAr ? 'إزالة الكوبون' : 'Gutschein entfernen'}
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+
+              {couponError && (
+                <p className="text-[11px] text-rose-600 dark:text-rose-400 flex items-center gap-1 font-medium">
+                  <AlertCircle className="w-3 h-3 shrink-0" />
+                  <span>{couponError}</span>
+                </p>
+              )}
+            </div>
+
             {amountUntilFreeDelivery > 0 && (
-              <div className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/40 rounded-xl px-3 py-2 text-center">
+              <div className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/40 rounded-xl px-3 py-1.5 text-center">
                 {isAr
                   ? `أضف منتجات بقيمة €${amountUntilFreeDelivery.toFixed(2)} أخرى للحصول على توصيل مجاني!`
                   : `Noch €${amountUntilFreeDelivery.toFixed(2)} bis zur kostenlosen Lieferung!`}
@@ -513,28 +765,67 @@ export const CustomerCartDrawer = ({
             )}
 
             {belowMinOrder && (
-              <div className="text-[11px] font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/40 rounded-xl px-3 py-2 text-center">
+              <div className="text-[11px] font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/40 rounded-xl px-3 py-1.5 text-center">
                 {isAr
                   ? `الحد الأدنى للطلب هو €${minOrderValue.toFixed(2)}.`
                   : `Der Mindestbestellwert beträgt €${minOrderValue.toFixed(2)}.`}
               </div>
             )}
 
-            <div className="flex items-center justify-between text-xs text-slate-500 dark:text-gray-400">
-              <span>{isAr ? 'رسوم التوصيل' : 'Liefergebühr'}</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                {deliveryFee > 0 ? `€${deliveryFee.toFixed(2)}` : (isAr ? 'مجاناً' : 'Kostenlos')}
-              </span>
+            {/* Price Breakdown */}
+            <div className="space-y-1.5 pt-2 border-t border-slate-200/60 dark:border-gray-800 text-xs text-slate-500 dark:text-gray-400">
+              <div className="flex items-center justify-between">
+                <span>{isAr ? 'المجموع الفرعي' : 'Zwischensumme'}</span>
+                <span className="font-medium text-slate-800 dark:text-gray-200">
+                  €{Number(rawSubtotal).toFixed(2)}
+                </span>
+              </div>
+
+              {totalPromoSavings > 0 && (
+                <div className="flex items-center justify-between text-purple-600 dark:text-purple-400 font-medium">
+                  <span className="flex items-center gap-1">
+                    <Gift className="w-3 h-3" />
+                    {isAr ? 'توفير العروض (2+1 / تخفيضات)' : 'Aktions-Ersparnis (2+1 / Rabatt)'}
+                  </span>
+                  <span>-€{Number(totalPromoSavings).toFixed(2)}</span>
+                </div>
+              )}
+
+              {couponDiscount > 0 && (
+                <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400 font-medium">
+                  <span className="flex items-center gap-1">
+                    <Tag className="w-3 h-3" />
+                    {isAr ? `خصم الكوبون (${appliedCoupon.code})` : `Gutschein-Rabatt (${appliedCoupon.code})`}
+                  </span>
+                  <span>-€{Number(couponDiscount).toFixed(2)}</span>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between">
+                <span>{isAr ? 'رسوم التوصيل' : 'Liefergebühr'}</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                  {deliveryFee > 0 ? (
+                    `€${deliveryFee.toFixed(2)}`
+                  ) : isFreeDeliveryApplied ? (
+                    <span className="inline-flex items-center gap-1">
+                      <Truck className="w-3 h-3" />
+                      {isAr ? 'مجاناً (كوبون)' : 'Kostenlos (Gutschein)'}
+                    </span>
+                  ) : (
+                    isAr ? 'مجاناً' : 'Kostenlos'
+                  )}
+                </span>
+              </div>
             </div>
 
-            <div className="flex items-center justify-between text-base font-extrabold text-slate-900 dark:text-white">
+            <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 dark:border-gray-800 text-base font-extrabold text-slate-900 dark:text-white">
               <span>{isAr ? 'الإجمالي عند الاستلام' : 'Gesamtbetrag bei Erhalt'}</span>
               <span className="font-mono text-xl text-emerald-600 dark:text-emerald-400">
                 €{Number(totalAmount).toFixed(2)}
               </span>
             </div>
-            <p className="text-[10px] text-slate-400 dark:text-gray-500 text-end -mt-2">
-              {isAr ? 'شامل الضريبة، ويضاف إليها رسوم التوصيل المذكورة أعلاه' : 'inkl. MwSt., zzgl. der oben genannten Liefergebühr'}
+            <p className="text-[10px] text-slate-400 dark:text-gray-500 text-end -mt-1.5">
+              {isAr ? 'شامل الضريبة، والدفع نقداً أو بالبطاقة عند الباب' : 'inkl. MwSt., Zahlung bar oder mit Karte beim Fahrer'}
             </p>
 
             <button

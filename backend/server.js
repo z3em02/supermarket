@@ -14,6 +14,8 @@ const orderRoutes = require('./routes/orders');
 const accountingRoutes = require('./routes/accounting');
 const customerAuthRoutes = require('./routes/customerAuth');
 const settingsRoutes = require('./routes/settings');
+const couponRoutes = require('./routes/coupons');
+const promotionRoutes = require('./routes/promotions');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -57,6 +59,8 @@ app.use('/api/customer', customerAuthRoutes);
 app.use('/api/customer-auth', customerAuthRoutes);
 app.use('/api/customers', customerAuthRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/coupons', couponRoutes);
+app.use('/api/promotions', promotionRoutes);
 
 
 // Health check

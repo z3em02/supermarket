@@ -37,7 +37,10 @@ import {
   Trash2,
   User,
   LogIn,
-  UserPlus
+  UserPlus,
+  Gift,
+  Sparkles,
+  Tag
 } from 'lucide-react';
 import { getApiUrl } from '../utils/api';
 import TrustindexWidget from '../components/TrustindexWidget';
@@ -118,6 +121,7 @@ export const LandingPage = () => {
 
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [promotions, setPromotions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -148,9 +152,10 @@ export const LandingPage = () => {
       }
 
       const apiUrl = getApiUrl();
-      const [prodRes, catRes] = await Promise.all([
+      const [prodRes, catRes, promoRes] = await Promise.all([
         fetch(`${apiUrl}/api/products/catalog`, { headers }),
-        fetch(`${apiUrl}/api/categories`, { headers })
+        fetch(`${apiUrl}/api/categories`, { headers }),
+        fetch(`${apiUrl}/api/promotions/active`).catch(() => null)
       ]);
 
       if (!prodRes.ok) {
@@ -159,15 +164,78 @@ export const LandingPage = () => {
 
       const prodData = await prodRes.json();
       const catData = await catRes.json();
+      let promoData = [];
+      if (promoRes && promoRes.ok) {
+        promoData = await promoRes.json();
+      }
 
       setProducts(Array.isArray(prodData) ? prodData : []);
       setCategories(Array.isArray(catData) ? catData : []);
+      setPromotions(Array.isArray(promoData) ? promoData : []);
     } catch (err) {
       console.error('Catalog fetch error:', err);
       setError(err.message || 'Error loading catalog');
     } finally {
       setLoading(false);
     }
+  };
+
+  const promoMap = useMemo(() => {
+    return new Map(promotions.map(p => [p.productId, p]));
+  }, [promotions]);
+
+  const getPromotionBadge = (productId) => {
+    const promo = promoMap.get(productId);
+    if (!promo || !promo.isActive) return null;
+
+    if (promo.type === 'BUY_X_GET_Y') {
+      const text = (language === 'ar' ? promo.badgeTextAr : promo.badgeTextDe) || `${promo.buyQuantity || 2}+${promo.getYQuantity || 1} Gratis`;
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-black bg-purple-600 text-white shadow-xs tracking-tight">
+          <Gift className="w-3 h-3" />
+          {text}
+        </span>
+      );
+    }
+
+    if (promo.type === 'PRODUCT_DISCOUNT') {
+      let text = (language === 'ar' ? promo.badgeTextAr : promo.badgeTextDe);
+      if (!text) {
+        if (promo.discountPercent) text = `-${promo.discountPercent}%`;
+        else text = language === 'ar' ? 'عرض خاص' : 'Aktion';
+      }
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-black bg-rose-600 text-white shadow-xs tracking-tight">
+          <Sparkles className="w-3 h-3" />
+          {text}
+        </span>
+      );
+    }
+    return null;
+  };
+
+  const getProductPrices = (product) => {
+    const promo = promoMap.get(product.id);
+    const basePrice = Number(product.b2bPrice);
+    if (!promo || !promo.isActive) {
+      return { basePrice, promoPrice: null, hasPromo: false, promoType: null };
+    }
+
+    if (promo.type === 'PRODUCT_DISCOUNT') {
+      let promoPrice = basePrice;
+      if (promo.promotionalPrice != null) {
+        promoPrice = Number(promo.promotionalPrice);
+      } else if (promo.discountPercent) {
+        promoPrice = Number((basePrice * (1 - promo.discountPercent / 100)).toFixed(2));
+      }
+      return { basePrice, promoPrice, hasPromo: true, promoType: 'PRODUCT_DISCOUNT', promo };
+    }
+
+    if (promo.type === 'BUY_X_GET_Y') {
+      return { basePrice, promoPrice: null, hasPromo: true, promoType: 'BUY_X_GET_Y', promo };
+    }
+
+    return { basePrice, promoPrice: null, hasPromo: false, promoType: null };
   };
 
   useEffect(() => {
@@ -881,6 +949,11 @@ export const LandingPage = () => {
                       <div className="absolute top-2 end-2">
                         {getStockBadge(product.stock)}
                       </div>
+
+                      {/* Promotion Badge Overlay */}
+                      <div className="absolute bottom-2 start-2 z-10">
+                        {getPromotionBadge(product.id)}
+                      </div>
                     </div>
 
                     {/* Card Body */}
@@ -906,9 +979,32 @@ export const LandingPage = () => {
                   {/* Price & Action Row */}
                   <div className="p-3 pt-0">
                     <div className="pt-2.5 border-t border-slate-100 dark:border-gray-800 flex items-center justify-between gap-2">
-                      <span className="text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-400 tracking-tight leading-none">
-                        €{Number(product.b2bPrice).toFixed(2)}
-                      </span>
+                      {(() => {
+                        const priceInfo = getProductPrices(product);
+                        return (
+                          <div className="flex flex-col">
+                            {priceInfo.promoPrice != null ? (
+                              <div className="flex items-baseline gap-1.5">
+                                <span className="text-base sm:text-lg font-black text-rose-600 dark:text-rose-400 tracking-tight leading-none">
+                                  €{priceInfo.promoPrice.toFixed(2)}
+                                </span>
+                                <span className="line-through text-xs text-slate-400">
+                                  €{priceInfo.basePrice.toFixed(2)}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-400 tracking-tight leading-none">
+                                €{priceInfo.basePrice.toFixed(2)}
+                              </span>
+                            )}
+                            {priceInfo.promoType === 'BUY_X_GET_Y' && (
+                              <span className="text-[10px] text-purple-600 dark:text-purple-400 font-bold mt-0.5">
+                                {language === 'ar' ? 'عرض 2+1 مجاناً' : '2+1 Gratis Deal'}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       <div className="flex items-center gap-1.5">
                         <button
@@ -974,6 +1070,7 @@ export const LandingPage = () => {
                           </span>
                         )}
                         {getStockBadge(product.stock)}
+                        {getPromotionBadge(product.id)}
                       </div>
 
                       <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-gray-500 font-mono">
@@ -991,9 +1088,32 @@ export const LandingPage = () => {
                   {/* Price & Action */}
                   <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-gray-800">
                     <div className="text-start sm:text-end">
-                      <span className="text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400">
-                        €{Number(product.b2bPrice).toFixed(2)}
-                      </span>
+                      {(() => {
+                        const priceInfo = getProductPrices(product);
+                        return (
+                          <div className="flex flex-col items-start sm:items-end">
+                            {priceInfo.promoPrice != null ? (
+                              <div className="flex items-baseline gap-1.5">
+                                <span className="text-lg sm:text-xl font-black text-rose-600 dark:text-rose-400">
+                                  €{priceInfo.promoPrice.toFixed(2)}
+                                </span>
+                                <span className="line-through text-xs text-slate-400">
+                                  €{priceInfo.basePrice.toFixed(2)}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400">
+                                €{priceInfo.basePrice.toFixed(2)}
+                              </span>
+                            )}
+                            {priceInfo.promoType === 'BUY_X_GET_Y' && (
+                              <span className="text-[10px] text-purple-600 dark:text-purple-400 font-bold">
+                                {language === 'ar' ? 'عرض 2+1 مجاناً' : '2+1 Gratis Deal'}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     <button
@@ -1056,9 +1176,12 @@ export const LandingPage = () => {
                                 <Package className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                               )}
                             </div>
-                            <span className="font-bold text-slate-900 dark:text-white line-clamp-1" title={localizedName}>
-                              {localizedName}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-slate-900 dark:text-white line-clamp-1" title={localizedName}>
+                                {localizedName}
+                              </span>
+                              {getPromotionBadge(product.id)}
+                            </div>
                           </div>
                         </td>
 
@@ -1078,8 +1201,24 @@ export const LandingPage = () => {
                         </td>
 
                         {/* Price */}
-                        <td className="py-3 px-4 font-black text-emerald-600 dark:text-emerald-400">
-                          €{Number(product.b2bPrice).toFixed(2)}
+                        <td className="py-3 px-4">
+                          {(() => {
+                            const priceInfo = getProductPrices(product);
+                            return priceInfo.promoPrice != null ? (
+                              <div className="flex items-baseline gap-1.5">
+                                <span className="font-black text-rose-600 dark:text-rose-400">
+                                  €{priceInfo.promoPrice.toFixed(2)}
+                                </span>
+                                <span className="line-through text-xs text-slate-400">
+                                  €{priceInfo.basePrice.toFixed(2)}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="font-black text-emerald-600 dark:text-emerald-400">
+                                €{priceInfo.basePrice.toFixed(2)}
+                              </span>
+                            );
+                          })()}
                         </td>
 
                         {/* Action */}
@@ -1339,10 +1478,13 @@ export const LandingPage = () => {
             {/* Modal Content */}
             <div className="space-y-4">
               <div>
-                <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
-                  {(language === 'ar' ? selectedProduct.nameAr : selectedProduct.nameDe) || selectedProduct.name}
-                </h3>
-                <div className="flex items-center gap-2 sm:gap-3 mt-1.5 text-xs text-slate-400 dark:text-gray-500 font-mono flex-wrap">
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
+                    {(language === 'ar' ? selectedProduct.nameAr : selectedProduct.nameDe) || selectedProduct.name}
+                  </h3>
+                  {getPromotionBadge(selectedProduct.id)}
+                </div>
+                <div className="flex items-center gap-2 sm:gap-3 text-xs text-slate-400 dark:text-gray-500 font-mono flex-wrap">
                   <span>SKU: {selectedProduct.sku}</span>
                   <span>•</span>
                   <div>{getStockBadge(selectedProduct.stock)}</div>
@@ -1358,9 +1500,32 @@ export const LandingPage = () => {
               <div className="pt-4 border-t border-slate-100 dark:border-gray-800 flex flex-col xs:flex-row items-stretch xs:items-center justify-between gap-3">
                 <div>
                   <span className="block text-[11px] text-slate-400 font-semibold">{isAr ? 'السعر للتوصيل' : 'Preis für Hauszustellung'}</span>
-                  <span className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
-                    €{Number(selectedProduct.b2bPrice).toFixed(2)}
-                  </span>
+                  {(() => {
+                    const priceInfo = getProductPrices(selectedProduct);
+                    return (
+                      <div>
+                        {priceInfo.promoPrice != null ? (
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400 font-mono">
+                              €{priceInfo.promoPrice.toFixed(2)}
+                            </span>
+                            <span className="line-through text-xs text-slate-400 font-mono">
+                              €{priceInfo.basePrice.toFixed(2)}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
+                            €{priceInfo.basePrice.toFixed(2)}
+                          </span>
+                        )}
+                        {priceInfo.promoType === 'BUY_X_GET_Y' && (
+                          <span className="text-xs text-purple-600 dark:text-purple-400 font-bold block mt-0.5">
+                            {language === 'ar' ? 'عرض 2+1 مجاناً: أضف 3 وحدات للسلة وادفع ثمن 2 فقط!' : '2+1 Gratis Aktion: 3 Stück in den Warenkorb legen und 1 geschenkt bekommen!'}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })()}
                   <span className="block text-[10px] text-slate-400 dark:text-gray-500 mt-0.5">
                     {t('pricesInclVatNotice')}
                   </span>

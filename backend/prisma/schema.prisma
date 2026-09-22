@@ -44,50 +44,59 @@ model Product {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   orderItems    OrderItem[]
+  promotions    Promotion[]
 
   @@index([categoryId])
   @@index([stock])
 }
 
 model Customer {
-  id                   String    @id @default(uuid())
+  id                   String        @id @default(uuid())
   name                 String
-  email                String    @unique
-  emailVerified        Boolean   @default(false)
+  email                String        @unique
+  emailVerified        Boolean       @default(false)
   emailOtp             String?
   emailOtpExpiry       DateTime?
-  phone                String    @unique
-  phoneVerified        Boolean   @default(false)
+  phone                String        @unique
+  phoneVerified        Boolean       @default(false)
   phoneOtp             String?
   phoneOtpExpiry       DateTime?
   password             String
   resetToken           String?
   resetTokenExpiry     DateTime?
-  otpAttempts          Int       @default(0)
+  otpAttempts          Int           @default(0)
   street               String?
   houseNumber          String?
   postalCode           String?
   city                 String?
   floorApartment       String?
   deliveryNotes        String?
-  preferredLanguage    String    @default("de")
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  preferredLanguage    String        @default("de")
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
   orders               Order[]
+  couponUsages         CouponUsage[]
 }
 
 model Order {
-  id              String      @id @default(uuid())
-  customerId      String?
-  customer        Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  customerName    String?
-  customerPhone   String?
-  customerEmail   String?
-  deliveryAddress String?
-  deliveryNotes   String?
-  deliverySlot    String?
-  paymentMethod   String      @default("cash_on_delivery")
-  status          String      @default("pending")
+  id                  String      @id @default(uuid())
+  customerId          String?
+  customer            Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerName        String?
+  customerPhone       String?
+  customerEmail       String?
+  deliveryAddress     String?
+  deliveryNotes       String?
+  deliverySlot        String?
+  paymentMethod       String      @default("cash_on_delivery")
+  status              String      @default("pending")
+  itemsSubtotal       Float       @default(0)
+  couponId            String?
+  coupon              Coupon?     @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  couponCode          String?
+  couponDiscount      Float       @default(0)
+  promotionDiscount   Float       @default(0)
+  isFreeShipping      Boolean     @default(false)
   totalAmount         Float
   originalTotalAmount Float?
   modificationReason  String?
@@ -101,17 +110,21 @@ model Order {
   @@index([customerId])
   @@index([status])
   @@index([createdAt])
+  @@index([couponCode])
 }
 
 model OrderItem {
-  id        String  @id @default(uuid())
-  orderId   String
-  order     Order   @relation(fields: [orderId], references: [id])
-  productId String
-  product   Product @relation(fields: [productId], references: [id])
-  quantity  Int
-  price     Float
-  subtotal  Float
+  id              String   @id @default(uuid())
+  orderId         String
+  order           Order    @relation(fields: [orderId], references: [id])
+  productId       String
+  product         Product  @relation(fields: [productId], references: [id])
+  quantity        Int
+  price           Float
+  originalPrice   Float?
+  discountAmount  Float    @default(0)
+  promotionType   String?
+  subtotal        Float
 
   @@index([orderId])
   @@index([productId])
@@ -170,6 +183,67 @@ model GoogleReview {
   verified       Boolean  @default(true)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+model Coupon {
+  id                    String        @id @default(uuid())
+  code                  String        @unique
+  description           String?
+  discountType          String        // "PERCENTAGE", "FIXED", "COMBO"
+  discountValue         Float         // e.g. 10 for 10% or 5 for €5
+  freeShipping          Boolean       @default(false)
+  requiredProductIds    String?       // comma-separated product IDs required for bundle combo
+  minOrderValue         Float         @default(0)
+  maxDiscountAmount     Float?        // optional cap for percentage discounts
+  startDate             DateTime?
+  endDate               DateTime?
+  usageLimit            Int?          // total max uses across all users, null = unlimited
+  usageLimitPerCustomer Int           @default(1)
+  usedCount             Int           @default(0)
+  isActive              Boolean       @default(true)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  orders                Order[]
+  usages                CouponUsage[]
+
+  @@index([code])
+  @@index([isActive])
+}
+
+model CouponUsage {
+  id         String   @id @default(uuid())
+  couponId   String
+  coupon     Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  orderId    String
+  usedAt     DateTime @default(now())
+
+  @@unique([couponId, orderId])
+  @@index([couponId, customerId])
+}
+
+model Promotion {
+  id               String    @id @default(uuid())
+  productId        String
+  product          Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  titleDe          String
+  titleAr          String?
+  type             String    // "PRODUCT_DISCOUNT", "BUY_X_GET_Y"
+  discountPercent  Float?    // e.g. 20 for 20% off
+  promotionalPrice Float?    // e.g. 2.99
+  buyQuantity      Int?      @default(2) // for 2+1: buy 2
+  getYQuantity     Int?      @default(1) // for 2+1: get 1 free
+  badgeTextDe      String?   // e.g. "2+1 Gratis", "Angebot -20%"
+  badgeTextAr      String?   // e.g. "2+1 مجاناً"
+  startDate        DateTime?
+  endDate          DateTime?
+  isActive         Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([productId])
+  @@index([isActive])
 }
 
 

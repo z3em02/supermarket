@@ -27,6 +27,7 @@ const Accounting = lazy(() => import('./pages/Accounting').then(m => ({ default:
 const Catalogs = lazy(() => import('./pages/Catalogs').then(m => ({ default: m.Catalogs })));
 const Settings = lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })));
 const Customers = lazy(() => import('./pages/Customers').then(m => ({ default: m.Customers })));
+const Promotions = lazy(() => import('./pages/Promotions').then(m => ({ default: m.Promotions })));
 
 const PageLoader = () => (
   <div className="min-h-[50vh] flex items-center justify-center">
@@ -85,6 +86,7 @@ function App() {
                   <Route path={`${ADMIN}/catalogs`}   element={<Suspense fallback={<PageLoader />}><Catalogs /></Suspense>} />
                   <Route path={`${ADMIN}/categories`} element={<Navigate to={`${ADMIN}/catalogs`} replace />} />
                   <Route path={`${ADMIN}/products`}   element={<Suspense fallback={<PageLoader />}><Products /></Suspense>} />
+                  <Route path={`${ADMIN}/promotions`} element={<Suspense fallback={<PageLoader />}><Promotions /></Suspense>} />
                   <Route path={`${ADMIN}/orders`}     element={<Suspense fallback={<PageLoader />}><Orders /></Suspense>} />
                   <Route path={`${ADMIN}/customers`}  element={<Suspense fallback={<PageLoader />}><Customers /></Suspense>} />
                   <Route path={`${ADMIN}/accounting`} element={<Suspense fallback={<PageLoader />}><Accounting /></Suspense>} />

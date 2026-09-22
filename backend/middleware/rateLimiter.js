@@ -63,4 +63,11 @@ const apiLimiter = createRateLimiter({
   message: 'Request limit exceeded. Please slow down.'
 });
 
-module.exports = { authLimiter, apiLimiter };
+// Coupon code validation limiter: 20 attempts per 5 minutes per IP (guards against coupon enumeration)
+const couponLimiter = createRateLimiter({
+  windowMs: 5 * 60 * 1000,
+  max: 20,
+  message: 'Zu viele Versuche zur Gutschein-Validierung. Bitte warten Sie 5 Minuten / Too many coupon validation attempts. Please try again after 5 minutes.'
+});
+
+module.exports = { authLimiter, apiLimiter, couponLimiter };

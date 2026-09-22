@@ -31,7 +31,10 @@ import {
   PlusCircle,
   RotateCcw,
   Phone,
-  Mail
+  Mail,
+  Tag,
+  Gift,
+  Sparkles
 } from 'lucide-react';
 
 export const DELIVERY_SLOT_LABELS = {
@@ -530,6 +533,10 @@ export const Orders = () => {
     const labelQty       = isAr ? 'الكمية'            : 'Menge';
     const labelSubtotal  = isAr ? 'المجموع'           : 'Betrag';
     const labelGross     = isAr ? 'المجموع الكلي'     : 'Gesamtbetrag';
+    const labelSubtotalGross = isAr ? 'المجموع الفرعي' : 'Zwischensumme';
+    const labelCoupon    = isAr ? 'كوبون الخصم'       : 'Gutschein';
+    const labelPromo     = isAr ? 'خصم العروض'        : 'Aktionsrabatt';
+    const labelDeliveryFee = isAr ? 'رسوم التوصيل'    : 'Liefergebühr';
     const labelBilledTo  = isAr ? 'فاتورة إلى'       : 'Rechnungsempfänger';
     const labelDelivery  = isAr ? 'عنوان التسليم'    : 'Lieferadresse';
     const labelInvoice   = isAr ? 'فاتورة'            : 'Rechnung';
@@ -564,7 +571,7 @@ export const Orders = () => {
     tbody tr{border-bottom:1px solid #e2e8f0}
     tbody tr:nth-child(even){background:#f8fafc}
     .totals{display:flex;justify-content:flex-end;margin-bottom:16px}
-    .totals-box{width:220px;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden}
+    .totals-box{width:240px;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden}
     .totals-row{display:flex;justify-content:space-between;padding:7px 12px;font-size:12px}
     .totals-row:not(:last-child){border-bottom:1px solid #f1f5f9}
     .totals-row.total{background:#1e3a8a;color:#fff;font-weight:800;font-size:13px}
@@ -616,6 +623,18 @@ export const Orders = () => {
 
   <div class="totals">
     <div class="totals-box">
+      ${Number(order.itemsSubtotal) > 0 && (Number(order.couponDiscount) > 0 || Number(order.promotionDiscount) > 0) ? `
+      <div class="totals-row"><span>${labelSubtotalGross}</span><span>€${Number(order.itemsSubtotal).toFixed(2)}</span></div>
+      ` : ''}
+      ${Number(order.promotionDiscount) > 0 ? `
+      <div class="totals-row" style="color:#e11d48"><span>${labelPromo}</span><span>-€${Number(order.promotionDiscount).toFixed(2)}</span></div>
+      ` : ''}
+      ${Number(order.couponDiscount) > 0 ? `
+      <div class="totals-row" style="color:#7c3aed"><span>${labelCoupon}${order.couponCode ? ` (${escapeHtml(order.couponCode)})` : ''}</span><span>-€${Number(order.couponDiscount).toFixed(2)}</span></div>
+      ` : ''}
+      ${Number(order.deliveryFee) > 0 ? `
+      <div class="totals-row"><span>${labelDeliveryFee}</span><span>€${Number(order.deliveryFee).toFixed(2)}</span></div>
+      ` : ''}
       <div class="totals-row total"><span>${labelGross}</span><span>€${total.toFixed(2)}</span></div>
     </div>
   </div>
@@ -956,6 +975,20 @@ export const Orders = () => {
                     <Truck className="w-3 h-3" />
                     {language === 'ar' ? 'توصيل منزلي' : 'Hauszustellung'}
                   </span>
+
+                  {Number(order.promotionDiscount) > 0 && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-[11px] font-bold border border-rose-200/80 dark:border-rose-900/50">
+                      <Sparkles className="w-3 h-3 text-rose-500" />
+                      <span>{t('promotions')}: -€{Number(order.promotionDiscount).toFixed(2)}</span>
+                    </span>
+                  )}
+
+                  {Number(order.couponDiscount) > 0 && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 text-[11px] font-bold border border-purple-200/80 dark:border-purple-900/50" title={order.couponCode ? `Code: ${order.couponCode}` : undefined}>
+                      <Tag className="w-3 h-3 text-purple-500" />
+                      <span>{order.couponCode || t('coupon')}: -€{Number(order.couponDiscount).toFixed(2)}</span>
+                    </span>
+                  )}
                 </div>
 
                 {/* Amount + items count */}
@@ -1470,6 +1503,45 @@ export const Orders = () => {
                 </div>
               </div>
 
+              {/* Order Totals Summary */}
+              <div className="flex justify-end">
+                <div className="w-full sm:w-72 bg-slate-50 dark:bg-gray-950/60 rounded-xl border border-slate-200 dark:border-gray-800 p-3.5 space-y-2 text-xs">
+                  {Number(selectedOrder.itemsSubtotal) > 0 && (Number(selectedOrder.couponDiscount) > 0 || Number(selectedOrder.promotionDiscount) > 0) && (
+                    <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                      <span>{language === 'ar' ? 'المجموع الفرعي' : 'Zwischensumme'}</span>
+                      <span className="font-mono">€{Number(selectedOrder.itemsSubtotal).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {Number(selectedOrder.promotionDiscount) > 0 && (
+                    <div className="flex justify-between text-rose-600 dark:text-rose-400 font-semibold">
+                      <span className="flex items-center gap-1"><Sparkles className="w-3.5 h-3.5" /> {language === 'ar' ? 'خصم العروض' : 'Aktionsrabatt'}</span>
+                      <span className="font-mono">-€{Number(selectedOrder.promotionDiscount).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {Number(selectedOrder.couponDiscount) > 0 && (
+                    <div className="flex justify-between text-purple-600 dark:text-purple-400 font-semibold">
+                      <span className="flex items-center gap-1"><Tag className="w-3.5 h-3.5" /> {t('coupon')} {selectedOrder.couponCode ? `(${selectedOrder.couponCode})` : ''}</span>
+                      <span className="font-mono">-€{Number(selectedOrder.couponDiscount).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {Number(selectedOrder.deliveryFee) > 0 ? (
+                    <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                      <span>{t('deliveryFee')}</span>
+                      <span className="font-mono">€{Number(selectedOrder.deliveryFee).toFixed(2)}</span>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-semibold">
+                      <span>{t('deliveryFee')}</span>
+                      <span>{t('freeShipping')}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between pt-2 border-t border-slate-200 dark:border-gray-800 text-sm font-black text-slate-900 dark:text-white">
+                    <span>{t('total')}</span>
+                    <span className="font-mono text-blue-600 dark:text-blue-400">€{Number(selectedOrder.totalAmount).toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+
               {/* Customer Response / Admin Note in Detail Modal */}
               {(() => {
                 const { customNotes, customerResponse } = parseOrderNotes(selectedOrder.adminNotes, language);
@@ -1695,7 +1767,36 @@ export const Orders = () => {
 
               {/* Totals */}
               <div className="flex justify-end">
-                <div className="w-56 rounded-xl border border-slate-200 dark:border-gray-800 overflow-hidden">
+                <div className="w-64 rounded-xl border border-slate-200 dark:border-gray-800 overflow-hidden divide-y divide-slate-100 dark:divide-gray-800">
+                  {Number(printOrder.itemsSubtotal) > 0 && (Number(printOrder.couponDiscount) > 0 || Number(printOrder.promotionDiscount) > 0) && (
+                    <div className="flex justify-between px-4 py-2 bg-slate-50 dark:bg-gray-950 text-slate-600 dark:text-slate-300 text-xs">
+                      <span>{language === 'ar' ? 'المجموع الفرعي' : 'Zwischensumme'}</span>
+                      <span className="font-mono">€{Number(printOrder.itemsSubtotal).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {Number(printOrder.promotionDiscount) > 0 && (
+                    <div className="flex justify-between px-4 py-2 bg-rose-50/50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 text-xs font-semibold">
+                      <span>{language === 'ar' ? 'خصم العروض' : 'Aktionsrabatt'}</span>
+                      <span className="font-mono">-€{Number(printOrder.promotionDiscount).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {Number(printOrder.couponDiscount) > 0 && (
+                    <div className="flex justify-between px-4 py-2 bg-purple-50/50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400 text-xs font-semibold">
+                      <span>{language === 'ar' ? 'كوبون الخصم' : 'Gutschein'} {printOrder.couponCode ? `(${printOrder.couponCode})` : ''}</span>
+                      <span className="font-mono">-€{Number(printOrder.couponDiscount).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {Number(printOrder.deliveryFee) > 0 ? (
+                    <div className="flex justify-between px-4 py-2 bg-slate-50 dark:bg-gray-950 text-slate-600 dark:text-slate-300 text-xs">
+                      <span>{language === 'ar' ? 'رسوم التوصيل' : 'Liefergebühr'}</span>
+                      <span className="font-mono">€{Number(printOrder.deliveryFee).toFixed(2)}</span>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between px-4 py-2 bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300 text-xs font-semibold">
+                      <span>{language === 'ar' ? 'رسوم التوصيل' : 'Liefergebühr'}</span>
+                      <span>{language === 'ar' ? 'مجاناً' : 'Kostenlos'}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between px-4 py-3 bg-blue-900 dark:bg-blue-950 text-white text-sm font-black">
                     <span>{language === 'ar' ? 'المجموع الكلي' : 'Gesamtbetrag'}</span>
                     <span className="font-mono">€{Number(printOrder.totalAmount).toFixed(2)}</span>

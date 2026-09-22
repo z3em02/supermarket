@@ -29,6 +29,7 @@ import {
   Calendar,
   Printer,
   FileText,
+  Tag,
   X
 } from 'lucide-react';
 
@@ -220,10 +221,12 @@ export const CustomerAccount = () => {
     const isArabic = language === 'ar';
     const dir = isArabic ? 'rtl' : 'ltr';
     const storeName = getStoreName();
-    const itemsSubtotal = (order.orderItems || []).reduce(
+    const itemsSubtotal = Number(order.itemsSubtotal) || (order.orderItems || []).reduce(
       (sum, item) => sum + Number(item.subtotal ?? item.price * item.quantity), 0
     );
-    const deliveryFeeCharged = Math.max(0, Number(order.totalAmount) - itemsSubtotal);
+    const promotionDiscount = Number(order.promotionDiscount || 0);
+    const couponDiscount = Number(order.couponDiscount || 0);
+    const deliveryFeeCharged = Number(order.deliveryFee ?? Math.max(0, Number(order.totalAmount) - (itemsSubtotal - promotionDiscount - couponDiscount)));
 
     const escapeHtml = (str) => {
       if (!str) return '';
@@ -348,6 +351,21 @@ export const CustomerAccount = () => {
 
   <div class="totals">
     <div class="totals-box">
+      ${itemsSubtotal > 0 && (promotionDiscount > 0 || couponDiscount > 0) ? `
+      <div class="totals-row">
+        <span>${isArabic ? 'المجموع الفرعي:' : 'Zwischensumme:'}</span>
+        <span style="font-family: monospace;">€${itemsSubtotal.toFixed(2)}</span>
+      </div>` : ''}
+      ${promotionDiscount > 0 ? `
+      <div class="totals-row" style="color:#e11d48">
+        <span>${isArabic ? 'خصم العروض:' : 'Aktionsrabatt:'}</span>
+        <span style="font-family: monospace;">-€${promotionDiscount.toFixed(2)}</span>
+      </div>` : ''}
+      ${couponDiscount > 0 ? `
+      <div class="totals-row" style="color:#7c3aed">
+        <span>${isArabic ? 'كوبون الخصم:' : 'Gutschein:'} ${order.couponCode ? `(${escapeHtml(order.couponCode)})` : ''}</span>
+        <span style="font-family: monospace;">-€${couponDiscount.toFixed(2)}</span>
+      </div>` : ''}
       <div class="totals-row">
         <span>${isArabic ? 'رسوم التوصيل:' : 'Liefergebühr:'}</span>
         <strong style="color:#16a34a;">${deliveryFeeCharged > 0 ? `€${deliveryFeeCharged.toFixed(2)}` : (isArabic ? 'مجاناً (0.00 €)' : 'Kostenlos (0,00 €)')}</strong>
@@ -737,7 +755,19 @@ export const CustomerAccount = () => {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-50 dark:border-gray-800/50">
+                      <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 sm:gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-50 dark:border-gray-800/50">
+                        {Number(order.promotionDiscount) > 0 && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-[11px] font-bold border border-rose-200/80 dark:border-rose-900/50">
+                            <Sparkles className="w-3 h-3 text-rose-500" />
+                            <span>{isAr ? 'عروض' : 'Aktion'}: -€{Number(order.promotionDiscount).toFixed(2)}</span>
+                          </span>
+                        )}
+                        {Number(order.couponDiscount) > 0 && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 text-[11px] font-bold border border-purple-200/80 dark:border-purple-900/50">
+                            <Tag className="w-3 h-3 text-purple-500" />
+                            <span>{order.couponCode || (isAr ? 'كوبون' : 'Gutschein')}: -€{Number(order.couponDiscount).toFixed(2)}</span>
+                          </span>
+                        )}
                         {getStatusBadge(order.status)}
                         <div className="text-end">
                           <div className="text-xs text-slate-400">{isAr ? 'الإجمالي' : 'Gesamt'}</div>
@@ -1138,12 +1168,42 @@ export const CustomerAccount = () => {
                       })}
                     </tbody>
                     <tfoot>
+                      {Number(reportOrder.itemsSubtotal) > 0 && (Number(reportOrder.couponDiscount) > 0 || Number(reportOrder.promotionDiscount) > 0) && (
+                        <tr className="border-t border-slate-200 dark:border-gray-800 bg-slate-50/60 dark:bg-gray-950/40">
+                          <td colSpan="3" className="p-2.5 sm:p-3 text-end font-medium text-slate-500">
+                            {isAr ? 'المجموع الفرعي:' : 'Zwischensumme:'}
+                          </td>
+                          <td className="p-2.5 sm:p-3 text-end font-mono font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                            €{Number(reportOrder.itemsSubtotal).toFixed(2)}
+                          </td>
+                        </tr>
+                      )}
+                      {Number(reportOrder.promotionDiscount) > 0 && (
+                        <tr className="border-t border-slate-200 dark:border-gray-800 bg-rose-50/40 dark:bg-rose-950/20">
+                          <td colSpan="3" className="p-2.5 sm:p-3 text-end font-medium text-rose-600 dark:text-rose-400">
+                            {isAr ? 'خصم العروض الترويجية:' : 'Aktionsrabatt:'}
+                          </td>
+                          <td className="p-2.5 sm:p-3 text-end font-mono font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap">
+                            -€{Number(reportOrder.promotionDiscount).toFixed(2)}
+                          </td>
+                        </tr>
+                      )}
+                      {Number(reportOrder.couponDiscount) > 0 && (
+                        <tr className="border-t border-slate-200 dark:border-gray-800 bg-purple-50/40 dark:bg-purple-950/20">
+                          <td colSpan="3" className="p-2.5 sm:p-3 text-end font-medium text-purple-600 dark:text-purple-400">
+                            {isAr ? 'كوبون الخصم:' : 'Gutschein:'} {reportOrder.couponCode ? `(${reportOrder.couponCode})` : ''}
+                          </td>
+                          <td className="p-2.5 sm:p-3 text-end font-mono font-bold text-purple-600 dark:text-purple-400 whitespace-nowrap">
+                            -€{Number(reportOrder.couponDiscount).toFixed(2)}
+                          </td>
+                        </tr>
+                      )}
                       <tr className="border-t border-slate-200 dark:border-gray-800 bg-slate-50/60 dark:bg-gray-950/40">
                         <td colSpan="3" className="p-2.5 sm:p-3 text-end font-medium text-slate-500">
                           {isAr ? 'رسوم التوصيل للمنزل:' : 'Lieferkosten (Haustür):'}
                         </td>
                         <td className="p-2.5 sm:p-3 text-end font-bold text-emerald-600 whitespace-nowrap">
-                          {reportDeliveryFee > 0 ? `€${reportDeliveryFee.toFixed(2)}` : (isAr ? 'مجاناً (0.00 €)' : 'Kostenlos (0,00 €)')}
+                          {Number(reportOrder.deliveryFee) > 0 ? `€${Number(reportOrder.deliveryFee).toFixed(2)}` : (isAr ? 'مجاناً (0.00 €)' : 'Kostenlos (0,00 €)')}
                         </td>
                       </tr>
                       <tr className="border-t-2 border-slate-200 dark:border-gray-700 bg-slate-100/80 dark:bg-gray-800/80">

@@ -15,7 +15,8 @@ import {
   Building2,
   Store,
   Layers,
-  Settings
+  Settings,
+  Sparkles
 } from 'lucide-react';
 import { LanguageSelector } from './LanguageSelector';
 import { ThemeToggle } from './ThemeToggle';
@@ -31,6 +32,7 @@ export const Layout = () => {
     { name: t('dashboard'), href: '/secret/admin/dashboard', icon: LayoutDashboard },
     { name: t('catalogs'),  href: '/secret/admin/catalogs',  icon: Layers },
     { name: t('products'),  href: '/secret/admin/products',  icon: Package },
+    { name: t('promotions'), href: '/secret/admin/promotions', icon: Sparkles },
     { name: t('publicCatalog'), href: '/', icon: Store },
     { name: t('orders'),    href: '/secret/admin/orders',    icon: ShoppingCart },
     { name: t('customers'), href: '/secret/admin/customers', icon: Users },
