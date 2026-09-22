@@ -174,6 +174,33 @@ export const LandingPage = () => {
     fetchCatalog();
   }, []);
 
+  // Re-sync cart items against the live catalog once products load, so a cart
+  // that's been sitting in localStorage for days doesn't show a stale price
+  // or let a customer check out with an outdated total. Removes items whose
+  // product was deleted or has since sold out, and clamps quantity to stock.
+  useEffect(() => {
+    if (products.length === 0) return;
+    setCart((prev) => {
+      let changed = false;
+      const next = prev
+        .map((item) => {
+          const live = products.find((p) => p.id === item.productId);
+          if (!live || live.stock <= 0) {
+            changed = true;
+            return null;
+          }
+          const clampedQty = Math.min(item.quantity, live.stock);
+          if (live.b2bPrice !== item.price || live.stock !== item.stock || clampedQty !== item.quantity) {
+            changed = true;
+            return { ...item, price: live.b2bPrice, stock: live.stock, quantity: clampedQty };
+          }
+          return item;
+        })
+        .filter(Boolean);
+      return changed ? next : prev;
+    });
+  }, [products]);
+
   // Filtered & sorted products
   const filteredProducts = useMemo(() => {
     return products

@@ -39,6 +39,27 @@ async function scrapeGoogleReviews(inputUrlOrQuery, options = {}) {
   // If not starting with http, assume it's a search term
   if (!target.startsWith('http://') && !target.startsWith('https://')) {
     target = `https://www.google.com/maps/search/${encodeURIComponent(target)}`;
+  } else {
+    // Only ever navigate the headless browser to Google's own domains — never
+    // let an admin-supplied URL make this server fetch an arbitrary internal
+    // or external host (SSRF).
+    let hostname;
+    try {
+      hostname = new URL(target).hostname.toLowerCase();
+    } catch {
+      throw new Error('Ungültige URL.');
+    }
+    // Check the label immediately before the TLD is exactly "google" (e.g.
+    // google.com, maps.google.com, google.de) rather than a loose substring/
+    // regex match, which a host like "google.com.evil.com" would slip past.
+    const labels = hostname.split('.');
+    const isGoogleHost =
+      (labels.length >= 2 && labels[labels.length - 2] === 'google') ||
+      hostname === 'goo.gl' || hostname.endsWith('.goo.gl') ||
+      hostname === 'g.page' || hostname.endsWith('.g.page');
+    if (!isGoogleHost) {
+      throw new Error('Nur Google Maps- oder Google-Bewertungslinks sind erlaubt.');
+    }
   }
 
   const executablePath = getBrowserExecutablePath();

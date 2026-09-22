@@ -13,8 +13,10 @@ const anyAuthMiddleware = (req, res, next) => {
     const decoded = jwt.verify(token, JWT_SECRET);
     if (decoded.role === 'customer') {
       req.customer = decoded;
-    } else {
+    } else if (decoded.role === 'admin') {
       req.admin = decoded;
+    } else {
+      return res.status(401).json({ error: 'Invalid or expired token' });
     }
     next();
   } catch (error) {
@@ -34,9 +36,10 @@ const optionalAuthMiddleware = (req, res, next) => {
     const decoded = jwt.verify(token, JWT_SECRET);
     if (decoded.role === 'customer') {
       req.customer = decoded;
-    } else {
+    } else if (decoded.role === 'admin') {
       req.admin = decoded;
     }
+    // Any other/missing role: fall through unauthenticated, same as an invalid token
   } catch (error) {
     // Token is invalid/expired, continue as unauthenticated guest
   }

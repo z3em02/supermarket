@@ -11,7 +11,7 @@ const authMiddleware = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    if (decoded.role && decoded.role !== 'admin') {
+    if (decoded.role !== 'admin') {
       return res.status(403).json({ error: 'Access denied. Admin access required.' });
     }
     req.admin = decoded;

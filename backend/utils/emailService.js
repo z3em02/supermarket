@@ -1,6 +1,19 @@
 const nodemailer = require('nodemailer');
 const prisma = require('../lib/prisma');
 
+// Customer-supplied strings (name, delivery address/notes) are interpolated
+// directly into HTML emails below; escape them so a malicious value can't
+// break the email markup or inject content.
+const escapeHtml = (value) => {
+  if (value == null) return value;
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
 const isEmailConfigured = () =>
   Boolean(
     process.env.EMAIL_USER &&
@@ -226,6 +239,7 @@ const emailWrapper = ({ lang = 'de', title, subtitle, contentHtml, settings }) =
  * Sent in the customer's chosen language ('de' or 'ar')
  */
 const sendOrderStatusEmail = async (customerEmail, customerName, orderDetails, status, notes, lang = 'de') => {
+  customerName = escapeHtml(customerName);
   if (!isEmailConfigured()) {
     console.log(`[Email skipped - SMTP not configured] Order #${orderDetails.id} status '${status}' (${lang}) -> ${customerEmail}`);
     return;
@@ -291,6 +305,14 @@ const sendOrderStatusEmail = async (customerEmail, customerName, orderDetails, s
 
     const deliveryFeeCharged = computeDeliveryFeeCharged(orderDetails);
 
+    // Escaped copies for HTML interpolation — orderDetails/notes are not mutated
+    // in place since the same object is serialized back as the API response
+    // after this email is sent.
+    const safeNotes = escapeHtml(notes);
+    const safeDeliveryAddress = escapeHtml(orderDetails.deliveryAddress);
+    const safeDeliveryNotes = escapeHtml(orderDetails.deliveryNotes);
+    const safeModificationReason = escapeHtml(orderDetails.modificationReason);
+
     // Highlight block if modification requires approval
     const modificationAlertHtml = isPendingApproval ? `
       <div style="background-color: #fffbeb; border: 2px solid #f59e0b; border-radius: 14px; padding: 18px; margin: 18px 0; direction: ${isAr ? 'rtl' : 'ltr'}; text-align: ${isAr ? 'right' : 'left'};">
@@ -307,7 +329,7 @@ const sendOrderStatusEmail = async (customerEmail, customerName, orderDetails, s
         </p>
         ${orderDetails.modificationReason ? `
           <div style="background: #ffffff; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #92400e; border: 1px dashed #f59e0b; margin-bottom: 12px;">
-            <strong>${isAr ? 'ملاحظة المتجر / سبب التعديل:' : 'Begründung des Supermarkts:'}</strong> ${orderDetails.modificationReason}
+            <strong>${isAr ? 'ملاحظة المتجر / سبب التعديل:' : 'Begründung des Supermarkts:'}</strong> ${safeModificationReason}
           </div>
         ` : ''}
         ${orderDetails.originalTotalAmount ? `
@@ -334,7 +356,7 @@ const sendOrderStatusEmail = async (customerEmail, customerName, orderDetails, s
 
       ${modificationAlertHtml}
 
-      ${notes && !isPendingApproval ? `<p style="background: #f8fafc; border-right: 3px solid #2563eb; padding: 10px 14px; font-size: 13px; color: #475569; margin: 16px 0;"><strong>ملاحظات المتجر:</strong> ${notes}</p>` : ''}
+      ${notes && !isPendingApproval ? `<p style="background: #f8fafc; border-right: 3px solid #2563eb; padding: 10px 14px; font-size: 13px; color: #475569; margin: 16px 0;"><strong>ملاحظات المتجر:</strong> ${safeNotes}</p>` : ''}
 
       <!-- Order Summary Card -->
       <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px; margin: 18px 0; font-size: 13px; line-height: 1.8;">
@@ -348,9 +370,9 @@ const sendOrderStatusEmail = async (customerEmail, customerName, orderDetails, s
             <td style="color: #64748b;">طريقة الدفع:</td>
             <td style="font-weight: 700; color: #16a34a;">الدفع عند الاستلام (نقداً أو بالبطاقة عند الباب)</td>
           </tr>
-          ${orderDetails.deliveryAddress ? `<tr><td style="color: #64748b; vertical-align: top;">عنوان التوصيل:</td><td style="font-weight: 600; color: #1e293b;">${orderDetails.deliveryAddress}</td></tr>` : ''}
+          ${orderDetails.deliveryAddress ? `<tr><td style="color: #64748b; vertical-align: top;">عنوان التوصيل:</td><td style="font-weight: 600; color: #1e293b;">${safeDeliveryAddress}</td></tr>` : ''}
           ${orderDetails.deliverySlot && DELIVERY_SLOT_LABELS[orderDetails.deliverySlot] ? `<tr><td style="color: #64748b;">موعد التوصيل:</td><td style="font-weight: 600; color: #1e293b;">${DELIVERY_SLOT_LABELS[orderDetails.deliverySlot].ar}</td></tr>` : ''}
-          ${orderDetails.deliveryNotes ? `<tr><td style="color: #64748b;">ملاحظات السائق:</td><td style="font-style: italic; color: #475569;">${orderDetails.deliveryNotes}</td></tr>` : ''}
+          ${orderDetails.deliveryNotes ? `<tr><td style="color: #64748b;">ملاحظات السائق:</td><td style="font-style: italic; color: #475569;">${safeDeliveryNotes}</td></tr>` : ''}
         </table>
       </div>
 
@@ -398,7 +420,7 @@ const sendOrderStatusEmail = async (customerEmail, customerName, orderDetails, s
 
       ${modificationAlertHtml}
 
-      ${notes && !isPendingApproval ? `<p style="background: #f8fafc; border-left: 3px solid #2563eb; padding: 10px 14px; font-size: 13px; color: #475569; margin: 16px 0;"><strong>Hinweis der Filiale:</strong> ${notes}</p>` : ''}
+      ${notes && !isPendingApproval ? `<p style="background: #f8fafc; border-left: 3px solid #2563eb; padding: 10px 14px; font-size: 13px; color: #475569; margin: 16px 0;"><strong>Hinweis der Filiale:</strong> ${safeNotes}</p>` : ''}
 
       <!-- Order Summary Card -->
       <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px; margin: 18px 0; font-size: 13px; line-height: 1.8;">
@@ -412,9 +434,9 @@ const sendOrderStatusEmail = async (customerEmail, customerName, orderDetails, s
             <td style="color: #64748b;">Zahlungsart:</td>
             <td style="font-weight: 700; color: #16a34a;">Barzahlung / Kartenzahlung an der Haustür (Lieferung)</td>
           </tr>
-          ${orderDetails.deliveryAddress ? `<tr><td style="color: #64748b; vertical-align: top;">Lieferadresse:</td><td style="font-weight: 600; color: #1e293b;">${orderDetails.deliveryAddress}</td></tr>` : ''}
+          ${orderDetails.deliveryAddress ? `<tr><td style="color: #64748b; vertical-align: top;">Lieferadresse:</td><td style="font-weight: 600; color: #1e293b;">${safeDeliveryAddress}</td></tr>` : ''}
           ${orderDetails.deliverySlot && DELIVERY_SLOT_LABELS[orderDetails.deliverySlot] ? `<tr><td style="color: #64748b;">Lieferzeitfenster:</td><td style="font-weight: 600; color: #1e293b;">${DELIVERY_SLOT_LABELS[orderDetails.deliverySlot].de}</td></tr>` : ''}
-          ${orderDetails.deliveryNotes ? `<tr><td style="color: #64748b;">Hinweis für Fahrer:</td><td style="font-style: italic; color: #475569;">${orderDetails.deliveryNotes}</td></tr>` : ''}
+          ${orderDetails.deliveryNotes ? `<tr><td style="color: #64748b;">Hinweis für Fahrer:</td><td style="font-style: italic; color: #475569;">${safeDeliveryNotes}</td></tr>` : ''}
         </table>
       </div>
 
@@ -480,6 +502,7 @@ const sendOrderModificationEmail = async (customerEmail, customerName, orderDeta
  * Send 6-Digit Verification Code to Customer Email
  */
 const sendCustomerVerificationEmail = async (customerEmail, customerName, verificationCode, lang = 'de') => {
+  customerName = escapeHtml(customerName);
   if (!isEmailConfigured()) {
     console.log(`[Email skipped - SMTP not configured] Customer OTP '${verificationCode}' (${lang}) -> ${customerEmail}`);
     return;
@@ -549,6 +572,7 @@ const sendCustomerVerificationEmail = async (customerEmail, customerName, verifi
  * Send Password Reset Link to Customer Email
  */
 const sendPasswordResetEmail = async (customerEmail, customerName, resetToken, lang = 'de') => {
+  customerName = escapeHtml(customerName);
   if (!isEmailConfigured()) {
     console.log(`[Email skipped - SMTP not configured] Password reset link -> ${customerEmail}`);
     return;
@@ -617,6 +641,7 @@ const sendPasswordResetEmail = async (customerEmail, customerName, resetToken, l
  * Send Customer Order Confirmation (Cash on Delivery)
  */
 const sendCustomerOrderConfirmationEmail = async (customerEmail, customerName, order, lang = 'de') => {
+  customerName = escapeHtml(customerName);
   if (!isEmailConfigured()) {
     console.log(`[Email skipped - SMTP not configured] Customer order confirmation -> ${customerEmail}`);
     return;
@@ -646,6 +671,8 @@ const sendCustomerOrderConfirmationEmail = async (customerEmail, customerName, o
     `).join('');
 
     const deliveryFeeCharged = computeDeliveryFeeCharged(order);
+    const safeDeliveryAddress = escapeHtml(order.deliveryAddress);
+    const safeDeliveryNotes = escapeHtml(order.deliveryNotes);
 
     const contentHtml = isAr ? `
       <p style="font-size: 16px; color: #0f172a; margin-top: 0;">مرحباً <strong>${customerName}</strong>،</p>
@@ -654,9 +681,9 @@ const sendCustomerOrderConfirmationEmail = async (customerEmail, customerName, o
       </p>
 
       <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin: 18px 0; font-size: 13px;">
-        <div><strong>عنوان التوصيل:</strong> ${order.deliveryAddress || 'عنوان العميل'}</div>
+        <div><strong>عنوان التوصيل:</strong> ${safeDeliveryAddress || 'عنوان العميل'}</div>
         ${order.deliverySlot && DELIVERY_SLOT_LABELS[order.deliverySlot] ? `<div style="margin-top: 6px;"><strong>موعد التوصيل:</strong> ${DELIVERY_SLOT_LABELS[order.deliverySlot].ar}</div>` : ''}
-        ${order.deliveryNotes ? `<div style="margin-top: 6px;"><strong>ملاحظات السائق:</strong> ${order.deliveryNotes}</div>` : ''}
+        ${order.deliveryNotes ? `<div style="margin-top: 6px;"><strong>ملاحظات السائق:</strong> ${safeDeliveryNotes}</div>` : ''}
         <div style="margin-top: 6px; color: #16a34a; font-weight: bold;">طريقة الدفع: الدفع عند الاستلام (نقداً أو بالبطاقة عند الباب)</div>
       </div>
 
@@ -690,9 +717,9 @@ const sendCustomerOrderConfirmationEmail = async (customerEmail, customerName, o
       </p>
 
       <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin: 18px 0; font-size: 13px;">
-        <div><strong>Lieferadresse:</strong> ${order.deliveryAddress || 'Ihre hinterlegte Adresse'}</div>
+        <div><strong>Lieferadresse:</strong> ${safeDeliveryAddress || 'Ihre hinterlegte Adresse'}</div>
         ${order.deliverySlot && DELIVERY_SLOT_LABELS[order.deliverySlot] ? `<div style="margin-top: 6px;"><strong>Lieferzeitfenster:</strong> ${DELIVERY_SLOT_LABELS[order.deliverySlot].de}</div>` : ''}
-        ${order.deliveryNotes ? `<div style="margin-top: 6px;"><strong>Lieferhinweis für den Fahrer:</strong> ${order.deliveryNotes}</div>` : ''}
+        ${order.deliveryNotes ? `<div style="margin-top: 6px;"><strong>Lieferhinweis für den Fahrer:</strong> ${safeDeliveryNotes}</div>` : ''}
         <div style="margin-top: 6px; color: #16a34a; font-weight: bold;">Zahlungsart: Barzahlung / Kartenzahlung an der Haustür (Lieferung)</div>
       </div>
 

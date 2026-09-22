@@ -581,7 +581,7 @@ export const Orders = () => {
       <div class="brand-sub" style="margin-top:4px">${labelInvoice} Ref: INV-${order.id.slice(0,8).toUpperCase()}</div>
     </div>
     <div style="text-align:${isAr?'left':'right'}">
-      <div class="badge">${order.status || '—'}</div>
+      <div class="badge">${escapeHtml(order.status || '—')}</div>
       <div style="color:#6b7280;font-size:11px;margin-top:6px">${labelDate}: ${new Date(order.createdAt).toLocaleDateString(isAr?'ar-DE':'de-DE',{year:'numeric',month:'long',day:'numeric'})}</div>
       <div style="color:#6b7280;font-size:11px">${labelOrder}: #${order.id.slice(0,8).toUpperCase()}</div>
     </div>
