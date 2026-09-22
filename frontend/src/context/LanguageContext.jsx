@@ -332,6 +332,7 @@ const translations = {
     allowedPostalCodes: "Erlaubte Postleitzahlen",
     allowedPostalCodesPlaceholder: "z.B. 1010, 1020, 1030",
     allowedPostalCodesHint: "Kommagetrennt. Leer lassen, um überall zu liefern.",
+    pricesInclVatNotice: "Alle Preise inkl. MwSt., zzgl. Liefergebühr",
 
     // Google Reviews Extended
     googleReviewsTitle: "Google-Kundenbewertungen",
@@ -714,6 +715,7 @@ const translations = {
     allowedPostalCodes: "الرموز البريدية المسموح بها",
     allowedPostalCodesPlaceholder: "مثال: 1010, 1020, 1030",
     allowedPostalCodesHint: "مفصولة بفواصل. اتركه فارغاً للتوصيل في كل مكان.",
+    pricesInclVatNotice: "جميع الأسعار شاملة ضريبة القيمة المضافة، ويضاف إليها رسوم التوصيل",
 
     // Google Reviews Extended
     googleReviewsTitle: "تقييمات العملاء من Google",

@@ -639,6 +639,10 @@ export const LandingPage = () => {
           </div>
         </div>
 
+        <p className="text-[11px] text-slate-400 dark:text-gray-500 -mt-2">
+          {t('pricesInclVatNotice')}
+        </p>
+
         {/* Filter Controls Bar */}
         <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-2xs border border-slate-200/80 dark:border-gray-850 space-y-4">
           <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
@@ -1323,6 +1327,9 @@ export const LandingPage = () => {
                   <span className="block text-[11px] text-slate-400 font-semibold">{isAr ? 'السعر للتوصيل' : 'Preis für Hauszustellung'}</span>
                   <span className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
                     €{Number(selectedProduct.b2bPrice).toFixed(2)}
+                  </span>
+                  <span className="block text-[10px] text-slate-400 dark:text-gray-500 mt-0.5">
+                    {t('pricesInclVatNotice')}
                   </span>
                 </div>
 

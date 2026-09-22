@@ -533,6 +533,9 @@ export const CustomerCartDrawer = ({
                 €{Number(totalAmount).toFixed(2)}
               </span>
             </div>
+            <p className="text-[10px] text-slate-400 dark:text-gray-500 text-end -mt-2">
+              {isAr ? 'شامل الضريبة، ويضاف إليها رسوم التوصيل المذكورة أعلاه' : 'inkl. MwSt., zzgl. der oben genannten Liefergebühr'}
+            </p>
 
             <button
               type="button"

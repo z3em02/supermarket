@@ -1,93 +1,123 @@
-# privateSupermarket
+# Hajar Supermarkt
 
+An online supermarket for private (B2C) customers in Austria, with home
+delivery and cash/card-on-delivery payment. Bilingual German/Arabic storefront,
+customer accounts with email/phone OTP verification, and an admin back office
+for products, orders, customers, accounting and store settings.
 
+## Tech stack
 
-## Getting started
+- **Backend**: Node.js, Express 5, Prisma ORM on PostgreSQL, JWT auth, Nodemailer
+- **Frontend**: React 19, Vite, Tailwind CSS, React Router 7
+- **Deployment**: nginx (reverse proxy + static hosting) + PM2 (process manager, cluster mode)
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## Prerequisites
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+- Node.js 18+ and npm
+- A PostgreSQL database (local install, or a managed provider like Neon/Supabase/RDS)
+- An SMTP account for sending emails (e.g. a Gmail account with a
+  [App Password](https://myaccount.google.com/apppasswords) — requires
+  2-Step Verification to be enabled)
 
-## Add your files
+## Environment variables
 
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+Copy the example files and fill in real values. **Never commit your `.env` files.**
+
+```bash
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+```
+
+**`backend/.env`**
+
+| Variable | Description |
+| --- | --- |
+| `NODE_ENV` | `development` or `production`. In production, dev-only helpers (on-screen OTP codes, verbose OTP logging) are disabled. |
+| `PORT` | Port the Express server listens on (default `5000`). |
+| `DATABASE_URL` | PostgreSQL connection string. |
+| `JWT_SECRET` | Random secret, **at least 32 characters** (`openssl rand -base64 48`). The server refuses to start without one. |
+| `FRONTEND_URL` | Public URL of the deployed frontend. Used for CORS and for links inside emails (order status, password reset) — must be the real domain in production, not `localhost`. |
+| `EMAIL_HOST` / `EMAIL_PORT` / `EMAIL_USER` / `EMAIL_PASSWORD` / `EMAIL_FROM` | SMTP credentials for transactional email (OTPs, order confirmations/status updates, password reset). If left as placeholder values, emails are skipped and logged to the console instead of failing the request. |
+
+**`frontend/.env`**
+
+| Variable | Description |
+| --- | --- |
+| `VITE_API_URL` | Backend base URL. Leave **empty** when nginx proxies `/api` on the same domain as the frontend (the standard deployment in this repo). Only set it to an absolute URL if the backend is hosted on a separate subdomain. |
+
+## Local setup
+
+```bash
+# Backend
+cd backend
+npm install
+npx prisma db push      # sync the database schema (this project doesn't use `prisma migrate`)
+npm run prisma:seed     # optional: creates a default admin + sample categories/products
+npm run dev              # starts the API on http://localhost:5000
+
+# Frontend (in a second terminal)
+cd frontend
+npm install
+npm run dev               # starts Vite on http://localhost:5173
+```
+
+Or use the bundled convenience scripts from the repo root (`start.sh` / `start.bat`)
+to launch both at once.
+
+The seed script creates a default admin login: **admin@hajar.com / admin**.
+**Change this password immediately** if you run the seed against anything
+other than a throwaway local database — admin login is at `/secret/admin/login`.
+
+### Schema changes
+
+This project syncs its schema with `npx prisma db push` rather than
+`prisma migrate`. After editing `backend/prisma/schema.prisma`, run:
+
+```bash
+cd backend
+npx prisma db push
+```
+
+## Building for production
+
+```bash
+cd frontend
+npm run build   # outputs static files to frontend/dist
+```
+
+The backend needs no build step — it runs directly with Node.
+
+## Deployment (nginx + PM2)
+
+1. On the server, clone the repo, install dependencies in `backend/` and
+   `frontend/`, set up `backend/.env` for production (see table above —
+   double-check `FRONTEND_URL` and `JWT_SECRET`), and run `npx prisma db push`
+   against the production database.
+2. Build the frontend: `cd frontend && npm run build`.
+3. Start the backend with PM2 using the provided config:
+   ```bash
+   cd backend
+   pm2 start ../deployment/ecosystem.config.js
+   pm2 save
+   ```
+   This runs the API in cluster mode (`instances: 'max'`) on port 5000.
+4. Copy `deployment/nginx.conf` to `/etc/nginx/sites-available/supermarket.conf`,
+   symlink it into `sites-enabled`, update `server_name` and the SSL certificate
+   paths for your domain, then reload nginx:
+   ```bash
+   sudo ln -s /etc/nginx/sites-available/supermarket.conf /etc/nginx/sites-enabled/
+   sudo nginx -t && sudo systemctl reload nginx
+   ```
+   nginx serves the built frontend from `frontend/dist`, proxies `/api/*` to
+   the backend on port 5000, and applies rate limiting to the
+   login/register/verification endpoints.
+5. Point DNS at the server and obtain a TLS certificate (e.g. via Certbot) for
+   the paths referenced in `nginx.conf`.
+
+## Project structure
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/z3em02/privatesupermarket.git
-git branch -M main
-git push -uf origin main
+backend/       Express API, Prisma schema, controllers, routes, email templates
+frontend/      React storefront + admin dashboard (Vite)
+deployment/    nginx.conf and PM2 ecosystem.config.js for production
 ```
-
-## Integrate with your tools
-
-* [Set up project integrations](https://gitlab.com/z3em02/privatesupermarket/-/settings/integrations)
-
-## Collaborate with your team
-
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
