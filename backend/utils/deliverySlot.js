@@ -1,45 +1,98 @@
-// Delivery slots are stored as "YYYY-MM-DD_<window>", e.g. "2026-09-25_16_18" —
-// a customer-chosen delivery date combined with one of the store's fixed
-// delivery time windows for that day.
-const WINDOWS = {
-  '10_12': { de: '10–12 Uhr', ar: '10–12' },
-  '16_18': { de: '16–18 Uhr', ar: '16–18' }
-};
+const prisma = require('../lib/prisma');
 
+// Delivery slots are stored as "YYYY-MM-DD_<startHour>_<endHour>", e.g.
+// "2026-09-25_16_18" — a customer-chosen delivery date combined with one of
+// the store's admin-configurable delivery time windows (see DeliveryWindow
+// model / deliveryWindowController). The window's hours are encoded directly
+// in the slot rather than referencing a DeliveryWindow id, so a slot already
+// on an order keeps a stable, readable time even if that window is later
+// edited or deleted.
 const MAX_DAYS_AHEAD = 14;
+const TIMEZONE = 'Europe/Berlin';
 
-const SLOT_PATTERN = /^(\d{4}-\d{2}-\d{2})_(10_12|16_18)$/;
+const SLOT_PATTERN = /^(\d{4}-\d{2}-\d{2})_(\d{1,2})_(\d{1,2})$/;
 
-const todayAtMidnight = () => {
+// Get today's ISO date string ("YYYY-MM-DD") in Berlin timezone
+const getBerlinTodayIso = () => {
+  return new Date().toLocaleDateString('en-CA', { timeZone: TIMEZONE });
+};
+
+// Get current hour (0-23) in Berlin timezone
+const getBerlinCurrentHour = () => {
+  const hourStr = new Intl.DateTimeFormat('en-GB', {
+    timeZone: TIMEZONE,
+    hour: 'numeric',
+    hourCycle: 'h23'
+  }).format(new Date());
+  return parseInt(hourStr, 10);
+};
+
+// Compute max delivery date ISO string in Berlin timezone
+const getBerlinMaxDateIso = () => {
   const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
+  d.setDate(d.getDate() + MAX_DAYS_AHEAD);
+  return d.toLocaleDateString('en-CA', { timeZone: TIMEZONE });
 };
 
-// Validates format, that the window is one of the known ones, and that the
-// date falls within [today, today + MAX_DAYS_AHEAD] — rejects past dates and
-// unreasonably far-future ones.
-const isValidDeliverySlot = (slot) => {
-  const match = SLOT_PATTERN.exec(String(slot || ''));
-  if (!match) return false;
-
-  const [, dateStr] = match;
-  const date = new Date(`${dateStr}T00:00:00`);
-  if (Number.isNaN(date.getTime())) return false;
-
-  const today = todayAtMidnight();
-  const maxDate = new Date(today);
-  maxDate.setDate(maxDate.getDate() + MAX_DAYS_AHEAD);
-
-  return date >= today && date <= maxDate;
-};
-
-const formatDeliverySlot = (slot, lang = 'de') => {
+const parseDeliverySlot = (slot) => {
   const match = SLOT_PATTERN.exec(String(slot || ''));
   if (!match) return null;
+  const [, date, startHourStr, endHourStr] = match;
+  return { date, startHour: parseInt(startHourStr, 10), endHour: parseInt(endHourStr, 10) };
+};
 
-  const [, dateStr, window] = match;
-  const date = new Date(`${dateStr}T00:00:00`);
+// Validates format, date range, and window existence.
+// If allowPastHoursForToday is false (default, e.g. customer checkout),
+// orders for today must have a startHour greater than the current Berlin hour.
+// Admin order updates can pass allowPastHoursForToday: true.
+const isValidDeliverySlot = async (slot, { allowPastHoursForToday = false } = {}) => {
+  const parsed = parseDeliverySlot(slot);
+  if (!parsed) return false;
+
+  const { date, startHour, endHour } = parsed;
+  if (
+    !Number.isInteger(startHour) ||
+    !Number.isInteger(endHour) ||
+    startHour < 0 ||
+    startHour > 23 ||
+    endHour < 1 ||
+    endHour > 24 ||
+    endHour <= startHour
+  ) {
+    return false;
+  }
+
+  // Validate date format YYYY-MM-DD
+  const dateObj = new Date(`${date}T00:00:00`);
+  if (Number.isNaN(dateObj.getTime())) return false;
+
+  const todayIso = getBerlinTodayIso();
+  const maxDateIso = getBerlinMaxDateIso();
+
+  if (date < todayIso || date > maxDateIso) return false;
+
+  // For orders on today's date: check if the window has already started or passed
+  if (!allowPastHoursForToday && date === todayIso) {
+    const currentHour = getBerlinCurrentHour();
+    if (startHour <= currentHour) {
+      return false;
+    }
+  }
+
+  // Check if the window is currently configured and active in the database
+  const activeWindow = await prisma.deliveryWindow.findFirst({
+    where: { startHour, endHour, isActive: true }
+  });
+  return Boolean(activeWindow);
+};
+
+// Purely derived from the encoded hours — no DB lookup — so formatting a slot
+// already stored on an order never breaks even if the window was since removed.
+const formatDeliverySlot = (slot, lang = 'de') => {
+  const parsed = parseDeliverySlot(slot);
+  if (!parsed) return null;
+
+  const date = new Date(`${parsed.date}T00:00:00`);
   const isAr = lang === 'ar';
   const dateLabel = date.toLocaleDateString(isAr ? 'ar-EG' : 'de-DE', {
     weekday: 'short',
@@ -47,9 +100,19 @@ const formatDeliverySlot = (slot, lang = 'de') => {
     month: '2-digit',
     year: 'numeric'
   });
-  const windowLabel = WINDOWS[window][isAr ? 'ar' : 'de'];
+  const windowLabel = isAr
+    ? `${parsed.startHour}–${parsed.endHour}`
+    : `${parsed.startHour}–${parsed.endHour} Uhr`;
 
   return isAr ? `${dateLabel}، ${windowLabel}` : `${dateLabel}, ${windowLabel}`;
 };
 
-module.exports = { isValidDeliverySlot, formatDeliverySlot, MAX_DAYS_AHEAD };
+module.exports = {
+  isValidDeliverySlot,
+  parseDeliverySlot,
+  formatDeliverySlot,
+  getBerlinTodayIso,
+  getBerlinCurrentHour,
+  getBerlinMaxDateIso,
+  MAX_DAYS_AHEAD
+};

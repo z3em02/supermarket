@@ -70,4 +70,4 @@ const couponLimiter = createRateLimiter({
   message: 'Zu viele Versuche zur Gutschein-Validierung. Bitte warten Sie 5 Minuten / Too many coupon validation attempts. Please try again after 5 minutes.'
 });
 
-module.exports = { authLimiter, apiLimiter, couponLimiter };
+module.exports = { authLimiter, apiLimiter, couponLimiter, createRateLimiter };

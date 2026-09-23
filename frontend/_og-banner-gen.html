@@ -1,137 +1,516 @@
 <!doctype html>
-<html>
+<html lang="de">
 <head>
-<meta charset="UTF-8" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
-<style>
-  html, body { margin: 0; padding: 0; background: #0b1220; }
-  canvas { display: block; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OG Banner Generator – Hajar Supermarkt</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #090d16;
+      color: #e2e8f0;
+      font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 48px;
+    }
+    .header-bar {
+      max-width: 1200px;
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      padding: 16px 20px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      backdrop-filter: blur(12px);
+    }
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: #059669;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    h1 {
+      font-size: 18px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.2;
+    }
+    .meta-tag {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    .btn-primary {
+      background: #059669;
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);
+    }
+    .btn-primary:hover {
+      background: #10b981;
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: #cbd5e1;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.14);
+      color: #ffffff;
+    }
+    .badge-dims {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 12px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #34d399;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: monospace;
+    }
+    .canvas-container {
+      max-width: 1200px;
+      width: 100%;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      overflow: hidden;
+      background: #047857;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1200 / 630;
+    }
+    .status-note {
+      margin-top: 16px;
+      font-size: 13px;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+  </style>
 </head>
 <body>
-<canvas id="c" width="1200" height="630"></canvas>
-<script>
-async function draw() {
-  await document.fonts.load('900 80px Cairo');
-  await document.fonts.load('700 34px Cairo');
-  await document.fonts.load('600 26px Cairo');
-  await document.fonts.ready;
 
-  const canvas = document.getElementById('c');
-  const ctx = canvas.getContext('2d');
-  const W = 1200, H = 630;
+  <!-- Controls Header Bar -->
+  <div class="header-bar">
+    <div class="brand-title">
+      <div class="brand-icon">🏪</div>
+      <div>
+        <h1>Hajar Supermarkt – OG Banner Generator</h1>
+        <div class="meta-tag">Open Graph Image (WhatsApp, Facebook, Twitter, Telegram)</div>
+      </div>
+    </div>
 
-  const bg = ctx.createLinearGradient(0, 0, W, H);
-  bg.addColorStop(0, '#047857');
-  bg.addColorStop(0.55, '#065f46');
-  bg.addColorStop(1, '#1e3a8a');
-  ctx.fillStyle = bg;
-  ctx.fillRect(0, 0, W, H);
+    <div class="actions">
+      <span class="badge-dims">1200 × 630 px</span>
+      <button class="btn btn-secondary" id="btnRedraw">⚡ Neu zeichnen</button>
+      <button class="btn btn-secondary" id="btnCopy">📋 Kopieren</button>
+      <button class="btn btn-primary" id="btnDownload">📥 og-image.png herunterladen</button>
+    </div>
+  </div>
 
-  function glow(x, y, r, color, alpha) {
-    ctx.save();
-    ctx.filter = 'blur(70px)';
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
-  glow(120, 80, 180, '#34d399', 0.45);
-  glow(1080, 560, 220, '#60a5fa', 0.40);
-  glow(950, 120, 150, '#fbbf24', 0.30);
+  <!-- Canvas Container -->
+  <div class="canvas-container">
+    <canvas id="c" width="1200" height="630"></canvas>
+  </div>
 
-  ctx.save();
-  ctx.globalAlpha = 0.06;
-  ctx.fillStyle = '#ffffff';
-  for (let gx = 40; gx < W; gx += 28) {
-    for (let gy = 40; gy < H; gy += 28) {
-      ctx.beginPath();
-      ctx.arc(gx, gy, 1.4, 0, Math.PI * 2);
+  <div class="status-note" id="statusMsg">
+    ✓ Banner fertig gerendert. Kann direkt als <code>public/og-image.png</code> verwendet werden.
+  </div>
+
+  <script>
+    async function draw() {
+      const statusEl = document.getElementById('statusMsg');
+      if (statusEl) statusEl.textContent = 'Schriften werden geladen...';
+
+      try {
+        await document.fonts.load('900 80px Cairo');
+        await document.fonts.load('800 64px Cairo');
+        await document.fonts.load('700 36px Cairo');
+        await document.fonts.load('600 24px Cairo');
+        await document.fonts.load('500 18px Cairo');
+        await document.fonts.ready;
+      } catch (e) {
+        console.warn('Font load warning:', e);
+      }
+
+      const canvas = document.getElementById('c');
+      const ctx = canvas.getContext('2d');
+      const W = 1200, H = 630;
+
+      // 1. Rich Modern Gradient Background
+      const bg = ctx.createLinearGradient(0, 0, W, H);
+      bg.addColorStop(0, '#044e3b');   // Deep Emerald
+      bg.addColorStop(0.45, '#065f46'); // Emerald Mid
+      bg.addColorStop(0.85, '#0f2942'); // Deep Navy Blue
+      bg.addColorStop(1, '#0b1329');    // Midnight Dark
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, W, H);
+
+      // Helper: Blurred Glow Orb
+      function glow(x, y, r, color, alpha) {
+        ctx.save();
+        ctx.filter = 'blur(65px)';
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Atmospheric Color Glows
+      glow(140, 100, 220, '#10b981', 0.50); // Vibrant Emerald top-left
+      glow(1100, 540, 260, '#3b82f6', 0.40); // Blue bottom-right
+      glow(960, 140, 180, '#f59e0b', 0.25); // Warm Amber top-right
+      glow(450, 480, 200, '#059669', 0.35); // Emerald center-bottom
+
+      // Subtle Background Dot Grid Texture
+      ctx.save();
+      ctx.globalAlpha = 0.05;
+      ctx.fillStyle = '#ffffff';
+      for (let gx = 36; gx < W; gx += 28) {
+        for (let gy = 36; gy < H; gy += 28) {
+          ctx.beginPath();
+          ctx.arc(gx, gy, 1.3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+
+      // Rounded Rectangle Helper
+      function roundRect(x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + w, y, x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r);
+        ctx.arcTo(x, y, x + w, y, r);
+        ctx.closePath();
+      }
+
+      // Glassmorphic Card Helper
+      function glassCard(x, y, w, h, r, bgAlpha = 0.12, borderAlpha = 0.22) {
+        ctx.save();
+        roundRect(x, y, w, h, r);
+        ctx.fillStyle = `rgba(255, 255, 255, ${bgAlpha})`;
+        ctx.fill();
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = `rgba(255, 255, 255, ${borderAlpha})`;
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // ==========================================
+      // TOP HEADER BADGES (y: 60)
+      // ==========================================
+
+      // Store Badge Icon + Text
+      glassCard(80, 60, 250, 52, 26, 0.14, 0.28);
+      ctx.save();
+      ctx.font = '24px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🏪', 98, 86);
+      ctx.font = '800 17px Cairo, sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText('HAJAR SUPERMARKT', 136, 86);
+      ctx.restore();
+
+      // Google Reviews Badge
+      glassCard(344, 60, 310, 52, 26, 0.14, 0.28);
+      ctx.save();
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = '19px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('★★★★★', 362, 86);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 16px Cairo, sans-serif';
+      ctx.fillText('5.0', 448, 86);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+      ctx.font = '600 14px Cairo, sans-serif';
+      ctx.fillText('Google Bewertungen', 478, 86);
+      ctx.restore();
+
+      // ==========================================
+      // MAIN HERO TYPOGRAPHY (German & Arabic)
+      // ==========================================
+
+      // German Brand Name
+      ctx.save();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 66px Cairo, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+      ctx.shadowBlur = 18;
+      ctx.shadowOffsetY = 4;
+      ctx.fillText('Hajar Supermarkt', 80, 205);
+      ctx.restore();
+
+      // Arabic Brand Name (Accent Green & Glowing)
+      ctx.save();
+      ctx.fillStyle = '#34d399'; // Emerald Highlight
+      ctx.font = '900 46px Cairo, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+      ctx.shadowColor = 'rgba(52, 211, 153, 0.45)';
+      ctx.shadowBlur = 14;
+      ctx.fillText('سوبرماركت هاجر للجملة والمفرق', 80, 266);
+      ctx.restore();
+
+      // Dual-language Tagline / Subtitle
+      ctx.save();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '700 24px Cairo, sans-serif';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+      ctx.shadowBlur = 8;
+      ctx.fillText('Frische Lebensmittel & orientalische Spezialitäten direkt nach Hause', 80, 322);
+
+      ctx.fillStyle = 'rgba(209, 250, 229, 0.90)'; // Mint text
+      ctx.font = '600 20px Cairo, sans-serif';
+      ctx.fillText('خضروات، فواكه، لحوم حلال ومؤن يومية طازجة تصل إلى باب منزلك في برلين', 80, 360);
+      ctx.restore();
+
+      // ==========================================
+      // FEATURE CARDS (Bottom Row, y: 440)
+      // ==========================================
+
+      const features = [
+        {
+          icon: '⚡',
+          titleDe: 'Schnelle Lieferung',
+          subAr: 'توصيل سريع لباب بيتك',
+          w: 200
+        },
+        {
+          icon: '💶',
+          titleDe: 'Zahlung bei Erhalt',
+          subAr: 'كاش أو بطاقة عند الاستلام',
+          w: 220
+        },
+        {
+          icon: '🥬',
+          titleDe: '100% Frische & Halal',
+          subAr: 'جودة وطزاجة مضمونة',
+          w: 210
+        }
+      ];
+
+      let curX = 80;
+      features.forEach((feat) => {
+        glassCard(curX, 440, feat.w, 125, 20, 0.13, 0.25);
+
+        // Icon Pill
+        ctx.save();
+        roundRect(curX + 16, 454, 40, 40, 12);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.38)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.font = '22px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(feat.icon, curX + 36, 474);
+        ctx.restore();
+
+        // Titles
+        ctx.save();
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '800 16px Cairo, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillText(feat.titleDe, curX + 16, 524);
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.72)';
+        ctx.font = '600 13px Cairo, sans-serif';
+        ctx.fillText(feat.subAr, curX + 16, 546);
+        ctx.restore();
+
+        curX += feat.w + 16;
+      });
+
+      // ==========================================
+      // RIGHT SHOWCASE COMPOSITION CARD (x: 770, y: 70)
+      // ==========================================
+
+      // Background watermark shopping icon
+      ctx.save();
+      ctx.globalAlpha = 0.08;
+      ctx.font = '320px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🛒', 980, 310);
+      ctx.restore();
+
+      // Main Glass Showcase Container
+      const cardX = 760, cardY = 60, cardW = 360, cardH = 505;
+      glassCard(cardX, cardY, cardW, cardH, 28, 0.16, 0.32);
+
+      // Inner Highlight Header
+      ctx.save();
+      roundRect(cardX + 24, cardY + 24, cardW - 48, 48, 14);
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.22)';
       ctx.fill();
+      ctx.strokeStyle = 'rgba(52, 211, 153, 0.40)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.fillStyle = '#34d399';
+      ctx.font = '800 15px Cairo, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('✨ Online Supermarkt & Lieferservice', cardX + cardW / 2, cardY + 48);
+      ctx.restore();
+
+      // Fresh Grocery Emoji Cloud Illustration
+      ctx.save();
+      ctx.font = '54px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🍎 🥛 🥖', cardX + cardW / 2, cardY + 140);
+      ctx.fillText('🍇 🫒 🧀', cardX + cardW / 2, cardY + 205);
+      ctx.restore();
+
+      // Centerpiece Headline inside card
+      ctx.save();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 22px Cairo, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText('Täglich frisch geliefert', cardX + cardW / 2, cardY + 275);
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+      ctx.font = '600 16px Cairo, sans-serif';
+      ctx.fillText('خضار وفواكه طازجة يومياً', cardX + cardW / 2, cardY + 304);
+      ctx.restore();
+
+      // 2 Mini Stat Pills inside card
+      const pillW = (cardW - 48 - 12) / 2;
+      // Pill 1
+      glassCard(cardX + 24, cardY + 330, pillW, 72, 16, 0.14, 0.25);
+      ctx.save();
+      ctx.fillStyle = '#34d399';
+      ctx.font = '900 20px Cairo, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('€0', cardX + 24 + pillW / 2, cardY + 358);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.font = '600 12px Cairo, sans-serif';
+      ctx.fillText('Gratis Versand ab 30€', cardX + 24 + pillW / 2, cardY + 382);
+      ctx.restore();
+
+      // Pill 2
+      glassCard(cardX + 24 + pillW + 12, cardY + 330, pillW, 72, 16, 0.14, 0.25);
+      ctx.save();
+      ctx.fillStyle = '#60a5fa';
+      ctx.font = '900 20px Cairo, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('14 Tage', cardX + 24 + pillW + 12 + pillW / 2, cardY + 358);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.font = '600 12px Cairo, sans-serif';
+      ctx.fillText('Wunsch-Zeitfenster', cardX + 24 + pillW + 12 + pillW / 2, cardY + 382);
+      ctx.restore();
+
+      // Domain Footer Strip inside card
+      ctx.save();
+      roundRect(cardX + 24, cardY + 424, cardW - 48, 52, 16);
+      ctx.fillStyle = '#059669';
+      ctx.fill();
+      ctx.shadowColor = 'rgba(5, 150, 105, 0.4)';
+      ctx.shadowBlur = 12;
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 16px Cairo, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🛒 JETZT ONLINE BESTELLEN', cardX + cardW / 2, cardY + 450);
+      ctx.restore();
+
+      if (statusEl) {
+        statusEl.innerHTML = '✓ <strong>Banner erfolgreich gerendert (1200×630px).</strong> Bereit zum Speichern.';
+      }
+      window.__done = true;
     }
-  }
-  ctx.restore();
 
-  ctx.save();
-  ctx.globalAlpha = 0.16;
-  ctx.font = '380px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('🛒', 950, 340);
-  ctx.restore();
+    // Trigger draw on load
+    window.addEventListener('load', draw);
+    draw();
 
-  function roundRect(x, y, w, h, r) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.arcTo(x + w, y, x + w, y + h, r);
-    ctx.arcTo(x + w, y + h, x, y + h, r);
-    ctx.arcTo(x, y + h, x, y, r);
-    ctx.arcTo(x, y, x + w, y, r);
-    ctx.closePath();
-  }
-  ctx.save();
-  roundRect(80, 90, 76, 76, 20);
-  ctx.fillStyle = 'rgba(255,255,255,0.16)';
-  ctx.fill();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-  ctx.stroke();
-  ctx.font = '38px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#ffffff';
-  ctx.fillText('🏪', 118, 130);
-  ctx.restore();
+    // Redraw Button
+    document.getElementById('btnRedraw')?.addEventListener('click', draw);
 
-  function pill(x, y, w, h) {
-    ctx.save();
-    roundRect(x, y, w, h, h / 2);
-    ctx.fillStyle = 'rgba(255,255,255,0.14)';
-    ctx.fill();
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = 'rgba(255,255,255,0.30)';
-    ctx.stroke();
-    ctx.restore();
-  }
-  pill(84, 320, 300, 46);
-  ctx.save();
-  ctx.fillStyle = '#fbbf24';
-  ctx.font = '22px sans-serif';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('★★★★★', 104, 344);
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '600 20px Cairo, sans-serif';
-  ctx.fillText('4.5 · 246 Google-Bewertungen', 220, 344);
-  ctx.restore();
+    // Download Button
+    document.getElementById('btnDownload')?.addEventListener('click', () => {
+      const canvas = document.getElementById('c');
+      const a = document.createElement('a');
+      a.download = 'og-image.png';
+      a.href = canvas.toDataURL('image/png');
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    });
 
-  ctx.save();
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '900 76px Cairo, sans-serif';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'alphabetic';
-  ctx.fillText('Hajar Supermarkt', 80, 430);
-  ctx.restore();
-
-  ctx.save();
-  ctx.fillStyle = 'rgba(255,255,255,0.92)';
-  ctx.font = '700 34px Cairo, sans-serif';
-  ctx.fillText('Frische Lebensmittel & direkte Hauszustellung', 80, 480);
-  ctx.restore();
-
-  ctx.save();
-  ctx.fillStyle = 'rgba(255,255,255,0.85)';
-  ctx.font = '600 24px Cairo, sans-serif';
-  ctx.fillText('🚚 Schnelle Lieferung     💶 Zahlung bei Erhalt     🥬 100% Frische', 80, 540);
-  ctx.restore();
-
-  window.__done = true;
-}
-draw();
-</script>
+    // Copy to Clipboard Button
+    document.getElementById('btnCopy')?.addEventListener('click', () => {
+      const canvas = document.getElementById('c');
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        navigator.clipboard.write([
+          new ClipboardItem({ 'image/png': blob })
+        ]).then(() => {
+          const statusEl = document.getElementById('statusMsg');
+          if (statusEl) statusEl.innerHTML = '📋 <strong>In Zwischenablage kopiert!</strong>';
+        }).catch((err) => {
+          console.error(err);
+          alert('Kopieren fehlgeschlagen oder vom Browser nicht unterstützt.');
+        });
+      });
+    });
+  </script>
 </body>
 </html>

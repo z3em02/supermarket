@@ -10,6 +10,7 @@ import {
   MapPin,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
   ShieldCheck,
   Lock,
   ArrowRight,
@@ -24,13 +25,25 @@ import {
   Check,
   Percent,
   Sparkles,
-  CalendarDays
+  CalendarDays,
+  Navigation
 } from 'lucide-react';
 import { useCustomerAuth } from '../context/CustomerAuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useStoreSettings } from '../context/StoreSettingsContext';
 import { getApiUrl } from '../utils/api';
-import { DELIVERY_WINDOWS, todayIso, maxDeliveryDateIso, buildDeliverySlot, formatDeliverySlot } from '../utils/deliverySlot';
+import {
+  todayIso,
+  tomorrowIso,
+  maxDeliveryDateIso,
+  buildDeliverySlot,
+  formatDeliverySlot,
+  windowLabel,
+  fetchActiveDeliveryWindows,
+  isWindowAvailableForDate,
+  getAvailableWindowsForDate,
+  getEarliestAvailableDate
+} from '../utils/deliverySlot';
 
 export const CustomerCartDrawer = ({
   isOpen,
@@ -51,10 +64,23 @@ export const CustomerCartDrawer = ({
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [deliveryNotes, setDeliveryNotes] = useState('');
   const [deliveryDate, setDeliveryDate] = useState(todayIso());
-  const [deliveryWindow, setDeliveryWindow] = useState(DELIVERY_WINDOWS[0].value);
+  const [deliveryWindows, setDeliveryWindows] = useState([]);
+  const [selectedWindow, setSelectedWindow] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [placedOrder, setPlacedOrder] = useState(null);
+
+  // Distance calculation state
+  const [distanceInfo, setDistanceInfo] = useState({
+    distanceKm: 0,
+    baseFee: Number(settings?.deliveryFee ?? 2.0),
+    perKmRate: Number(settings?.deliveryFeePerKm ?? 0.10),
+    distanceFee: 0,
+    totalDeliveryFee: Number(settings?.deliveryFee ?? 2.0),
+    isWithinMaxDistance: true,
+    maxDeliveryDistanceKm: Number(settings?.maxDeliveryDistanceKm ?? 0)
+  });
+  const [distanceLoading, setDistanceLoading] = useState(false);
 
   // Promotions & Coupon state
   const [activePromos, setActivePromos] = useState([]);
@@ -83,6 +109,35 @@ export const CustomerCartDrawer = ({
     }
   }, [isOpen]);
 
+  // Fetch admin-configured active delivery time windows
+  useEffect(() => {
+    if (!isOpen) return;
+    fetchActiveDeliveryWindows()
+      .then((windows) => {
+        setDeliveryWindows(windows);
+        // Smart earliest date: if all windows for today have closed, pick tomorrow!
+        const earliestDate = getEarliestAvailableDate(windows);
+        setDeliveryDate((prevDate) => {
+          if (!prevDate || prevDate < todayIso()) return earliestDate;
+          const availableForPrev = getAvailableWindowsForDate(windows, prevDate);
+          if (availableForPrev.length === 0) return earliestDate;
+          return prevDate;
+        });
+      })
+      .catch((err) => console.error('Cart drawer delivery windows error:', err));
+  }, [isOpen]);
+
+  // Keep selectedWindow synced with available windows for chosen date
+  useEffect(() => {
+    const available = getAvailableWindowsForDate(deliveryWindows, deliveryDate);
+    setSelectedWindow((prev) => {
+      if (prev && available.some((w) => w.startHour === prev.startHour && w.endHour === prev.endHour)) {
+        return prev;
+      }
+      return available[0] || null;
+    });
+  }, [deliveryDate, deliveryWindows]);
+
   // Initialize address from customer profile when customer changes
   useEffect(() => {
     if (customer) {
@@ -95,6 +150,54 @@ export const CustomerCartDrawer = ({
       setDeliveryNotes(customer.deliveryNotes || '');
     }
   }, [customer]);
+
+  // Debounced distance calculation whenever destination address changes
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const targetAddress = deliveryAddress.trim() || [
+      customer?.street && `${customer.street} ${customer.houseNumber || ''}`.trim(),
+      customer?.postalCode && customer?.city && `${customer.postalCode} ${customer.city}`.trim()
+    ].filter(Boolean).join(', ');
+
+    if (!targetAddress) {
+      setDistanceInfo({
+        distanceKm: 0,
+        baseFee: Number(settings?.deliveryFee ?? 2.0),
+        perKmRate: Number(settings?.deliveryFeePerKm ?? 0.10),
+        distanceFee: 0,
+        totalDeliveryFee: Number(settings?.deliveryFee ?? 2.0),
+        isWithinMaxDistance: true,
+        maxDeliveryDistanceKm: Number(settings?.maxDeliveryDistanceKm ?? 0)
+      });
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        setDistanceLoading(true);
+        const apiUrl = getApiUrl();
+        const res = await fetch(`${apiUrl}/api/delivery-distance/calculate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            address: targetAddress,
+            postalCode: customer?.postalCode
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setDistanceInfo(data);
+        }
+      } catch (err) {
+        console.error('Cart drawer distance calc error:', err);
+      } finally {
+        setDistanceLoading(false);
+      }
+    }, 450);
+
+    return () => clearTimeout(timer);
+  }, [isOpen, deliveryAddress, customer?.street, customer?.postalCode, customer?.city, settings?.deliveryFee, settings?.deliveryFeePerKm, settings?.maxDeliveryDistanceKm]);
 
   const promoMap = useMemo(() => {
     return new Map(activePromos.map(p => [p.productId, p]));
@@ -231,21 +334,36 @@ export const CustomerCartDrawer = ({
     }
   }, [cart, token]);
 
+  const allowedPostalCodes = useMemo(() => {
+    const raw = settings?.allowedPostalCodes;
+    if (!raw || raw === 'null') return [];
+    return raw.split(/[,;\s]+/).map(c => c.trim()).filter(c => c && c !== 'null');
+  }, [settings?.allowedPostalCodes]);
+
+  const isPostalCodeAllowed = useMemo(() => {
+    if (allowedPostalCodes.length === 0) return true;
+    const custPostal = (customer?.postalCode || '').trim();
+    const addr = String(deliveryAddress || '').trim();
+    if (custPostal && allowedPostalCodes.includes(custPostal)) return true;
+    return allowedPostalCodes.some((code) => {
+      const regex = new RegExp(`(^|[^0-9])${code}([^0-9]|$)`);
+      return regex.test(addr);
+    });
+  }, [allowedPostalCodes, customer?.postalCode, deliveryAddress]);
+
   if (!isOpen) return null;
 
   const minOrderValue = Number(settings?.minOrderValue) || 0;
-  const deliveryFeeSetting = Number(settings?.deliveryFee) || 0;
   const freeDeliveryThreshold = Number(settings?.freeDeliveryThreshold) || 0;
 
-  // Free shipping perk from combo coupon or threshold
-  const isFreeDeliveryApplied = Boolean(appliedCoupon?.isFreeShipping);
-  const deliveryFee = isFreeDeliveryApplied
-    ? 0
-    : (deliveryFeeSetting <= 0
-      ? 0
-      : (freeDeliveryThreshold > 0 && itemsSubtotal >= freeDeliveryThreshold ? 0 : deliveryFeeSetting));
+  const baseServiceFee = Number(distanceInfo.baseFee ?? (settings?.deliveryFee ?? 2.0));
+  const rawDeliveryFee = Number(distanceInfo.totalDeliveryFee ?? baseServiceFee);
 
-  const amountUntilFreeDelivery = !isFreeDeliveryApplied && deliveryFeeSetting > 0 && freeDeliveryThreshold > 0 && itemsSubtotal < freeDeliveryThreshold
+  // Free shipping perk from combo coupon or threshold
+  const isFreeDeliveryApplied = Boolean(appliedCoupon?.isFreeShipping) || (freeDeliveryThreshold > 0 && itemsSubtotal >= freeDeliveryThreshold);
+  const deliveryFee = isFreeDeliveryApplied ? 0 : rawDeliveryFee;
+
+  const amountUntilFreeDelivery = !isFreeDeliveryApplied && rawDeliveryFee > 0 && freeDeliveryThreshold > 0 && itemsSubtotal < freeDeliveryThreshold
     ? freeDeliveryThreshold - itemsSubtotal
     : 0;
 
@@ -290,6 +408,33 @@ export const CustomerCartDrawer = ({
       return;
     }
 
+    if (deliveryWindows.length > 0 && !selectedWindow) {
+      setError(
+        isAr
+          ? 'يرجى اختيار وقت توصيل متاح للمتابعة.'
+          : 'Bitte wählen Sie ein verfügbares Liefer-Zeitfenster aus.'
+      );
+      return;
+    }
+
+    if (!isPostalCodeAllowed) {
+      setError(
+        isAr
+          ? `عذراً، نوصل حالياً فقط إلى الرموز البريدية التالية: ${allowedPostalCodes.join(', ')}`
+          : `Wir liefern derzeit nur an folgende Postleitzahlen: ${allowedPostalCodes.join(', ')}`
+      );
+      return;
+    }
+
+    if (!distanceInfo.isWithinMaxDistance) {
+      setError(
+        isAr
+          ? `عنوان التوصيل على بعد ${distanceInfo.distanceKm} كم. أقصى مسافة توصيل متاحة هي ${distanceInfo.maxDeliveryDistanceKm} كم.`
+          : `Die Lieferadresse ist ${distanceInfo.distanceKm} km entfernt. Unsere maximale Lieferdistanz beträgt ${distanceInfo.maxDeliveryDistanceKm} km.`
+      );
+      return;
+    }
+
     if (cart.length === 0) return;
 
     try {
@@ -308,7 +453,7 @@ export const CustomerCartDrawer = ({
           deliveryAddress: deliveryAddress.trim() || undefined,
           deliveryNotes: deliveryNotes.trim() || undefined,
           notes: deliveryNotes.trim() || undefined,
-          deliverySlot: buildDeliverySlot(deliveryDate, deliveryWindow)
+          deliverySlot: buildDeliverySlot(deliveryDate, selectedWindow?.startHour, selectedWindow?.endHour)
         })
       });
 
@@ -643,46 +788,109 @@ export const CustomerCartDrawer = ({
                         required
                         className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
                       />
+                      {!isPostalCodeAllowed && (
+                        <div className="mt-2.5 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-xs flex items-start gap-2">
+                          <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
+                          <div>
+                            <p className="font-bold">
+                              {isAr ? 'عذراً، هذا العنوان خارج نطاق التوصيل حالياً.' : 'Lieferadresse liegt außerhalb des aktuellen Liefergebiets.'}
+                            </p>
+                            <p className="text-[11px] mt-0.5 text-amber-700 dark:text-amber-300">
+                              {isAr
+                                ? `الرموز البريدية المتاحة حالياً: ${allowedPostalCodes.join(', ')}`
+                                : `Wir liefern aktuell nur an: ${allowedPostalCodes.join(', ')}`}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {!distanceInfo.isWithinMaxDistance && (
+                        <div className="mt-2.5 p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200 text-xs flex items-start gap-2">
+                          <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600 mt-0.5" />
+                          <div>
+                            <p className="font-bold">
+                              {isAr ? 'عذراً، العنوان بعيد جداً عن السوبرماركت.' : 'Lieferadresse ist zu weit entfernt.'}
+                            </p>
+                            <p className="text-[11px] mt-0.5 text-rose-700 dark:text-rose-300">
+                              {isAr
+                                ? `المسافة الحالية تقريباً ${distanceInfo.distanceKm} كم (الحد الأقصى المسموح: ${distanceInfo.maxDeliveryDistanceKm} كم).`
+                                : `Entfernung ca. ${distanceInfo.distanceKm} km (Maximale Lieferdistanz: ${distanceInfo.maxDeliveryDistanceKm} km).`}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {distanceInfo.distanceKm > 0 && distanceInfo.isWithinMaxDistance && (
+                        <div className="mt-2 text-[11px] text-slate-500 dark:text-gray-400 flex items-center gap-1.5 font-medium">
+                          <Navigation className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                          <span>
+                            {distanceInfo.isExactAddress
+                              ? (isAr
+                                  ? `مسافة التوصيل لعنوانك: ${distanceInfo.distanceKm} كم`
+                                  : `Fahrtstrecke zu Ihrer Adresse: ${distanceInfo.distanceKm} km`)
+                              : (isAr
+                                  ? `المسافة التقديرية: ~${distanceInfo.distanceKm} كم`
+                                  : `Geschätzte Entfernung: ~${distanceInfo.distanceKm} km`)}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
-                    <div className="p-3.5">
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="block text-[10px] font-semibold text-slate-500 dark:text-gray-400 mb-1 flex items-center gap-1">
-                            <CalendarDays className="w-3 h-3" />
-                            <span>{isAr ? 'التاريخ' : 'Datum'}</span>
-                          </label>
-                          <input
-                            type="date"
-                            value={deliveryDate}
-                            min={todayIso()}
-                            max={maxDeliveryDateIso()}
-                            onChange={(e) => setDeliveryDate(e.target.value)}
-                            className="w-full px-2.5 py-2 rounded-lg bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-semibold text-slate-500 dark:text-gray-400 mb-1 flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            <span>{isAr ? 'الوقت' : 'Zeitfenster'}</span>
-                          </label>
-                          <div className="flex gap-1.5">
-                            {DELIVERY_WINDOWS.map((w) => (
+                    <div className="p-3.5 space-y-3">
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-500 dark:text-gray-400 mb-1 flex items-center gap-1">
+                          <CalendarDays className="w-3 h-3" />
+                          <span>{isAr ? 'التاريخ' : 'Datum'}</span>
+                        </label>
+                        <input
+                          type="date"
+                          value={deliveryDate}
+                          min={todayIso()}
+                          max={maxDeliveryDateIso()}
+                          onChange={(e) => setDeliveryDate(e.target.value)}
+                          className="w-full px-2.5 py-2 rounded-lg bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-500 dark:text-gray-400 mb-1 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          <span>{isAr ? 'الوقت' : 'Zeitfenster'}</span>
+                        </label>
+                        {deliveryWindows.length === 0 ? (
+                          <p className="text-[11px] text-slate-400 dark:text-gray-500">
+                            {isAr ? 'لا توجد أوقات توصيل متاحة حالياً' : 'Derzeit keine Zeitfenster verfügbar'}
+                          </p>
+                        ) : getAvailableWindowsForDate(deliveryWindows, deliveryDate).length === 0 ? (
+                          <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-xs space-y-1.5">
+                            <p>
+                              {isAr
+                                ? 'عذراً، انتهت أوقات التوصيل المتاحة لهذا اليوم.'
+                                : 'Für das gewählte Datum sind keine Lieferfenster mehr verfügbar.'}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => setDeliveryDate(tomorrowIso())}
+                              className="text-xs font-bold text-emerald-700 dark:text-emerald-400 underline hover:text-emerald-800 dark:hover:text-emerald-300 cursor-pointer block"
+                            >
+                              {isAr ? '← التبديل إلى يوم الغد' : '→ Auf morgen wechseln'}
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex flex-wrap gap-1.5">
+                            {getAvailableWindowsForDate(deliveryWindows, deliveryDate).map((w) => (
                               <button
-                                key={w.value}
+                                key={w.id}
                                 type="button"
-                                onClick={() => setDeliveryWindow(w.value)}
-                                className={`flex-1 px-2 py-2 rounded-lg border text-[11px] font-bold transition cursor-pointer touch-manipulation ${
-                                  deliveryWindow === w.value
-                                    ? 'bg-emerald-600 border-emerald-600 text-white'
+                                onClick={() => setSelectedWindow(w)}
+                                className={`px-3 py-2 rounded-lg border text-[11px] font-bold transition cursor-pointer touch-manipulation ${
+                                  selectedWindow?.id === w.id
+                                    ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs'
                                     : 'bg-white dark:bg-gray-900 border-slate-200 dark:border-gray-800 text-slate-600 dark:text-gray-300 hover:border-emerald-400'
                                 }`}
                               >
-                                {isAr ? w.labelAr : w.labelDe}
+                                {windowLabel(w.startHour, w.endHour, isAr)}
                               </button>
                             ))}
                           </div>
-                        </div>
+                        )}
                       </div>
                     </div>
 
@@ -819,15 +1027,36 @@ export const CustomerCartDrawer = ({
                 </div>
               )}
 
+              {/* Distance Fee Itemization if applicable */}
+              {distanceInfo.distanceKm > 0 && !isFreeDeliveryApplied && (
+                <>
+                  <div className="flex items-center justify-between text-slate-500 dark:text-gray-400">
+                    <span>{isAr ? 'رسوم الخدمة الأساسية' : 'Servicepauschale (Basis)'}</span>
+                    <span>€{baseServiceFee.toFixed(2)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-slate-500 dark:text-gray-400">
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                      {isAr
+                        ? `رسوم المسافة (${distanceInfo.distanceKm} كم × €${(distanceInfo.perKmRate || 0.10).toFixed(2)}/كم)`
+                        : `Entfernungsgebühr (${distanceInfo.distanceKm} km × €${(distanceInfo.perKmRate || 0.10).toFixed(2)}/km)`}
+                    </span>
+                    <span>+€{(distanceInfo.distanceFee || 0).toFixed(2)}</span>
+                  </div>
+                </>
+              )}
+
               <div className="flex items-center justify-between">
-                <span>{isAr ? 'رسوم التوصيل' : 'Liefergebühr'}</span>
+                <span className="font-semibold text-slate-700 dark:text-gray-300">{isAr ? 'رسوم التوصيل الإجمالية' : 'Liefergebühr gesamt'}</span>
                 <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                  {deliveryFee > 0 ? (
+                  {distanceLoading ? (
+                    <span className="text-xs text-slate-400 animate-pulse">{isAr ? 'جارٍ الحساب...' : 'Berechne...'}</span>
+                  ) : deliveryFee > 0 ? (
                     `€${deliveryFee.toFixed(2)}`
                   ) : isFreeDeliveryApplied ? (
                     <span className="inline-flex items-center gap-1">
                       <Truck className="w-3 h-3" />
-                      {isAr ? 'مجاناً (كوبون)' : 'Kostenlos (Gutschein)'}
+                      {isAr ? 'مجاناً' : 'Kostenlos'}
                     </span>
                   ) : (
                     isAr ? 'مجاناً' : 'Kostenlos'

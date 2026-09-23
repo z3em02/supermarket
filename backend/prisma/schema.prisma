@@ -97,6 +97,10 @@ model Order {
   couponDiscount      Float       @default(0)
   promotionDiscount   Float       @default(0)
   isFreeShipping      Boolean     @default(false)
+  deliveryFee         Float       @default(0)
+  deliveryDistanceKm  Float?
+  baseDeliveryFee     Float?
+  distanceDeliveryFee Float?
   totalAmount         Float
   originalTotalAmount Float?
   modificationReason  String?
@@ -164,10 +168,31 @@ model StoreSettings {
   trustindexWidgetCode String?
   showGoogleReviews Boolean  @default(true)
   minOrderValue         Float    @default(0)
-  deliveryFee           Float    @default(0)
+  deliveryFee           Float    @default(2.0)
+  deliveryFeePerKm      Float    @default(0.10)
   freeDeliveryThreshold Float    @default(0)
+  storeLatitude         Float?   @default(48.1746605)
+  storeLongitude        Float?   @default(16.3272662)
+  maxDeliveryDistanceKm Float?   @default(0)
   allowedPostalCodes    String?  @default("")
   updatedAt         DateTime @updatedAt
+}
+
+// Admin-configurable delivery time windows offered to customers at checkout
+// (e.g. "10-12", "16-18"). Order.deliverySlot encodes the chosen window's
+// hours directly (e.g. "2026-09-25_10_12"), not a foreign key to this table,
+// so past orders keep a stable, readable time even if a window is later
+// edited or removed.
+model DeliveryWindow {
+  id        String   @id @default(uuid())
+  startHour Int
+  endHour   Int
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([startHour, endHour])
 }
 
 model GoogleReview {

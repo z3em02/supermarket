@@ -10,6 +10,7 @@ const {
   validateAndCalculateCoupon
 } = require('../utils/pricingService');
 const { isValidDeliverySlot } = require('../utils/deliverySlot');
+const { calculateDeliveryDistance } = require('../utils/distanceService');
 
 // Stock is deducted for every order from creation onward and only ever restored
 // once an order reaches one of these terminal decline states.
@@ -200,15 +201,25 @@ const createOrder = async (req, res) => {
     itemsSubtotal = Number(itemsSubtotal.toFixed(2));
     totalPromoSavings = Number(totalPromoSavings.toFixed(2));
 
-    // Delivery rules: minimum order value, service area and delivery fee
+    // Resolve delivery address and notes early for postal code and distance checks
+    const addressParts = [
+      customer.street && `${customer.street} ${customer.houseNumber || ''}`.trim(),
+      customer.postalCode && customer.city && `${customer.postalCode} ${customer.city}`.trim(),
+      customer.floorApartment && `Apt/Floor: ${customer.floorApartment}`
+    ].filter(Boolean);
+
+    const deliveryAddress = req.body.deliveryAddress || addressParts.join(', ') || 'Home Delivery Address';
+    const deliveryNotes = req.body.deliveryNotes || customer.deliveryNotes || notes || null;
+
+    // Delivery rules: minimum order value, service area and distance-based delivery fee
     const storeSettings = await prisma.storeSettings.findUnique({ where: { id: 'default' } });
     const minOrderValue = storeSettings?.minOrderValue || 0;
-    const deliveryFeeSetting = storeSettings?.deliveryFee || 0;
     const freeDeliveryThreshold = storeSettings?.freeDeliveryThreshold || 0;
-    const allowedPostalCodes = (storeSettings?.allowedPostalCodes || '')
-      .split(',')
+    const rawAllowed = storeSettings?.allowedPostalCodes;
+    const allowedPostalCodes = (rawAllowed && rawAllowed !== 'null' ? rawAllowed : '')
+      .split(/[,;\s]+/)
       .map((code) => code.trim())
-      .filter(Boolean);
+      .filter((code) => code && code !== 'null');
 
     if (minOrderValue > 0 && itemsSubtotal < minOrderValue) {
       return res.status(400).json({
@@ -216,9 +227,29 @@ const createOrder = async (req, res) => {
       });
     }
 
-    if (allowedPostalCodes.length > 0 && !allowedPostalCodes.includes((customer.postalCode || '').trim())) {
+    if (allowedPostalCodes.length > 0) {
+      const custPostal = (customer.postalCode || '').trim();
+      const addr = String(deliveryAddress).trim();
+
+      const matchesProfile = custPostal && allowedPostalCodes.includes(custPostal);
+      const matchesAddress = allowedPostalCodes.some((code) => {
+        const regex = new RegExp(`(^|[^0-9])${code}([^0-9]|$)`);
+        return regex.test(addr);
+      });
+
+      if (!matchesProfile && !matchesAddress) {
+        return res.status(400).json({
+          error: `Wir liefern derzeit nur an folgende Postleitzahlen: ${allowedPostalCodes.join(', ')} / We currently only deliver to: ${allowedPostalCodes.join(', ')}`
+        });
+      }
+    }
+
+    // Distance and delivery fee calculation
+    const distanceResult = await calculateDeliveryDistance(deliveryAddress, storeSettings || {});
+
+    if (!distanceResult.isWithinMaxDistance) {
       return res.status(400).json({
-        error: 'Sorry, we do not currently deliver to your postal code.'
+        error: `Die Lieferadresse ist ${distanceResult.distanceKm} km entfernt. Unsere maximale Lieferdistanz beträgt ${distanceResult.maxDeliveryDistanceKm} km.`
       });
     }
 
@@ -257,25 +288,30 @@ const createOrder = async (req, res) => {
       isFreeShipping = couponEval.isFreeShipping;
     }
 
-    const deliveryFee = isFreeShipping
-      ? 0
-      : (deliveryFeeSetting <= 0
-        ? 0
-        : (freeDeliveryThreshold > 0 && itemsSubtotal >= freeDeliveryThreshold ? 0 : deliveryFeeSetting));
+    const isFreeDelivery = isFreeShipping || (freeDeliveryThreshold > 0 && itemsSubtotal >= freeDeliveryThreshold);
+    const chargedDeliveryFee = isFreeDelivery ? 0 : distanceResult.totalDeliveryFee;
+    const deliveryDistanceKm = distanceResult.distanceKm;
+    const baseDeliveryFee = isFreeDelivery ? 0 : distanceResult.baseFee;
+    const distanceDeliveryFee = isFreeDelivery ? 0 : distanceResult.distanceFee;
 
     const finalItemsTotal = Math.max(0, Number((itemsSubtotal - couponDiscount).toFixed(2)));
-    const totalAmount = Number((finalItemsTotal + deliveryFee).toFixed(2));
+    const totalAmount = Number((finalItemsTotal + chargedDeliveryFee).toFixed(2));
 
-    const deliverySlot = isValidDeliverySlot(req.body.deliverySlot) ? req.body.deliverySlot : null;
-
-    const addressParts = [
-      customer.street && `${customer.street} ${customer.houseNumber || ''}`.trim(),
-      customer.postalCode && customer.city && `${customer.postalCode} ${customer.city}`.trim(),
-      customer.floorApartment && `Apt/Floor: ${customer.floorApartment}`
-    ].filter(Boolean);
-
-    const deliveryAddress = req.body.deliveryAddress || addressParts.join(', ') || 'Home Delivery Address';
-    const deliveryNotes = req.body.deliveryNotes || customer.deliveryNotes || notes || null;
+    const activeWindowsCount = await prisma.deliveryWindow.count({ where: { isActive: true } });
+    let deliverySlot = null;
+    if (activeWindowsCount > 0) {
+      if (!req.body.deliverySlot) {
+        return res.status(400).json({ error: 'Please select a delivery time window' });
+      }
+      const valid = await isValidDeliverySlot(req.body.deliverySlot);
+      if (!valid) {
+        return res.status(400).json({ error: 'Selected delivery time window is invalid or already closed' });
+      }
+      deliverySlot = req.body.deliverySlot;
+    } else if (req.body.deliverySlot) {
+      const valid = await isValidDeliverySlot(req.body.deliverySlot);
+      deliverySlot = valid ? req.body.deliverySlot : null;
+    }
 
     let freshCoupon = null;
 
@@ -338,6 +374,10 @@ const createOrder = async (req, res) => {
           couponDiscount,
           promotionDiscount: totalPromoSavings,
           isFreeShipping,
+          deliveryFee: chargedDeliveryFee,
+          deliveryDistanceKm,
+          baseDeliveryFee,
+          distanceDeliveryFee,
           totalAmount,
           notes: notes || null,
           orderItems: {
@@ -437,7 +477,7 @@ const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ error: 'Order not found' });
     }
 
-    if (deliverySlot !== undefined && deliverySlot !== null && !isValidDeliverySlot(deliverySlot)) {
+    if (deliverySlot !== undefined && deliverySlot !== null && !(await isValidDeliverySlot(deliverySlot, { allowPastHoursForToday: true }))) {
       return res.status(400).json({ error: 'Invalid delivery slot' });
     }
 

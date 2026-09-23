@@ -7,6 +7,7 @@ import { useStoreSettings } from '../context/StoreSettingsContext';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { getApiUrl } from '../utils/api';
+import { formatDeliverySlot } from '../utils/deliverySlot';
 import {
   sendPhoneVerificationCode,
   confirmPhoneVerificationCode,
@@ -36,7 +37,8 @@ import {
   Printer,
   FileText,
   Tag,
-  X
+  X,
+  Navigation
 } from 'lucide-react';
 
 export const CustomerAccount = () => {
@@ -393,6 +395,7 @@ export const CustomerAccount = () => {
     <div class="meta-box">
       <h4>${isArabic ? 'عنوان التسليم والتعليمات' : 'Lieferadresse &amp; Hinweise'}</h4>
       <p>${escapeHtml(order.deliveryAddress || '—')}</p>
+      ${order.deliverySlot && formatDeliverySlot(order.deliverySlot, isArabic) ? `<p style="margin-top:4px;"><strong>${isArabic ? 'موعد التوصيل:' : 'Lieferzeitfenster:'}</strong> ${escapeHtml(formatDeliverySlot(order.deliverySlot, isArabic))}</p>` : ''}
       ${order.deliveryNotes ? `<p style="font-style:italic;color:#475569;margin-top:4px;"><strong>${isArabic ? 'ملاحظة:' : 'Hinweis:'}</strong> ${escapeHtml(order.deliveryNotes)}</p>` : ''}
     </div>
   </div>
@@ -856,6 +859,28 @@ export const CustomerAccount = () => {
                         <strong className="block text-slate-400 text-[11px] uppercase tracking-wider">{isAr ? 'عنوان التوصيل' : 'Lieferadresse'}</strong>
                         <span className="font-medium break-words">{order.deliveryAddress || 'Adresse'}</span>
                       </div>
+                      {order.deliverySlot && formatDeliverySlot(order.deliverySlot, isAr) && (
+                        <div>
+                          <strong className="block text-slate-400 text-[11px] uppercase tracking-wider flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                            <span>{isAr ? 'موعد التوصيل' : 'Liefer-Zeitfenster'}</span>
+                          </strong>
+                          <span className="font-bold text-emerald-700 dark:text-emerald-300">
+                            {formatDeliverySlot(order.deliverySlot, isAr)}
+                          </span>
+                        </div>
+                      )}
+                      {order.deliveryDistanceKm != null && Number(order.deliveryDistanceKm) > 0 && (
+                        <div>
+                          <strong className="block text-slate-400 text-[11px] uppercase tracking-wider flex items-center gap-1">
+                            <Navigation className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                            <span>{isAr ? 'المسافة والتوصيل' : 'Distanz & Lieferung'}</span>
+                          </strong>
+                          <span className="font-semibold text-slate-700 dark:text-gray-300">
+                            ~{order.deliveryDistanceKm} km {Number(order.deliveryFee) > 0 ? `(€${Number(order.deliveryFee).toFixed(2)})` : `(${isAr ? 'مجاناً' : 'Kostenlos'})`}
+                          </span>
+                        </div>
+                      )}
                       <div>
                         <strong className="block text-slate-400 text-[11px] uppercase tracking-wider">{isAr ? 'طريقة الدفع' : 'Zahlung'}</strong>
                         <span className="font-semibold text-emerald-600 dark:text-emerald-400">
@@ -1272,7 +1297,12 @@ export const CustomerAccount = () => {
                       )}
                       <tr className="border-t border-slate-200 dark:border-gray-800 bg-slate-50/60 dark:bg-gray-950/40">
                         <td colSpan="3" className="p-2.5 sm:p-3 text-end font-medium text-slate-500">
-                          {isAr ? 'رسوم التوصيل للمنزل:' : 'Lieferkosten (Haustür):'}
+                          {isAr ? 'رسوم التوصيل للمنزل' : 'Lieferkosten (Haustür)'}
+                          {reportOrder.deliveryDistanceKm != null && Number(reportOrder.deliveryDistanceKm) > 0 && (
+                            <span className="text-[10px] text-slate-400 block font-normal">
+                              (~{reportOrder.deliveryDistanceKm} km {isAr ? 'من المتجر' : 'vom Supermarkt'})
+                            </span>
+                          )}:
                         </td>
                         <td className="p-2.5 sm:p-3 text-end font-bold text-emerald-600 whitespace-nowrap">
                           {Number(reportOrder.deliveryFee) > 0 ? `€${Number(reportOrder.deliveryFee).toFixed(2)}` : (isAr ? 'مجاناً (0.00 €)' : 'Kostenlos (0,00 €)')}

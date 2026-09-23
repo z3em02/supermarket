@@ -16,6 +16,8 @@ const customerAuthRoutes = require('./routes/customerAuth');
 const settingsRoutes = require('./routes/settings');
 const couponRoutes = require('./routes/coupons');
 const promotionRoutes = require('./routes/promotions');
+const deliveryWindowRoutes = require('./routes/deliveryWindows');
+const deliveryDistanceRoutes = require('./routes/deliveryDistance');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -61,6 +63,8 @@ app.use('/api/customers', customerAuthRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/promotions', promotionRoutes);
+app.use('/api/delivery-windows', deliveryWindowRoutes);
+app.use('/api/delivery-distance', deliveryDistanceRoutes);
 
 
 // Health check

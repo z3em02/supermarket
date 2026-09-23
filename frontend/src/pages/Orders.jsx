@@ -36,7 +36,7 @@ import {
   Gift,
   Sparkles
 } from 'lucide-react';
-import { DELIVERY_WINDOWS, todayIso, maxDeliveryDateIso, buildDeliverySlot, parseDeliverySlot, formatDeliverySlot } from '../utils/deliverySlot';
+import { todayIso, maxDeliveryDateIso, buildDeliverySlot, parseDeliverySlot, formatDeliverySlot, windowLabel, fetchActiveDeliveryWindows } from '../utils/deliverySlot';
 
 export const parseOrderNotes = (adminNotes, language) => {
   if (!adminNotes) return { customNotes: '', customerResponse: null };
@@ -95,8 +95,13 @@ export const Orders = () => {
   const [expandedOrders, setExpandedOrders] = useState({});
   const [editingDeliverySlot, setEditingDeliverySlot] = useState(false);
   const [editDeliveryDate, setEditDeliveryDate] = useState('');
-  const [editDeliveryWindow, setEditDeliveryWindow] = useState(DELIVERY_WINDOWS[0].value);
+  const [editSelectedWindow, setEditSelectedWindow] = useState(null);
   const [savingDeliverySlot, setSavingDeliverySlot] = useState(false);
+  const [deliveryWindows, setDeliveryWindows] = useState([]);
+
+  useEffect(() => {
+    fetchActiveDeliveryWindows().then(setDeliveryWindows).catch(() => {});
+  }, []);
 
   const toggleOrderItemsExpand = (id) => {
     setExpandedOrders((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -292,7 +297,10 @@ export const Orders = () => {
   const handleOpenEditDeliverySlot = (order) => {
     const parsed = parseDeliverySlot(order.deliverySlot);
     setEditDeliveryDate(parsed?.date || todayIso());
-    setEditDeliveryWindow(parsed?.window || DELIVERY_WINDOWS[0].value);
+    const matching = parsed
+      ? deliveryWindows.find((w) => w.startHour === parsed.startHour && w.endHour === parsed.endHour)
+      : null;
+    setEditSelectedWindow(matching || deliveryWindows[0] || null);
     setEditingDeliverySlot(true);
   };
 
@@ -303,7 +311,7 @@ export const Orders = () => {
       const apiUrl = getApiUrl();
       await axios.put(
         `${apiUrl}/api/orders/${orderId}/status`,
-        { deliverySlot: buildDeliverySlot(editDeliveryDate, editDeliveryWindow) },
+        { deliverySlot: buildDeliverySlot(editDeliveryDate, editSelectedWindow?.startHour, editSelectedWindow?.endHour) },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setEditingDeliverySlot(false);
@@ -1491,69 +1499,86 @@ export const Orders = () => {
                         <span>{selectedOrder.deliveryNotes}</span>
                       </span>
                     )}
-                    {!editingDeliverySlot && (
-                      <span className="inline-flex items-center gap-1.5">
-                        <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span>
-                          {formatDeliverySlot(selectedOrder.deliverySlot, language === 'ar') || (language === 'ar' ? 'لم يُحدد بعد' : 'Noch nicht festgelegt')}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEditDeliverySlot(selectedOrder)}
-                          className="text-emerald-700 dark:text-emerald-400 font-bold underline cursor-pointer"
-                        >
-                          {language === 'ar' ? 'تعديل' : 'Bearbeiten'}
-                        </button>
+                  </div>
+
+                  {/* Delivery time — its own prominent row with a visible edit button */}
+                  <div className="flex items-center justify-between gap-2 pt-2 mt-1 border-t border-emerald-200/50 dark:border-emerald-850">
+                    <span className="inline-flex items-center gap-1.5 min-w-0">
+                      <Clock className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span className="font-bold text-slate-700 dark:text-gray-200 truncate">
+                        {formatDeliverySlot(selectedOrder.deliverySlot, language === 'ar') || (language === 'ar' ? 'لم يُحدد بعد' : 'Noch nicht festgelegt')}
                       </span>
+                    </span>
+                    {!editingDeliverySlot && (
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditDeliverySlot(selectedOrder)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold cursor-pointer shrink-0 shadow-sm"
+                      >
+                        <Edit className="w-3 h-3" />
+                        {language === 'ar' ? 'تعديل الوقت' : 'Zeit bearbeiten'}
+                      </button>
                     )}
                   </div>
 
                   {editingDeliverySlot && (
-                    <div className="pt-2 mt-1 border-t border-emerald-200/60 dark:border-emerald-850 flex flex-wrap items-end gap-2">
-                      <div>
-                        <label className="block text-[10px] font-semibold text-slate-500 dark:text-gray-400 mb-1">
-                          {language === 'ar' ? 'التاريخ' : 'Datum'}
-                        </label>
-                        <input
-                          type="date"
-                          value={editDeliveryDate}
-                          min={todayIso()}
-                          max={maxDeliveryDateIso()}
-                          onChange={(e) => setEditDeliveryDate(e.target.value)}
-                          className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
-                        />
+                    <div className="pt-2 mt-1 border-t border-emerald-200/60 dark:border-emerald-850 space-y-2">
+                      <div className="flex flex-wrap items-end gap-2">
+                        <div>
+                          <label className="block text-[10px] font-semibold text-slate-500 dark:text-gray-400 mb-1">
+                            {language === 'ar' ? 'التاريخ' : 'Datum'}
+                          </label>
+                          <input
+                            type="date"
+                            value={editDeliveryDate}
+                            min={todayIso()}
+                            max={maxDeliveryDateIso()}
+                            onChange={(e) => setEditDeliveryDate(e.target.value)}
+                            className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
+                          />
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {deliveryWindows.length === 0 ? (
+                            <p className="text-[11px] text-amber-700 dark:text-amber-400 self-center">
+                              {language === 'ar'
+                                ? 'لا توجد أوقات توصيل مُفعّلة. أضفها في الإعدادات.'
+                                : 'Keine aktiven Zeitfenster. Bitte in den Einstellungen anlegen.'}
+                            </p>
+                          ) : (
+                            deliveryWindows.map((w) => (
+                              <button
+                                key={w.id}
+                                type="button"
+                                onClick={() => setEditSelectedWindow(w)}
+                                className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-bold transition cursor-pointer ${
+                                  editSelectedWindow?.id === w.id
+                                    ? 'bg-emerald-600 border-emerald-600 text-white'
+                                    : 'bg-white dark:bg-gray-900 border-slate-200 dark:border-gray-800 text-slate-600 dark:text-gray-300 hover:border-emerald-400'
+                                }`}
+                              >
+                                {windowLabel(w.startHour, w.endHour, language === 'ar')}
+                              </button>
+                            ))
+                          )}
+                        </div>
                       </div>
-                      <div className="flex gap-1.5">
-                        {DELIVERY_WINDOWS.map((w) => (
-                          <button
-                            key={w.value}
-                            type="button"
-                            onClick={() => setEditDeliveryWindow(w.value)}
-                            className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-bold transition cursor-pointer ${
-                              editDeliveryWindow === w.value
-                                ? 'bg-emerald-600 border-emerald-600 text-white'
-                                : 'bg-white dark:bg-gray-900 border-slate-200 dark:border-gray-800 text-slate-600 dark:text-gray-300 hover:border-emerald-400'
-                            }`}
-                          >
-                            {language === 'ar' ? w.labelAr : w.labelDe}
-                          </button>
-                        ))}
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleSaveDeliverySlot(selectedOrder.id)}
+                          disabled={savingDeliverySlot || !editSelectedWindow}
+                          className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[11px] font-bold cursor-pointer"
+                        >
+                          {savingDeliverySlot ? '...' : (language === 'ar' ? 'حفظ' : 'Speichern')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingDeliverySlot(false)}
+                          className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-600 dark:text-gray-300 text-[11px] font-bold cursor-pointer"
+                        >
+                          {language === 'ar' ? 'إلغاء' : 'Abbrechen'}
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => handleSaveDeliverySlot(selectedOrder.id)}
-                        disabled={savingDeliverySlot}
-                        className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[11px] font-bold cursor-pointer"
-                      >
-                        {savingDeliverySlot ? '...' : (language === 'ar' ? 'حفظ' : 'Speichern')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setEditingDeliverySlot(false)}
-                        className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-600 dark:text-gray-300 text-[11px] font-bold cursor-pointer"
-                      >
-                        {language === 'ar' ? 'إلغاء' : 'Abbrechen'}
-                      </button>
                     </div>
                   )}
                 </div>
@@ -1618,9 +1643,26 @@ export const Orders = () => {
                     </div>
                   )}
                   {Number(selectedOrder.deliveryFee) > 0 ? (
-                    <div className="flex justify-between text-slate-600 dark:text-slate-400">
-                      <span>{t('deliveryFee')}</span>
-                      <span className="font-mono">€{Number(selectedOrder.deliveryFee).toFixed(2)}</span>
+                    <div className="space-y-0.5">
+                      <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                        <span>{t('deliveryFee')}</span>
+                        <span className="font-mono">€{Number(selectedOrder.deliveryFee).toFixed(2)}</span>
+                      </div>
+                      {selectedOrder.deliveryDistanceKm != null && Number(selectedOrder.deliveryDistanceKm) > 0 && (
+                        <div className="flex justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3 text-emerald-600" />
+                            <span>
+                              {language === 'ar'
+                                ? `المسافة: ${selectedOrder.deliveryDistanceKm} كم`
+                                : `Distanz: ${selectedOrder.deliveryDistanceKm} km`}
+                              {selectedOrder.baseDeliveryFee != null && selectedOrder.distanceDeliveryFee != null
+                                ? ` (Basis: €${Number(selectedOrder.baseDeliveryFee).toFixed(2)} + Distanz: €${Number(selectedOrder.distanceDeliveryFee).toFixed(2)})`
+                                : ''}
+                            </span>
+                          </span>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-semibold">
@@ -1880,9 +1922,18 @@ export const Orders = () => {
                     </div>
                   )}
                   {Number(printOrder.deliveryFee) > 0 ? (
-                    <div className="flex justify-between px-4 py-2 bg-slate-50 dark:bg-gray-950 text-slate-600 dark:text-slate-300 text-xs">
-                      <span>{language === 'ar' ? 'رسوم التوصيل' : 'Liefergebühr'}</span>
-                      <span className="font-mono">€{Number(printOrder.deliveryFee).toFixed(2)}</span>
+                    <div className="px-4 py-2 bg-slate-50 dark:bg-gray-950 text-slate-600 dark:text-slate-300 text-xs space-y-0.5">
+                      <div className="flex justify-between">
+                        <span>{language === 'ar' ? 'رسوم التوصيل' : 'Liefergebühr'}</span>
+                        <span className="font-mono">€{Number(printOrder.deliveryFee).toFixed(2)}</span>
+                      </div>
+                      {printOrder.deliveryDistanceKm != null && Number(printOrder.deliveryDistanceKm) > 0 && (
+                        <div className="text-[10px] text-slate-400 dark:text-slate-500">
+                          <span>
+                            {language === 'ar' ? `المسافة: ${printOrder.deliveryDistanceKm} كم` : `Distanz: ${printOrder.deliveryDistanceKm} km`}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="flex justify-between px-4 py-2 bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300 text-xs font-semibold">

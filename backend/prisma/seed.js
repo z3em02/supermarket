@@ -435,6 +435,17 @@ async function main() {
     console.log(`+ Seeded Product [${product.sku}]: ${product.name} (€${product.b2bPrice.toFixed(2)})`);
   }
 
+  const deliveryWindowCount = await prisma.deliveryWindow.count();
+  if (deliveryWindowCount === 0) {
+    await prisma.deliveryWindow.createMany({
+      data: [
+        { startHour: 10, endHour: 12, sortOrder: 0 },
+        { startHour: 16, endHour: 18, sortOrder: 1 }
+      ]
+    });
+    console.log('+ Seeded 2 default delivery time windows (10-12, 16-18)');
+  }
+
   console.log(`\n✓ Seeding finished successfully! Seeded ${categoriesData.length} categories and ${productsData.length} products.`);
 }
 

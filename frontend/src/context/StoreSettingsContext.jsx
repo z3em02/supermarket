@@ -15,7 +15,15 @@ const DEFAULT_SETTINGS = {
   googleReviewsUrl: 'https://search.google.com/local/reviews',
   googleRating: 5.0,
   googleReviewCount: 0,
-  showGoogleReviews: true
+  showGoogleReviews: true,
+  minOrderValue: 0,
+  deliveryFee: 2.0,
+  deliveryFeePerKm: 0.10,
+  freeDeliveryThreshold: 0,
+  storeLatitude: 48.1746605,
+  storeLongitude: 16.3272662,
+  maxDeliveryDistanceKm: 0,
+  allowedPostalCodes: ''
 };
 
 const StoreSettingsContext = createContext(null);

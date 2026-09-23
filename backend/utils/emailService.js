@@ -43,10 +43,13 @@ const getStoreSettings = async () => {
 // Delivery fee is folded into order.totalAmount at creation time; derive the
 // charged fee back out for display by subtracting the items' own subtotal.
 const computeDeliveryFeeCharged = (order) => {
-  const itemsSubtotal = (order.orderItems || []).reduce(
+  if (typeof order?.deliveryFee === 'number') {
+    return order.deliveryFee;
+  }
+  const itemsSubtotal = (order?.orderItems || []).reduce(
     (sum, item) => sum + Number(item.subtotal ?? item.price * item.quantity), 0
   );
-  const fee = Number(order.totalAmount) - itemsSubtotal;
+  const fee = Number(order?.totalAmount || 0) - itemsSubtotal;
   return fee > 0.001 ? fee : 0;
 };
 

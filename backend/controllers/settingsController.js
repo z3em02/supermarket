@@ -19,8 +19,12 @@ const DEFAULT_SETTINGS = {
   googleApiKey: '',
   showGoogleReviews: true,
   minOrderValue: 0,
-  deliveryFee: 0,
+  deliveryFee: 2.0,
+  deliveryFeePerKm: 0.10,
   freeDeliveryThreshold: 0,
+  storeLatitude: 48.1746605,
+  storeLongitude: 16.3272662,
+  maxDeliveryDistanceKm: 0,
   allowedPostalCodes: ''
 };
 
@@ -43,7 +47,11 @@ const PUBLIC_SETTINGS_SELECT = {
   showGoogleReviews: true,
   minOrderValue: true,
   deliveryFee: true,
+  deliveryFeePerKm: true,
   freeDeliveryThreshold: true,
+  storeLatitude: true,
+  storeLongitude: true,
+  maxDeliveryDistanceKm: true,
   allowedPostalCodes: true
 };
 
@@ -88,7 +96,11 @@ const updateSettings = async (req, res) => {
       showGoogleReviews,
       minOrderValue,
       deliveryFee,
+      deliveryFeePerKm,
       freeDeliveryThreshold,
+      storeLatitude,
+      storeLongitude,
+      maxDeliveryDistanceKm,
       allowedPostalCodes
     } = req.body;
 
@@ -142,11 +154,29 @@ const updateSettings = async (req, res) => {
     if (deliveryFee !== undefined) {
       data.deliveryFee = Math.max(0, Number(deliveryFee) || 0);
     }
+    if (deliveryFeePerKm !== undefined) {
+      data.deliveryFeePerKm = Math.max(0, Number(deliveryFeePerKm) || 0);
+    }
     if (freeDeliveryThreshold !== undefined) {
       data.freeDeliveryThreshold = Math.max(0, Number(freeDeliveryThreshold) || 0);
     }
+    if (storeLatitude !== undefined) {
+      const lat = parseFloat(storeLatitude);
+      data.storeLatitude = !isNaN(lat) ? lat : null;
+    }
+    if (storeLongitude !== undefined) {
+      const lng = parseFloat(storeLongitude);
+      data.storeLongitude = !isNaN(lng) ? lng : null;
+    }
+    if (maxDeliveryDistanceKm !== undefined) {
+      data.maxDeliveryDistanceKm = Math.max(0, Number(maxDeliveryDistanceKm) || 0);
+    }
     if (allowedPostalCodes !== undefined) {
-      data.allowedPostalCodes = String(allowedPostalCodes).trim();
+      if (!allowedPostalCodes || allowedPostalCodes === 'null' || allowedPostalCodes === null) {
+        data.allowedPostalCodes = '';
+      } else {
+        data.allowedPostalCodes = String(allowedPostalCodes).trim();
+      }
     }
 
     const updated = await prisma.storeSettings.upsert({
