@@ -32,6 +32,16 @@ const decrementStockOrThrow = async (tx, productId, quantity, productName) => {
   }
 };
 
+// Throws an Error flagged so the outer catch block reports it as a 400 with
+// the actual message, instead of falling through to a generic 500 — these are
+// expected business-rule rejections (coupon inactive/expired/limit reached),
+// not server failures.
+const couponError = (message) => {
+  const err = new Error(message);
+  err.isCouponError = true;
+  return err;
+};
+
 const getOrders = async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
@@ -260,19 +270,17 @@ const createOrder = async (req, res) => {
     const deliveryAddress = req.body.deliveryAddress || addressParts.join(', ') || 'Home Delivery Address';
     const deliveryNotes = req.body.deliveryNotes || customer.deliveryNotes || notes || null;
 
+    let freshCoupon = null;
+
     const order = await prisma.$transaction(async (tx) => {
-      // Re-verify coupon atomically inside transaction to eliminate race conditions
+      // Re-verify coupon atomically inside transaction to eliminate race conditions.
       if (appliedCoupon) {
-        const freshCoupon = await tx.coupon.findUnique({
+        freshCoupon = await tx.coupon.findUnique({
           where: { id: appliedCoupon.id }
         });
 
-        if (!freshCoupon || !freshCoupon.isActive) {
-          throw new Error('Gutschein ist nicht mehr aktiv / Coupon is no longer active.');
-        }
-
-        if (freshCoupon.usageLimit && freshCoupon.usedCount >= freshCoupon.usageLimit) {
-          throw new Error('Gutschein-Limit wurde soeben erreicht / Coupon usage limit reached.');
+        if (!freshCoupon) {
+          throw couponError('Gutschein ist nicht mehr aktiv / Coupon is no longer active.');
         }
 
         if (freshCoupon.usageLimitPerCustomer) {
@@ -280,14 +288,25 @@ const createOrder = async (req, res) => {
             where: { couponId: freshCoupon.id, customerId: customer.id }
           });
           if (freshCustCount >= freshCoupon.usageLimitPerCustomer) {
-            throw new Error('Sie haben diesen Gutschein bereits maximal eingelöst / Coupon already redeemed.');
+            throw couponError('Sie haben diesen Gutschein bereits maximal eingelöst / Coupon already redeemed.');
           }
         }
 
-        await tx.coupon.update({
-          where: { id: freshCoupon.id },
+        // Atomically re-check isActive + the global usage limit and increment usedCount
+        // in a single guarded UPDATE, the same way decrementStockOrThrow prevents
+        // overselling — a plain read-then-write here would let two concurrent orders
+        // both read "under limit" and both squeeze through past the cap.
+        const guardWhere = { id: freshCoupon.id, isActive: true };
+        if (freshCoupon.usageLimit != null) {
+          guardWhere.usedCount = { lt: freshCoupon.usageLimit };
+        }
+        const couponGuard = await tx.coupon.updateMany({
+          where: guardWhere,
           data: { usedCount: { increment: 1 } }
         });
+        if (couponGuard.count === 0) {
+          throw couponError('Gutschein ist nicht mehr aktiv oder das Limit wurde soeben erreicht / Coupon is no longer active or its usage limit was just reached.');
+        }
       }
 
       // Deduct stock atomically per item before creating the order
@@ -346,6 +365,20 @@ const createOrder = async (req, res) => {
             orderId: createdOrder.id
           }
         });
+
+        // Narrow the per-customer-limit race (e.g. a double-submitted checkout):
+        // recount including the row just inserted and abort the whole transaction
+        // if it pushed this customer over their limit. Under concurrent requests
+        // from the very same customer this can't be made fully atomic without
+        // raw SQL locking, but this closes the window down to a rare edge case.
+        if (freshCoupon && freshCoupon.usageLimitPerCustomer) {
+          const customerUsageCount = await tx.couponUsage.count({
+            where: { couponId: appliedCoupon.id, customerId: customer.id }
+          });
+          if (customerUsageCount > freshCoupon.usageLimitPerCustomer) {
+            throw couponError('Sie haben diesen Gutschein bereits maximal eingelöst / Coupon already redeemed.');
+          }
+        }
       }
 
       return createdOrder;
@@ -367,7 +400,7 @@ const createOrder = async (req, res) => {
 
     res.status(201).json(order);
   } catch (error) {
-    if (error.isStockError) {
+    if (error.isStockError || error.isCouponError) {
       return res.status(400).json({ error: error.message });
     }
     console.error('Create order error:', error);
