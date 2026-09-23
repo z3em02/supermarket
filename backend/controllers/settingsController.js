@@ -1,6 +1,11 @@
 const prisma = require('../lib/prisma');
 const { scrapeGoogleReviews } = require('../utils/googleScraper');
 
+// String(null) / String(undefined) produce the literal text "null"/"undefined",
+// which then reads back as a truthy, non-empty value forever — treat any
+// nullish or already-corrupted "null" string as empty instead of stringifying it.
+const cleanString = (value) => (value == null || value === 'null' || value === 'undefined') ? '' : String(value).trim();
+
 const DEFAULT_SETTINGS = {
   id: 'default',
   storeName: 'Hajar Supermarkt',
@@ -122,31 +127,31 @@ const updateSettings = async (req, res) => {
       data.storeNameAr = String(storeNameAr).trim() || 'سوبرماركت هاجر';
     }
     if (logoUrl !== undefined) {
-      data.logoUrl = String(logoUrl).trim();
+      data.logoUrl = cleanString(logoUrl);
     }
     if (phone !== undefined) {
-      data.phone = String(phone).trim();
+      data.phone = cleanString(phone);
     }
     if (email !== undefined) {
-      data.email = String(email).trim().toLowerCase();
+      data.email = cleanString(email).toLowerCase();
     }
     if (address !== undefined) {
-      data.address = String(address).trim();
+      data.address = cleanString(address);
     }
     if (mapUrl !== undefined) {
-      data.mapUrl = String(mapUrl).trim();
+      data.mapUrl = cleanString(mapUrl);
     }
     if (mapEmbedUrl !== undefined) {
-      data.mapEmbedUrl = String(mapEmbedUrl).trim();
+      data.mapEmbedUrl = cleanString(mapEmbedUrl);
     }
     if (googleReviewsUrl !== undefined) {
-      data.googleReviewsUrl = String(googleReviewsUrl).trim();
+      data.googleReviewsUrl = cleanString(googleReviewsUrl);
     }
     if (googlePlaceId !== undefined) {
-      data.googlePlaceId = String(googlePlaceId).trim();
+      data.googlePlaceId = cleanString(googlePlaceId);
     }
     if (googleApiKey !== undefined) {
-      data.googleApiKey = String(googleApiKey).trim();
+      data.googleApiKey = cleanString(googleApiKey);
     }
     if (minOrderValue !== undefined) {
       data.minOrderValue = Math.max(0, Number(minOrderValue) || 0);
@@ -172,11 +177,7 @@ const updateSettings = async (req, res) => {
       data.maxDeliveryDistanceKm = Math.max(0, Number(maxDeliveryDistanceKm) || 0);
     }
     if (allowedPostalCodes !== undefined) {
-      if (!allowedPostalCodes || allowedPostalCodes === 'null' || allowedPostalCodes === null) {
-        data.allowedPostalCodes = '';
-      } else {
-        data.allowedPostalCodes = String(allowedPostalCodes).trim();
-      }
+      data.allowedPostalCodes = cleanString(allowedPostalCodes);
     }
 
     const updated = await prisma.storeSettings.upsert({

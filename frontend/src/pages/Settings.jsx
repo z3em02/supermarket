@@ -165,7 +165,7 @@ export const Settings = () => {
         storeName: settings.storeName || '',
         storeNameDe: settings.storeNameDe || '',
         storeNameAr: settings.storeNameAr || '',
-        logoUrl: settings.logoUrl || '',
+        logoUrl: (settings.logoUrl && settings.logoUrl !== 'null') ? settings.logoUrl : '',
         phone: settings.phone || '',
         email: settings.email || '',
         address: settings.address || '',
