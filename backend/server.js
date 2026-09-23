@@ -26,12 +26,12 @@ app.use(helmet({
 }));
 app.use(cors({
   origin: (origin, callback) => {
-    const allowed = [
-      process.env.FRONTEND_URL,
-      'http://localhost:5173',
-      'http://localhost:3000'
-    ].filter(Boolean);
-    if (!origin || allowed.includes(origin)) {
+    if (!origin) return callback(null, true);
+    if (origin === process.env.FRONTEND_URL) return callback(null, true);
+    // Outside production, allow any localhost port — Vite picks a different
+    // one (5174, 5175, ...) whenever 5173 is already taken by another running
+    // dev server, so a fixed port list breaks as soon as two are running.
+    if (process.env.NODE_ENV !== 'production' && /^https?:\/\/localhost:\d+$/.test(origin)) {
       return callback(null, true);
     }
     return callback(null, false);
