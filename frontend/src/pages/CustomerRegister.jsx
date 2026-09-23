@@ -26,8 +26,7 @@ import {
   ArrowLeft, 
   Truck, 
   RotateCcw,
-  ShieldCheck,
-  Sparkles
+  ShieldCheck
 } from 'lucide-react';
 
 export const CustomerRegister = () => {
@@ -61,7 +60,6 @@ export const CustomerRegister = () => {
   const [phoneCode, setPhoneCode] = useState('');
   const [emailVerified, setEmailVerified] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
-  const [devOtp, setDevOtp] = useState(null);
   // Firebase confirmationResult between "send SMS code" and "confirm code"
   const [phoneConfirmationResult, setPhoneConfirmationResult] = useState(null);
   const [sendingPhoneCode, setSendingPhoneCode] = useState(false);
@@ -112,10 +110,6 @@ export const CustomerRegister = () => {
         ...formData,
         preferredLanguage: language
       });
-
-      if (res.devOtp) {
-        setDevOtp(res.devOtp);
-      }
 
       setStep(2);
       setSuccessMsg(
@@ -189,10 +183,7 @@ export const CustomerRegister = () => {
   const handleResendEmail = async () => {
     try {
       setError('');
-      const res = await resendOtp('email');
-      if (res.devOtp) {
-        setDevOtp(prev => ({ ...prev, emailOtp: res.devOtp }));
-      }
+      await resendOtp('email');
       setSuccessMsg(isAr ? 'تمت إعادة إرسال رمز التحقق (البريد)' : 'Neuer Code gesendet (E-Mail)');
     } catch (err) {
       setError(err.response?.data?.error || 'Fehler beim Senden');
@@ -485,23 +476,6 @@ export const CustomerRegister = () => {
                 </p>
               </div>
 
-              {/* Dev Helper Callout (email only — phone codes come from Firebase SMS) */}
-              {devOtp?.emailOtp && (
-                <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-850 text-amber-800 dark:text-amber-200 text-xs flex flex-col sm:flex-row gap-2 sm:items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
-                    <span>
-                      {isAr ? 'رمز التحقق السريع (تجريبي):' : 'Schnelltest-Code:'}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-2 font-mono font-bold">
-                    <span className="bg-amber-100 dark:bg-amber-900 px-2 py-0.5 rounded inline-flex items-center gap-1">
-                      <Mail className="w-3 h-3 text-amber-700 dark:text-amber-300" />
-                      {devOtp.emailOtp}
-                    </span>
-                  </div>
-                </div>
-              )}
 
               {/* Verification Boxes */}
               <div className="space-y-4">

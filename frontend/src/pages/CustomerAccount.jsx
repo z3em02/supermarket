@@ -85,7 +85,6 @@ export const CustomerAccount = () => {
   const [verifyingType, setVerifyingType] = useState(null); // 'email' | 'phone' | null
   const [otpInput, setOtpInput] = useState('');
   const [verifyingLoading, setVerifyingLoading] = useState(false);
-  const [devOtpHint, setDevOtpHint] = useState('');
   // Holds the Firebase confirmationResult between "send SMS code" and "confirm code"
   const [phoneConfirmationResult, setPhoneConfirmationResult] = useState(null);
 
@@ -158,12 +157,8 @@ export const CustomerAccount = () => {
       setProfileError('');
       setSaveSuccess('');
 
-      const res = await updateProfile(profileForm);
+      await updateProfile(profileForm);
       setSaveSuccess(isAr ? 'تم تحديث بياناتك بنجاح!' : 'Profildaten erfolgreich aktualisiert!');
-
-      if (res.devOtp?.emailOtp) {
-        setDevOtpHint(`Code: ${res.devOtp.emailOtp}`);
-      }
     } catch (err) {
       console.error('Update profile error:', err);
       setProfileError(err.response?.data?.error || (isAr ? 'فشل تحديث البيانات' : 'Fehler beim Speichern'));
@@ -174,16 +169,12 @@ export const CustomerAccount = () => {
 
   const handleStartVerify = async (type) => {
     setProfileError('');
-    setDevOtpHint('');
     setOtpInput('');
 
     if (type === 'email') {
       setVerifyingType('email');
       try {
-        const res = await resendOtp('email');
-        if (res.devOtp) {
-          setDevOtpHint(`Code: ${res.devOtp}`);
-        }
+        await resendOtp('email');
       } catch (err) {}
       return;
     }
@@ -651,12 +642,6 @@ export const CustomerAccount = () => {
                 {isAr ? 'إلغاء' : 'Abbrechen'}
               </button>
             </div>
-
-            {devOtpHint && (
-              <div className="text-xs font-mono bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 px-3 py-1.5 rounded-lg mb-3 inline-block break-all">
-                {devOtpHint}
-              </div>
-            )}
 
             {profileError && (
               <div className="text-xs bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-300 px-3 py-1.5 rounded-lg mb-3">

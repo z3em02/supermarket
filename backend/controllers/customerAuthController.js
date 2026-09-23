@@ -140,11 +140,7 @@ const register = async (req, res) => {
         floorApartment: customer.floorApartment,
         deliveryNotes: customer.deliveryNotes,
         preferredLanguage: customer.preferredLanguage
-      },
-      // Expose OTP in non-production environments only
-      ...(process.env.NODE_ENV !== 'production' ? {
-        devOtp: { emailOtp }
-      } : {})
+      }
     });
   } catch (error) {
     console.error('Customer register error:', error);
@@ -327,10 +323,7 @@ const resendOtp = async (req, res) => {
     if (process.env.NODE_ENV !== 'production') {
       console.log(`✉️ RESENT Email OTP for ${customer.email}: [ ${newCode} ]`);
     }
-    return res.json({
-      message: 'New email verification code sent',
-      ...(process.env.NODE_ENV !== 'production' ? { devOtp: newCode } : {})
-    });
+    return res.json({ message: 'New email verification code sent' });
   } catch (error) {
     console.error('Resend OTP error:', error);
     res.status(500).json({ error: 'Failed to resend code' });
@@ -558,10 +551,7 @@ const updateProfile = async (req, res) => {
       message: 'Profile updated successfully',
       customer: updated,
       reverifyEmail: updateData.email !== undefined,
-      reverifyPhone: updateData.phone !== undefined,
-      ...(process.env.NODE_ENV !== 'production' && updateData.emailOtp ? {
-        devOtp: { emailOtp: updateData.emailOtp }
-      } : {})
+      reverifyPhone: updateData.phone !== undefined
     });
   } catch (error) {
     console.error('Update profile error:', error);
