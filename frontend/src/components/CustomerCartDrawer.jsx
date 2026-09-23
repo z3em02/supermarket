@@ -23,18 +23,14 @@ import {
   Gift,
   Check,
   Percent,
-  Sparkles
+  Sparkles,
+  CalendarDays
 } from 'lucide-react';
 import { useCustomerAuth } from '../context/CustomerAuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useStoreSettings } from '../context/StoreSettingsContext';
 import { getApiUrl } from '../utils/api';
-
-const DELIVERY_SLOTS = [
-  { value: 'today_16_18', labelDe: 'Heute, 16–18 Uhr', labelAr: 'اليوم، 16–18' },
-  { value: 'tomorrow_10_12', labelDe: 'Morgen, 10–12 Uhr', labelAr: 'غداً، 10–12' },
-  { value: 'tomorrow_16_18', labelDe: 'Morgen, 16–18 Uhr', labelAr: 'غداً، 16–18' }
-];
+import { DELIVERY_WINDOWS, todayIso, maxDeliveryDateIso, buildDeliverySlot, formatDeliverySlot } from '../utils/deliverySlot';
 
 export const CustomerCartDrawer = ({
   isOpen,
@@ -54,13 +50,15 @@ export const CustomerCartDrawer = ({
 
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [deliveryNotes, setDeliveryNotes] = useState('');
-  const [deliverySlot, setDeliverySlot] = useState(DELIVERY_SLOTS[0].value);
+  const [deliveryDate, setDeliveryDate] = useState(todayIso());
+  const [deliveryWindow, setDeliveryWindow] = useState(DELIVERY_WINDOWS[0].value);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [placedOrder, setPlacedOrder] = useState(null);
 
   // Promotions & Coupon state
   const [activePromos, setActivePromos] = useState([]);
+  const [showCouponField, setShowCouponField] = useState(false);
   const [couponInput, setCouponInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [validatingCoupon, setValidatingCoupon] = useState(false);
@@ -310,7 +308,7 @@ export const CustomerCartDrawer = ({
           deliveryAddress: deliveryAddress.trim() || undefined,
           deliveryNotes: deliveryNotes.trim() || undefined,
           notes: deliveryNotes.trim() || undefined,
-          deliverySlot
+          deliverySlot: buildDeliverySlot(deliveryDate, deliveryWindow)
         })
       });
 
@@ -400,6 +398,12 @@ export const CustomerCartDrawer = ({
                   <span className="text-slate-400 block">{isAr ? 'عنوان التوصيل:' : 'Lieferadresse:'}</span>
                   <span className="font-bold text-slate-800 dark:text-gray-200">{placedOrder.deliveryAddress}</span>
                 </div>
+                {placedOrder.deliverySlot && formatDeliverySlot(placedOrder.deliverySlot, isAr) && (
+                  <div>
+                    <span className="text-slate-400 block">{isAr ? 'موعد التوصيل:' : 'Lieferzeitfenster:'}</span>
+                    <span className="font-bold text-slate-800 dark:text-gray-200">{formatDeliverySlot(placedOrder.deliverySlot, isAr)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between pt-2 border-t border-emerald-200/50 dark:border-emerald-850">
                   <span className="text-slate-400">{isAr ? 'المطلوب سداده عند الاستلام:' : 'Betrag bei Lieferung:'}</span>
                   <span className="font-extrabold text-emerald-600 dark:text-emerald-400 font-mono text-sm">
@@ -539,19 +543,10 @@ export const CustomerCartDrawer = ({
                 })}
               </div>
 
-              {/* Zero-Payment Badge */}
-              <div className="p-4 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-850 flex items-start gap-3">
-                <Truck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                <div className="text-xs text-emerald-900 dark:text-emerald-200">
-                  <strong className="block font-bold">
-                    {isAr ? 'الدفع عند الاستلام فقط (نقداً أو بالبطاقة عند الباب)' : 'Zahlung an der Haustür (Bar oder Karte)'}
-                  </strong>
-                  <span className="text-[11px] opacity-90 block mt-0.5">
-                    {isAr 
-                      ? 'لا داعي لإدخال أي بطاقة دفع الآن. ستدفع للمندوب مباشرة عند استلام مشترياتك.' 
-                      : 'Keine Online-Zahlung nötig. Sie bezahlen den Fahrer erst bei der Zustellung.'}
-                  </span>
-                </div>
+              {/* Zero-Payment note */}
+              <div className="flex items-center gap-2 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
+                <Truck className="w-3.5 h-3.5 shrink-0" />
+                <span>{isAr ? 'الدفع عند الاستلام فقط (نقداً أو بالبطاقة)' : 'Zahlung erst bei Lieferung (Bar oder Karte)'}</span>
               </div>
 
               {error && (
@@ -598,105 +593,109 @@ export const CustomerCartDrawer = ({
                 </div>
               ) : (
                 /* Authenticated Customer Delivery Form */
-                <div className="space-y-4 pt-2 border-t border-slate-100 dark:border-gray-800">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-slate-700 dark:text-gray-300 flex items-center gap-1.5">
-                      <MapPin className="w-4 h-4 text-emerald-600" />
-                      <span>{isAr ? 'تأكيد عنوان التوصيل' : 'Lieferadresse bestätigen'}</span>
-                    </span>
-                    <Link
-                      to="/account"
-                      onClick={onClose}
-                      className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline flex items-center gap-1"
-                    >
-                      <span>{isAr ? 'تعديل الحساب' : 'Konto anpassen'}</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </Link>
-                  </div>
-
-                  {/* Verification badges warning */}
-                  {!customer?.emailVerified && (
-                    <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-850 text-amber-800 dark:text-amber-300 text-xs flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4 text-amber-600" />
-                        <span>{isAr ? 'البريد الإلكتروني غير مؤكد' : 'E-Mail-Adresse nicht bestätigt'}</span>
+                <div className="pt-2 border-t border-slate-100 dark:border-gray-800 space-y-3">
+                  {/* Verification warning (combined if both missing) */}
+                  {(!customer?.emailVerified || !customer?.phoneVerified) && (
+                    <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-850 text-amber-800 dark:text-amber-300 text-xs flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                        <span className="truncate">
+                          {!customer?.emailVerified && !customer?.phoneVerified
+                            ? (isAr ? 'البريد الإلكتروني ورقم الهاتف غير مؤكدين' : 'E-Mail & Telefon nicht bestätigt')
+                            : !customer?.emailVerified
+                              ? (isAr ? 'البريد الإلكتروني غير مؤكد' : 'E-Mail-Adresse nicht bestätigt')
+                              : (isAr ? 'رقم الهاتف غير مؤكد' : 'Telefonnummer nicht bestätigt')}
+                        </span>
                       </div>
                       <Link
                         to="/account"
                         onClick={onClose}
-                        className="font-bold underline text-amber-900 dark:text-amber-200"
+                        className="font-bold underline text-amber-900 dark:text-amber-200 shrink-0"
                       >
                         {isAr ? 'تأكيد الآن' : 'Jetzt bestätigen'}
                       </Link>
                     </div>
                   )}
 
-                  {customer?.emailVerified && !customer?.phoneVerified && (
-                    <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-850 text-amber-800 dark:text-amber-300 text-xs flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4 text-amber-600" />
-                        <span>{isAr ? 'رقم الهاتف غير مؤكد' : 'Telefonnummer nicht bestätigt'}</span>
-                      </div>
+                  {/* Delivery details card */}
+                  <div className="rounded-2xl border border-slate-200 dark:border-gray-800 bg-slate-50/60 dark:bg-gray-950/40 divide-y divide-slate-200/70 dark:divide-gray-800">
+                    <div className="p-3.5 flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-slate-700 dark:text-gray-300 flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>{isAr ? 'تفاصيل التوصيل' : 'Lieferdetails'}</span>
+                      </span>
                       <Link
                         to="/account"
                         onClick={onClose}
-                        className="font-bold underline text-amber-900 dark:text-amber-200"
+                        className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold hover:underline flex items-center gap-1"
                       >
-                        {isAr ? 'تأكيد الآن' : 'Jetzt bestätigen'}
+                        <span>{isAr ? 'تعديل الحساب' : 'Konto anpassen'}</span>
+                        <ExternalLink className="w-3 h-3" />
                       </Link>
                     </div>
-                  )}
 
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-500 dark:text-gray-400 mb-1">
-                      {isAr ? 'عنوان التوصيل الفعلي للمنزل *' : 'Lieferadresse *'}
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={deliveryAddress}
-                      onChange={(e) => setDeliveryAddress(e.target.value)}
-                      placeholder={isAr ? 'الشارع، رقم المنزل، الرمز البريدي، المدينة، الطابق...' : 'Straße, Hausnummer, PLZ, Ort, Stock/Tür'}
-                      required
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
+                    <div className="p-3.5">
+                      <textarea
+                        rows={2}
+                        value={deliveryAddress}
+                        onChange={(e) => setDeliveryAddress(e.target.value)}
+                        placeholder={isAr ? 'الشارع، رقم المنزل، الرمز البريدي، المدينة، الطابق...' : 'Straße, Hausnummer, PLZ, Ort, Stock/Tür'}
+                        required
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-500 dark:text-gray-400 mb-1">
-                      {isAr ? 'ملاحظات للسائق (اختياري)' : 'Lieferhinweis für den Fahrer (optional)'}
-                    </label>
-                    <input
-                      type="text"
-                      value={deliveryNotes}
-                      onChange={(e) => setDeliveryNotes(e.target.value)}
-                      placeholder={isAr ? 'مثال: يرجى الاتصال عند الوصول، الجرس باسم...' : 'z.B. Bitte bei Schmidt klingeln'}
-                      className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
+                    <div className="p-3.5">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[10px] font-semibold text-slate-500 dark:text-gray-400 mb-1 flex items-center gap-1">
+                            <CalendarDays className="w-3 h-3" />
+                            <span>{isAr ? 'التاريخ' : 'Datum'}</span>
+                          </label>
+                          <input
+                            type="date"
+                            value={deliveryDate}
+                            min={todayIso()}
+                            max={maxDeliveryDateIso()}
+                            onChange={(e) => setDeliveryDate(e.target.value)}
+                            className="w-full px-2.5 py-2 rounded-lg bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-semibold text-slate-500 dark:text-gray-400 mb-1 flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            <span>{isAr ? 'الوقت' : 'Zeitfenster'}</span>
+                          </label>
+                          <div className="flex gap-1.5">
+                            {DELIVERY_WINDOWS.map((w) => (
+                              <button
+                                key={w.value}
+                                type="button"
+                                onClick={() => setDeliveryWindow(w.value)}
+                                className={`flex-1 px-2 py-2 rounded-lg border text-[11px] font-bold transition cursor-pointer touch-manipulation ${
+                                  deliveryWindow === w.value
+                                    ? 'bg-emerald-600 border-emerald-600 text-white'
+                                    : 'bg-white dark:bg-gray-900 border-slate-200 dark:border-gray-800 text-slate-600 dark:text-gray-300 hover:border-emerald-400'
+                                }`}
+                              >
+                                {isAr ? w.labelAr : w.labelDe}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-500 dark:text-gray-400 mb-1.5 flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>{isAr ? 'اختر موعد التوصيل' : 'Lieferzeitfenster wählen'}</span>
-                    </label>
-                    <div className="grid grid-cols-1 xs:grid-cols-3 gap-2">
-                      {DELIVERY_SLOTS.map((slot) => (
-                        <button
-                          key={slot.value}
-                          type="button"
-                          onClick={() => setDeliverySlot(slot.value)}
-                          className={`px-3 py-2.5 rounded-xl border text-xs font-bold transition cursor-pointer touch-manipulation ${
-                            deliverySlot === slot.value
-                              ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm'
-                              : 'bg-slate-50 dark:bg-gray-950 border-slate-200 dark:border-gray-800 text-slate-600 dark:text-gray-300 hover:border-emerald-400'
-                          }`}
-                        >
-                          {isAr ? slot.labelAr : slot.labelDe}
-                        </button>
-                      ))}
+                    <div className="p-3.5">
+                      <input
+                        type="text"
+                        value={deliveryNotes}
+                        onChange={(e) => setDeliveryNotes(e.target.value)}
+                        placeholder={isAr ? 'ملاحظات للسائق (اختياري)' : 'Lieferhinweis für den Fahrer (optional)'}
+                        className="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
                     </div>
                   </div>
-
                 </div>
               )}
 
@@ -711,25 +710,37 @@ export const CustomerCartDrawer = ({
             {/* Coupon Code Input & Applied Pill */}
             <div className="space-y-2">
               {!appliedCoupon ? (
-                <form onSubmit={handleApplyCoupon} className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Tag className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder={isAr ? 'أدخل رمز الكوبون...' : 'Gutscheincode eingeben...'}
-                      value={couponInput}
-                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                      className="w-full pl-8 pr-3 py-2 text-xs font-mono font-bold uppercase bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white placeholder:normal-case placeholder:font-normal placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
+                showCouponField ? (
+                  <form onSubmit={handleApplyCoupon} className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Tag className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        autoFocus
+                        type="text"
+                        placeholder={isAr ? 'أدخل رمز الكوبون...' : 'Gutscheincode eingeben...'}
+                        value={couponInput}
+                        onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                        className="w-full pl-8 pr-3 py-2 text-xs font-mono font-bold uppercase bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white placeholder:normal-case placeholder:font-normal placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={validatingCoupon || !couponInput.trim()}
+                      className="px-3.5 py-2 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-900 dark:bg-gray-800 dark:hover:bg-gray-700 text-white disabled:opacity-40 transition cursor-pointer shrink-0"
+                    >
+                      {validatingCoupon ? '...' : (isAr ? 'تطبيق' : 'Anwenden')}
+                    </button>
+                  </form>
+                ) : (
                   <button
-                    type="submit"
-                    disabled={validatingCoupon || !couponInput.trim()}
-                    className="px-3.5 py-2 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-900 dark:bg-gray-800 dark:hover:bg-gray-700 text-white disabled:opacity-40 transition cursor-pointer shrink-0"
+                    type="button"
+                    onClick={() => setShowCouponField(true)}
+                    className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
                   >
-                    {validatingCoupon ? '...' : (isAr ? 'تطبيق' : 'Anwenden')}
+                    <Tag className="w-3.5 h-3.5" />
+                    <span>{isAr ? 'لديك رمز كوبون؟' : 'Gutscheincode hinzufügen'}</span>
                   </button>
-                </form>
+                )
               ) : (
                 <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs">
                   <div className="flex items-center gap-2 min-w-0">

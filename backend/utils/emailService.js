@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 const prisma = require('../lib/prisma');
+const { formatDeliverySlot } = require('./deliverySlot');
 
 // Customer-supplied strings (name, delivery address/notes) are interpolated
 // directly into HTML emails below; escape them so a malicious value can't
@@ -38,11 +39,6 @@ const getStoreSettings = async () => {
   };
 };
 
-const DELIVERY_SLOT_LABELS = {
-  today_16_18: { de: 'Heute, 16–18 Uhr', ar: 'اليوم، 16–18' },
-  tomorrow_10_12: { de: 'Morgen, 10–12 Uhr', ar: 'غداً، 10–12' },
-  tomorrow_16_18: { de: 'Morgen, 16–18 Uhr', ar: 'غداً، 16–18' }
-};
 
 // Delivery fee is folded into order.totalAmount at creation time; derive the
 // charged fee back out for display by subtracting the items' own subtotal.
@@ -371,7 +367,7 @@ const sendOrderStatusEmail = async (customerEmail, customerName, orderDetails, s
             <td style="font-weight: 700; color: #16a34a;">الدفع عند الاستلام (نقداً أو بالبطاقة عند الباب)</td>
           </tr>
           ${orderDetails.deliveryAddress ? `<tr><td style="color: #64748b; vertical-align: top;">عنوان التوصيل:</td><td style="font-weight: 600; color: #1e293b;">${safeDeliveryAddress}</td></tr>` : ''}
-          ${orderDetails.deliverySlot && DELIVERY_SLOT_LABELS[orderDetails.deliverySlot] ? `<tr><td style="color: #64748b;">موعد التوصيل:</td><td style="font-weight: 600; color: #1e293b;">${DELIVERY_SLOT_LABELS[orderDetails.deliverySlot].ar}</td></tr>` : ''}
+          ${formatDeliverySlot(orderDetails.deliverySlot, 'ar') ? `<tr><td style="color: #64748b;">موعد التوصيل:</td><td style="font-weight: 600; color: #1e293b;">${formatDeliverySlot(orderDetails.deliverySlot, 'ar')}</td></tr>` : ''}
           ${orderDetails.deliveryNotes ? `<tr><td style="color: #64748b;">ملاحظات السائق:</td><td style="font-style: italic; color: #475569;">${safeDeliveryNotes}</td></tr>` : ''}
         </table>
       </div>
@@ -435,7 +431,7 @@ const sendOrderStatusEmail = async (customerEmail, customerName, orderDetails, s
             <td style="font-weight: 700; color: #16a34a;">Barzahlung / Kartenzahlung an der Haustür (Lieferung)</td>
           </tr>
           ${orderDetails.deliveryAddress ? `<tr><td style="color: #64748b; vertical-align: top;">Lieferadresse:</td><td style="font-weight: 600; color: #1e293b;">${safeDeliveryAddress}</td></tr>` : ''}
-          ${orderDetails.deliverySlot && DELIVERY_SLOT_LABELS[orderDetails.deliverySlot] ? `<tr><td style="color: #64748b;">Lieferzeitfenster:</td><td style="font-weight: 600; color: #1e293b;">${DELIVERY_SLOT_LABELS[orderDetails.deliverySlot].de}</td></tr>` : ''}
+          ${formatDeliverySlot(orderDetails.deliverySlot, 'de') ? `<tr><td style="color: #64748b;">Lieferzeitfenster:</td><td style="font-weight: 600; color: #1e293b;">${formatDeliverySlot(orderDetails.deliverySlot, 'de')}</td></tr>` : ''}
           ${orderDetails.deliveryNotes ? `<tr><td style="color: #64748b;">Hinweis für Fahrer:</td><td style="font-style: italic; color: #475569;">${safeDeliveryNotes}</td></tr>` : ''}
         </table>
       </div>
@@ -682,7 +678,7 @@ const sendCustomerOrderConfirmationEmail = async (customerEmail, customerName, o
 
       <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin: 18px 0; font-size: 13px;">
         <div><strong>عنوان التوصيل:</strong> ${safeDeliveryAddress || 'عنوان العميل'}</div>
-        ${order.deliverySlot && DELIVERY_SLOT_LABELS[order.deliverySlot] ? `<div style="margin-top: 6px;"><strong>موعد التوصيل:</strong> ${DELIVERY_SLOT_LABELS[order.deliverySlot].ar}</div>` : ''}
+        ${formatDeliverySlot(order.deliverySlot, 'ar') ? `<div style="margin-top: 6px;"><strong>موعد التوصيل:</strong> ${formatDeliverySlot(order.deliverySlot, 'ar')}</div>` : ''}
         ${order.deliveryNotes ? `<div style="margin-top: 6px;"><strong>ملاحظات السائق:</strong> ${safeDeliveryNotes}</div>` : ''}
         <div style="margin-top: 6px; color: #16a34a; font-weight: bold;">طريقة الدفع: الدفع عند الاستلام (نقداً أو بالبطاقة عند الباب)</div>
       </div>
@@ -718,7 +714,7 @@ const sendCustomerOrderConfirmationEmail = async (customerEmail, customerName, o
 
       <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin: 18px 0; font-size: 13px;">
         <div><strong>Lieferadresse:</strong> ${safeDeliveryAddress || 'Ihre hinterlegte Adresse'}</div>
-        ${order.deliverySlot && DELIVERY_SLOT_LABELS[order.deliverySlot] ? `<div style="margin-top: 6px;"><strong>Lieferzeitfenster:</strong> ${DELIVERY_SLOT_LABELS[order.deliverySlot].de}</div>` : ''}
+        ${formatDeliverySlot(order.deliverySlot, 'de') ? `<div style="margin-top: 6px;"><strong>Lieferzeitfenster:</strong> ${formatDeliverySlot(order.deliverySlot, 'de')}</div>` : ''}
         ${order.deliveryNotes ? `<div style="margin-top: 6px;"><strong>Lieferhinweis für den Fahrer:</strong> ${safeDeliveryNotes}</div>` : ''}
         <div style="margin-top: 6px; color: #16a34a; font-weight: bold;">Zahlungsart: Barzahlung / Kartenzahlung an der Haustür (Lieferung)</div>
       </div>

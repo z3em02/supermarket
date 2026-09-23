@@ -36,12 +36,7 @@ import {
   Gift,
   Sparkles
 } from 'lucide-react';
-
-export const DELIVERY_SLOT_LABELS = {
-  today_16_18: { de: 'Heute, 16–18 Uhr', ar: 'اليوم، 16–18' },
-  tomorrow_10_12: { de: 'Morgen, 10–12 Uhr', ar: 'غداً، 10–12' },
-  tomorrow_16_18: { de: 'Morgen, 16–18 Uhr', ar: 'غداً، 16–18' }
-};
+import { DELIVERY_WINDOWS, todayIso, maxDeliveryDateIso, buildDeliverySlot, parseDeliverySlot, formatDeliverySlot } from '../utils/deliverySlot';
 
 export const parseOrderNotes = (adminNotes, language) => {
   if (!adminNotes) return { customNotes: '', customerResponse: null };
@@ -98,6 +93,10 @@ export const Orders = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [updating, setUpdating] = useState(false);
   const [expandedOrders, setExpandedOrders] = useState({});
+  const [editingDeliverySlot, setEditingDeliverySlot] = useState(false);
+  const [editDeliveryDate, setEditDeliveryDate] = useState('');
+  const [editDeliveryWindow, setEditDeliveryWindow] = useState(DELIVERY_WINDOWS[0].value);
+  const [savingDeliverySlot, setSavingDeliverySlot] = useState(false);
 
   const toggleOrderItemsExpand = (id) => {
     setExpandedOrders((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -288,6 +287,41 @@ export const Orders = () => {
     }
   };
 
+  // Admin directly overwrites the customer's requested delivery slot (e.g.
+  // after a phone call) — no separate customer approval needed.
+  const handleOpenEditDeliverySlot = (order) => {
+    const parsed = parseDeliverySlot(order.deliverySlot);
+    setEditDeliveryDate(parsed?.date || todayIso());
+    setEditDeliveryWindow(parsed?.window || DELIVERY_WINDOWS[0].value);
+    setEditingDeliverySlot(true);
+  };
+
+  const handleSaveDeliverySlot = async (orderId) => {
+    setSavingDeliverySlot(true);
+    try {
+      const token = localStorage.getItem('token');
+      const apiUrl = getApiUrl();
+      await axios.put(
+        `${apiUrl}/api/orders/${orderId}/status`,
+        { deliverySlot: buildDeliverySlot(editDeliveryDate, editDeliveryWindow) },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setEditingDeliverySlot(false);
+      await fetchOrders();
+      if (selectedOrder && selectedOrder.id === orderId) {
+        const updatedOrder = await axios.get(`${apiUrl}/api/orders/${orderId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setSelectedOrder(updatedOrder.data);
+      }
+    } catch (error) {
+      console.error('Error updating delivery slot:', error);
+      alert(error.response?.data?.error || t('error'));
+    } finally {
+      setSavingDeliverySlot(false);
+    }
+  };
+
   const handleDeleteOrder = async (orderId) => {
     if (!window.confirm(t('confirmDelete'))) return;
     try {
@@ -313,6 +347,7 @@ export const Orders = () => {
       });
       setSelectedOrder(response.data);
       setShowDetailModal(true);
+      setEditingDeliverySlot(false);
     } catch (error) {
       console.error('Error fetching order details:', error);
     }
@@ -1029,10 +1064,10 @@ export const Orders = () => {
                         <span className="line-clamp-2">{order.deliveryAddress}</span>
                       </div>
                     )}
-                    {order.deliverySlot && DELIVERY_SLOT_LABELS[order.deliverySlot] && (
+                    {formatDeliverySlot(order.deliverySlot, language === 'ar') && (
                       <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 pt-0.5">
                         <Clock className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                        <span>{DELIVERY_SLOT_LABELS[order.deliverySlot][language === 'ar' ? 'ar' : 'de']}</span>
+                        <span>{formatDeliverySlot(order.deliverySlot, language === 'ar')}</span>
                       </div>
                     )}
                   </div>
@@ -1456,13 +1491,71 @@ export const Orders = () => {
                         <span>{selectedOrder.deliveryNotes}</span>
                       </span>
                     )}
-                    {selectedOrder.deliverySlot && DELIVERY_SLOT_LABELS[selectedOrder.deliverySlot] && (
+                    {!editingDeliverySlot && (
                       <span className="inline-flex items-center gap-1.5">
                         <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span>{DELIVERY_SLOT_LABELS[selectedOrder.deliverySlot][language === 'ar' ? 'ar' : 'de']}</span>
+                        <span>
+                          {formatDeliverySlot(selectedOrder.deliverySlot, language === 'ar') || (language === 'ar' ? 'لم يُحدد بعد' : 'Noch nicht festgelegt')}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditDeliverySlot(selectedOrder)}
+                          className="text-emerald-700 dark:text-emerald-400 font-bold underline cursor-pointer"
+                        >
+                          {language === 'ar' ? 'تعديل' : 'Bearbeiten'}
+                        </button>
                       </span>
                     )}
                   </div>
+
+                  {editingDeliverySlot && (
+                    <div className="pt-2 mt-1 border-t border-emerald-200/60 dark:border-emerald-850 flex flex-wrap items-end gap-2">
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-500 dark:text-gray-400 mb-1">
+                          {language === 'ar' ? 'التاريخ' : 'Datum'}
+                        </label>
+                        <input
+                          type="date"
+                          value={editDeliveryDate}
+                          min={todayIso()}
+                          max={maxDeliveryDateIso()}
+                          onChange={(e) => setEditDeliveryDate(e.target.value)}
+                          className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                      </div>
+                      <div className="flex gap-1.5">
+                        {DELIVERY_WINDOWS.map((w) => (
+                          <button
+                            key={w.value}
+                            type="button"
+                            onClick={() => setEditDeliveryWindow(w.value)}
+                            className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-bold transition cursor-pointer ${
+                              editDeliveryWindow === w.value
+                                ? 'bg-emerald-600 border-emerald-600 text-white'
+                                : 'bg-white dark:bg-gray-900 border-slate-200 dark:border-gray-800 text-slate-600 dark:text-gray-300 hover:border-emerald-400'
+                            }`}
+                          >
+                            {language === 'ar' ? w.labelAr : w.labelDe}
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleSaveDeliverySlot(selectedOrder.id)}
+                        disabled={savingDeliverySlot}
+                        className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[11px] font-bold cursor-pointer"
+                      >
+                        {savingDeliverySlot ? '...' : (language === 'ar' ? 'حفظ' : 'Speichern')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingDeliverySlot(false)}
+                        className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-600 dark:text-gray-300 text-[11px] font-bold cursor-pointer"
+                      >
+                        {language === 'ar' ? 'إلغاء' : 'Abbrechen'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1717,9 +1810,9 @@ export const Orders = () => {
                   <p className="text-xs text-slate-600 dark:text-gray-300 leading-relaxed break-words">
                     {printOrder.deliveryAddress || printOrder.customer?.address || '—'}
                   </p>
-                  {printOrder.deliverySlot && DELIVERY_SLOT_LABELS[printOrder.deliverySlot] && (
+                  {formatDeliverySlot(printOrder.deliverySlot, language === 'ar') && (
                     <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-1.5">
-                      {DELIVERY_SLOT_LABELS[printOrder.deliverySlot][language === 'ar' ? 'ar' : 'de']}
+                      {formatDeliverySlot(printOrder.deliverySlot, language === 'ar')}
                     </p>
                   )}
                   {printOrder.notes && (

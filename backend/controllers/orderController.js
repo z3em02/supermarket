@@ -9,13 +9,11 @@ const {
   calculatePromotionForItem,
   validateAndCalculateCoupon
 } = require('../utils/pricingService');
+const { isValidDeliverySlot } = require('../utils/deliverySlot');
 
 // Stock is deducted for every order from creation onward and only ever restored
 // once an order reaches one of these terminal decline states.
 const DECLINED_STATUSES = ['declined', 'rejected', 'canceled', 'cancelled'];
-
-// Machine values for the delivery time-slot picker in the cart.
-const ALLOWED_DELIVERY_SLOTS = ['today_16_18', 'tomorrow_10_12', 'tomorrow_16_18'];
 
 // Atomically decrements stock only if enough is available (guards against two
 // concurrent orders overselling the same product); throws if not. Must run
@@ -268,7 +266,7 @@ const createOrder = async (req, res) => {
     const finalItemsTotal = Math.max(0, Number((itemsSubtotal - couponDiscount).toFixed(2)));
     const totalAmount = Number((finalItemsTotal + deliveryFee).toFixed(2));
 
-    const deliverySlot = ALLOWED_DELIVERY_SLOTS.includes(req.body.deliverySlot) ? req.body.deliverySlot : null;
+    const deliverySlot = isValidDeliverySlot(req.body.deliverySlot) ? req.body.deliverySlot : null;
 
     const addressParts = [
       customer.street && `${customer.street} ${customer.houseNumber || ''}`.trim(),
@@ -420,7 +418,7 @@ const createOrder = async (req, res) => {
 const updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, notes, adminNotes } = req.body;
+    const { status, notes, adminNotes, deliverySlot } = req.body;
 
     const order = await prisma.order.findUnique({
       where: { id },
@@ -439,11 +437,19 @@ const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ error: 'Order not found' });
     }
 
+    if (deliverySlot !== undefined && deliverySlot !== null && !isValidDeliverySlot(deliverySlot)) {
+      return res.status(400).json({ error: 'Invalid delivery slot' });
+    }
+
     let normalizedStatus = status ? status.toLowerCase().trim() : order.status;
     if (normalizedStatus === 'decline') normalizedStatus = 'declined';
 
     const finalNotes = notes !== undefined ? notes : order.notes;
     const finalAdminNotes = adminNotes !== undefined ? adminNotes : order.adminNotes;
+    // Admin can directly overwrite the customer's requested delivery slot
+    // (e.g. after a phone call) — no separate customer approval needed, unlike
+    // item modifications.
+    const finalDeliverySlot = deliverySlot !== undefined ? deliverySlot : order.deliverySlot;
 
     const wasStockDeducted = !DECLINED_STATUSES.includes(order.status);
     const shouldStockBeDeducted = !DECLINED_STATUSES.includes(normalizedStatus);
@@ -462,7 +468,8 @@ const updateOrderStatus = async (req, res) => {
             data: {
               status: normalizedStatus,
               notes: finalNotes,
-              adminNotes: finalAdminNotes
+              adminNotes: finalAdminNotes,
+              deliverySlot: finalDeliverySlot
             }
           });
 
@@ -504,10 +511,11 @@ const updateOrderStatus = async (req, res) => {
 
         await tx.order.update({
           where: { id },
-          data: { 
+          data: {
             status: normalizedStatus,
             notes: finalNotes,
-            adminNotes: finalAdminNotes
+            adminNotes: finalAdminNotes,
+            deliverySlot: finalDeliverySlot
           }
         });
 
@@ -522,10 +530,11 @@ const updateOrderStatus = async (req, res) => {
       // Stock state does not change (e.g. accepted -> preparing, declined -> rejected, or notes update only)
       await prisma.order.update({
         where: { id },
-        data: { 
+        data: {
           status: normalizedStatus,
           notes: finalNotes,
-          adminNotes: finalAdminNotes
+          adminNotes: finalAdminNotes,
+          deliverySlot: finalDeliverySlot
         }
       });
     }
