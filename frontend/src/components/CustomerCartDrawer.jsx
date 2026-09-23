@@ -16,7 +16,6 @@ import {
   ArrowLeft,
   ShoppingBag,
   ExternalLink,
-  Phone,
   Mail,
   Store,
   Clock,
@@ -257,7 +256,7 @@ export const CustomerCartDrawer = ({
   const totalAmount = Number((finalItemsTotal + deliveryFee).toFixed(2));
   const belowMinOrder = minOrderValue > 0 && itemsSubtotal < minOrderValue;
 
-  const isVerified = Boolean(customer?.emailVerified);
+  const isVerified = Boolean(customer?.emailVerified && customer?.phoneVerified);
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
@@ -266,11 +265,20 @@ export const CustomerCartDrawer = ({
       return;
     }
 
-    if (!isVerified) {
+    if (!customer?.emailVerified) {
       setError(
         isAr
           ? 'يجب تأكيد بريدك الإلكتروني أولاً لتتمكن من تقديم الطلب.'
           : 'Bitte bestätigen Sie zuerst Ihre E-Mail-Adresse, um eine Bestellung aufgeben zu können.'
+      );
+      return;
+    }
+
+    if (!customer?.phoneVerified) {
+      setError(
+        isAr
+          ? 'يجب تأكيد رقم هاتفك أولاً لتتمكن من تقديم الطلب.'
+          : 'Bitte bestätigen Sie zuerst Ihre Telefonnummer, um eine Bestellung aufgeben zu können.'
       );
       return;
     }
@@ -607,7 +615,7 @@ export const CustomerCartDrawer = ({
                   </div>
 
                   {/* Verification badges warning */}
-                  {!isVerified && (
+                  {!customer?.emailVerified && (
                     <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-850 text-amber-800 dark:text-amber-300 text-xs flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <AlertCircle className="w-4 h-4 text-amber-600" />
@@ -623,19 +631,18 @@ export const CustomerCartDrawer = ({
                     </div>
                   )}
 
-                  {/* Optional phone verification hint (not required to order) */}
-                  {isVerified && !customer?.phoneVerified && (
-                    <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/40 text-blue-700 dark:text-blue-300 text-xs flex items-center justify-between">
+                  {customer?.emailVerified && !customer?.phoneVerified && (
+                    <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-850 text-amber-800 dark:text-amber-300 text-xs flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Phone className="w-4 h-4" />
-                        <span>{isAr ? 'رقم الهاتف غير مؤكد (اختياري)' : 'Telefonnummer nicht bestätigt (optional)'}</span>
+                        <AlertCircle className="w-4 h-4 text-amber-600" />
+                        <span>{isAr ? 'رقم الهاتف غير مؤكد' : 'Telefonnummer nicht bestätigt'}</span>
                       </div>
                       <Link
                         to="/account"
                         onClick={onClose}
-                        className="font-bold underline"
+                        className="font-bold underline text-amber-900 dark:text-amber-200"
                       >
-                        {isAr ? 'تأكيد لاحقاً' : 'Später bestätigen'}
+                        {isAr ? 'تأكيد الآن' : 'Jetzt bestätigen'}
                       </Link>
                     </div>
                   )}

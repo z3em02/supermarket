@@ -100,7 +100,8 @@ export const CustomerAccount = () => {
       'auth/invalid-phone-number': isAr ? 'رقم الهاتف غير صالح' : 'Ungültige Telefonnummer',
       'auth/missing-phone-number': isAr ? 'رقم الهاتف مفقود' : 'Telefonnummer fehlt',
       'auth/captcha-check-failed': isAr ? 'فشل التحقق الأمني، حاول مرة أخرى' : 'Sicherheitsprüfung fehlgeschlagen, bitte erneut versuchen',
-      'auth/quota-exceeded': isAr ? 'تم تجاوز الحد المسموح للرسائل، حاول لاحقاً' : 'SMS-Kontingent überschritten, bitte später erneut versuchen'
+      'auth/quota-exceeded': isAr ? 'تم تجاوز الحد المسموح للرسائل، حاول لاحقاً' : 'SMS-Kontingent überschritten, bitte später erneut versuchen',
+      'auth/operation-not-allowed': isAr ? 'التحقق من الهاتف غير مفعّل حالياً، يرجى المحاولة لاحقاً' : 'Telefonverifizierung ist derzeit nicht verfügbar, bitte später erneut versuchen'
     };
     return messages[err?.code] || err?.message || (isAr ? 'حدث خطأ أثناء التحقق من الهاتف' : 'Fehler bei der Telefonverifizierung');
   };
@@ -607,7 +608,6 @@ export const CustomerAccount = () => {
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                   ) : (
                     <>
-                      <span className="text-[10px] opacity-70">({isAr ? 'اختياري' : 'optional'})</span>
                       <button
                         onClick={() => handleStartVerify('phone')}
                         className="underline font-bold text-amber-800 hover:text-amber-900 ms-1 cursor-pointer"
@@ -988,7 +988,7 @@ export const CustomerAccount = () => {
                       </span>
                     ) : (
                       <span className="text-[11px] text-amber-600 font-bold">
-                        {isAr ? 'غير مؤكد (اختياري)' : 'Nicht verifiziert (optional)'}
+                        {isAr ? 'غير مؤكد' : 'Nicht verifiziert'}
                       </span>
                     )}
                   </label>

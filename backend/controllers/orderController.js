@@ -122,6 +122,15 @@ const createOrder = async (req, res) => {
       });
     }
 
+    if (!customer.phoneVerified) {
+      return res.status(403).json({
+        error: 'Please verify your phone number before submitting an order.',
+        needsVerification: true,
+        emailVerified: customer.emailVerified,
+        phoneVerified: customer.phoneVerified
+      });
+    }
+
     // Accept either items or orderItems
     const rawItems = req.body.orderItems || req.body.items;
     if (!Array.isArray(rawItems) || rawItems.length === 0) {

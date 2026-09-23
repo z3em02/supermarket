@@ -156,8 +156,8 @@ export const CustomerAuthProvider = ({ children }) => {
     return res.data;
   };
 
-  // Only email verification is required to place orders; phone verification is optional.
-  const isVerified = Boolean(customer?.emailVerified);
+  // Both email and phone verification are required to place orders.
+  const isVerified = Boolean(customer?.emailVerified && customer?.phoneVerified);
 
   return (
     <CustomerAuthContext.Provider
