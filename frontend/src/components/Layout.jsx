@@ -16,10 +16,12 @@ import {
   Store,
   Layers,
   Settings,
-  Sparkles
+  Sparkles,
+  Lock
 } from 'lucide-react';
 import { LanguageSelector } from './LanguageSelector';
 import { ThemeToggle } from './ThemeToggle';
+import { useNavigate } from 'react-router-dom';
 
 export const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -27,6 +29,7 @@ export const Layout = () => {
   const { t, language, direction } = useLanguage();
   const { settings, getStoreName } = useStoreSettings();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const navigation = [
     { name: t('dashboard'), href: '/secret/admin/dashboard', icon: LayoutDashboard },
@@ -42,6 +45,11 @@ export const Layout = () => {
 
   const handleLogout = () => {
     logout();
+  };
+
+  const handleLockSections = () => {
+    sessionStorage.removeItem('admin_section_unlocked');
+    navigate('/secret/admin/dashboard');
   };
 
   const navContent = (
@@ -117,6 +125,13 @@ export const Layout = () => {
             </p>
           </div>
         </div>
+        <button
+          onClick={handleLockSections}
+          className="flex items-center justify-center gap-2 w-full px-3 py-2 mb-1.5 text-sm font-medium text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded-lg transition cursor-pointer"
+        >
+          <Lock className="w-4 h-4" />
+          <span>{language === 'ar' ? 'الأقسام الحساسة قفل' : 'Bereiche sperren'}</span>
+        </button>
         <button
           onClick={handleLogout}
           className="flex items-center justify-center gap-2 w-full px-3 py-2 text-sm font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition"

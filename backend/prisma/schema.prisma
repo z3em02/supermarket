@@ -185,6 +185,11 @@ model StoreSettings {
   vatId                 String?
   businessPurposeDe     String?  @default("Groß- und Einzelhandel mit Lebensmitteln und orientalischen Spezialitäten")
   businessPurposeAr     String?  @default("تجارة الجملة والتجزئة للمواد الغذائية والمنتجات الاستهلاكية")
+  // Hashed step-up PIN gating access to the Settings, Accounting, Customers
+  // and Promotions admin pages (a shop-terminal deterrent, not a separate
+  // privilege boundary — there is only one Admin account). Never sent to the
+  // frontend; only a verify endpoint compares against it.
+  sectionPasscodeHash   String?
   updatedAt         DateTime @updatedAt
 }
 

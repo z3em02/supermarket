@@ -6,6 +6,7 @@ import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { StoreSettingsProvider } from './context/StoreSettingsContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { SectionPasscodeGate } from './components/SectionPasscodeGate';
 import { Layout } from './components/Layout';
 
 // Public customer storefront pages (eager loaded for instant first paint)
@@ -89,11 +90,11 @@ function App() {
                   <Route path={`${ADMIN}/catalogs`}   element={<Suspense fallback={<PageLoader />}><Catalogs /></Suspense>} />
                   <Route path={`${ADMIN}/categories`} element={<Navigate to={`${ADMIN}/catalogs`} replace />} />
                   <Route path={`${ADMIN}/products`}   element={<Suspense fallback={<PageLoader />}><Products /></Suspense>} />
-                  <Route path={`${ADMIN}/promotions`} element={<Suspense fallback={<PageLoader />}><Promotions /></Suspense>} />
+                  <Route path={`${ADMIN}/promotions`} element={<SectionPasscodeGate><Suspense fallback={<PageLoader />}><Promotions /></Suspense></SectionPasscodeGate>} />
                   <Route path={`${ADMIN}/orders`}     element={<Suspense fallback={<PageLoader />}><Orders /></Suspense>} />
-                  <Route path={`${ADMIN}/customers`}  element={<Suspense fallback={<PageLoader />}><Customers /></Suspense>} />
-                  <Route path={`${ADMIN}/accounting`} element={<Suspense fallback={<PageLoader />}><Accounting /></Suspense>} />
-                  <Route path={`${ADMIN}/settings`}   element={<Suspense fallback={<PageLoader />}><Settings /></Suspense>} />
+                  <Route path={`${ADMIN}/customers`}  element={<SectionPasscodeGate><Suspense fallback={<PageLoader />}><Customers /></Suspense></SectionPasscodeGate>} />
+                  <Route path={`${ADMIN}/accounting`} element={<SectionPasscodeGate><Suspense fallback={<PageLoader />}><Accounting /></Suspense></SectionPasscodeGate>} />
+                  <Route path={`${ADMIN}/settings`}   element={<SectionPasscodeGate><Suspense fallback={<PageLoader />}><Settings /></Suspense></SectionPasscodeGate>} />
                 </Route>
 
                 {/* Fallback to main catalog */}

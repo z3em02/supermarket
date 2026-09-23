@@ -1,3 +1,4 @@
+const bcrypt = require('bcryptjs');
 const prisma = require('../lib/prisma');
 const { scrapeGoogleReviews } = require('../utils/googleScraper');
 
@@ -367,11 +368,85 @@ const syncGoogleReviews = async (req, res) => {
   }
 };
 
+// GET /api/settings/passcode-status - Admin only
+// Reports whether a section passcode is currently configured, without ever
+// exposing the hash itself.
+const getPasscodeStatus = async (req, res) => {
+  try {
+    const settings = await prisma.storeSettings.findUnique({
+      where: { id: 'default' },
+      select: { sectionPasscodeHash: true }
+    });
+    res.json({ isSet: Boolean(settings?.sectionPasscodeHash) });
+  } catch (error) {
+    console.error('Get passcode status error:', error);
+    res.status(500).json({ error: 'Failed to check passcode status' });
+  }
+};
+
+// PUT /api/settings/passcode - Admin only
+// Sets or changes the section passcode. Pass { passcode: null } to remove
+// protection entirely.
+const setPasscode = async (req, res) => {
+  try {
+    const { passcode } = req.body;
+
+    if (passcode === null || passcode === '') {
+      await prisma.storeSettings.upsert({
+        where: { id: 'default' },
+        update: { sectionPasscodeHash: null },
+        create: { ...DEFAULT_SETTINGS, sectionPasscodeHash: null }
+      });
+      return res.json({ message: 'Passcode removed', isSet: false });
+    }
+
+    const clean = String(passcode || '').trim();
+    if (!/^\d{4,8}$/.test(clean)) {
+      return res.status(400).json({ error: 'Passcode must be 4-8 digits' });
+    }
+
+    const hash = await bcrypt.hash(clean, 10);
+    await prisma.storeSettings.upsert({
+      where: { id: 'default' },
+      update: { sectionPasscodeHash: hash },
+      create: { ...DEFAULT_SETTINGS, sectionPasscodeHash: hash }
+    });
+    res.json({ message: 'Passcode set', isSet: true });
+  } catch (error) {
+    console.error('Set passcode error:', error);
+    res.status(500).json({ error: 'Failed to set passcode' });
+  }
+};
+
+// POST /api/settings/passcode/verify - Admin only, rate-limited at the route
+const verifyPasscode = async (req, res) => {
+  try {
+    const { passcode } = req.body;
+    const settings = await prisma.storeSettings.findUnique({
+      where: { id: 'default' },
+      select: { sectionPasscodeHash: true }
+    });
+
+    if (!settings?.sectionPasscodeHash) {
+      return res.json({ valid: true, isSet: false });
+    }
+
+    const valid = await bcrypt.compare(String(passcode || ''), settings.sectionPasscodeHash);
+    res.json({ valid, isSet: true });
+  } catch (error) {
+    console.error('Verify passcode error:', error);
+    res.status(500).json({ error: 'Failed to verify passcode' });
+  }
+};
+
 module.exports = {
   getSettings,
   updateSettings,
   getGoogleReviews,
   createGoogleReview,
   deleteGoogleReview,
-  syncGoogleReviews
+  syncGoogleReviews,
+  getPasscodeStatus,
+  setPasscode,
+  verifyPasscode
 };
