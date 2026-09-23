@@ -397,6 +397,7 @@ const translations = {
     productsCount: "Produkte",
     impressum: "Impressum & Urheberrecht",
     datenschutz: "Datenschutzerklärung",
+    agb: "Allgemeine Geschäftsbedingungen",
     copyrightNotice: "Urheberrecht & Rechtliche Hinweise",
     backToHome: "Zurück zur Startseite",
 
@@ -830,6 +831,7 @@ const translations = {
     productsCount: "منتج",
     impressum: "بيانات النشر وحقوق الملكية",
     datenschutz: "سياسة الخصوصية وحماية البيانات",
+    agb: "الشروط والأحكام العامة",
     copyrightNotice: "حقوق الطبع والنشر والإشعار القانوني",
     backToHome: "العودة إلى الصفحة الرئيسية",
 

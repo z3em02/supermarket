@@ -17,6 +17,7 @@ import { ForgotPassword } from './pages/ForgotPassword';
 import { ResetPassword } from './pages/ResetPassword';
 import { Impressum } from './pages/Impressum';
 import { Datenschutz } from './pages/Datenschutz';
+import { AGB } from './pages/AGB';
 
 // Admin and back-office pages (lazy loaded to minimize customer bundle size)
 const Login = lazy(() => import('./pages/Login').then(m => ({ default: m.Login })));
@@ -67,6 +68,8 @@ function App() {
                   <Route path="/copyright" element={<Navigate to="/impressum" replace />} />
                   <Route path="/datenschutz" element={<Datenschutz />} />
                   <Route path="/privacy" element={<Navigate to="/datenschutz" replace />} />
+                  <Route path="/agb" element={<AGB />} />
+                  <Route path="/terms" element={<Navigate to="/agb" replace />} />
 
                 {/* Secret Admin Login */}
                 <Route path={`${ADMIN}/login`} element={<Suspense fallback={<PageLoader />}><Login /></Suspense>} />

@@ -335,6 +335,7 @@ export const Datenschutz = () => {
           <span>© {new Date().getFullYear()} {storeName}. {language === 'ar' ? 'جميع الحقوق محفوظة.' : 'Alle Rechte vorbehalten.'}</span>
           <div className="flex items-center gap-4">
             <Link to="/impressum" className="hover:text-blue-600 underline underline-offset-2">{t('impressum')}</Link>
+            <Link to="/agb" className="hover:text-blue-600 underline underline-offset-2">{t('agb')}</Link>
             <Link to="/" className="hover:text-blue-600">{t('backToHome')}</Link>
           </div>
         </div>

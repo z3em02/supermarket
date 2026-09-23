@@ -27,6 +27,13 @@ export const Impressum = () => {
   const phone = settings?.phone || '0681 20800852';
   const email = settings?.email || 'info@hajar-supermarkt.at';
 
+  const legalOwnerName = (settings?.legalOwnerName && settings.legalOwnerName !== 'null') ? settings.legalOwnerName : null;
+  const gisaNumber = (settings?.gisaNumber && settings.gisaNumber !== 'null') ? settings.gisaNumber : null;
+  const isKleinunternehmer = settings?.isKleinunternehmer !== false;
+  const vatId = (settings?.vatId && settings.vatId !== 'null') ? settings.vatId : null;
+  const businessPurposeDe = settings?.businessPurposeDe || 'Groß- und Einzelhandel mit Lebensmitteln und orientalischen Spezialitäten';
+  const businessPurposeAr = settings?.businessPurposeAr || 'تجارة الجملة والتجزئة للمواد الغذائية والمنتجات الاستهلاكية';
+
   return (
     <div className={`min-h-screen bg-slate-50 dark:bg-gray-950 text-slate-900 dark:text-gray-100 transition-colors duration-200 font-sans ${direction === 'rtl' ? 'rtl' : 'ltr'}`}>
       
@@ -104,8 +111,16 @@ export const Impressum = () => {
                   <span>{storeName} (HAJAR Alasiri Casa)</span>
                 </div>
                 <div>
+                  <span className="block font-bold text-slate-900 dark:text-white mb-0.5">المالك / الشخص المسؤول:</span>
+                  {legalOwnerName ? (
+                    <span>{legalOwnerName}</span>
+                  ) : (
+                    <span className="text-amber-700 dark:text-amber-400">[يُرجى الإكمال – الاسم القانوني الكامل]</span>
+                  )}
+                </div>
+                <div>
                   <span className="block font-bold text-slate-900 dark:text-white mb-0.5">طبيعة النشاط:</span>
-                  <span>تجارة الجملة والتجزئة للمواد الغذائية والمنتجات الاستهلاكية</span>
+                  <span>{businessPurposeAr}</span>
                 </div>
                 <div>
                   <span className="block font-bold text-slate-900 dark:text-white mb-0.5">العنوان والمقر:</span>
@@ -114,6 +129,22 @@ export const Impressum = () => {
                 <div>
                   <span className="block font-bold text-slate-900 dark:text-white mb-0.5">البلد:</span>
                   <span>جمهورية النمسا (Österreich)</span>
+                </div>
+                <div>
+                  <span className="block font-bold text-slate-900 dark:text-white mb-0.5">رقم GISA / رخصة العمل:</span>
+                  {gisaNumber ? (
+                    <span>{gisaNumber}</span>
+                  ) : (
+                    <span className="text-amber-700 dark:text-amber-400">[يُرجى الإكمال]</span>
+                  )}
+                </div>
+                <div className="sm:col-span-2">
+                  <span className="block font-bold text-slate-900 dark:text-white mb-0.5">ضريبة القيمة المضافة:</span>
+                  {isKleinunternehmer ? (
+                    <span>منشأة صغيرة وفقاً للمادة § 6 Abs. 1 Z 27 UStG – لا يتم عرض ضريبة القيمة المضافة.</span>
+                  ) : (
+                    <span>رقم ضريبة القيمة المضافة (UID): {vatId || '[يُرجى الإكمال]'}</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -191,8 +222,16 @@ export const Impressum = () => {
                   <span>{storeName} (HAJAR Alasiri Casa)</span>
                 </div>
                 <div>
+                  <span className="block font-bold text-slate-900 dark:text-white mb-0.5">Inhaber / Verantwortliche Person:</span>
+                  {legalOwnerName ? (
+                    <span>{legalOwnerName}</span>
+                  ) : (
+                    <span className="text-amber-700 dark:text-amber-400">[BITTE ERGÄNZEN – vollständiger rechtlicher Name]</span>
+                  )}
+                </div>
+                <div>
                   <span className="block font-bold text-slate-900 dark:text-white mb-0.5">Unternehmensgegenstand:</span>
-                  <span>Groß- und Einzelhandel mit Lebensmitteln und orientalischen Spezialitäten</span>
+                  <span>{businessPurposeDe}</span>
                 </div>
                 <div>
                   <span className="block font-bold text-slate-900 dark:text-white mb-0.5">Standort / Anschrift:</span>
@@ -201,6 +240,22 @@ export const Impressum = () => {
                 <div>
                   <span className="block font-bold text-slate-900 dark:text-white mb-0.5">Staat:</span>
                   <span>Österreich</span>
+                </div>
+                <div>
+                  <span className="block font-bold text-slate-900 dark:text-white mb-0.5">GISA-Zahl / Gewerbeschein:</span>
+                  {gisaNumber ? (
+                    <span>{gisaNumber}</span>
+                  ) : (
+                    <span className="text-amber-700 dark:text-amber-400">[BITTE ERGÄNZEN]</span>
+                  )}
+                </div>
+                <div className="sm:col-span-2">
+                  <span className="block font-bold text-slate-900 dark:text-white mb-0.5">Umsatzsteuer:</span>
+                  {isKleinunternehmer ? (
+                    <span>Kleinunternehmer gemäß § 6 Abs. 1 Z 27 UStG – es wird keine Umsatzsteuer ausgewiesen.</span>
+                  ) : (
+                    <span>UID-Nummer: {vatId || '[BITTE ERGÄNZEN]'}</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -286,6 +341,7 @@ export const Impressum = () => {
           <span>© {new Date().getFullYear()} {storeName}. {language === 'ar' ? 'جميع الحقوق محفوظة.' : 'Alle Rechte vorbehalten.'}</span>
           <div className="flex items-center gap-4">
             <Link to="/datenschutz" className="hover:text-blue-600 underline underline-offset-2">{t('datenschutz')}</Link>
+            <Link to="/agb" className="hover:text-blue-600 underline underline-offset-2">{t('agb')}</Link>
             <Link to="/" className="hover:text-blue-600">{t('backToHome')}</Link>
           </div>
         </div>

@@ -175,6 +175,16 @@ model StoreSettings {
   storeLongitude        Float?   @default(16.3272662)
   maxDeliveryDistanceKm Float?   @default(0)
   allowedPostalCodes    String?  @default("")
+  // Legal identity fields shown on the Impressum & AGB pages (Austrian
+  // e-commerce law requires the actual responsible person, not just the
+  // trade name) — edited via Settings -> Rechtliches so they don't need a
+  // code change.
+  legalOwnerName        String?
+  gisaNumber            String?
+  isKleinunternehmer    Boolean  @default(true)
+  vatId                 String?
+  businessPurposeDe     String?  @default("Groß- und Einzelhandel mit Lebensmitteln und orientalischen Spezialitäten")
+  businessPurposeAr     String?  @default("تجارة الجملة والتجزئة للمواد الغذائية والمنتجات الاستهلاكية")
   updatedAt         DateTime @updatedAt
 }
 

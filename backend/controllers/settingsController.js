@@ -30,7 +30,13 @@ const DEFAULT_SETTINGS = {
   storeLatitude: 48.1746605,
   storeLongitude: 16.3272662,
   maxDeliveryDistanceKm: 0,
-  allowedPostalCodes: ''
+  allowedPostalCodes: '',
+  legalOwnerName: '',
+  gisaNumber: '',
+  isKleinunternehmer: true,
+  vatId: '',
+  businessPurposeDe: 'Groß- und Einzelhandel mit Lebensmitteln und orientalischen Spezialitäten',
+  businessPurposeAr: 'تجارة الجملة والتجزئة للمواد الغذائية والمنتجات الاستهلاكية'
 };
 
 // Fields safe to expose on the public settings endpoint.
@@ -57,7 +63,13 @@ const PUBLIC_SETTINGS_SELECT = {
   storeLatitude: true,
   storeLongitude: true,
   maxDeliveryDistanceKm: true,
-  allowedPostalCodes: true
+  allowedPostalCodes: true,
+  legalOwnerName: true,
+  gisaNumber: true,
+  isKleinunternehmer: true,
+  vatId: true,
+  businessPurposeDe: true,
+  businessPurposeAr: true
 };
 
 // GET /api/settings - Public
@@ -106,7 +118,13 @@ const updateSettings = async (req, res) => {
       storeLatitude,
       storeLongitude,
       maxDeliveryDistanceKm,
-      allowedPostalCodes
+      allowedPostalCodes,
+      legalOwnerName,
+      gisaNumber,
+      isKleinunternehmer,
+      vatId,
+      businessPurposeDe,
+      businessPurposeAr
     } = req.body;
 
     const data = {};
@@ -178,6 +196,24 @@ const updateSettings = async (req, res) => {
     }
     if (allowedPostalCodes !== undefined) {
       data.allowedPostalCodes = cleanString(allowedPostalCodes);
+    }
+    if (legalOwnerName !== undefined) {
+      data.legalOwnerName = cleanString(legalOwnerName);
+    }
+    if (gisaNumber !== undefined) {
+      data.gisaNumber = cleanString(gisaNumber);
+    }
+    if (isKleinunternehmer !== undefined) {
+      data.isKleinunternehmer = Boolean(isKleinunternehmer);
+    }
+    if (vatId !== undefined) {
+      data.vatId = cleanString(vatId);
+    }
+    if (businessPurposeDe !== undefined) {
+      data.businessPurposeDe = cleanString(businessPurposeDe);
+    }
+    if (businessPurposeAr !== undefined) {
+      data.businessPurposeAr = cleanString(businessPurposeAr);
     }
 
     const updated = await prisma.storeSettings.upsert({

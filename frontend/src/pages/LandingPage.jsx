@@ -1433,6 +1433,7 @@ export const LandingPage = () => {
             <a href="#reviews" className="hover:text-blue-600">{t('googleReviewsTitle')}</a>
             <Link to="/impressum" className="hover:text-blue-600">{t('impressum')}</Link>
             <Link to="/datenschutz" className="hover:text-blue-600">{t('datenschutz')}</Link>
+            <Link to="/agb" className="hover:text-blue-600">{t('agb')}</Link>
             <Link to={isCustomerLoggedIn ? "/account" : "/customer/login"} className="hover:text-blue-600">
               {isCustomerLoggedIn ? (language === 'ar' ? 'حسابي' : 'Mein Konto') : (language === 'ar' ? 'دخول العملاء' : 'Kunden-Login')}
             </Link>
