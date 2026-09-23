@@ -96,13 +96,14 @@ export const CustomerAuthProvider = ({ children }) => {
     return res.data;
   };
 
-  const verifyPhone = async (code) => {
+  // idToken comes from Firebase Phone Auth (see utils/firebaseClient.js) after
+  // the customer confirms the SMS code with Firebase directly.
+  const verifyPhone = async (idToken) => {
     const apiUrl = getApiUrl();
     const res = await axios.post(`${apiUrl}/api/customer/verify-phone`, {
-      code,
-      customerId: customer?.id
+      idToken
     }, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {}
+      headers: { Authorization: `Bearer ${token}` }
     });
     if (res.data.phoneVerified) {
       setCustomer(prev => prev ? { ...prev, phoneVerified: true } : prev);

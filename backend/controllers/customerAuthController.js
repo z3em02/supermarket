@@ -3,8 +3,9 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const prisma = require('../lib/prisma');
 const { sendCustomerVerificationEmail, sendPasswordResetEmail } = require('../utils/emailService');
+const { verifyFirebaseIdToken } = require('../utils/firebaseAdmin');
 const { JWT_SECRET } = require('../lib/config');
-const { isValidEmail, isValidPhone, isValidPostalCode } = require('../utils/validation');
+const { isValidEmail, isValidPhone, isValidPostalCode, normalizeAustrianPhone } = require('../utils/validation');
 
 // Helper to generate 6-digit numeric OTP code
 const generateOTP = () => crypto.randomInt(100000, 1000000).toString();
@@ -52,7 +53,7 @@ const register = async (req, res) => {
     }
 
     const trimmedEmail = email.toLowerCase().trim();
-    const trimmedPhone = phone.trim();
+    const trimmedPhone = normalizeAustrianPhone(phone);
 
     // Check existing email
     const existingEmail = await prisma.customer.findUnique({
@@ -74,9 +75,10 @@ const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Generate verification OTPs (15 min validity)
+    // Generate email verification OTP (15 min validity). Phone verification
+    // is handled client-side via Firebase Phone Auth (see verifyPhone below),
+    // not a server-generated code.
     const emailOtp = generateOTP();
-    const phoneOtp = generateOTP();
     const otpExpiry = new Date(Date.now() + 15 * 60 * 1000);
 
     const customer = await prisma.customer.create({
@@ -88,8 +90,6 @@ const register = async (req, res) => {
         emailOtpExpiry: otpExpiry,
         phone: trimmedPhone,
         phoneVerified: false,
-        phoneOtp,
-        phoneOtpExpiry: otpExpiry,
         password: hashedPassword,
         street: street.trim(),
         houseNumber: houseNumber.trim(),
@@ -112,7 +112,6 @@ const register = async (req, res) => {
       console.log(`\n==============================================`);
       console.log(`📱 NEW CUSTOMER REGISTERED: ${customer.name}`);
       console.log(`✉️ Email OTP for ${customer.email}: [ ${emailOtp} ]`);
-      console.log(`📲 Phone OTP for ${customer.phone}: [ ${phoneOtp} ]`);
       console.log(`==============================================\n`);
     }
 
@@ -144,10 +143,7 @@ const register = async (req, res) => {
       },
       // Expose OTP in non-production environments only
       ...(process.env.NODE_ENV !== 'production' ? {
-        devOtp: {
-          emailOtp,
-          phoneOtp
-        }
+        devOtp: { emailOtp }
       } : {})
     });
   } catch (error) {
@@ -227,19 +223,25 @@ const verifyEmail = async (req, res) => {
 };
 
 /**
- * Verify Phone Code
+ * Verify Phone via Firebase Phone Auth
+ *
+ * The client verifies possession of the phone number directly with Firebase
+ * (SMS + reCAPTCHA) and hands us the resulting ID token. We verify that
+ * token's signature with firebase-admin and check its `phone_number` claim
+ * matches the phone number on this customer's account before marking it
+ * verified — this endpoint never sees or trusts a client-supplied code.
+ * Requires the customer's own JWT (customerAuthMiddleware) so a caller can't
+ * verify their own phone possession against someone else's account.
  */
 const verifyPhone = async (req, res) => {
   try {
-    const { customerId, phone, code } = req.body;
-    const targetId = customerId || req.customer?.customerId;
-
-    if (!code) {
-      return res.status(400).json({ error: 'Verification code is required' });
+    const { idToken } = req.body;
+    if (!idToken) {
+      return res.status(400).json({ error: 'Firebase ID token is required' });
     }
 
-    const customer = await prisma.customer.findFirst({
-      where: targetId ? { id: targetId } : { phone: phone?.trim() }
+    const customer = await prisma.customer.findUnique({
+      where: { id: req.customer.customerId }
     });
 
     if (!customer) {
@@ -250,29 +252,17 @@ const verifyPhone = async (req, res) => {
       return res.json({ message: 'Phone number is already verified', phoneVerified: true });
     }
 
-    if (customer.otpAttempts >= 5) {
-      return res.status(429).json({ error: 'Too many incorrect attempts. Please request a new code.' });
+    let decoded;
+    try {
+      decoded = await verifyFirebaseIdToken(idToken);
+    } catch (err) {
+      console.error('Firebase phone token verification failed:', err.message);
+      return res.status(400).json({ error: 'Invalid or expired verification. Please try again.' });
     }
 
-    if (customer.phoneOtp !== code.trim()) {
-      const attempts = customer.otpAttempts + 1;
-      const lockedOut = attempts >= 5;
-      await prisma.customer.update({
-        where: { id: customer.id },
-        data: {
-          otpAttempts: attempts,
-          ...(lockedOut ? { phoneOtp: null, phoneOtpExpiry: null } : {})
-        }
-      });
-      return res.status(lockedOut ? 429 : 400).json({
-        error: lockedOut
-          ? 'Too many incorrect attempts. Please request a new code.'
-          : 'Invalid phone verification code'
-      });
-    }
-
-    if (customer.phoneOtpExpiry && new Date() > customer.phoneOtpExpiry) {
-      return res.status(400).json({ error: 'Verification code has expired. Please request a new one.' });
+    const verifiedPhone = decoded.phone_number ? normalizeAustrianPhone(decoded.phone_number) : null;
+    if (!verifiedPhone || verifiedPhone !== normalizeAustrianPhone(customer.phone)) {
+      return res.status(400).json({ error: 'The verified phone number does not match your account phone number.' });
     }
 
     const updated = await prisma.customer.update({
@@ -280,8 +270,7 @@ const verifyPhone = async (req, res) => {
       data: {
         phoneVerified: true,
         phoneOtp: null,
-        phoneOtpExpiry: null,
-        otpAttempts: 0
+        phoneOtpExpiry: null
       }
     });
 
@@ -297,19 +286,26 @@ const verifyPhone = async (req, res) => {
 };
 
 /**
- * Resend OTP Code for Email or Phone
+ * Resend Email OTP
+ *
+ * Phone verification codes are sent by Firebase directly to the client
+ * (SMS + reCAPTCHA), so there is nothing for the backend to resend for
+ * type: 'phone' — the frontend re-triggers Firebase's own signInWithPhoneNumber
+ * instead of calling this endpoint.
  */
 const resendOtp = async (req, res) => {
   try {
-    const { customerId, email, phone, type } = req.body; // type: 'email' | 'phone'
+    const { customerId, email, type } = req.body; // type: 'email'
     const targetId = customerId || req.customer?.customerId;
+
+    if (type !== 'email') {
+      return res.status(400).json({ error: 'Unsupported verification type' });
+    }
 
     const customer = await prisma.customer.findFirst({
       where: targetId
         ? { id: targetId }
-        : email
-        ? { email: email.toLowerCase().trim() }
-        : { phone: phone?.trim() }
+        : { email: email?.toLowerCase()?.trim() }
     });
 
     if (!customer) {
@@ -319,40 +315,22 @@ const resendOtp = async (req, res) => {
     const newCode = generateOTP();
     const expiry = new Date(Date.now() + 15 * 60 * 1000);
 
-    if (type === 'email') {
-      await prisma.customer.update({
-        where: { id: customer.id },
-        data: {
-          emailOtp: newCode,
-          emailOtpExpiry: expiry,
-          otpAttempts: 0
-        }
-      });
-      await sendCustomerVerificationEmail(customer.email, customer.name, newCode, customer.preferredLanguage);
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`✉️ RESENT Email OTP for ${customer.email}: [ ${newCode} ]`);
+    await prisma.customer.update({
+      where: { id: customer.id },
+      data: {
+        emailOtp: newCode,
+        emailOtpExpiry: expiry,
+        otpAttempts: 0
       }
-      return res.json({ 
-        message: 'New email verification code sent', 
-        ...(process.env.NODE_ENV !== 'production' ? { devOtp: newCode } : {}) 
-      });
-    } else {
-      await prisma.customer.update({
-        where: { id: customer.id },
-        data: {
-          phoneOtp: newCode,
-          phoneOtpExpiry: expiry,
-          otpAttempts: 0
-        }
-      });
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`📲 RESENT Phone OTP for ${customer.phone}: [ ${newCode} ]`);
-      }
-      return res.json({ 
-        message: 'New phone verification code sent', 
-        ...(process.env.NODE_ENV !== 'production' ? { devOtp: newCode } : {}) 
-      });
+    });
+    await sendCustomerVerificationEmail(customer.email, customer.name, newCode, customer.preferredLanguage);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`✉️ RESENT Email OTP for ${customer.email}: [ ${newCode} ]`);
     }
+    return res.json({
+      message: 'New email verification code sent',
+      ...(process.env.NODE_ENV !== 'production' ? { devOtp: newCode } : {})
+    });
   } catch (error) {
     console.error('Resend OTP error:', error);
     res.status(500).json({ error: 'Failed to resend code' });
@@ -372,12 +350,13 @@ const login = async (req, res) => {
 
     const trimmed = identifier.trim();
 
-    // Match either email or phone
+    // Match either email or phone (phones are stored normalized to E.164,
+    // so normalize the login input the same way before comparing)
     const customer = await prisma.customer.findFirst({
       where: {
         OR: [
           { email: trimmed.toLowerCase() },
-          { phone: trimmed }
+          { phone: normalizeAustrianPhone(trimmed) }
         ]
       }
     });
@@ -533,21 +512,18 @@ const updateProfile = async (req, res) => {
     }
 
     // Check if phone changed
-    if (phone && phone.trim() !== existing.phone) {
+    const normalizedPhone = phone ? normalizeAustrianPhone(phone) : null;
+    if (normalizedPhone && normalizedPhone !== existing.phone) {
       const phoneTaken = await prisma.customer.findUnique({
-        where: { phone: phone.trim() }
+        where: { phone: normalizedPhone }
       });
       if (phoneTaken) {
         return res.status(400).json({ error: 'This phone number is already in use by another account' });
       }
-      updateData.phone = phone.trim();
+      updateData.phone = normalizedPhone;
       updateData.phoneVerified = false;
-      updateData.phoneOtp = generateOTP();
-      updateData.phoneOtpExpiry = new Date(Date.now() + 15 * 60 * 1000);
-      updateData.otpAttempts = 0;
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`📲 NEW Phone OTP for ${updateData.phone}: [ ${updateData.phoneOtp} ]`);
-      }
+      updateData.phoneOtp = null;
+      updateData.phoneOtpExpiry = null;
     }
 
     // Password change (already validated to be >= 8 chars above, if provided)
@@ -583,11 +559,8 @@ const updateProfile = async (req, res) => {
       customer: updated,
       reverifyEmail: updateData.email !== undefined,
       reverifyPhone: updateData.phone !== undefined,
-      ...(process.env.NODE_ENV !== 'production' ? {
-        devOtp: {
-          emailOtp: updateData.emailOtp,
-          phoneOtp: updateData.phoneOtp
-        }
+      ...(process.env.NODE_ENV !== 'production' && updateData.emailOtp ? {
+        devOtp: { emailOtp: updateData.emailOtp }
       } : {})
     });
   } catch (error) {

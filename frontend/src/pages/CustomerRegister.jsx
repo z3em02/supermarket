@@ -3,6 +3,12 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useCustomerAuth } from '../context/CustomerAuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useStoreSettings } from '../context/StoreSettingsContext';
+import {
+  sendPhoneVerificationCode,
+  confirmPhoneVerificationCode,
+  resetRecaptcha,
+  isFirebasePhoneAuthConfigured
+} from '../utils/firebaseClient';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { 
@@ -56,11 +62,30 @@ export const CustomerRegister = () => {
   const [emailVerified, setEmailVerified] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [devOtp, setDevOtp] = useState(null);
+  // Firebase confirmationResult between "send SMS code" and "confirm code"
+  const [phoneConfirmationResult, setPhoneConfirmationResult] = useState(null);
+  const [sendingPhoneCode, setSendingPhoneCode] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [resendCooldown, setResendCooldown] = useState(0);
+
+  const PHONE_RECAPTCHA_CONTAINER_ID = 'firebase-phone-recaptcha-container-register';
+
+  const resolvePhoneError = (err) => {
+    if (err?.response?.data?.error) return err.response.data.error;
+    const messages = {
+      'auth/invalid-verification-code': isAr ? 'رمز التحقق غير صحيح' : 'Ungültiger Verifizierungscode',
+      'auth/code-expired': isAr ? 'انتهت صلاحية الرمز، يرجى طلب رمز جديد' : 'Der Code ist abgelaufen, bitte fordern Sie einen neuen an',
+      'auth/too-many-requests': isAr ? 'محاولات كثيرة جداً، حاول لاحقاً' : 'Zu viele Versuche, bitte später erneut versuchen',
+      'auth/invalid-phone-number': isAr ? 'رقم الهاتف غير صالح' : 'Ungültige Telefonnummer',
+      'auth/missing-phone-number': isAr ? 'رقم الهاتف مفقود' : 'Telefonnummer fehlt',
+      'auth/captcha-check-failed': isAr ? 'فشل التحقق الأمني، حاول مرة أخرى' : 'Sicherheitsprüfung fehlgeschlagen, bitte erneut versuchen',
+      'auth/quota-exceeded': isAr ? 'تم تجاوز الحد المسموح للرسائل، حاول لاحقاً' : 'SMS-Kontingent überschritten, bitte später erneut versuchen'
+    };
+    return messages[err?.code] || err?.message || (isAr ? 'حدث خطأ أثناء التحقق من الهاتف' : 'Fehler bei der Telefonverifizierung');
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -120,36 +145,54 @@ export const CustomerRegister = () => {
     }
   };
 
+  // Firebase sends the SMS directly to the customer's phone (no backend call
+  // for this step) via an invisible reCAPTCHA check.
+  const handleSendPhoneCode = async () => {
+    if (!isFirebasePhoneAuthConfigured()) {
+      setError(isAr ? 'Telefonverifizierung ist derzeit nicht verfügbar.' : 'Telefonverifizierung ist derzeit nicht verfügbar.');
+      return;
+    }
+    try {
+      setSendingPhoneCode(true);
+      setError('');
+      const confirmation = await sendPhoneVerificationCode(formData.phone, PHONE_RECAPTCHA_CONTAINER_ID);
+      setPhoneConfirmationResult(confirmation);
+      setSuccessMsg(isAr ? 'تم إرسال رمز عبر الرسائل القصيرة' : 'SMS-Code wurde gesendet');
+    } catch (err) {
+      console.error('Firebase phone send error:', err);
+      setError(resolvePhoneError(err));
+      resetRecaptcha();
+    } finally {
+      setSendingPhoneCode(false);
+    }
+  };
+
   const handleVerifyPhone = async () => {
-    if (!phoneCode.trim()) return;
+    if (!phoneCode.trim() || !phoneConfirmationResult) return;
     try {
       setLoading(true);
       setError('');
-      await verifyPhone(phoneCode.trim());
+      const idToken = await confirmPhoneVerificationCode(phoneConfirmationResult, phoneCode.trim());
+      await verifyPhone(idToken);
       setPhoneVerified(true);
+      setPhoneConfirmationResult(null);
+      resetRecaptcha();
       setSuccessMsg(isAr ? 'تم التحقق من رقم الهاتف بنجاح!' : 'Telefonnummer erfolgreich verifiziert!');
     } catch (err) {
-      setError(err.response?.data?.error || (isAr ? 'رمز الهاتف غير صالح' : 'Ungültiger Telefon-Code'));
+      setError(resolvePhoneError(err));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleResend = async (type) => {
+  const handleResendEmail = async () => {
     try {
       setError('');
-      const res = await resendOtp(type);
+      const res = await resendOtp('email');
       if (res.devOtp) {
-        setDevOtp(prev => ({
-          ...prev,
-          [type === 'email' ? 'emailOtp' : 'phoneOtp']: res.devOtp
-        }));
+        setDevOtp(prev => ({ ...prev, emailOtp: res.devOtp }));
       }
-      setSuccessMsg(
-        isAr 
-          ? `تمت إعادة إرسال رمز التحقق (${type === 'email' ? 'البريد' : 'الهاتف'})` 
-          : `Neuer Code gesendet (${type === 'email' ? 'E-Mail' : 'Telefon'})`
-      );
+      setSuccessMsg(isAr ? 'تمت إعادة إرسال رمز التحقق (البريد)' : 'Neuer Code gesendet (E-Mail)');
     } catch (err) {
       setError(err.response?.data?.error || 'Fehler beim Senden');
     }
@@ -441,23 +484,19 @@ export const CustomerRegister = () => {
                 </p>
               </div>
 
-              {/* Dev Helper Callout */}
-              {devOtp && (
+              {/* Dev Helper Callout (email only — phone codes come from Firebase SMS) */}
+              {devOtp?.emailOtp && (
                 <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-850 text-amber-800 dark:text-amber-200 text-xs flex flex-col sm:flex-row gap-2 sm:items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
                     <span>
-                      {isAr ? 'رموز التحقق السريع (تجريبي):' : 'Schnelltest-Codes:'}
+                      {isAr ? 'رمز التحقق السريع (تجريبي):' : 'Schnelltest-Code:'}
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-2 font-mono font-bold">
                     <span className="bg-amber-100 dark:bg-amber-900 px-2 py-0.5 rounded inline-flex items-center gap-1">
                       <Mail className="w-3 h-3 text-amber-700 dark:text-amber-300" />
                       {devOtp.emailOtp}
-                    </span>
-                    <span className="bg-amber-100 dark:bg-amber-900 px-2 py-0.5 rounded inline-flex items-center gap-1">
-                      <Phone className="w-3 h-3 text-amber-700 dark:text-amber-300" />
-                      {devOtp.phoneOtp}
                     </span>
                   </div>
                 </div>
@@ -481,7 +520,7 @@ export const CustomerRegister = () => {
                     ) : (
                       <button
                         type="button"
-                        onClick={() => handleResend('email')}
+                        onClick={handleResendEmail}
                         className="text-xs text-slate-500 hover:text-emerald-600 font-medium flex items-center gap-1 cursor-pointer shrink-0 touch-manipulation"
                       >
                         <RotateCcw className="w-3 h-3" />
@@ -529,37 +568,51 @@ export const CustomerRegister = () => {
                       <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
                         <CheckCircle2 className="w-4 h-4" /> {isAr ? 'تم التحقق' : 'Verifiziert'}
                       </span>
-                    ) : (
+                    ) : phoneConfirmationResult ? (
                       <button
                         type="button"
-                        onClick={() => handleResend('phone')}
-                        className="text-xs text-slate-500 hover:text-emerald-600 font-medium flex items-center gap-1 cursor-pointer shrink-0 touch-manipulation"
+                        onClick={handleSendPhoneCode}
+                        disabled={sendingPhoneCode}
+                        className="text-xs text-slate-500 hover:text-emerald-600 font-medium flex items-center gap-1 cursor-pointer shrink-0 touch-manipulation disabled:opacity-50"
                       >
                         <RotateCcw className="w-3 h-3" />
                         <span>{isAr ? 'إعادة الإرسال' : 'Erneut senden'}</span>
                       </button>
-                    )}
+                    ) : null}
                   </div>
 
                   {!phoneVerified ? (
-                    <div className="flex flex-col xs:flex-row gap-2 mt-2">
-                      <input
-                        type="text"
-                        maxLength={6}
-                        value={phoneCode}
-                        onChange={(e) => setPhoneCode(e.target.value)}
-                        placeholder="123456"
-                        className="flex-1 px-4 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 font-mono tracking-widest text-center text-base font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
-                      />
+                    phoneConfirmationResult ? (
+                      <div className="flex flex-col xs:flex-row gap-2 mt-2">
+                        <input
+                          type="text"
+                          maxLength={6}
+                          value={phoneCode}
+                          onChange={(e) => setPhoneCode(e.target.value)}
+                          placeholder="123456"
+                          className="flex-1 px-4 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 font-mono tracking-widest text-center text-base font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleVerifyPhone}
+                          disabled={loading || phoneCode.length < 6}
+                          className="w-full xs:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs transition cursor-pointer touch-manipulation shrink-0"
+                        >
+                          {isAr ? 'تأكيد' : 'Bestätigen'}
+                        </button>
+                      </div>
+                    ) : (
                       <button
                         type="button"
-                        onClick={handleVerifyPhone}
-                        disabled={loading || phoneCode.length < 6}
-                        className="w-full xs:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs transition cursor-pointer touch-manipulation shrink-0"
+                        onClick={handleSendPhoneCode}
+                        disabled={sendingPhoneCode}
+                        className="mt-2 w-full xs:w-auto px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 dark:bg-gray-800 dark:hover:bg-gray-700 disabled:opacity-50 text-white font-bold text-xs transition cursor-pointer touch-manipulation"
                       >
-                        {isAr ? 'تأكيد' : 'Bestätigen'}
+                        {sendingPhoneCode
+                          ? (isAr ? 'جارٍ الإرسال...' : 'Wird gesendet...')
+                          : (isAr ? 'إرسال رمز عبر الرسائل القصيرة' : 'SMS-Code senden')}
                       </button>
-                    </div>
+                    )
                   ) : (
                     <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
                       {isAr ? 'تم تأكيد رقم هاتفك بنجاح.' : 'Ihre Telefonnummer wurde erfolgreich bestätigt.'}
@@ -567,6 +620,9 @@ export const CustomerRegister = () => {
                   )}
                 </div>
               </div>
+
+              {/* Invisible reCAPTCHA host for Firebase Phone Auth */}
+              <div id={PHONE_RECAPTCHA_CONTAINER_ID} />
 
               {/* Complete & Enter Store Button */}
               <div className="pt-4">

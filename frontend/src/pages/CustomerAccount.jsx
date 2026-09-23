@@ -7,7 +7,13 @@ import { useStoreSettings } from '../context/StoreSettingsContext';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { getApiUrl } from '../utils/api';
-import { 
+import {
+  sendPhoneVerificationCode,
+  confirmPhoneVerificationCode,
+  resetRecaptcha,
+  isFirebasePhoneAuthConfigured
+} from '../utils/firebaseClient';
+import {
   User, 
   Package, 
   MapPin, 
@@ -80,6 +86,24 @@ export const CustomerAccount = () => {
   const [otpInput, setOtpInput] = useState('');
   const [verifyingLoading, setVerifyingLoading] = useState(false);
   const [devOtpHint, setDevOtpHint] = useState('');
+  // Holds the Firebase confirmationResult between "send SMS code" and "confirm code"
+  const [phoneConfirmationResult, setPhoneConfirmationResult] = useState(null);
+
+  const PHONE_RECAPTCHA_CONTAINER_ID = 'firebase-phone-recaptcha-container';
+
+  const resolvePhoneVerifyError = (err) => {
+    if (err?.response?.data?.error) return err.response.data.error;
+    const messages = {
+      'auth/invalid-verification-code': isAr ? 'رمز التحقق غير صحيح' : 'Ungültiger Verifizierungscode',
+      'auth/code-expired': isAr ? 'انتهت صلاحية الرمز، يرجى طلب رمز جديد' : 'Der Code ist abgelaufen, bitte fordern Sie einen neuen an',
+      'auth/too-many-requests': isAr ? 'محاولات كثيرة جداً، حاول لاحقاً' : 'Zu viele Versuche, bitte später erneut versuchen',
+      'auth/invalid-phone-number': isAr ? 'رقم الهاتف غير صالح' : 'Ungültige Telefonnummer',
+      'auth/missing-phone-number': isAr ? 'رقم الهاتف مفقود' : 'Telefonnummer fehlt',
+      'auth/captcha-check-failed': isAr ? 'فشل التحقق الأمني، حاول مرة أخرى' : 'Sicherheitsprüfung fehlgeschlagen, bitte erneut versuchen',
+      'auth/quota-exceeded': isAr ? 'تم تجاوز الحد المسموح للرسائل، حاول لاحقاً' : 'SMS-Kontingent überschritten, bitte später erneut versuchen'
+    };
+    return messages[err?.code] || err?.message || (isAr ? 'حدث خطأ أثناء التحقق من الهاتف' : 'Fehler bei der Telefonverifizierung');
+  };
 
   useEffect(() => {
     if (!token) {
@@ -136,8 +160,8 @@ export const CustomerAccount = () => {
       const res = await updateProfile(profileForm);
       setSaveSuccess(isAr ? 'تم تحديث بياناتك بنجاح!' : 'Profildaten erfolgreich aktualisiert!');
 
-      if (res.devOtp?.emailOtp || res.devOtp?.phoneOtp) {
-        setDevOtpHint(`Codes: ${res.devOtp.emailOtp || ''} ${res.devOtp.phoneOtp || ''}`);
+      if (res.devOtp?.emailOtp) {
+        setDevOtpHint(`Code: ${res.devOtp.emailOtp}`);
       }
     } catch (err) {
       console.error('Update profile error:', err);
@@ -148,14 +172,50 @@ export const CustomerAccount = () => {
   };
 
   const handleStartVerify = async (type) => {
-    setVerifyingType(type);
+    setProfileError('');
+    setDevOtpHint('');
     setOtpInput('');
+
+    if (type === 'email') {
+      setVerifyingType('email');
+      try {
+        const res = await resendOtp('email');
+        if (res.devOtp) {
+          setDevOtpHint(`Code: ${res.devOtp}`);
+        }
+      } catch (err) {}
+      return;
+    }
+
+    // Phone: Firebase sends the SMS directly to the customer's phone (no
+    // backend call needed for this step) via an invisible reCAPTCHA check.
+    if (!isFirebasePhoneAuthConfigured()) {
+      setProfileError(isAr ? 'Telefonverifizierung ist derzeit nicht verfügbar.' : 'Telefonverifizierung ist derzeit nicht verfügbar.');
+      return;
+    }
+    setVerifyingType('phone');
+    setVerifyingLoading(true);
     try {
-      const res = await resendOtp(type);
-      if (res.devOtp) {
-        setDevOtpHint(`Code: ${res.devOtp}`);
-      }
-    } catch (err) {}
+      const confirmation = await sendPhoneVerificationCode(customer.phone, PHONE_RECAPTCHA_CONTAINER_ID);
+      setPhoneConfirmationResult(confirmation);
+    } catch (err) {
+      console.error('Firebase phone send error:', err);
+      setVerifyingType(null);
+      setProfileError(resolvePhoneVerifyError(err));
+      resetRecaptcha();
+    } finally {
+      setVerifyingLoading(false);
+    }
+  };
+
+  const handleCancelVerify = () => {
+    if (verifyingType === 'phone') {
+      resetRecaptcha();
+      setPhoneConfirmationResult(null);
+    }
+    setVerifyingType(null);
+    setOtpInput('');
+    setProfileError('');
   };
 
   const handleSubmitVerifyOtp = async () => {
@@ -166,18 +226,28 @@ export const CustomerAccount = () => {
       if (verifyingType === 'email') {
         await verifyEmail(otpInput.trim());
       } else {
-        await verifyPhone(otpInput.trim());
+        if (!phoneConfirmationResult) {
+          throw new Error(isAr ? 'يرجى طلب رمز جديد.' : 'Bitte fordern Sie einen neuen Code an.');
+        }
+        const idToken = await confirmPhoneVerificationCode(phoneConfirmationResult, otpInput.trim());
+        await verifyPhone(idToken);
+        setPhoneConfirmationResult(null);
+        resetRecaptcha();
       }
       setVerifyingType(null);
       setOtpInput('');
       setSaveSuccess(
-        isAr 
-          ? `تم تأكيد ${verifyingType === 'email' ? 'البريد' : 'الهاتف'} بنجاح!` 
+        isAr
+          ? `تم تأكيد ${verifyingType === 'email' ? 'البريد' : 'الهاتف'} بنجاح!`
           : `${verifyingType === 'email' ? 'E-Mail' : 'Telefon'} erfolgreich bestätigt!`
       );
       refreshProfile();
     } catch (err) {
-      setProfileError(err.response?.data?.error || (isAr ? 'رمز التحقق غير صحيح' : 'Ungültiger Code'));
+      setProfileError(
+        verifyingType === 'phone'
+          ? resolvePhoneVerifyError(err)
+          : (err.response?.data?.error || (isAr ? 'رمز التحقق غير صحيح' : 'Ungültiger Code'))
+      );
     } finally {
       setVerifyingLoading(false);
     }
@@ -460,6 +530,9 @@ export const CustomerAccount = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-gray-950 text-slate-800 dark:text-gray-100 transition-colors">
+      {/* Invisible reCAPTCHA host for Firebase Phone Auth; must stay mounted
+          whenever a phone-verification attempt could start */}
+      <div id={PHONE_RECAPTCHA_CONTAINER_ID} />
       {/* Navigation Header */}
       <header className="px-3 xs:px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between border-b border-slate-200/80 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md sticky top-0 z-30">
         <Link to="/" className="flex items-center gap-1.5 sm:gap-3 group min-w-0">
@@ -572,7 +645,7 @@ export const CustomerAccount = () => {
                 </span>
               </h3>
               <button
-                onClick={() => setVerifyingType(null)}
+                onClick={handleCancelVerify}
                 className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer touch-manipulation"
               >
                 {isAr ? 'إلغاء' : 'Abbrechen'}
@@ -585,24 +658,38 @@ export const CustomerAccount = () => {
               </div>
             )}
 
-            <div className="flex flex-col sm:flex-row gap-2">
-              <input
-                type="text"
-                maxLength={6}
-                value={otpInput}
-                onChange={(e) => setOtpInput(e.target.value)}
-                placeholder="123456"
-                className="w-full sm:w-48 px-4 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-amber-300 dark:border-amber-700 font-mono tracking-widest text-center font-bold text-base outline-none focus:ring-2 focus:ring-amber-500"
-              />
-              <button
-                type="button"
-                onClick={handleSubmitVerifyOtp}
-                disabled={verifyingLoading || otpInput.length < 6}
-                className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition cursor-pointer disabled:opacity-50 touch-manipulation"
-              >
-                {verifyingLoading ? '...' : (isAr ? 'تأكيد الرمز' : 'Code bestätigen')}
-              </button>
-            </div>
+            {profileError && (
+              <div className="text-xs bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-300 px-3 py-1.5 rounded-lg mb-3">
+                {profileError}
+              </div>
+            )}
+
+            {verifyingType === 'phone' && !phoneConfirmationResult ? (
+              <p className="text-xs text-amber-700 dark:text-amber-300">
+                {verifyingLoading
+                  ? (isAr ? 'جارٍ إرسال رمز عبر الرسائل القصيرة...' : 'SMS-Code wird gesendet...')
+                  : (isAr ? 'تعذر إرسال الرمز.' : 'Code konnte nicht gesendet werden.')}
+              </p>
+            ) : (
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={otpInput}
+                  onChange={(e) => setOtpInput(e.target.value)}
+                  placeholder="123456"
+                  className="w-full sm:w-48 px-4 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-amber-300 dark:border-amber-700 font-mono tracking-widest text-center font-bold text-base outline-none focus:ring-2 focus:ring-amber-500"
+                />
+                <button
+                  type="button"
+                  onClick={handleSubmitVerifyOtp}
+                  disabled={verifyingLoading || otpInput.length < 6}
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition cursor-pointer disabled:opacity-50 touch-manipulation"
+                >
+                  {verifyingLoading ? '...' : (isAr ? 'تأكيد الرمز' : 'Code bestätigen')}
+                </button>
+              </div>
+            )}
           </div>
         )}
 

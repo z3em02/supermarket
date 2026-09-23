@@ -1,12 +1,21 @@
 const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim());
 
-const isValidPhone = (phone) => {
-  const trimmed = String(phone || '').trim();
-  if (!/^\+?[0-9\s\-()]{6,20}$/.test(trimmed)) return false;
-  const digitCount = trimmed.replace(/\D/g, '').length;
-  return digitCount >= 6 && digitCount <= 15;
+// Normalizes an Austrian phone number to E.164 (+43...), accepting a leading
+// +43, 0043, or a local 0-prefixed number (e.g. "0660 1234567" -> "+436601234567").
+// Firebase Phone Auth requires E.164, and storing customers' numbers in this
+// single canonical form lets us compare against the phone_number claim on the
+// verified Firebase ID token with a plain string match.
+const normalizeAustrianPhone = (phone) => {
+  let trimmed = String(phone || '').trim().replace(/[\s\-()]/g, '');
+  if (trimmed.startsWith('0043')) trimmed = `+43${trimmed.slice(4)}`;
+  else if (trimmed.startsWith('43') && !trimmed.startsWith('+')) trimmed = `+${trimmed}`;
+  else if (trimmed.startsWith('0') && !trimmed.startsWith('+')) trimmed = `+43${trimmed.slice(1)}`;
+  return trimmed;
 };
+
+// Austrian numbers only: +43 followed by 4-13 digits, first digit non-zero.
+const isValidPhone = (phone) => /^\+43[1-9]\d{3,12}$/.test(normalizeAustrianPhone(phone));
 
 const isValidPostalCode = (postalCode) => /^\d+$/.test(String(postalCode || '').trim());
 
-module.exports = { isValidEmail, isValidPhone, isValidPostalCode };
+module.exports = { isValidEmail, isValidPhone, isValidPostalCode, normalizeAustrianPhone };
