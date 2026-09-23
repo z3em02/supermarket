@@ -34,7 +34,8 @@ import {
   Mail,
   Tag,
   Gift,
-  Sparkles
+  Sparkles,
+  Receipt
 } from 'lucide-react';
 import { todayIso, maxDeliveryDateIso, buildDeliverySlot, parseDeliverySlot, formatDeliverySlot, windowLabel, fetchActiveDeliveryWindows } from '../utils/deliverySlot';
 
@@ -539,7 +540,28 @@ export const Orders = () => {
     setShowPrintModal(true);
   };
 
-  const printReceipt = (order) => {
+  // Writes html into a hidden iframe and triggers the browser print dialog on
+  // it — shared by both the A4 and thermal-receipt-printer formats below.
+  const printHtmlInHiddenIframe = (html) => {
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:0;height:0;border:none;visibility:hidden';
+    document.body.appendChild(iframe);
+    iframe.contentDocument.open();
+    iframe.contentDocument.write(html);
+    iframe.contentDocument.close();
+    iframe.contentWindow.onafterprint = () => document.body.removeChild(iframe);
+    setTimeout(() => { iframe.contentWindow.focus(); iframe.contentWindow.print(); }, 300);
+  };
+
+  const printReceipt = (order, format = 'a4') => {
+    if (format === 'thermal') {
+      printHtmlInHiddenIframe(buildThermalReceiptHtml(order));
+      return;
+    }
+    printHtmlInHiddenIframe(buildA4ReceiptHtml(order));
+  };
+
+  const buildA4ReceiptHtml = (order) => {
     const isAr = language === 'ar';
     const dir = isAr ? 'rtl' : 'ltr';
     const total = Number(order.totalAmount);
@@ -689,14 +711,115 @@ export const Orders = () => {
 </body>
 </html>`;
 
-    const iframe = document.createElement('iframe');
-    iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:0;height:0;border:none;visibility:hidden';
-    document.body.appendChild(iframe);
-    iframe.contentDocument.open();
-    iframe.contentDocument.write(html);
-    iframe.contentDocument.close();
-    iframe.contentWindow.onafterprint = () => document.body.removeChild(iframe);
-    setTimeout(() => { iframe.contentWindow.focus(); iframe.contentWindow.print(); }, 300);
+    return html;
+  };
+
+  // Compact single-column layout for an 80mm thermal receipt printer —
+  // no multi-column table, no color, dashed-line separators, monospace.
+  const buildThermalReceiptHtml = (order) => {
+    const isAr = language === 'ar';
+    const dir = isAr ? 'rtl' : 'ltr';
+    const total = Number(order.totalAmount);
+
+    const escapeHtml = (str) => {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    };
+
+    const labelQty       = isAr ? 'الكمية'            : 'Menge';
+    const labelGross     = isAr ? 'المجموع الكلي'     : 'Gesamtbetrag';
+    const labelSubtotalGross = isAr ? 'المجموع الفرعي' : 'Zwischensumme';
+    const labelCoupon    = isAr ? 'كوبون الخصم'       : 'Gutschein';
+    const labelPromo     = isAr ? 'خصم العروض'        : 'Aktionsrabatt';
+    const labelDeliveryFee = isAr ? 'رسوم التوصيل'    : 'Liefergebühr';
+    const labelDelivery  = isAr ? 'عنوان التسليم'    : 'Lieferadresse';
+    const labelInvoice   = isAr ? 'فاتورة'            : 'Rechnung';
+    const labelOrder     = isAr ? 'رقم الطلب'        : 'Bestellnummer';
+    const labelDate      = isAr ? 'التاريخ'           : 'Datum';
+    const labelNotes     = isAr ? 'ملاحظات'           : 'Hinweise';
+    const thanks         = isAr ? 'شكراً لتسوقكم معنا!' : 'Danke für Ihren Einkauf!';
+
+    const itemsHtml = (order.orderItems || []).map((item) => {
+      const rawName = (isAr ? item.product?.nameAr : item.product?.nameDe) || item.product?.name || item.productId;
+      const name = escapeHtml(rawName);
+      const subtotal = Number(item.subtotal);
+      const unitPrice = item.quantity > 0 ? subtotal / item.quantity : 0;
+      return `
+        <div class="item">
+          <div class="item-name">${name}</div>
+          <div class="item-line"><span>${item.quantity} x €${unitPrice.toFixed(2)}</span><span>€${subtotal.toFixed(2)}</span></div>
+        </div>`;
+    }).join('');
+
+    const html = `<!DOCTYPE html>
+<html lang="${language}" dir="${dir}">
+<head>
+  <meta charset="UTF-8"/>
+  <title>${labelInvoice} – INV-${order.id.slice(0,8).toUpperCase()}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Courier New',${isAr ? "'Noto Sans Arabic'," : ''}monospace;font-size:12px;color:#000;background:#fff;direction:${dir};width:76mm;padding:2mm}
+    .center{text-align:center}
+    .brand{font-size:15px;font-weight:800}
+    .sub{font-size:10px;margin-top:2px}
+    .dashed{border-top:1px dashed #000;margin:6px 0}
+    .row{display:flex;justify-content:space-between;font-size:11px;padding:1px 0}
+    .item{margin:4px 0}
+    .item-name{font-weight:700;font-size:11px}
+    .item-line{display:flex;justify-content:space-between;font-size:11px}
+    .totals-row{display:flex;justify-content:space-between;font-size:11px;padding:1px 0}
+    .totals-row.total{font-weight:800;font-size:13px;border-top:1px dashed #000;margin-top:4px;padding-top:4px}
+    .notes{font-size:10px;margin-top:6px}
+    .footer{text-align:center;font-size:10px;margin-top:10px}
+    @media print{body{width:auto}@page{size:80mm auto;margin:2mm}}
+  </style>
+</head>
+<body>
+  <div class="center">
+    <div class="brand">Supermarkt Lieferservice</div>
+    <div class="sub">${labelInvoice} INV-${order.id.slice(0,8).toUpperCase()}</div>
+    <div class="sub">${labelDate}: ${new Date(order.createdAt).toLocaleDateString(isAr?'ar-DE':'de-DE')}</div>
+    <div class="sub">${labelOrder}: #${order.id.slice(0,8).toUpperCase()}</div>
+  </div>
+
+  <div class="dashed"></div>
+
+  <div>${escapeHtml(order.customer?.name || order.customerName || '—')}</div>
+  ${(order.customer?.phone || order.customerPhone) ? `<div class="sub">${escapeHtml(order.customer?.phone || order.customerPhone)}</div>` : ''}
+  <div class="sub" style="margin-top:4px">${labelDelivery}: ${escapeHtml(order.deliveryAddress || order.customer?.address || '—')}</div>
+
+  <div class="dashed"></div>
+
+  ${itemsHtml}
+
+  <div class="dashed"></div>
+
+  ${Number(order.itemsSubtotal) > 0 && (Number(order.couponDiscount) > 0 || Number(order.promotionDiscount) > 0) ? `
+  <div class="totals-row"><span>${labelSubtotalGross}</span><span>€${Number(order.itemsSubtotal).toFixed(2)}</span></div>
+  ` : ''}
+  ${Number(order.promotionDiscount) > 0 ? `
+  <div class="totals-row"><span>${labelPromo}</span><span>-€${Number(order.promotionDiscount).toFixed(2)}</span></div>
+  ` : ''}
+  ${Number(order.couponDiscount) > 0 ? `
+  <div class="totals-row"><span>${labelCoupon}${order.couponCode ? ` (${escapeHtml(order.couponCode)})` : ''}</span><span>-€${Number(order.couponDiscount).toFixed(2)}</span></div>
+  ` : ''}
+  ${Number(order.deliveryFee) > 0 ? `
+  <div class="totals-row"><span>${labelDeliveryFee}</span><span>€${Number(order.deliveryFee).toFixed(2)}</span></div>
+  ` : ''}
+  <div class="totals-row total"><span>${labelGross}</span><span>€${total.toFixed(2)}</span></div>
+
+  ${order.notes ? `<div class="notes"><strong>${labelNotes}:</strong> ${escapeHtml(order.notes)}</div>` : ''}
+
+  <div class="footer">${thanks}</div>
+</body>
+</html>`;
+
+    return html;
   };
 
   const handleOpenPrintModal_orig = (order) => {
@@ -1789,14 +1912,24 @@ export const Orders = () => {
                   <p className="text-[11px] text-slate-400 dark:text-gray-500 font-mono">INV-{printOrder.id.slice(0,8).toUpperCase()}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 <button
                   type="button"
-                  onClick={() => printReceipt(printOrder)}
+                  onClick={() => printReceipt(printOrder, 'a4')}
+                  title={language === 'ar' ? 'طباعة A4' : 'A4 drucken'}
                   className="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition touch-manipulation cursor-pointer"
                 >
-                  <Printer className="w-3.5 h-3.5" />
-                  <span className="hidden xs:inline">{t('printInvoice')}</span>
+                  <FileText className="w-3.5 h-3.5" />
+                  <span className="hidden xs:inline">A4</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => printReceipt(printOrder, 'thermal')}
+                  title={language === 'ar' ? 'طباعة على طابعة الإيصالات' : 'Auf Bon-Drucker drucken'}
+                  className="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-slate-800 hover:bg-slate-900 dark:bg-gray-800 dark:hover:bg-gray-700 text-white rounded-xl text-xs font-semibold shadow-sm transition touch-manipulation cursor-pointer"
+                >
+                  <Receipt className="w-3.5 h-3.5" />
+                  <span className="hidden xs:inline">{language === 'ar' ? 'بون' : 'Bon'}</span>
                 </button>
                 <button
                   type="button"
