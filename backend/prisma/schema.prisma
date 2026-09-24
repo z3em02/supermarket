@@ -16,6 +16,17 @@ model Admin {
   updatedAt DateTime @updatedAt
 }
 
+// Tracks admin access to customer records (view/export), for accountability.
+model AuditLog {
+  id          String   @id @default(uuid())
+  adminEmail  String
+  action      String   // e.g. 'VIEW_CUSTOMERS', 'EXPORT_ACCOUNTING'
+  detail      String?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 model Category {
   id            String    @id @default(uuid())
   nameDe        String

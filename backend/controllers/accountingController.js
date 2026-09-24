@@ -1,5 +1,6 @@
 const prisma = require('../lib/prisma');
 const { CUSTOMER_PUBLIC_SELECT } = require('../utils/serialize');
+const { logAudit } = require('../lib/auditLog');
 
 const getAccountingSummary = async (req, res) => {
   try {
@@ -157,6 +158,7 @@ const getAccountingRecords = async (req, res) => {
 const exportAccountingData = async (req, res) => {
   try {
     const { startDate, endDate, format = 'csv' } = req.query;
+    logAudit(req.admin?.email, 'EXPORT_ACCOUNTING', `format=${format}${startDate ? ` range=${startDate}..${endDate}` : ''}`);
 
     const dateFilter = {};
     if (startDate && endDate) {

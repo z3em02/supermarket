@@ -6,6 +6,7 @@ const { sendCustomerVerificationEmail, sendPasswordResetEmail } = require('../ut
 const { verifyFirebaseIdToken } = require('../utils/firebaseAdmin');
 const { JWT_SECRET } = require('../lib/config');
 const { isValidEmail, isValidPhone, isValidPostalCode, normalizeAustrianPhone } = require('../utils/validation');
+const { logAudit } = require('../lib/auditLog');
 
 // Helper to generate 6-digit numeric OTP code
 const generateOTP = () => crypto.randomInt(100000, 1000000).toString();
@@ -564,6 +565,7 @@ const updateProfile = async (req, res) => {
  */
 const listCustomers = async (req, res) => {
   try {
+    logAudit(req.admin?.email, 'VIEW_CUSTOMERS');
     const customers = await prisma.customer.findMany({
       select: {
         id: true,

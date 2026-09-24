@@ -30,6 +30,7 @@ const Catalogs = lazy(() => import('./pages/Catalogs').then(m => ({ default: m.C
 const Settings = lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })));
 const Customers = lazy(() => import('./pages/Customers').then(m => ({ default: m.Customers })));
 const Promotions = lazy(() => import('./pages/Promotions').then(m => ({ default: m.Promotions })));
+const AuditLog = lazy(() => import('./pages/AuditLog').then(m => ({ default: m.AuditLog })));
 
 const PageLoader = () => (
   <div className="min-h-[50vh] flex items-center justify-center">
@@ -95,6 +96,7 @@ function App() {
                   <Route path={`${ADMIN}/customers`}  element={<SectionPasscodeGate><Suspense fallback={<PageLoader />}><Customers /></Suspense></SectionPasscodeGate>} />
                   <Route path={`${ADMIN}/accounting`} element={<SectionPasscodeGate><Suspense fallback={<PageLoader />}><Accounting /></Suspense></SectionPasscodeGate>} />
                   <Route path={`${ADMIN}/settings`}   element={<SectionPasscodeGate><Suspense fallback={<PageLoader />}><Settings /></Suspense></SectionPasscodeGate>} />
+                  <Route path={`${ADMIN}/audit-log`}  element={<SectionPasscodeGate><Suspense fallback={<PageLoader />}><AuditLog /></Suspense></SectionPasscodeGate>} />
                 </Route>
 
                 {/* Fallback to main catalog */}

@@ -17,7 +17,8 @@ import {
   Layers,
   Settings,
   Sparkles,
-  Lock
+  Lock,
+  ScrollText
 } from 'lucide-react';
 import { LanguageSelector } from './LanguageSelector';
 import { ThemeToggle } from './ThemeToggle';
@@ -41,6 +42,7 @@ export const Layout = () => {
     { name: t('customers'), href: '/secret/admin/customers', icon: Users },
     { name: t('accounting'), href: '/secret/admin/accounting', icon: TrendingUp },
     { name: t('settings'),   href: '/secret/admin/settings',   icon: Settings },
+    { name: language === 'ar' ? 'سجل الوصول' : 'Zugriffsprotokoll', href: '/secret/admin/audit-log', icon: ScrollText },
   ];
 
   const handleLogout = () => {
