@@ -1,20 +1,32 @@
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../lib/config');
+const prisma = require('../lib/prisma');
 
-const authMiddleware = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  // #38 fix: support HttpOnly cookie or Authorization Bearer header
+  const token = req.cookies?.token || (authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null);
+  if (!token) {
     return res.status(401).json({ error: 'Authentication required' });
   }
-
-  const token = authHeader.split(' ')[1];
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     if (decoded.role !== 'admin') {
       return res.status(403).json({ error: 'Access denied. Admin access required.' });
     }
-    req.admin = decoded;
+
+    // Verify admin exists and tokenVersion matches (revocation check)
+    const admin = await prisma.admin.findUnique({
+      where: { id: decoded.id },
+      select: { id: true, email: true, name: true, tokenVersion: true }
+    });
+
+    if (!admin || decoded.tokenVersion === undefined || admin.tokenVersion !== decoded.tokenVersion) {
+      return res.status(401).json({ error: 'Session invalidated or expired. Please sign in again.' });
+    }
+
+    req.admin = { ...decoded, name: admin.name };
     next();
   } catch (error) {
     return res.status(401).json({ error: 'Invalid or expired token' });

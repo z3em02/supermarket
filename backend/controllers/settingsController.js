@@ -1,7 +1,8 @@
 const bcrypt = require('bcryptjs');
 const prisma = require('../lib/prisma');
 const { scrapeGoogleReviews } = require('../utils/googleScraper');
-const { issueSectionUnlockToken } = require('../middleware/sectionUnlock');
+const { issueSectionUnlockToken, invalidateSectionPasscodeCache } = require('../middleware/sectionUnlock');
+const { logAudit } = require('../lib/auditLog');
 
 // String(null) / String(undefined) produce the literal text "null"/"undefined",
 // which then reads back as a truthy, non-empty value forever — treat any
@@ -147,7 +148,18 @@ const updateSettings = async (req, res) => {
       data.storeNameAr = String(storeNameAr).trim() || 'سوبرماركت هاجر';
     }
     if (logoUrl !== undefined) {
-      data.logoUrl = cleanString(logoUrl);
+      const cleaned = cleanString(logoUrl);
+      // #30 & #33 fix: validate logo URL scheme, block protocol-relative URLs
+      if (cleaned) {
+        const s = cleaned.toLowerCase();
+        if (s.startsWith('javascript:') || s.startsWith('data:') || s.startsWith('vbscript:') || s.startsWith('//')) {
+          return res.status(400).json({ error: 'Invalid logo URL scheme' });
+        }
+        if (!s.startsWith('https://') && !s.startsWith('http://') && !s.startsWith('/')) {
+          return res.status(400).json({ error: 'Logo URL must be an HTTP(S) URL or local path' });
+        }
+      }
+      data.logoUrl = cleaned;
     }
     if (phone !== undefined) {
       data.phone = cleanString(phone);
@@ -159,13 +171,34 @@ const updateSettings = async (req, res) => {
       data.address = cleanString(address);
     }
     if (mapUrl !== undefined) {
-      data.mapUrl = cleanString(mapUrl);
+      const cleaned = cleanString(mapUrl);
+      // Finding 3.1 fix: prevent stored XSS via javascript: or unvalidated URLs
+      if (cleaned) {
+        const s = cleaned.toLowerCase();
+        if (s.startsWith('javascript:') || s.startsWith('data:') || s.startsWith('vbscript:') || s.startsWith('//') || !s.startsWith('https://')) {
+          return res.status(400).json({ error: 'mapUrl must be a secure HTTPS URL (starting with https://)' });
+        }
+      }
+      data.mapUrl = cleaned;
     }
     if (mapEmbedUrl !== undefined) {
-      data.mapEmbedUrl = cleanString(mapEmbedUrl);
+      const cleaned = cleanString(mapEmbedUrl);
+      // #31 fix: only allow legitimate Google Maps embed URLs
+      if (cleaned && !cleaned.startsWith('https://www.google.com/maps/embed') && !cleaned.startsWith('https://maps.google.com/maps')) {
+        return res.status(400).json({ error: 'Map embed URL must be a valid Google Maps embed URL (starting with https://www.google.com/maps/embed)' });
+      }
+      data.mapEmbedUrl = cleaned;
     }
     if (googleReviewsUrl !== undefined) {
-      data.googleReviewsUrl = cleanString(googleReviewsUrl);
+      const cleaned = cleanString(googleReviewsUrl);
+      // Finding 3.1 fix: prevent stored XSS via javascript: or unvalidated URLs
+      if (cleaned) {
+        const s = cleaned.toLowerCase();
+        if (s.startsWith('javascript:') || s.startsWith('data:') || s.startsWith('vbscript:') || s.startsWith('//') || !s.startsWith('https://')) {
+          return res.status(400).json({ error: 'googleReviewsUrl must be a secure HTTPS URL (starting with https://)' });
+        }
+      }
+      data.googleReviewsUrl = cleaned;
     }
     if (googlePlaceId !== undefined) {
       data.googlePlaceId = cleanString(googlePlaceId);
@@ -390,7 +423,39 @@ const getPasscodeStatus = async (req, res) => {
 // protection entirely.
 const setPasscode = async (req, res) => {
   try {
-    const { passcode } = req.body;
+    const { passcode, currentPasscode } = req.body;
+
+    const settings = await prisma.storeSettings.findUnique({
+      where: { id: 'default' },
+      select: { sectionPasscodeHash: true }
+    });
+
+    // Finding 1.1 fix: if a passcode is already set, require either an active
+    // section-unlock token or verification of currentPasscode
+    if (settings?.sectionPasscodeHash) {
+      const unlockHeader = req.headers['x-section-unlock'];
+      let isUnlocked = false;
+      if (unlockHeader) {
+        try {
+          const jwt = require('jsonwebtoken');
+          const { SECTION_UNLOCK_SECRET } = require('../lib/config');
+          const decoded = jwt.verify(unlockHeader, SECTION_UNLOCK_SECRET);
+          if (decoded.scope === 'section-unlock' && decoded.adminId === req.admin?.id) {
+            isUnlocked = true;
+          }
+        } catch (_) {}
+      }
+
+      if (!isUnlocked) {
+        if (!currentPasscode) {
+          return res.status(400).json({ error: 'Aktueller PIN ist erforderlich / Current passcode is required' });
+        }
+        const matches = await bcrypt.compare(String(currentPasscode).trim(), settings.sectionPasscodeHash);
+        if (!matches) {
+          return res.status(403).json({ error: 'Aktueller PIN ist falsch / Current passcode is incorrect' });
+        }
+      }
+    }
 
     if (passcode === null || passcode === '') {
       await prisma.storeSettings.upsert({
@@ -398,6 +463,8 @@ const setPasscode = async (req, res) => {
         update: { sectionPasscodeHash: null },
         create: { ...DEFAULT_SETTINGS, sectionPasscodeHash: null }
       });
+      invalidateSectionPasscodeCache();
+      logAudit(req.admin?.email, 'REMOVE_SECTION_PASSCODE', 'Section passcode removed');
       return res.json({ message: 'Passcode removed', isSet: false });
     }
 
@@ -412,6 +479,8 @@ const setPasscode = async (req, res) => {
       update: { sectionPasscodeHash: hash },
       create: { ...DEFAULT_SETTINGS, sectionPasscodeHash: hash }
     });
+    invalidateSectionPasscodeCache();
+    logAudit(req.admin?.email, 'SET_SECTION_PASSCODE', 'Section passcode updated');
     res.json({ message: 'Passcode set', isSet: true, unlockToken: issueSectionUnlockToken(req.admin.id) });
   } catch (error) {
     console.error('Set passcode error:', error);

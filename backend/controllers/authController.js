@@ -6,7 +6,7 @@ const { JWT_SECRET } = require('../lib/config');
 const { sendAdminLoginOtpEmail } = require('../utils/emailService');
 
 const PENDING_2FA_SCOPE = 'admin-2fa-pending';
-const SESSION_TTL = '30d'; // "stay logged in" — issued only after 2FA succeeds
+const SESSION_TTL = '24h'; // #22 fix: limit admin JWT lifetime to 24h (previously 30d)
 
 const generateOTP = () => crypto.randomInt(100000, 1000000).toString();
 
@@ -103,10 +103,19 @@ const verify2FA = async (req, res) => {
     });
 
     const token = jwt.sign(
-      { id: admin.id, email: admin.email, role: 'admin' },
+      { id: admin.id, email: admin.email, role: 'admin', tokenVersion: admin.tokenVersion || 0 },
       JWT_SECRET,
       { expiresIn: SESSION_TTL }
     );
+
+    // #38 fix: set HttpOnly cookie alongside token in JSON response
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 24 * 60 * 60 * 1000
+    });
 
     res.json({
       token,
@@ -159,32 +168,67 @@ const resend2FA = async (req, res) => {
   }
 };
 
-const createAdmin = async (req, res) => {
+const changePassword = async (req, res) => {
   try {
-    const existing = await prisma.admin.count();
-    if (existing > 0) {
-      return res.status(403).json({ error: 'An admin account already exists' });
+    const adminId = req.admin?.id;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!adminId) {
+      return res.status(401).json({ error: 'Authentication required' });
     }
 
-    const { email, password, name } = req.body;
-    if (!email || !password || !name) {
-      return res.status(400).json({ error: 'Name, email and password are required' });
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current password and new password are required' });
     }
 
-    const hashed = await bcrypt.hash(password, 10);
-    const admin = await prisma.admin.create({
-      data: { email, password: hashed, name }
+    const { isStrongPassword, STRONG_PASSWORD_HINT } = require('../utils/validation');
+    if (!isStrongPassword(newPassword)) {
+      return res.status(400).json({ error: STRONG_PASSWORD_HINT });
+    }
+
+    const admin = await prisma.admin.findUnique({ where: { id: adminId } });
+    if (!admin) {
+      return res.status(404).json({ error: 'Admin not found' });
+    }
+
+    const valid = await bcrypt.compare(currentPassword, admin.password);
+    if (!valid) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    const updated = await prisma.admin.update({
+      where: { id: adminId },
+      data: {
+        password: hashedPassword,
+        tokenVersion: { increment: 1 }
+      }
     });
 
-    res.status(201).json({
-      id: admin.id,
-      email: admin.email,
-      name: admin.name
+    const token = jwt.sign(
+      { id: updated.id, email: updated.email, role: 'admin', tokenVersion: updated.tokenVersion },
+      JWT_SECRET,
+      { expiresIn: SESSION_TTL }
+    );
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 24 * 60 * 60 * 1000
+    });
+
+    res.json({
+      message: 'Password changed successfully. All other admin sessions have been revoked.',
+      token
     });
   } catch (error) {
-    console.error('Create admin error:', error);
-    res.status(500).json({ error: 'Could not create admin' });
+    console.error('Admin change password error:', error);
+    res.status(500).json({ error: 'Failed to change password' });
   }
 };
 
-module.exports = { login, verify2FA, resend2FA, createAdmin };
+module.exports = { login, verify2FA, resend2FA, changePassword };

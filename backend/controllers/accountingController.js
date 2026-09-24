@@ -11,19 +11,36 @@ const withDecryptedOrder = (ord) => ({
   customerName: 'customerName' in ord ? decrypt(ord.customerName) : ord.customerName,
   customerPhone: 'customerPhone' in ord ? decrypt(ord.customerPhone) : ord.customerPhone,
   customerEmail: 'customerEmail' in ord ? decrypt(ord.customerEmail) : ord.customerEmail,
+  deliveryAddress: 'deliveryAddress' in ord ? decrypt(ord.deliveryAddress) : ord.deliveryAddress,
+  deliveryNotes: 'deliveryNotes' in ord ? decrypt(ord.deliveryNotes) : ord.deliveryNotes,
   customer: ord.customer ? decryptCustomerPII(ord.customer) : ord.customer
 });
+
+const parseValidDate = (str) => {
+  if (!str) return null;
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? null : d;
+};
 
 const getAccountingSummary = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
 
     const dateFilter = {};
-    if (startDate && endDate) {
-      dateFilter.createdAt = {
-        gte: new Date(startDate),
-        lte: new Date(endDate)
-      };
+    if (startDate || endDate) {
+      if (startDate) {
+        const start = parseValidDate(startDate);
+        if (!start) return res.status(400).json({ error: 'Invalid startDate format' });
+        dateFilter.createdAt = { ...dateFilter.createdAt, gte: start };
+      }
+      if (endDate) {
+        const end = parseValidDate(endDate);
+        if (!end) return res.status(400).json({ error: 'Invalid endDate format' });
+        dateFilter.createdAt = { ...dateFilter.createdAt, lte: end };
+      }
+      if (dateFilter.createdAt?.gte && dateFilter.createdAt?.lte && dateFilter.createdAt.gte > dateFilter.createdAt.lte) {
+        return res.status(400).json({ error: 'startDate cannot be after endDate' });
+      }
     }
 
     // Valid non-declined orders
@@ -124,6 +141,9 @@ const getAccountingSummary = async (req, res) => {
 const getAccountingRecords = async (req, res) => {
   try {
     const { page = 1, limit = 20, status } = req.query;
+    // #15 fix: cap limit between 1 and 200 to prevent DoS via huge result sets
+    const parsedPage = Math.max(1, parseInt(page, 10) || 1);
+    const parsedLimit = Math.min(200, Math.max(1, parseInt(limit, 10) || 20));
 
     const where = {};
     if (status) where.status = status;
@@ -136,8 +156,8 @@ const getAccountingRecords = async (req, res) => {
       orderBy: {
         createdAt: 'desc'
       },
-      skip: (page - 1) * limit,
-      take: parseInt(limit)
+      skip: (parsedPage - 1) * parsedLimit,
+      take: parsedLimit
     })).map(withDecryptedOrder);
 
     const total = await prisma.order.count({ where });
@@ -155,10 +175,10 @@ const getAccountingRecords = async (req, res) => {
     res.json({
       records,
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: parsedPage,
+        limit: parsedLimit,
         total,
-        totalPages: Math.ceil(total / limit)
+        totalPages: Math.ceil(total / parsedLimit)
       }
     });
   } catch (error) {
@@ -173,11 +193,21 @@ const exportAccountingData = async (req, res) => {
     logAudit(req.admin?.email, 'EXPORT_ACCOUNTING', `format=${format}${startDate ? ` range=${startDate}..${endDate}` : ''}`);
 
     const dateFilter = {};
-    if (startDate && endDate) {
-      dateFilter.createdAt = {
-        gte: new Date(startDate),
-        lte: new Date(endDate)
-      };
+    // #14 fix: validate date strings
+    if (startDate || endDate) {
+      if (startDate) {
+        const start = parseValidDate(startDate);
+        if (!start) return res.status(400).json({ error: 'Invalid startDate format' });
+        dateFilter.createdAt = { ...dateFilter.createdAt, gte: start };
+      }
+      if (endDate) {
+        const end = parseValidDate(endDate);
+        if (!end) return res.status(400).json({ error: 'Invalid endDate format' });
+        dateFilter.createdAt = { ...dateFilter.createdAt, lte: end };
+      }
+      if (dateFilter.createdAt?.gte && dateFilter.createdAt?.lte && dateFilter.createdAt.gte > dateFilter.createdAt.lte) {
+        return res.status(400).json({ error: 'startDate cannot be after endDate' });
+      }
     }
 
     const orders = (await prisma.order.findMany({
@@ -194,13 +224,23 @@ const exportAccountingData = async (req, res) => {
     })).map(withDecryptedOrder);
 
     if (format === 'csv') {
+      // Finding 3.4 fix: Sanitize cells against CSV / Spreadsheet formula injection
+      const sanitizeCsvCell = (val) => {
+        const str = String(val ?? '');
+        const safeStr = /^[=+\-@\t\r]/.test(str) ? `'${str}` : str;
+        return `"${safeStr.replace(/"/g, '""')}"`;
+      };
+
       const csvHeader = 'Bestellnummer,Datum,Kunde,Telefon,Lieferadresse,Status,Zahlungsart,Betrag (EUR)\n';
       const csvRows = orders.map(ord => {
-        const name = `"${(ord.customer?.name || ord.customerName || 'Kunde').replace(/"/g, '""')}"`;
-        const phone = `"${(ord.customer?.phone || ord.customerPhone || '').replace(/"/g, '""')}"`;
-        const addr = `"${(ord.deliveryAddress || '').replace(/"/g, '""')}"`;
+        const id = sanitizeCsvCell(ord.id);
+        const name = sanitizeCsvCell(ord.customer?.name || ord.customerName || 'Kunde');
+        const phone = sanitizeCsvCell(ord.customer?.phone || ord.customerPhone || '');
+        const addr = sanitizeCsvCell(ord.deliveryAddress || '');
+        const status = sanitizeCsvCell(ord.status);
+        const payment = sanitizeCsvCell(ord.paymentMethod);
         const date = new Date(ord.createdAt).toISOString();
-        return `${ord.id},${date},${name},${phone},${addr},${ord.status},${ord.paymentMethod},${ord.totalAmount.toFixed(2)}`;
+        return `${id},${date},${name},${phone},${addr},${status},${payment},${ord.totalAmount.toFixed(2)}`;
       }).join('\n');
 
       res.setHeader('Content-Type', 'text/csv; charset=utf-8');

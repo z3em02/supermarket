@@ -152,6 +152,49 @@ function calculatePromotionForItem(product, quantity, activePromotion = null) {
 }
 
 /**
+ * Pure discount-amount math for a coupon against a given subtotal — shared
+ * by validateAndCalculateCoupon (new orders) and editOrder's re-validation
+ * of an already-applied coupon against a recalculated subtotal, so the two
+ * never drift apart.
+ *
+ * @param {Object} coupon - Coupon model record from DB
+ * @param {number} itemsSubtotal - Subtotal to compute the discount against
+ * @returns {number} Discount amount, clamped to [0, itemsSubtotal]
+ */
+function calculateCouponDiscountAmount(coupon, itemsSubtotal) {
+  let discountAmount = 0;
+  const discountVal = Number(coupon.discountValue) || 0;
+
+  if (coupon.discountType === 'PERCENTAGE') {
+    const pct = Math.min(100, Math.max(0, discountVal));
+    let rawDiscount = (itemsSubtotal * pct) / 100;
+    if (coupon.maxDiscountAmount != null && coupon.maxDiscountAmount > 0) {
+      rawDiscount = Math.min(rawDiscount, Number(coupon.maxDiscountAmount));
+    }
+    discountAmount = Math.min(rawDiscount, itemsSubtotal);
+  } else if (coupon.discountType === 'FIXED') {
+    discountAmount = Math.min(discountVal, itemsSubtotal);
+  } else if (coupon.discountType === 'COMBO') {
+    // In COMBO: can have a fixed/percent discount and/or free shipping
+    if (discountVal > 0) {
+      if (discountVal <= 100 && coupon.maxDiscountAmount != null) {
+        // Percentage combo
+        let rawDiscount = (itemsSubtotal * discountVal) / 100;
+        if (coupon.maxDiscountAmount > 0) {
+          rawDiscount = Math.min(rawDiscount, Number(coupon.maxDiscountAmount));
+        }
+        discountAmount = Math.min(rawDiscount, itemsSubtotal);
+      } else {
+        // Fixed amount combo
+        discountAmount = Math.min(discountVal, itemsSubtotal);
+      }
+    }
+  }
+
+  return Math.max(0, Number(discountAmount.toFixed(2)));
+}
+
+/**
  * Validates a coupon and calculates the discount amount.
  *
  * @param {Object} coupon - Coupon model record from DB
@@ -222,37 +265,7 @@ function validateAndCalculateCoupon(coupon, cartItems = [], itemsSubtotal = 0, c
     }
   }
 
-  // Calculate discount amount
-  let discountAmount = 0;
-  const discountVal = Number(coupon.discountValue) || 0;
-
-  if (coupon.discountType === 'PERCENTAGE') {
-    const pct = Math.min(100, Math.max(0, discountVal));
-    let rawDiscount = (itemsSubtotal * pct) / 100;
-    if (coupon.maxDiscountAmount != null && coupon.maxDiscountAmount > 0) {
-      rawDiscount = Math.min(rawDiscount, Number(coupon.maxDiscountAmount));
-    }
-    discountAmount = Math.min(rawDiscount, itemsSubtotal);
-  } else if (coupon.discountType === 'FIXED') {
-    discountAmount = Math.min(discountVal, itemsSubtotal);
-  } else if (coupon.discountType === 'COMBO') {
-    // In COMBO: can have a fixed/percent discount and/or free shipping
-    if (discountVal > 0) {
-      if (discountVal <= 100 && coupon.maxDiscountAmount != null) {
-        // Percentage combo
-        let rawDiscount = (itemsSubtotal * discountVal) / 100;
-        if (coupon.maxDiscountAmount > 0) {
-          rawDiscount = Math.min(rawDiscount, Number(coupon.maxDiscountAmount));
-        }
-        discountAmount = Math.min(rawDiscount, itemsSubtotal);
-      } else {
-        // Fixed amount combo
-        discountAmount = Math.min(discountVal, itemsSubtotal);
-      }
-    }
-  }
-
-  discountAmount = Math.max(0, Number(discountAmount.toFixed(2)));
+  const discountAmount = calculateCouponDiscountAmount(coupon, itemsSubtotal);
   const isFreeShipping = Boolean(coupon.freeShipping);
 
   return {
@@ -273,5 +286,6 @@ function validateAndCalculateCoupon(coupon, cartItems = [], itemsSubtotal = 0, c
 
 module.exports = {
   calculatePromotionForItem,
-  validateAndCalculateCoupon
+  validateAndCalculateCoupon,
+  calculateCouponDiscountAmount
 };

@@ -134,14 +134,27 @@ export const CustomerAuthProvider = ({ children }) => {
       setCustomer(res.data.customer);
       localStorage.setItem('customer_user', JSON.stringify(res.data.customer));
     }
+    if (res.data.token) {
+      setToken(res.data.token);
+      localStorage.setItem('customer_token', res.data.token);
+    }
     return res.data;
   };
 
   const logout = () => {
+    const currentToken = token;
     setToken(null);
     setCustomer(null);
     localStorage.removeItem('customer_token');
     localStorage.removeItem('customer_user');
+    // Best-effort: revoke the session server-side (bumps tokenVersion, clears
+    // the HttpOnly cookie) so a stolen token/cookie can't outlive logout.
+    if (currentToken) {
+      const apiUrl = getApiUrl();
+      axios.post(`${apiUrl}/api/customer/logout`, {}, {
+        headers: { Authorization: `Bearer ${currentToken}` }
+      }).catch(() => {});
+    }
   };
 
   const requestPasswordReset = async (email) => {

@@ -86,6 +86,8 @@ const register = async (req, res) => {
     const emailOtp = generateOTP();
     const otpExpiry = new Date(Date.now() + 15 * 60 * 1000);
 
+    const cleanLang = ['de', 'ar', 'en'].includes(preferredLanguage) ? preferredLanguage : 'de';
+
     const customer = await prisma.customer.create({
       data: {
         name: name.trim(),
@@ -104,7 +106,7 @@ const register = async (req, res) => {
         city: encrypt(city.trim()),
         floorApartment: encrypt(floorApartment.trim()),
         deliveryNotes: encrypt(deliveryNotes.trim()),
-        preferredLanguage
+        preferredLanguage: cleanLang
       }
     });
 
@@ -122,12 +124,21 @@ const register = async (req, res) => {
       console.log(`==============================================\n`);
     }
 
-    // Create a temporary JWT for immediate verification flow
+    // Create a temporary JWT for immediate verification flow (7d expiry, includes tokenVersion)
     const token = jwt.sign(
-      { customerId: customer.id, role: 'customer' },
+      { customerId: customer.id, role: 'customer', tokenVersion: customer.tokenVersion || 0 },
       JWT_SECRET,
-      { expiresIn: '30d' }
+      { expiresIn: '7d' }
     );
+
+    // #38 fix: set HttpOnly cookie alongside token in JSON response
+    res.cookie('customer_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
 
     res.status(201).json({
       message: 'Registration successful. Verification codes have been generated.',
@@ -160,15 +171,20 @@ const register = async (req, res) => {
  */
 const verifyEmail = async (req, res) => {
   try {
-    const { customerId, email, code } = req.body;
-    const targetId = customerId || req.customer?.customerId;
+    const { code } = req.body;
+    // #5 fix: always derive targetId from the authenticated customer JWT.
+    const targetId = req.customer?.customerId;
+
+    if (!targetId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
 
     if (!code) {
       return res.status(400).json({ error: 'Verification code is required' });
     }
 
-    const customer = await prisma.customer.findFirst({
-      where: targetId ? { id: targetId } : { emailHash: hashLookup(email) }
+    const customer = await prisma.customer.findUnique({
+      where: { id: targetId }
     });
 
     if (!customer) {
@@ -177,6 +193,11 @@ const verifyEmail = async (req, res) => {
 
     if (customer.emailVerified) {
       return res.json({ message: 'Email is already verified', emailVerified: true });
+    }
+
+    // #12 & #24 fix: check expiry BEFORE checking code match or attempt limits
+    if (customer.emailOtpExpiry && new Date() > customer.emailOtpExpiry) {
+      return res.status(400).json({ error: 'Verification code has expired. Please request a new one.' });
     }
 
     if (customer.otpAttempts >= 5) {
@@ -198,10 +219,6 @@ const verifyEmail = async (req, res) => {
           ? 'Too many incorrect attempts. Please request a new code.'
           : 'Invalid email verification code'
       });
-    }
-
-    if (customer.emailOtpExpiry && new Date() > customer.emailOtpExpiry) {
-      return res.status(400).json({ error: 'Verification code has expired. Please request a new one.' });
     }
 
     const updated = await prisma.customer.update({
@@ -298,21 +315,37 @@ const verifyPhone = async (req, res) => {
  */
 const resendOtp = async (req, res) => {
   try {
-    const { customerId, email, type } = req.body; // type: 'email'
-    const targetId = customerId || req.customer?.customerId;
+    const { type } = req.body; // type: 'email'
+    // #5 & #13 fix: require authenticated customer session; ignore client-supplied customerId
+    const targetId = req.customer?.customerId;
+
+    if (!targetId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
 
     if (type !== 'email') {
       return res.status(400).json({ error: 'Unsupported verification type' });
     }
 
-    const customer = await prisma.customer.findFirst({
-      where: targetId
-        ? { id: targetId }
-        : { emailHash: hashLookup(email) }
+    const customer = await prisma.customer.findUnique({
+      where: { id: targetId }
     });
 
     if (!customer) {
       return res.status(404).json({ error: 'Customer not found' });
+    }
+
+    if (customer.emailVerified) {
+      return res.status(400).json({ error: 'Email is already verified' });
+    }
+
+    // Rate-limit resend: minimum 60s cooldown between OTP generations
+    if (customer.emailOtpExpiry) {
+      const msLeft = customer.emailOtpExpiry.getTime() - Date.now();
+      // OTP expiry is 15 minutes = 900s. If msLeft > 14 minutes (840s), less than 60s has passed
+      if (msLeft > 14 * 60 * 1000) {
+        return res.status(429).json({ error: 'Please wait at least 60 seconds before requesting a new code.' });
+      }
     }
 
     const newCode = generateOTP();
@@ -372,12 +405,21 @@ const login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { customerId: customer.id, role: 'customer' },
+      { customerId: customer.id, role: 'customer', tokenVersion: customer.tokenVersion || 0 },
       JWT_SECRET,
-      { expiresIn: '30d' }
+      { expiresIn: '7d' }
     );
 
     const decrypted = decryptCustomerPII(customer);
+
+    // #38 fix: set HttpOnly cookie alongside token in JSON response
+    res.cookie('customer_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
 
     res.json({
       token,
@@ -457,7 +499,8 @@ const updateProfile = async (req, res) => {
       floorApartment,
       deliveryNotes,
       preferredLanguage,
-      password
+      password,
+      currentPassword
     } = req.body;
 
     const existing = await prisma.customer.findUnique({
@@ -484,6 +527,31 @@ const updateProfile = async (req, res) => {
       return res.status(400).json({ error: STRONG_PASSWORD_HINT });
     }
 
+    const trimmedNewEmail = email ? email.toLowerCase().trim() : null;
+    const newEmailHash = trimmedNewEmail ? hashLookup(trimmedNewEmail) : null;
+    const isEmailChanging = Boolean(newEmailHash && newEmailHash !== existing.emailHash);
+
+    const normalizedPhone = phone ? normalizeAustrianPhone(phone) : null;
+    const newPhoneHash = normalizedPhone ? hashLookup(normalizedPhone) : null;
+    const isPhoneChanging = Boolean(newPhoneHash && newPhoneHash !== existing.phoneHash);
+
+    const isPasswordChanging = Boolean(password && String(password).trim().length > 0);
+
+    // Finding 4.3 fix: Require re-authentication with current password before updating credentials
+    if (isEmailChanging || isPhoneChanging || isPasswordChanging) {
+      if (!currentPassword) {
+        return res.status(400).json({
+          error: 'Zur Änderung von Passwort, E-Mail-Adresse oder Telefonnummer ist Ihr aktuelles Passwort erforderlich / Current password is required to change password, email, or phone number.'
+        });
+      }
+      const isCurrentPasswordValid = await bcrypt.compare(currentPassword, existing.password);
+      if (!isCurrentPasswordValid) {
+        return res.status(401).json({
+          error: 'Das aktuelle Passwort ist nicht korrekt / Current password is incorrect.'
+        });
+      }
+    }
+
     const updateData = {};
     if (name !== undefined) updateData.name = name.trim();
     if (street !== undefined) updateData.street = encrypt(street.trim());
@@ -492,12 +560,12 @@ const updateProfile = async (req, res) => {
     if (city !== undefined) updateData.city = encrypt(city.trim());
     if (floorApartment !== undefined) updateData.floorApartment = encrypt(floorApartment.trim());
     if (deliveryNotes !== undefined) updateData.deliveryNotes = encrypt(deliveryNotes.trim());
-    if (preferredLanguage !== undefined) updateData.preferredLanguage = preferredLanguage;
+    if (preferredLanguage !== undefined) {
+      updateData.preferredLanguage = ['de', 'ar', 'en'].includes(preferredLanguage) ? preferredLanguage : 'de';
+    }
 
     // Check if email changed
-    const trimmedNewEmail = email ? email.toLowerCase().trim() : null;
-    const newEmailHash = trimmedNewEmail ? hashLookup(trimmedNewEmail) : null;
-    if (newEmailHash && newEmailHash !== existing.emailHash) {
+    if (isEmailChanging) {
       const emailTaken = await prisma.customer.findUnique({
         where: { emailHash: newEmailHash }
       });
@@ -518,9 +586,7 @@ const updateProfile = async (req, res) => {
     }
 
     // Check if phone changed
-    const normalizedPhone = phone ? normalizeAustrianPhone(phone) : null;
-    const newPhoneHash = normalizedPhone ? hashLookup(normalizedPhone) : null;
-    if (newPhoneHash && newPhoneHash !== existing.phoneHash) {
+    if (isPhoneChanging) {
       const phoneTaken = await prisma.customer.findUnique({
         where: { phoneHash: newPhoneHash }
       });
@@ -535,9 +601,11 @@ const updateProfile = async (req, res) => {
     }
 
     // Password change (already validated to be >= 8 chars above, if provided)
-    if (password) {
+    // #23 fix: increment tokenVersion to revoke all active sessions across all devices
+    if (isPasswordChanging) {
       const salt = await bcrypt.genSalt(10);
       updateData.password = await bcrypt.hash(password, salt);
+      updateData.tokenVersion = { increment: 1 };
     }
 
     const updated = await prisma.customer.update({
@@ -557,14 +625,32 @@ const updateProfile = async (req, res) => {
         floorApartment: true,
         deliveryNotes: true,
         preferredLanguage: true,
+        tokenVersion: true,
         createdAt: true,
         updatedAt: true
       }
     });
 
+    let freshToken = null;
+    if (isPasswordChanging) {
+      freshToken = jwt.sign(
+        { customerId: updated.id, role: 'customer', tokenVersion: updated.tokenVersion },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+      res.cookie('customer_token', freshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60 * 1000
+      });
+    }
+
     res.json({
       message: 'Profile updated successfully',
       customer: decryptCustomerPII(updated),
+      token: freshToken || undefined,
       reverifyEmail: updateData.email !== undefined,
       reverifyPhone: updateData.phone !== undefined
     });
@@ -634,6 +720,10 @@ const listCustomers = async (req, res) => {
       const totalSpent = validOrders.reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
       return {
         ...decryptCustomerPII(c),
+        orders: (c.orders || []).map(o => ({
+          ...o,
+          deliveryAddress: o.deliveryAddress ? decrypt(o.deliveryAddress) : o.deliveryAddress
+        })),
         totalSpent,
         totalOrders: c._count?.orders || c.orders?.length || 0
       };
@@ -655,6 +745,8 @@ const deleteCustomer = async (req, res) => {
     await prisma.customer.delete({
       where: { id }
     });
+    // #11 fix: record GDPR audit trail of customer account deletion
+    logAudit(req.admin?.email, 'DELETE_CUSTOMER', `Customer account ${id} deleted by admin`);
     res.json({ message: 'Customer deleted successfully' });
   } catch (error) {
     console.error('Delete customer error:', error);
@@ -736,7 +828,8 @@ const resetPassword = async (req, res) => {
       data: {
         password: hashedPassword,
         resetToken: null,
-        resetTokenExpiry: null
+        resetTokenExpiry: null,
+        tokenVersion: { increment: 1 }
       }
     });
 

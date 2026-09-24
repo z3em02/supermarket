@@ -41,9 +41,14 @@ const decrypt = (value) => {
 // Deterministic lookup hash for fields we need exact-match queries on
 // (email, phone) — normalize first so lookups are consistent regardless of
 // casing/whitespace at the call site.
+// #40 fix: use HMAC-SHA-256 with KEY to prevent rainbow-table precomputation
 const hashLookup = (value) => {
   if (value === null || value === undefined || value === '') return value;
-  return crypto.createHash('sha256').update(String(value).trim().toLowerCase()).digest('hex');
+  const normalized = String(value).trim().toLowerCase();
+  if (KEY) {
+    return crypto.createHmac('sha256', KEY).update(normalized).digest('hex');
+  }
+  return crypto.createHash('sha256').update(normalized).digest('hex');
 };
 
 const CUSTOMER_PII_FIELDS = ['email', 'phone', 'street', 'houseNumber', 'postalCode', 'city', 'floorApartment', 'deliveryNotes'];

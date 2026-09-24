@@ -66,11 +66,23 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    const currentToken = localStorage.getItem('token');
     localStorage.removeItem('token');
     localStorage.removeItem('adminUser');
     setToken(null);
     setUser(null);
+    // Best-effort: revoke the session server-side (bumps tokenVersion, clears
+    // the HttpOnly cookie) so a stolen token/cookie can't outlive logout.
+    // The local state is already cleared above regardless of this succeeding.
+    try {
+      const apiUrl = getApiUrl();
+      await axios.post(`${apiUrl}/api/auth/logout`, {}, {
+        headers: currentToken ? { Authorization: `Bearer ${currentToken}` } : {}
+      });
+    } catch (err) {
+      // Ignore — the admin is logged out locally either way.
+    }
   };
 
   return (

@@ -336,21 +336,7 @@ export const Orders = () => {
     }
   };
 
-  const handleDeleteOrder = async (orderId) => {
-    if (!window.confirm(t('confirmDelete'))) return;
-    try {
-      const token = localStorage.getItem('token');
-      const apiUrl = getApiUrl();
-      await axios.delete(`${apiUrl}/api/orders/${orderId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (selectedOrder?.id === orderId) setShowDetailModal(false);
-      fetchOrders();
-    } catch (error) {
-      console.error('Error deleting order:', error);
-      alert(error.response?.data?.error || t('error'));
-    }
-  };
+
 
   const handleViewDetails = async (order) => {
     try {
@@ -1406,10 +1392,7 @@ export const Orders = () => {
                     )}
                   </div>
 
-                  <button onClick={() => handleDeleteOrder(order.id)} title={t('delete')}
-                    className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition cursor-pointer touch-manipulation ms-auto sm:ms-0">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+
                 </div>
               </div>
             </div>

@@ -30,7 +30,7 @@ router.put('/', authMiddleware, sectionUnlockMiddleware, updateSettings);
 
 // Section passcode (Settings/Accounting/Customers/Promotions gate)
 router.get('/passcode-status', authMiddleware, getPasscodeStatus);
-router.put('/passcode', authMiddleware, setPasscode);
+router.put('/passcode', authMiddleware, passcodeVerifyLimiter, setPasscode);
 router.post('/passcode/verify', authMiddleware, passcodeVerifyLimiter, verifyPasscode);
 
 // Google Reviews (managed from the Settings page)

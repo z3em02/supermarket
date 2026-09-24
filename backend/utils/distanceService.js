@@ -342,7 +342,7 @@ async function calculateDeliveryDistance(destinationAddress, storeSettings = {})
 
   const coords = await geocodeAddress(destinationAddress, storeLat, storeLng);
 
-  // If destination could not be resolved at all, fall back to base fee without failing
+  // #27 fix: If destination could not be resolved at all, only allow if maxDistanceKm <= 0 (no radius limit configured)
   if (!coords) {
     return {
       distanceKm: 0,
@@ -356,9 +356,10 @@ async function calculateDeliveryDistance(destinationAddress, storeSettings = {})
       perKmRate,
       distanceFee: 0,
       totalDeliveryFee: baseFee,
-      isWithinMaxDistance: true,
+      isWithinMaxDistance: maxDistanceKm <= 0,
       maxDeliveryDistanceKm: maxDistanceKm,
-      fallbackUsed: true
+      fallbackUsed: true,
+      unresolvableAddress: true
     };
   }
 

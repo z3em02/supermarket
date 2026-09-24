@@ -28,13 +28,16 @@ const PORT = process.env.PORT || 5000;
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
+const allowedOrigins = (process.env.FRONTEND_URL || '')
+  .split(',')
+  .map(u => u.trim())
+  .filter(Boolean);
+
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
-    if (origin === process.env.FRONTEND_URL) return callback(null, true);
-    // Outside production, allow any localhost port — Vite picks a different
-    // one (5174, 5175, ...) whenever 5173 is already taken by another running
-    // dev server, so a fixed port list breaks as soon as two are running.
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    // Outside production, allow any localhost port (Vite dynamic ports)
     if (process.env.NODE_ENV !== 'production' && /^https?:\/\/localhost:\d+$/.test(origin)) {
       return callback(null, true);
     }
@@ -42,11 +45,19 @@ app.use(cors({
   },
   credentials: true
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// Trust proxy for nginx
-app.set('trust proxy', 1);
+const cookieParser = require('cookie-parser');
+
+// #28 fix: enforce explicit request body size limits to prevent parser memory exhaustion
+app.use(express.json({ limit: '100kb' }));
+app.use(express.urlencoded({ extended: true, limit: '100kb' }));
+// #38 fix: enable cookie parsing for HttpOnly JWT support
+app.use(cookieParser());
+
+// #21: Trust proxy (e.g. nginx in front). Can be disabled with TRUST_PROXY=false
+if (process.env.TRUST_PROXY !== 'false') {
+  app.set('trust proxy', 1);
+}
 
 const { apiLimiter } = require('./middleware/rateLimiter');
 

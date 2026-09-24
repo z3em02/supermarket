@@ -100,7 +100,8 @@ export const CustomerAccount = () => {
     city: customer?.city || '',
     floorApartment: customer?.floorApartment || '',
     deliveryNotes: customer?.deliveryNotes || '',
-    password: ''
+    password: '',
+    currentPassword: ''
   });
 
   const [savingProfile, setSavingProfile] = useState(false);
@@ -138,8 +139,13 @@ export const CustomerAccount = () => {
     }
     fetchOrders();
 
-    // Poll so the order progress timeline updates live without a manual refresh.
-    const pollId = setInterval(() => fetchOrders(true), 15000);
+    // #37 fix: only poll if active token exists in storage; clean up interval properly
+    const pollId = setInterval(() => {
+      const currentToken = localStorage.getItem('customer_token');
+      if (currentToken) {
+        fetchOrders(true);
+      }
+    }, 15000);
     return () => clearInterval(pollId);
   }, [token]);
 
@@ -155,21 +161,26 @@ export const CustomerAccount = () => {
         city: customer.city || '',
         floorApartment: customer.floorApartment || '',
         deliveryNotes: customer.deliveryNotes || '',
-        password: ''
+        password: '',
+        currentPassword: ''
       });
     }
   }, [customer]);
 
   const fetchOrders = async (silent = false) => {
+    const currentToken = token || localStorage.getItem('customer_token');
+    if (!currentToken) return;
     try {
       if (!silent) setLoadingOrders(true);
       const apiUrl = getApiUrl();
       const res = await axios.get(`${apiUrl}/api/orders/my-orders`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${currentToken}` }
       });
       setOrders(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      console.error('Failed to load customer orders:', err);
+      if (err.response?.status !== 401) {
+        console.error('Failed to load customer orders:', err);
+      }
     } finally {
       if (!silent) setLoadingOrders(false);
     }
@@ -188,6 +199,7 @@ export const CustomerAccount = () => {
       setSaveSuccess('');
 
       await updateProfile(profileForm);
+      setProfileForm(prev => ({ ...prev, password: '', currentPassword: '' }));
       setSaveSuccess(isAr ? 'تم تحديث بياناتك بنجاح!' : 'Profildaten erfolgreich aktualisiert!');
     } catch (err) {
       console.error('Update profile error:', err);
@@ -1111,6 +1123,28 @@ export const CustomerAccount = () => {
                     </p>
                   )}
                 </div>
+
+                {(Boolean(profileForm.password) || profileForm.email !== (customer?.email || '') || profileForm.phone !== (customer?.phone || '')) && (
+                  <div className="sm:col-span-2 p-3.5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/60 transition-all">
+                    <label className="block text-xs font-bold text-amber-900 dark:text-amber-200 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                      <Lock className="w-3.5 h-3.5 text-amber-600" />
+                      <span>{isAr ? 'كلمة المرور الحالية (لتأكيد الهوية)' : 'Aktuelles Passwort (Sicherheitsbestätigung)'}</span>
+                      <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="password"
+                      name="currentPassword"
+                      value={profileForm.currentPassword || ''}
+                      onChange={handleProfileChange}
+                      required
+                      placeholder={isAr ? 'أدخل كلمة المرور الحالية لتأكيد التغييرات' : 'Aktuelles Passwort eingeben, um Änderungen zu bestätigen'}
+                      className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-amber-300 dark:border-amber-700 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-amber-500"
+                    />
+                    <p className="text-[11px] text-amber-700 dark:text-amber-300 mt-1">
+                      {isAr ? 'مطلوبة لتأكيد تغيير كلمة المرور أو البريد الإلكتروني أو رقم الهاتف.' : 'Erforderlich zur Bestätigung von Passwort-, E-Mail- oder Telefonänderungen.'}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Delivery Address Section */}

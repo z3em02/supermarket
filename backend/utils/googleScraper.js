@@ -23,6 +23,40 @@ function getBrowserExecutablePath() {
 }
 
 /**
+ * Finding 3.2: Check if a hostname resolves or refers to private, loopback, or metadata addresses
+ */
+function isPrivateOrLocalHost(hostname) {
+  const host = (hostname || '').toLowerCase().trim();
+  if (
+    host === 'localhost' ||
+    host.endsWith('.local') ||
+    host.endsWith('.internal') ||
+    host === '0.0.0.0' ||
+    host === '::1' ||
+    host === '[::1]'
+  ) {
+    return true;
+  }
+  // IPv4 check
+  if (/^(\d{1,3}\.){3}\d{1,3}$/.test(host)) {
+    const parts = host.split('.').map(Number);
+    if (parts.some((p) => p < 0 || p > 255)) return true;
+    if (parts[0] === 127) return true; // 127.0.0.0/8
+    if (parts[0] === 10) return true;  // 10.0.0.0/8
+    if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) return true; // 172.16.0.0/12
+    if (parts[0] === 192 && parts[1] === 168) return true; // 192.168.0.0/16
+    if (parts[0] === 169 && parts[1] === 254) return true; // 169.254.0.0/16
+    if (parts[0] === 0) return true;
+    if (parts[0] === 100 && parts[1] >= 64 && parts[1] <= 127) return true;
+  }
+  // IPv6 check
+  if (host.includes(':')) {
+    if (host.startsWith('fe80:') || host.startsWith('fc00:') || host.startsWith('fd00:')) return true;
+  }
+  return false;
+}
+
+/**
  * Scrapes Google Maps star rating, review count, and reviews.
  * @param {string} inputUrlOrQuery - Google Maps URL, shortlink, or place search query
  * @param {object} options - Optional config { maxReviews: 10, timeoutMs: 35000 }
@@ -53,12 +87,12 @@ async function scrapeGoogleReviews(inputUrlOrQuery, options = {}) {
     // google.com, maps.google.com, google.de) rather than a loose substring/
     // regex match, which a host like "google.com.evil.com" would slip past.
     const labels = hostname.split('.');
-    const isGoogleHost =
-      (labels.length >= 2 && labels[labels.length - 2] === 'google') ||
-      hostname === 'goo.gl' || hostname.endsWith('.goo.gl') ||
-      hostname === 'g.page' || hostname.endsWith('.g.page');
+    // #32 fix: require direct google.* domains only. Shortlinks like goo.gl / g.page
+    // are blocked because their open redirects can be abused to point the headless
+    // browser at internal infrastructure (e.g. metadata services or localhost ports).
+    const isGoogleHost = labels.length >= 2 && labels[labels.length - 2] === 'google';
     if (!isGoogleHost) {
-      throw new Error('Nur Google Maps- oder Google-Bewertungslinks sind erlaubt.');
+      throw new Error('Nur direkte Google Maps- oder Google-Bewertungslinks (z.B. https://www.google.com/maps/...) sind erlaubt. Kurzlinks (goo.gl, g.page) sind aus Sicherheitsgründen nicht zulässig.');
     }
   }
 
@@ -67,17 +101,23 @@ async function scrapeGoogleReviews(inputUrlOrQuery, options = {}) {
     throw new Error('Kein Chrome- oder Edge-Browser auf dem System gefunden. Bitte installieren Sie Google Chrome.');
   }
 
+  // #43: In Linux Docker containers or when running as root/restricted user,
+  // --no-sandbox is required. We also disable unnecessary features to harden the browser instance.
+  const launchArgs = [
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--disable-dev-shm-usage',
+    '--disable-gpu',
+    '--disable-extensions',
+    '--disable-sync',
+    '--window-size=1280,900',
+    '--lang=de-DE,de,ar,en'
+  ];
+
   const browser = await puppeteer.launch({
     executablePath,
     headless: 'new',
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
-      '--window-size=1280,900',
-      '--lang=de-DE,de,ar,en'
-    ]
+    args: launchArgs
   });
 
   try {
@@ -86,6 +126,30 @@ async function scrapeGoogleReviews(inputUrlOrQuery, options = {}) {
     await page.setUserAgent(
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
     );
+
+    // Finding 3.2 fix: Intercept requests to prevent Blind SSRF via 301/302 redirects or subresources
+    await page.setRequestInterception(true);
+    page.on('request', (req) => {
+      try {
+        const parsed = new URL(req.url());
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+          return req.abort();
+        }
+        if (isPrivateOrLocalHost(parsed.hostname)) {
+          return req.abort();
+        }
+        if (req.isNavigationRequest()) {
+          const labels = parsed.hostname.toLowerCase().split('.');
+          const isGoogle = labels.length >= 2 && labels[labels.length - 2] === 'google';
+          if (!isGoogle) {
+            return req.abort();
+          }
+        }
+        req.continue();
+      } catch {
+        req.abort();
+      }
+    });
 
     // Follow redirects to the final page
     await page.goto(target, { waitUntil: 'networkidle2', timeout: timeoutMs });

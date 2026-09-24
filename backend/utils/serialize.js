@@ -12,6 +12,7 @@ const CUSTOMER_PUBLIC_SELECT = {
   postalCode: true,
   city: true,
   floorApartment: true,
+  deliveryNotes: true,
   preferredLanguage: true
 };
 

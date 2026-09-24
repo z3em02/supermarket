@@ -11,7 +11,12 @@ const SECTION_UNLOCK_FLAG_KEY = 'admin_section_unlocked';
 // Attaches the section-PIN unlock token (see SectionPasscodeGate.jsx) to
 // every request. Harmless on routes that don't require it — the backend
 // only checks this header on the Settings/Buchhaltung/Kunden/Aktionen APIs.
+// #39 fix: automatically attach admin JWT and section unlock token to all admin requests
 adminAxios.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token && !config.headers.Authorization) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
   const unlockToken = sessionStorage.getItem(SECTION_UNLOCK_TOKEN_KEY);
   if (unlockToken) {
     config.headers['X-Section-Unlock'] = unlockToken;

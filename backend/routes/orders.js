@@ -24,6 +24,8 @@ router.get('/', authMiddleware, getOrders);
 router.get('/:id', authMiddleware, getOrderById);
 router.put('/:id/status', authMiddleware, updateOrderStatus);
 router.put('/:id/edit', authMiddleware, editOrder);
+// Registered (not removed) so its 403 + audit-log retention-policy response
+// actually runs instead of callers hitting a bare 404 — see deleteOrder.
 router.delete('/:id', authMiddleware, deleteOrder);
 
 // Order creation route (Customer, Guest, Admin)

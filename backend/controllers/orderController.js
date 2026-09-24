@@ -7,6 +7,7 @@ const {
 const { CUSTOMER_PUBLIC_SELECT } = require('../utils/serialize');
 const { decryptCustomerPII, encrypt, decrypt } = require('../utils/piiCrypto');
 const { sendPushToCustomer } = require('../utils/pushService');
+const { logAudit } = require('../lib/auditLog');
 
 // Orders carry their own encrypted customer* snapshot columns (a copy taken
 // at creation time, kept separate from the Customer row so invoices stay
@@ -21,6 +22,8 @@ const withDecryptedCustomer = (order) => {
     customerName: 'customerName' in order ? decrypt(order.customerName) : order.customerName,
     customerPhone: 'customerPhone' in order ? decrypt(order.customerPhone) : order.customerPhone,
     customerEmail: 'customerEmail' in order ? decrypt(order.customerEmail) : order.customerEmail,
+    deliveryAddress: 'deliveryAddress' in order ? decrypt(order.deliveryAddress) : order.deliveryAddress,
+    deliveryNotes: 'deliveryNotes' in order ? decrypt(order.deliveryNotes) : order.deliveryNotes,
     customer: order.customer ? decryptCustomerPII(order.customer) : order.customer
   };
 };
@@ -52,7 +55,8 @@ const pushOrderStatusUpdate = (order, status, lang) => {
 };
 const {
   calculatePromotionForItem,
-  validateAndCalculateCoupon
+  validateAndCalculateCoupon,
+  calculateCouponDiscountAmount
 } = require('../utils/pricingService');
 const { isValidDeliverySlot } = require('../utils/deliverySlot');
 const { calculateDeliveryDistance } = require('../utils/distanceService');
@@ -143,10 +147,18 @@ const getOrderById = async (req, res) => {
 const createOrder = async (req, res) => {
   try {
     const { notes } = req.body;
-    const customerId = req.customer?.customerId || req.body.customerId;
-
-    if (!customerId) {
-      return res.status(400).json({ error: 'Customer authentication is required' });
+    let customerId;
+    // #4 & #16 fix: regular customers strictly use their own JWT customerId (IDOR prevention).
+    // Admins can place orders for existing customers, but customerId must be valid and existence is verified.
+    if (req.customer?.customerId) {
+      customerId = req.customer.customerId;
+    } else if (req.admin?.id) {
+      customerId = req.body.customerId;
+      if (!customerId) {
+        return res.status(400).json({ error: 'customerId is required when placing an order as admin' });
+      }
+    } else {
+      return res.status(401).json({ error: 'Customer authentication is required' });
     }
 
     const customerRow = await prisma.customer.findUnique({
@@ -159,22 +171,28 @@ const createOrder = async (req, res) => {
 
     const customer = decryptCustomerPII(customerRow);
 
-    if (!customer.emailVerified) {
-      return res.status(403).json({
-        error: 'Please verify your email address before submitting an order.',
-        needsVerification: true,
-        emailVerified: customer.emailVerified,
-        phoneVerified: customer.phoneVerified
-      });
-    }
+    // Customer-placed orders require verified email and phone
+    if (!req.admin) {
+      if (!customer.emailVerified) {
+        return res.status(403).json({
+          error: 'Please verify your email address before submitting an order.',
+          needsVerification: true,
+          emailVerified: customer.emailVerified,
+          phoneVerified: customer.phoneVerified
+        });
+      }
 
-    if (!customer.phoneVerified) {
-      return res.status(403).json({
-        error: 'Please verify your phone number before submitting an order.',
-        needsVerification: true,
-        emailVerified: customer.emailVerified,
-        phoneVerified: customer.phoneVerified
-      });
+      if (!customer.phoneVerified) {
+        return res.status(403).json({
+          error: 'Please verify your phone number before submitting an order.',
+          needsVerification: true,
+          emailVerified: customer.emailVerified,
+          phoneVerified: customer.phoneVerified
+        });
+      }
+    } else {
+      // Audit log when admin places order on behalf of customer
+      logAudit(req.admin.email, 'ADMIN_CREATE_ORDER', `Admin placed order on behalf of customer ${customer.id}`);
     }
 
     // Accept either items or orderItems
@@ -295,6 +313,11 @@ const createOrder = async (req, res) => {
     const distanceResult = await calculateDeliveryDistance(deliveryAddress, storeSettings || {});
 
     if (!distanceResult.isWithinMaxDistance) {
+      if (distanceResult.unresolvableAddress) {
+        return res.status(400).json({
+          error: 'Die Lieferadresse konnte nicht geortet werden. Bitte überprüfen Sie Straße und Postleitzahl. / The delivery address could not be located. Please check the street and postal code.'
+        });
+      }
       return res.status(400).json({
         error: `Die Lieferadresse ist ${distanceResult.distanceKm} km entfernt. Unsere maximale Lieferdistanz beträgt ${distanceResult.maxDeliveryDistanceKm} km.`
       });
@@ -410,8 +433,8 @@ const createOrder = async (req, res) => {
           customerName: encrypt(customer.name),
           customerPhone: encrypt(customer.phone),
           customerEmail: encrypt(customer.email),
-          deliveryAddress,
-          deliveryNotes,
+          deliveryAddress: encrypt(deliveryAddress),
+          deliveryNotes: deliveryNotes ? encrypt(deliveryNotes) : null,
           deliverySlot,
           paymentMethod: 'cash_on_delivery',
           status: 'pending',
@@ -478,13 +501,15 @@ const createOrder = async (req, res) => {
       return createdOrder;
     });
 
+    const decryptedOrder = withDecryptedCustomer(order);
+
     // Send confirmation email to customer
     if (customer.email) {
       try {
         await sendCustomerOrderConfirmationEmail(
           customer.email,
           customer.name,
-          order,
+          decryptedOrder,
           customer.preferredLanguage || 'de'
         );
       } catch (err) {
@@ -495,11 +520,11 @@ const createOrder = async (req, res) => {
     const isAr = customer.preferredLanguage === 'ar';
     sendPushToCustomer(customer.id, {
       title: isAr ? 'تم استلام طلبك' : 'Bestellung eingegangen',
-      body: isAr ? `طلبك #${order.id.slice(0, 8).toUpperCase()} قيد المراجعة` : `Ihre Bestellung #${order.id.slice(0, 8).toUpperCase()} wird bearbeitet`,
+      body: isAr ? `طلبك #${decryptedOrder.id.slice(0, 8).toUpperCase()} قيد المراجعة` : `Ihre Bestellung #${decryptedOrder.id.slice(0, 8).toUpperCase()} wird bearbeitet`,
       url: '/customer/account'
     }).catch((err) => console.error('Order confirmation push failed:', err.message));
 
-    res.status(201).json(withDecryptedCustomer(order));
+    res.status(201).json(decryptedOrder);
   } catch (error) {
     if (error.isStockError || error.isCouponError) {
       return res.status(400).json({ error: error.message });
@@ -535,8 +560,19 @@ const updateOrderStatus = async (req, res) => {
       return res.status(400).json({ error: 'Invalid delivery slot' });
     }
 
+    // #34 fix: whitelist every allowed status — reject arbitrary strings that
+    // could corrupt stock-management logic or the accounting state machine.
+    const VALID_STATUSES = [
+      'pending', 'accepted', 'preparing', 'shipped', 'out_for_delivery',
+      'delivered', 'declined', 'rejected', 'canceled', 'cancelled',
+      'pending_customer_approval'
+    ];
     let normalizedStatus = status ? status.toLowerCase().trim() : order.status;
     if (normalizedStatus === 'decline') normalizedStatus = 'declined';
+
+    if (status !== undefined && !VALID_STATUSES.includes(normalizedStatus)) {
+      return res.status(400).json({ error: `Invalid status "${normalizedStatus}". Allowed: ${VALID_STATUSES.join(', ')}` });
+    }
 
     const finalNotes = notes !== undefined ? notes : order.notes;
     const finalAdminNotes = adminNotes !== undefined ? adminNotes : order.adminNotes;
@@ -591,6 +627,8 @@ const updateOrderStatus = async (req, res) => {
       }
     } else if (wasStockDeducted && !shouldStockBeDeducted) {
       // Transitioning into a declined/cancelled state: restore stock!
+      // #17 fix: also roll back any coupon usage so the customer isn't
+      // permanently penalized for an order that was never fulfilled.
       await prisma.$transaction(async (tx) => {
         for (const item of order.orderItems) {
           await tx.product.update({
@@ -600,6 +638,19 @@ const updateOrderStatus = async (req, res) => {
                 increment: item.quantity
               }
             }
+          });
+        }
+
+        // Roll back coupon usage if one was applied to this order
+        if (order.couponId) {
+          // Decrement the global usedCount (floor at 0 to prevent going negative)
+          await tx.coupon.updateMany({
+            where: { id: order.couponId, usedCount: { gt: 0 } },
+            data: { usedCount: { decrement: 1 } }
+          });
+          // Remove the per-customer usage record so they can use it again
+          await tx.couponUsage.deleteMany({
+            where: { orderId: id }
           });
         }
 
@@ -620,6 +671,7 @@ const updateOrderStatus = async (req, res) => {
           });
         }
       });
+
     } else {
       // Stock state does not change (e.g. accepted -> preparing, declined -> rejected, or notes update only)
       await prisma.order.update({
@@ -679,39 +731,11 @@ const updateOrderStatus = async (req, res) => {
 };
 
 const deleteOrder = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const order = await prisma.order.findUnique({
-      where: { id },
-      include: { orderItems: true }
-    });
-
-    if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
-    }
-
-    await prisma.$transaction(async (tx) => {
-      // If the order wasn't already declined/cancelled, its stock is still deducted — restore it
-      if (!DECLINED_STATUSES.includes(order.status)) {
-        for (const item of order.orderItems) {
-          await tx.product.update({
-            where: { id: item.productId },
-            data: { stock: { increment: item.quantity } }
-          });
-        }
-      }
-
-      await tx.accounting.deleteMany({ where: { orderId: id } });
-      await tx.orderItem.deleteMany({ where: { orderId: id } });
-      await tx.order.delete({ where: { id } });
-    });
-
-    res.json({ message: 'Order deleted successfully' });
-  } catch (error) {
-    console.error('Delete order error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+  const { id } = req.params;
+  logAudit(req.admin?.email, 'DELETE_ORDER_REJECTED', `Attempted deletion of order ${id} blocked per retention policy`);
+  return res.status(403).json({
+    error: 'Order history cannot be deleted due to legal and accounting retention requirements (§ 132 BAO). Orders can only be cancelled or declined.'
+  });
 };
 
 /**
@@ -767,7 +791,8 @@ const editOrder = async (req, res) => {
         orderItems: {
           include: { product: true }
         },
-        accounting: true
+        accounting: true,
+        coupon: true
       }
     });
 
@@ -787,10 +812,20 @@ const editOrder = async (req, res) => {
       oldItemsMap.set(it.productId, it);
     }
 
+    // Fetch active promotions for the edited product set, same as createOrder,
+    // so line-item pricing/discounts are recalculated fresh rather than
+    // reusing stale values computed for the pre-edit item list.
+    const editedProductIds = items.map((it) => it.productId).filter(Boolean);
+    const activePromotions = await prisma.promotion.findMany({
+      where: { productId: { in: editedProductIds }, isActive: true }
+    });
+    const promoMap = new Map(activePromotions.map((pr) => [pr.productId, pr]));
+
     // Validate incoming items and fetch latest product details
-    let newTotalAmount = 0;
+    let newItemsSubtotal = 0;
+    let newTotalPromoSavings = 0;
     const newItemsToCreate = [];
-    const stockAdjustments = []; // { productId, delta } positive means consume more stock, negative means return stock
+    const stockAdjustments = []; // { productId, delta, productName }
 
     for (const it of items) {
       const qty = parseInt(it.quantity, 10);
@@ -806,27 +841,34 @@ const editOrder = async (req, res) => {
         return res.status(404).json({ error: `Product ${it.productId} not found` });
       }
 
-      const unitPrice = typeof it.price === 'number' ? it.price : product.b2bPrice;
-      const subtotal = unitPrice * qty;
-      newTotalAmount += subtotal;
+      // #6 fix: strictly use authoritative database catalog price (product.b2bPrice)
+      // via calculatePromotionForItem, which itself only ever reads product.b2bPrice —
+      // client-supplied price is never trusted, preventing price tampering.
+      if (!product.b2bPrice || product.b2bPrice <= 0) {
+        return res.status(400).json({ error: `Product "${product.name}" has an invalid catalog price (${product.b2bPrice})` });
+      }
+
+      const promo = promoMap.get(it.productId);
+      const promoResult = calculatePromotionForItem(product, qty, promo);
+
+      newItemsSubtotal += promoResult.subtotal;
+      newTotalPromoSavings += promoResult.appliedSavings;
 
       newItemsToCreate.push({
         productId: it.productId,
         quantity: qty,
-        price: unitPrice,
-        subtotal
+        price: promoResult.price,
+        originalPrice: promoResult.originalPrice,
+        discountAmount: promoResult.discountAmount,
+        promotionType: promoResult.promotionType,
+        subtotal: promoResult.subtotal
       });
 
       if (wasStockDeducted) {
         const oldItem = oldItemsMap.get(it.productId);
         const oldQty = oldItem ? oldItem.quantity : 0;
         const delta = qty - oldQty; // e.g. 1 - 2 = -1 (return 1)
-        if (delta > 0 && product.stock < delta) {
-          return res.status(400).json({
-            error: `Insufficient stock for product "${product.name}". Available: ${product.stock}, Needed additional: ${delta}`
-          });
-        }
-        stockAdjustments.push({ productId: it.productId, delta });
+        stockAdjustments.push({ productId: it.productId, delta, productName: product.name });
       }
     }
 
@@ -834,12 +876,15 @@ const editOrder = async (req, res) => {
       return res.status(400).json({ error: 'Order must contain at least one valid item' });
     }
 
+    newItemsSubtotal = Number(newItemsSubtotal.toFixed(2));
+    newTotalPromoSavings = Number(newTotalPromoSavings.toFixed(2));
+
     // Check for removed items if stock was deducted (return all oldQty to stock)
     if (wasStockDeducted) {
       const newProductIds = new Set(newItemsToCreate.map(it => it.productId));
       for (const [prodId, oldItem] of oldItemsMap.entries()) {
         if (!newProductIds.has(prodId)) {
-          stockAdjustments.push({ productId: prodId, delta: -oldItem.quantity });
+          stockAdjustments.push({ productId: prodId, delta: -oldItem.quantity, productName: oldItem.product?.name });
         }
       }
     }
@@ -847,14 +892,61 @@ const editOrder = async (req, res) => {
     const reason = modificationReason || 'Einige Produkte waren leider nicht verfügbar.';
     const originalTotal = order.originalTotalAmount || order.totalAmount;
 
+    const storeSettingsForEdit = await prisma.storeSettings.findUnique({ where: { id: 'default' } });
+
+    // #8 fix: the store's minimum order value applies on edit the same as on
+    // creation — an edit (e.g. removing unavailable items) can't silently
+    // slip the order below it.
+    const storeMinOrderValue = Number(storeSettingsForEdit?.minOrderValue) || 0;
+    if (storeMinOrderValue > 0 && newItemsSubtotal < storeMinOrderValue) {
+      return res.status(400).json({
+        error: `Der bearbeitete Warenkorb (€${newItemsSubtotal.toFixed(2)}) liegt unter dem Mindestbestellwert von €${storeMinOrderValue.toFixed(2)}. Bitte Bestellung stornieren statt anpassen.`
+      });
+    }
+
+    // #6 fix: re-validate the coupon (if any) against the recalculated
+    // subtotal instead of clamping the old, possibly stale, discount amount.
+    // Only re-checks eligibility that can change on edit (active/date range,
+    // minOrderValue) — usage-limit checks are skipped since this order's
+    // usage was already counted when the coupon was first applied.
+    let finalCouponDiscount = 0;
+    if (order.coupon && Number(order.couponDiscount) > 0) {
+      const now = new Date();
+      const couponMinOrder = Number(order.coupon.minOrderValue) || 0;
+      const stillEligible = order.coupon.isActive
+        && !(order.coupon.startDate && new Date(order.coupon.startDate) > now)
+        && !(order.coupon.endDate && new Date(order.coupon.endDate) < now)
+        && newItemsSubtotal >= couponMinOrder;
+      if (stillEligible) {
+        finalCouponDiscount = calculateCouponDiscountAmount(order.coupon, newItemsSubtotal);
+      }
+      // else: coupon no longer applies to the edited cart (e.g. below its
+      // minimum order value) — the discount is dropped, not just capped.
+    }
+
+    // #7 fix: recalculate delivery fee against the new subtotal instead of
+    // carrying over the original charge — a free-shipping coupon or the
+    // original distance-based fee are preserved, but the free-delivery
+    // *threshold* comparison is redone since the subtotal changed. The
+    // distance-based components themselves don't need re-geocoding since
+    // the delivery address is unchanged by this edit.
+    const freeDeliveryThreshold = Number(storeSettingsForEdit?.freeDeliveryThreshold) || 0;
+    const isFreeDelivery = order.isFreeShipping || (freeDeliveryThreshold > 0 && newItemsSubtotal >= freeDeliveryThreshold);
+    const baseDeliveryFee = Number(order.baseDeliveryFee) || 0;
+    const distanceDeliveryFee = Number(order.distanceDeliveryFee) || 0;
+    const deliveryFee = isFreeDelivery ? 0 : Number((baseDeliveryFee + distanceDeliveryFee).toFixed(2));
+
+    const finalPromotionDiscount = newTotalPromoSavings;
+    const finalTotalAmount = Math.max(0, Number((newItemsSubtotal - finalCouponDiscount + deliveryFee).toFixed(2)));
+
     // Perform database transaction
     try {
       await prisma.$transaction(async (tx) => {
-        // Apply stock adjustments if order was active
+        // #25 fix: Apply stock adjustments inside transaction atomically
         if (wasStockDeducted) {
           for (const adj of stockAdjustments) {
             if (adj.delta > 0) {
-              await decrementStockOrThrow(tx, adj.productId, adj.delta);
+              await decrementStockOrThrow(tx, adj.productId, adj.delta, adj.productName);
             } else if (adj.delta < 0) {
               await tx.product.update({
                 where: { id: adj.productId },
@@ -875,15 +967,23 @@ const editOrder = async (req, res) => {
             productId: item.productId,
             quantity: item.quantity,
             price: item.price,
+            originalPrice: item.originalPrice,
+            discountAmount: item.discountAmount,
+            promotionType: item.promotionType,
             subtotal: item.subtotal
           }))
         });
 
-        // Update Order
+        // Update Order with recalculated subtotal, discounts and delivery fee
         await tx.order.update({
           where: { id },
           data: {
-            totalAmount: newTotalAmount,
+            itemsSubtotal: newItemsSubtotal,
+            couponDiscount: finalCouponDiscount,
+            promotionDiscount: finalPromotionDiscount,
+            deliveryFee,
+            isFreeShipping: isFreeDelivery,
+            totalAmount: finalTotalAmount,
             originalTotalAmount: originalTotal,
             modificationReason: reason,
             status: 'pending_customer_approval',
@@ -896,7 +996,7 @@ const editOrder = async (req, res) => {
           await tx.accounting.update({
             where: { orderId: id },
             data: {
-              amount: newTotalAmount,
+              amount: finalTotalAmount,
               status: 'completed'
             }
           });
@@ -1075,6 +1175,17 @@ const customerRespondToModification = async (req, res) => {
             adminNotes: updatedAdminNotes
           }
         });
+
+        // Roll back coupon usage if one was applied so customer doesn't lose coupon
+        if (order.couponId) {
+          await tx.coupon.updateMany({
+            where: { id: order.couponId, usedCount: { gt: 0 } },
+            data: { usedCount: { decrement: 1 } }
+          });
+          await tx.couponUsage.deleteMany({
+            where: { orderId: id }
+          });
+        }
 
         if (order.accounting) {
           await tx.accounting.update({

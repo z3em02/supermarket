@@ -5,6 +5,17 @@ const generateProductId = () => {
   return `PRD-${randomPart}`;
 };
 
+// #30 fix: validate image URLs to prevent script injection / XSS schemes
+const isValidImageUrl = (url) => {
+  if (!url) return true;
+  const s = String(url).trim().toLowerCase();
+  if (s.startsWith('javascript:') || s.startsWith('data:text/html') || s.startsWith('vbscript:')) return false;
+  // A protocol-relative URL ("//evil.com/x.jpg") also starts with "/" but
+  // resolves to an attacker-controlled origin — reject it before the local-path allowance.
+  if (s.startsWith('//')) return false;
+  return s.startsWith('https://') || s.startsWith('http://') || s.startsWith('/');
+};
+
 const getProducts = async (req, res) => {
   try {
     const products = await prisma.product.findMany({
@@ -78,16 +89,24 @@ const createProduct = async (req, res) => {
       return res.status(400).json({ error: 'Stock must be a non-negative integer' });
     }
 
+    // #30 fix: validate image URL format
+    if (imageUrl && !isValidImageUrl(imageUrl)) {
+      return res.status(400).json({ error: 'Invalid image URL. Must be an HTTP(S) URL or local path.' });
+    }
+
     // Auto-generate SKU / Product ID if not provided or left blank
     let resolvedSku = (sku && sku.trim()) ? sku.trim().toUpperCase() : generateProductId();
 
-    // Ensure generated SKU is unique
+    // Ensure generated SKU is unique (#42 fix: graceful failure after 5 attempts)
     let existingSku = await prisma.product.findUnique({ where: { sku: resolvedSku } });
     let attempts = 0;
     while (existingSku && attempts < 5) {
       resolvedSku = generateProductId();
       existingSku = await prisma.product.findUnique({ where: { sku: resolvedSku } });
       attempts++;
+    }
+    if (existingSku) {
+      return res.status(500).json({ error: 'Failed to generate unique SKU after multiple attempts. Please provide a SKU manually.' });
     }
 
     const product = await prisma.product.create({
@@ -150,6 +169,11 @@ const updateProduct = async (req, res) => {
       if (isNaN(parsedStock) || parsedStock < 0) {
         return res.status(400).json({ error: 'Stock must be a non-negative integer' });
       }
+    }
+
+    // #30 fix: validate image URL format
+    if (imageUrl !== undefined && imageUrl && !isValidImageUrl(imageUrl)) {
+      return res.status(400).json({ error: 'Invalid image URL. Must be an HTTP(S) URL or local path.' });
     }
 
     const product = await prisma.product.update({

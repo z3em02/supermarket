@@ -33,19 +33,18 @@ export const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
-      const headers = { Authorization: `Bearer ${token}` };
 
       // customer-auth/customers and accounting/summary sit behind the
       // Kunden/Buchhaltung section PIN — fall back to a "locked" marker
       // instead of failing the whole dashboard when it isn't unlocked.
+      // adminAxios interceptor attaches both Authorization and X-Section-Unlock automatically.
       const LOCKED = { locked: true };
       const [customersRes, productsRes, ordersRes, accountingRes] = await Promise.all([
-        axios.get(`${apiUrl}/api/customer-auth/customers`, { headers }).catch(() => LOCKED),
-        axios.get(`${apiUrl}/api/products`, { headers }),
-        axios.get(`${apiUrl}/api/orders`, { headers }),
-        axios.get(`${apiUrl}/api/accounting/summary`, { headers }).catch(() => LOCKED)
+        axios.get(`${apiUrl}/api/customer-auth/customers`).catch(() => LOCKED),
+        axios.get(`${apiUrl}/api/products`),
+        axios.get(`${apiUrl}/api/orders`),
+        axios.get(`${apiUrl}/api/accounting/summary`).catch(() => LOCKED)
       ]);
 
       setSectionLocked(customersRes.locked || accountingRes.locked);

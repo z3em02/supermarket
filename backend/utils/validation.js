@@ -8,7 +8,7 @@ const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email |
 const normalizeAustrianPhone = (phone) => {
   let trimmed = String(phone || '').trim().replace(/[\s\-()]/g, '');
   if (trimmed.startsWith('0043')) trimmed = `+43${trimmed.slice(4)}`;
-  else if (trimmed.startsWith('43') && !trimmed.startsWith('+')) trimmed = `+${trimmed}`;
+  else if (/^43[1-9]\d{4,12}$/.test(trimmed)) trimmed = `+${trimmed}`;
   else if (trimmed.startsWith('0') && !trimmed.startsWith('+')) trimmed = `+43${trimmed.slice(1)}`;
   return trimmed;
 };
