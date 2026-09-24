@@ -174,6 +174,11 @@ export const Orders = () => {
   useEffect(() => {
     fetchOrders();
     fetchCreateFormData();
+
+    // Poll for new orders so the list stays current without a manual refresh
+    // when a customer submits an order while this page is open.
+    const pollId = setInterval(fetchOrders, 20000);
+    return () => clearInterval(pollId);
   }, []);
 
   // Status metrics summary

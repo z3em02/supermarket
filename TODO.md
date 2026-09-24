@@ -13,8 +13,8 @@
 9. [x] Document a GDPR retention/deletion policy and a way to fulfill "delete my data" requests — see [GDPR_DATA_POLICY.md](GDPR_DATA_POLICY.md)
 
 ## Other fixes
-- [ ] Phone number can't be edited/replaced on a customer record — fix
-- [ ] Orders view should auto-refresh when a new order is submitted
+- [x] Phone number can't be edited/replaced on a customer record — verified fixed via live API test (register → change phone → persists correctly); likely resolved as a side effect of the encryption refactor rewriting this exact code path
+- [x] Orders view should auto-refresh when a new order is submitted — polls every 20s while the page is open
 
 ## 2nd Version
 - [ ] Add a ticket system for problems and bugs
