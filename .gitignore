@@ -9,3 +9,4 @@ frontend/dist
 backend/prisma/dev.db
 backend/prisma/dev.db-journal
 backend/firebase-service-account*.json
+backups/

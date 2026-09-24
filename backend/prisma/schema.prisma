@@ -64,11 +64,16 @@ model Product {
 model Customer {
   id                   String        @id @default(uuid())
   name                 String
-  email                String        @unique
+  // email/phone are encrypted at rest (see utils/piiCrypto.js); emailHash/
+  // phoneHash are deterministic SHA-256 hashes used for exact-match lookups
+  // (login, uniqueness checks) since the ciphertext itself isn't comparable.
+  email                String
+  emailHash            String        @unique
   emailVerified        Boolean       @default(false)
   emailOtp             String?
   emailOtpExpiry       DateTime?
-  phone                String        @unique
+  phone                String
+  phoneHash            String        @unique
   phoneVerified        Boolean       @default(false)
   phoneOtp             String?
   phoneOtpExpiry       DateTime?

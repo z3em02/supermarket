@@ -1,6 +1,7 @@
 const prisma = require('../lib/prisma');
 const { CUSTOMER_PUBLIC_SELECT } = require('../utils/serialize');
 const { logAudit } = require('../lib/auditLog');
+const { decryptCustomerPII } = require('../utils/piiCrypto');
 
 const getAccountingSummary = async (req, res) => {
   try {
@@ -15,7 +16,7 @@ const getAccountingSummary = async (req, res) => {
     }
 
     // Valid non-declined orders
-    const validOrders = await prisma.order.findMany({
+    const validOrders = (await prisma.order.findMany({
       where: {
         status: { notIn: ['declined', 'rejected', 'canceled', 'cancelled'] },
         ...dateFilter
@@ -26,7 +27,7 @@ const getAccountingSummary = async (req, res) => {
       orderBy: {
         createdAt: 'desc'
       }
-    });
+    })).map(ord => (ord.customer ? { ...ord, customer: decryptCustomerPII(ord.customer) } : ord));
 
     // Total revenue sum
     const totalRevenueAmount = validOrders.reduce((sum, ord) => sum + (Number(ord.totalAmount) || 0), 0);
@@ -116,7 +117,7 @@ const getAccountingRecords = async (req, res) => {
     const where = {};
     if (status) where.status = status;
 
-    const orders = await prisma.order.findMany({
+    const orders = (await prisma.order.findMany({
       where,
       include: {
         customer: { select: CUSTOMER_PUBLIC_SELECT }
@@ -126,7 +127,7 @@ const getAccountingRecords = async (req, res) => {
       },
       skip: (page - 1) * limit,
       take: parseInt(limit)
-    });
+    })).map(ord => (ord.customer ? { ...ord, customer: decryptCustomerPII(ord.customer) } : ord));
 
     const total = await prisma.order.count({ where });
 
@@ -168,7 +169,7 @@ const exportAccountingData = async (req, res) => {
       };
     }
 
-    const orders = await prisma.order.findMany({
+    const orders = (await prisma.order.findMany({
       where: {
         status: { notIn: ['declined', 'rejected', 'canceled', 'cancelled'] },
         ...dateFilter
@@ -179,7 +180,7 @@ const exportAccountingData = async (req, res) => {
       orderBy: {
         createdAt: 'desc'
       }
-    });
+    })).map(ord => (ord.customer ? { ...ord, customer: decryptCustomerPII(ord.customer) } : ord));
 
     if (format === 'csv') {
       const csvHeader = 'Bestellnummer,Datum,Kunde,Telefon,Lieferadresse,Status,Zahlungsart,Betrag (EUR)\n';

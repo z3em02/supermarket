@@ -5,6 +5,17 @@ const {
   sendOrderModificationEmail
 } = require('../utils/emailService');
 const { CUSTOMER_PUBLIC_SELECT } = require('../utils/serialize');
+const { decryptCustomerPII } = require('../utils/piiCrypto');
+
+// Orders carry their own plaintext customer* snapshot columns (set at
+// creation time from the decrypted customer), but the joined `customer`
+// relation itself still holds encrypted fields — decrypt it before any
+// response or email send touches it.
+const withDecryptedCustomer = (order) => {
+  if (!order) return order;
+  return order.customer ? { ...order, customer: decryptCustomerPII(order.customer) } : order;
+};
+const withDecryptedCustomers = (orders) => orders.map(withDecryptedCustomer);
 const {
   calculatePromotionForItem,
   validateAndCalculateCoupon
@@ -59,7 +70,7 @@ const getOrders = async (req, res) => {
       }
     });
 
-    res.json(orders);
+    res.json(withDecryptedCustomers(orders));
   } catch (error) {
     console.error('Get orders error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -88,7 +99,7 @@ const getOrderById = async (req, res) => {
       return res.status(404).json({ error: 'Order not found' });
     }
 
-    res.json(order);
+    res.json(withDecryptedCustomer(order));
   } catch (error) {
     console.error('Get order error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -104,13 +115,15 @@ const createOrder = async (req, res) => {
       return res.status(400).json({ error: 'Customer authentication is required' });
     }
 
-    const customer = await prisma.customer.findUnique({
+    const customerRow = await prisma.customer.findUnique({
       where: { id: customerId }
     });
 
-    if (!customer) {
+    if (!customerRow) {
       return res.status(404).json({ error: 'Customer account not found' });
     }
+
+    const customer = decryptCustomerPII(customerRow);
 
     if (!customer.emailVerified) {
       return res.status(403).json({
@@ -445,7 +458,7 @@ const createOrder = async (req, res) => {
       }
     }
 
-    res.status(201).json(order);
+    res.status(201).json(withDecryptedCustomer(order));
   } catch (error) {
     if (error.isStockError || error.isCouponError) {
       return res.status(400).json({ error: error.message });
@@ -579,7 +592,7 @@ const updateOrderStatus = async (req, res) => {
       });
     }
 
-    const updatedOrder = await prisma.order.findUnique({
+    const updatedOrder = withDecryptedCustomer(await prisma.order.findUnique({
       where: { id },
       include: {
         customer: { select: CUSTOMER_PUBLIC_SELECT },
@@ -590,7 +603,7 @@ const updateOrderStatus = async (req, res) => {
         },
         accounting: true
       }
-    });
+    }));
 
     // Safely attempt email notification without blocking if email service fails
     try {
@@ -850,7 +863,7 @@ const editOrder = async (req, res) => {
       throw error;
     }
 
-    const updatedOrder = await prisma.order.findUnique({
+    const updatedOrder = withDecryptedCustomer(await prisma.order.findUnique({
       where: { id },
       include: {
         customer: { select: CUSTOMER_PUBLIC_SELECT },
@@ -859,7 +872,7 @@ const editOrder = async (req, res) => {
         },
         accounting: true
       }
-    });
+    }));
 
     // Send modification email to customer
     try {
@@ -900,7 +913,7 @@ const customerRespondToModification = async (req, res) => {
       return res.status(401).json({ error: 'Customer authentication required' });
     }
 
-    const order = await prisma.order.findUnique({
+    const order = withDecryptedCustomer(await prisma.order.findUnique({
       where: { id },
       include: {
         customer: { select: CUSTOMER_PUBLIC_SELECT },
@@ -909,7 +922,7 @@ const customerRespondToModification = async (req, res) => {
         },
         accounting: true
       }
-    });
+    }));
 
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
@@ -956,14 +969,14 @@ const customerRespondToModification = async (req, res) => {
         }
       });
 
-      const updatedOrder = await prisma.order.findUnique({
+      const updatedOrder = withDecryptedCustomer(await prisma.order.findUnique({
         where: { id },
         include: {
           customer: { select: CUSTOMER_PUBLIC_SELECT },
           orderItems: { include: { product: true } },
           accounting: true
         }
-      });
+      }));
 
       // Send confirmation email
       if (customerEmail) {
@@ -1016,14 +1029,14 @@ const customerRespondToModification = async (req, res) => {
         }
       });
 
-      const updatedOrder = await prisma.order.findUnique({
+      const updatedOrder = withDecryptedCustomer(await prisma.order.findUnique({
         where: { id },
         include: {
           customer: { select: CUSTOMER_PUBLIC_SELECT },
           orderItems: { include: { product: true } },
           accounting: true
         }
-      });
+      }));
 
       // Send cancellation email
       if (customerEmail) {

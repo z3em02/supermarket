@@ -7,6 +7,7 @@ const { verifyFirebaseIdToken } = require('../utils/firebaseAdmin');
 const { JWT_SECRET } = require('../lib/config');
 const { isValidEmail, isValidPhone, isValidPostalCode, normalizeAustrianPhone } = require('../utils/validation');
 const { logAudit } = require('../lib/auditLog');
+const { encrypt, decrypt, hashLookup, decryptCustomerPII } = require('../utils/piiCrypto');
 
 // Helper to generate 6-digit numeric OTP code
 const generateOTP = () => crypto.randomInt(100000, 1000000).toString();
@@ -56,9 +57,12 @@ const register = async (req, res) => {
     const trimmedEmail = email.toLowerCase().trim();
     const trimmedPhone = normalizeAustrianPhone(phone);
 
+    const emailHash = hashLookup(trimmedEmail);
+    const phoneHash = hashLookup(trimmedPhone);
+
     // Check existing email
     const existingEmail = await prisma.customer.findUnique({
-      where: { email: trimmedEmail }
+      where: { emailHash }
     });
     if (existingEmail) {
       return res.status(400).json({ error: 'An account with this email already exists' });
@@ -66,7 +70,7 @@ const register = async (req, res) => {
 
     // Check existing phone
     const existingPhone = await prisma.customer.findUnique({
-      where: { phone: trimmedPhone }
+      where: { phoneHash }
     });
     if (existingPhone) {
       return res.status(400).json({ error: 'An account with this phone number already exists' });
@@ -85,26 +89,28 @@ const register = async (req, res) => {
     const customer = await prisma.customer.create({
       data: {
         name: name.trim(),
-        email: trimmedEmail,
+        email: encrypt(trimmedEmail),
+        emailHash,
         emailVerified: false,
         emailOtp,
         emailOtpExpiry: otpExpiry,
-        phone: trimmedPhone,
+        phone: encrypt(trimmedPhone),
+        phoneHash,
         phoneVerified: false,
         password: hashedPassword,
-        street: street.trim(),
-        houseNumber: houseNumber.trim(),
-        postalCode: postalCode.trim(),
-        city: city.trim(),
-        floorApartment: floorApartment.trim(),
-        deliveryNotes: deliveryNotes.trim(),
+        street: encrypt(street.trim()),
+        houseNumber: encrypt(houseNumber.trim()),
+        postalCode: encrypt(postalCode.trim()),
+        city: encrypt(city.trim()),
+        floorApartment: encrypt(floorApartment.trim()),
+        deliveryNotes: encrypt(deliveryNotes.trim()),
         preferredLanguage
       }
     });
 
     // Send email verification
     try {
-      await sendCustomerVerificationEmail(customer.email, customer.name, emailOtp, preferredLanguage);
+      await sendCustomerVerificationEmail(trimmedEmail, customer.name, emailOtp, preferredLanguage);
     } catch (err) {
       console.error('Failed to send verification email on register:', err.message);
     }
@@ -112,7 +118,7 @@ const register = async (req, res) => {
     if (process.env.NODE_ENV !== 'production') {
       console.log(`\n==============================================`);
       console.log(`📱 NEW CUSTOMER REGISTERED: ${customer.name}`);
-      console.log(`✉️ Email OTP for ${customer.email}: [ ${emailOtp} ]`);
+      console.log(`✉️ Email OTP for ${trimmedEmail}: [ ${emailOtp} ]`);
       console.log(`==============================================\n`);
     }
 
@@ -130,16 +136,16 @@ const register = async (req, res) => {
       customer: {
         id: customer.id,
         name: customer.name,
-        email: customer.email,
+        email: trimmedEmail,
         emailVerified: customer.emailVerified,
-        phone: customer.phone,
+        phone: trimmedPhone,
         phoneVerified: customer.phoneVerified,
-        street: customer.street,
-        houseNumber: customer.houseNumber,
-        postalCode: customer.postalCode,
-        city: customer.city,
-        floorApartment: customer.floorApartment,
-        deliveryNotes: customer.deliveryNotes,
+        street: street.trim(),
+        houseNumber: houseNumber.trim(),
+        postalCode: postalCode.trim(),
+        city: city.trim(),
+        floorApartment: floorApartment.trim(),
+        deliveryNotes: deliveryNotes.trim(),
         preferredLanguage: customer.preferredLanguage
       }
     });
@@ -162,7 +168,7 @@ const verifyEmail = async (req, res) => {
     }
 
     const customer = await prisma.customer.findFirst({
-      where: targetId ? { id: targetId } : { email: email?.toLowerCase()?.trim() }
+      where: targetId ? { id: targetId } : { emailHash: hashLookup(email) }
     });
 
     if (!customer) {
@@ -258,7 +264,7 @@ const verifyPhone = async (req, res) => {
     }
 
     const verifiedPhone = decoded.phone_number ? normalizeAustrianPhone(decoded.phone_number) : null;
-    if (!verifiedPhone || verifiedPhone !== normalizeAustrianPhone(customer.phone)) {
+    if (!verifiedPhone || verifiedPhone !== normalizeAustrianPhone(decrypt(customer.phone))) {
       return res.status(400).json({ error: 'The verified phone number does not match your account phone number.' });
     }
 
@@ -302,7 +308,7 @@ const resendOtp = async (req, res) => {
     const customer = await prisma.customer.findFirst({
       where: targetId
         ? { id: targetId }
-        : { email: email?.toLowerCase()?.trim() }
+        : { emailHash: hashLookup(email) }
     });
 
     if (!customer) {
@@ -311,6 +317,7 @@ const resendOtp = async (req, res) => {
 
     const newCode = generateOTP();
     const expiry = new Date(Date.now() + 15 * 60 * 1000);
+    const customerEmail = decrypt(customer.email);
 
     await prisma.customer.update({
       where: { id: customer.id },
@@ -320,9 +327,9 @@ const resendOtp = async (req, res) => {
         otpAttempts: 0
       }
     });
-    await sendCustomerVerificationEmail(customer.email, customer.name, newCode, customer.preferredLanguage);
+    await sendCustomerVerificationEmail(customerEmail, customer.name, newCode, customer.preferredLanguage);
     if (process.env.NODE_ENV !== 'production') {
-      console.log(`✉️ RESENT Email OTP for ${customer.email}: [ ${newCode} ]`);
+      console.log(`✉️ RESENT Email OTP for ${customerEmail}: [ ${newCode} ]`);
     }
     return res.json({ message: 'New email verification code sent' });
   } catch (error) {
@@ -349,8 +356,8 @@ const login = async (req, res) => {
     const customer = await prisma.customer.findFirst({
       where: {
         OR: [
-          { email: trimmed.toLowerCase() },
-          { phone: normalizeAustrianPhone(trimmed) }
+          { emailHash: hashLookup(trimmed.toLowerCase()) },
+          { phoneHash: hashLookup(normalizeAustrianPhone(trimmed)) }
         ]
       }
     });
@@ -370,21 +377,23 @@ const login = async (req, res) => {
       { expiresIn: '30d' }
     );
 
+    const decrypted = decryptCustomerPII(customer);
+
     res.json({
       token,
       customer: {
         id: customer.id,
         name: customer.name,
-        email: customer.email,
+        email: decrypted.email,
         emailVerified: customer.emailVerified,
-        phone: customer.phone,
+        phone: decrypted.phone,
         phoneVerified: customer.phoneVerified,
-        street: customer.street,
-        houseNumber: customer.houseNumber,
-        postalCode: customer.postalCode,
-        city: customer.city,
-        floorApartment: customer.floorApartment,
-        deliveryNotes: customer.deliveryNotes,
+        street: decrypted.street,
+        houseNumber: decrypted.houseNumber,
+        postalCode: decrypted.postalCode,
+        city: decrypted.city,
+        floorApartment: decrypted.floorApartment,
+        deliveryNotes: decrypted.deliveryNotes,
         preferredLanguage: customer.preferredLanguage
       }
     });
@@ -424,7 +433,7 @@ const getProfile = async (req, res) => {
       return res.status(404).json({ error: 'Customer not found' });
     }
 
-    res.json(customer);
+    res.json(decryptCustomerPII(customer));
   } catch (error) {
     console.error('Get customer profile error:', error);
     res.status(500).json({ error: 'Failed to fetch customer profile' });
@@ -477,23 +486,26 @@ const updateProfile = async (req, res) => {
 
     const updateData = {};
     if (name !== undefined) updateData.name = name.trim();
-    if (street !== undefined) updateData.street = street.trim();
-    if (houseNumber !== undefined) updateData.houseNumber = houseNumber.trim();
-    if (postalCode !== undefined) updateData.postalCode = postalCode.trim();
-    if (city !== undefined) updateData.city = city.trim();
-    if (floorApartment !== undefined) updateData.floorApartment = floorApartment.trim();
-    if (deliveryNotes !== undefined) updateData.deliveryNotes = deliveryNotes.trim();
+    if (street !== undefined) updateData.street = encrypt(street.trim());
+    if (houseNumber !== undefined) updateData.houseNumber = encrypt(houseNumber.trim());
+    if (postalCode !== undefined) updateData.postalCode = encrypt(postalCode.trim());
+    if (city !== undefined) updateData.city = encrypt(city.trim());
+    if (floorApartment !== undefined) updateData.floorApartment = encrypt(floorApartment.trim());
+    if (deliveryNotes !== undefined) updateData.deliveryNotes = encrypt(deliveryNotes.trim());
     if (preferredLanguage !== undefined) updateData.preferredLanguage = preferredLanguage;
 
     // Check if email changed
-    if (email && email.toLowerCase().trim() !== existing.email) {
+    const trimmedNewEmail = email ? email.toLowerCase().trim() : null;
+    const newEmailHash = trimmedNewEmail ? hashLookup(trimmedNewEmail) : null;
+    if (newEmailHash && newEmailHash !== existing.emailHash) {
       const emailTaken = await prisma.customer.findUnique({
-        where: { email: email.toLowerCase().trim() }
+        where: { emailHash: newEmailHash }
       });
       if (emailTaken) {
         return res.status(400).json({ error: 'This email is already in use by another account' });
       }
-      updateData.email = email.toLowerCase().trim();
+      updateData.email = encrypt(trimmedNewEmail);
+      updateData.emailHash = newEmailHash;
       updateData.emailVerified = false;
       updateData.emailOtp = generateOTP();
       updateData.emailOtpExpiry = new Date(Date.now() + 15 * 60 * 1000);
@@ -501,20 +513,22 @@ const updateProfile = async (req, res) => {
 
       // Send new code
       try {
-        await sendCustomerVerificationEmail(updateData.email, existing.name, updateData.emailOtp, existing.preferredLanguage);
+        await sendCustomerVerificationEmail(trimmedNewEmail, existing.name, updateData.emailOtp, existing.preferredLanguage);
       } catch (err) {}
     }
 
     // Check if phone changed
     const normalizedPhone = phone ? normalizeAustrianPhone(phone) : null;
-    if (normalizedPhone && normalizedPhone !== existing.phone) {
+    const newPhoneHash = normalizedPhone ? hashLookup(normalizedPhone) : null;
+    if (newPhoneHash && newPhoneHash !== existing.phoneHash) {
       const phoneTaken = await prisma.customer.findUnique({
-        where: { phone: normalizedPhone }
+        where: { phoneHash: newPhoneHash }
       });
       if (phoneTaken) {
         return res.status(400).json({ error: 'This phone number is already in use by another account' });
       }
-      updateData.phone = normalizedPhone;
+      updateData.phone = encrypt(normalizedPhone);
+      updateData.phoneHash = newPhoneHash;
       updateData.phoneVerified = false;
       updateData.phoneOtp = null;
       updateData.phoneOtpExpiry = null;
@@ -550,7 +564,7 @@ const updateProfile = async (req, res) => {
 
     res.json({
       message: 'Profile updated successfully',
-      customer: updated,
+      customer: decryptCustomerPII(updated),
       reverifyEmail: updateData.email !== undefined,
       reverifyPhone: updateData.phone !== undefined
     });
@@ -619,7 +633,7 @@ const listCustomers = async (req, res) => {
       const validOrders = (c.orders || []).filter(o => !['declined', 'rejected', 'canceled', 'cancelled'].includes(o.status?.toLowerCase()));
       const totalSpent = validOrders.reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
       return {
-        ...c,
+        ...decryptCustomerPII(c),
         totalSpent,
         totalOrders: c._count?.orders || c.orders?.length || 0
       };
@@ -661,7 +675,7 @@ const requestPasswordReset = async (req, res) => {
     }
 
     const customer = await prisma.customer.findUnique({
-      where: { email: email.toLowerCase().trim() }
+      where: { emailHash: hashLookup(email) }
     });
 
     if (customer) {
@@ -677,7 +691,7 @@ const requestPasswordReset = async (req, res) => {
       });
 
       try {
-        await sendPasswordResetEmail(customer.email, customer.name, rawToken, customer.preferredLanguage);
+        await sendPasswordResetEmail(decrypt(customer.email), customer.name, rawToken, customer.preferredLanguage);
       } catch (err) {
         console.error('Failed to send password reset email:', err.message);
       }
