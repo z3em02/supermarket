@@ -663,7 +663,6 @@ export const Orders = () => {
     <div class="meta-box">
       <h4>${labelBilledTo}</h4>
       <p><strong>${escapeHtml(order.customer?.name || order.customerName || '—')}</strong></p>
-      ${(order.customer?.email || order.customerEmail) ? `<p>${escapeHtml(order.customer?.email || order.customerEmail)}</p>` : ''}
       ${(order.customer?.phone || order.customerPhone) ? `<p>${escapeHtml(order.customer?.phone || order.customerPhone)}</p>` : ''}
     </div>
     <div class="meta-box">

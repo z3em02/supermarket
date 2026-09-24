@@ -15,16 +15,32 @@ import {
   Trash2, 
   X, 
   ExternalLink,
-  ShieldCheck, 
-  Clock, 
-  Check, 
-  Truck, 
-  Package, 
+  ShieldCheck,
+  Clock,
+  Check,
+  Truck,
+  Package,
   FileText,
   DollarSign,
   UserCheck,
-  AlertCircle
+  AlertCircle,
+  Eye,
+  EyeOff
 } from 'lucide-react';
+
+// Phone/address are PII shown to whoever is at the admin screen (incl. a
+// delivery person prepping an order) — masked by default, click to reveal.
+const maskPhone = (phone) => {
+  if (!phone) return '—';
+  const digits = phone.replace(/\s+/g, '');
+  const visible = digits.slice(-3);
+  return `${'•'.repeat(Math.max(digits.length - 3, 4))}${visible}`;
+};
+
+const maskAddress = (address) => {
+  if (!address) return '';
+  return '•'.repeat(Math.min(Math.max(address.length, 10), 28));
+};
 
 export const Customers = () => {
   const { t, language } = useLanguage();
@@ -36,6 +52,17 @@ export const Customers = () => {
   const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'orders' | 'revenue' | 'name'
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [revealedIds, setRevealedIds] = useState(new Set());
+
+  const isRevealed = (id) => revealedIds.has(id);
+  const toggleReveal = (id) => {
+    setRevealedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const fetchCustomers = async () => {
     try {
@@ -420,7 +447,15 @@ export const Customers = () => {
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-slate-700 dark:text-gray-300 font-mono truncate inline-flex items-center gap-1.5">
                           <Phone className="w-3 h-3 text-slate-400 shrink-0" />
-                          <span>{cust.phone || '—'}</span>
+                          <span>{isRevealed(cust.id) ? (cust.phone || '—') : maskPhone(cust.phone)}</span>
+                          <button
+                            type="button"
+                            onClick={() => toggleReveal(cust.id)}
+                            className="p-0.5 rounded text-slate-400 hover:text-slate-700 dark:hover:text-gray-200 cursor-pointer shrink-0"
+                            title={isRevealed(cust.id) ? (language === 'ar' ? 'إخفاء' : 'Verbergen') : (language === 'ar' ? 'إظهار' : 'Anzeigen')}
+                          >
+                            {isRevealed(cust.id) ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                          </button>
                         </span>
                         {cust.phoneVerified ? (
                           <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-850 text-[10px] font-bold shrink-0">
@@ -459,8 +494,8 @@ export const Customers = () => {
                       <div className="text-xs text-slate-700 dark:text-gray-300 flex items-start gap-1.5 px-1">
                         <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
                         <div className="min-w-0 flex-1">
-                          <p className="font-medium text-slate-800 dark:text-slate-200 break-words">{addressStr}</p>
-                          {cust.deliveryNotes && (
+                          <p className="font-medium text-slate-800 dark:text-slate-200 break-words">{isRevealed(cust.id) ? addressStr : maskAddress(addressStr)}</p>
+                          {cust.deliveryNotes && isRevealed(cust.id) && (
                             <p className="text-[11px] text-slate-400 italic mt-0.5 break-words">
                               Hinweis: {cust.deliveryNotes}
                             </p>
@@ -544,7 +579,15 @@ export const Customers = () => {
                             <div className="flex items-center gap-1.5 font-mono">
                               <span className="text-slate-700 dark:text-gray-300 inline-flex items-center gap-1.5">
                                 <Phone className="w-3 h-3 text-slate-400 shrink-0" />
-                                <span>{cust.phone || '—'}</span>
+                                <span>{isRevealed(cust.id) ? (cust.phone || '—') : maskPhone(cust.phone)}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => toggleReveal(cust.id)}
+                                  className="p-0.5 rounded text-slate-400 hover:text-slate-700 dark:hover:text-gray-200 cursor-pointer shrink-0"
+                                  title={isRevealed(cust.id) ? (language === 'ar' ? 'إخفاء' : 'Verbergen') : (language === 'ar' ? 'إظهار' : 'Anzeigen')}
+                                >
+                                  {isRevealed(cust.id) ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                                </button>
                               </span>
                               {cust.phoneVerified ? (
                                 <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-850 text-[10px] font-bold">
@@ -587,8 +630,8 @@ export const Customers = () => {
                               <div className="flex items-start gap-1.5">
                                 <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
                                 <div>
-                                  <p className="font-medium text-slate-800 dark:text-slate-200">{addressStr}</p>
-                                  {cust.deliveryNotes && (
+                                  <p className="font-medium text-slate-800 dark:text-slate-200">{isRevealed(cust.id) ? addressStr : maskAddress(addressStr)}</p>
+                                  {cust.deliveryNotes && isRevealed(cust.id) && (
                                     <p className="text-[11px] text-slate-400 italic mt-0.5">
                                       Hinweis: {cust.deliveryNotes}
                                     </p>

@@ -2,8 +2,8 @@
 
 ## Customer data security — steps
 
-1. [ ] Hide the email address in the order view so the delivery person can't see it
-2. [ ] Mask phone/address on the Customers admin page by default (click to reveal)
+1. [x] Hide the email address in the order view so the delivery person can't see it
+2. [x] Mask phone/address on the Customers admin page by default (click to reveal)
 3. [ ] Lock the customer info card on the dashboard behind the section PIN
 4. [ ] Verify the PIN check is enforced server-side, not just hidden in the frontend
 5. [ ] Add a PIN lock in front of the audit log (once step 6 exists)
