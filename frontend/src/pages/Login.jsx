@@ -3,34 +3,72 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useStoreSettings } from '../context/StoreSettingsContext';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Mail, Building2, Store } from 'lucide-react';
+import { Lock, Mail, Building2, Store, ShieldCheck } from 'lucide-react';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { ThemeToggle } from '../components/ThemeToggle';
 
 export const Login = () => {
   const { t, language } = useLanguage();
+  const isAr = language === 'ar';
   const { settings, getStoreName } = useStoreSettings();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { requestLogin, verifyLoginCode, resendLoginCode } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  // Step 1 (password) vs step 2 (emailed 2FA code)
+  const [pendingToken, setPendingToken] = useState(null);
+  const [code, setCode] = useState('');
+  const [resending, setResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState('');
+
+  const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    const result = await login(email, password);
-    
+    const result = await requestLogin(email, password);
+
+    if (result.success) {
+      setPendingToken(result.pendingToken);
+    } else {
+      setError(result.error);
+    }
+
+    setLoading(false);
+  };
+
+  const handleCodeSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    const result = await verifyLoginCode(pendingToken, code);
+
     if (result.success) {
       navigate('/secret/admin/dashboard');
     } else {
       setError(result.error);
     }
-    
+
     setLoading(false);
+  };
+
+  const handleResend = async () => {
+    setError('');
+    setResendMessage('');
+    setResending(true);
+    const result = await resendLoginCode(pendingToken);
+    if (result.success) {
+      setPendingToken(result.pendingToken);
+      setCode('');
+      setResendMessage(isAr ? 'تم إرسال رمز جديد' : 'Neuer Code wurde gesendet');
+    } else {
+      setError(result.error);
+    }
+    setResending(false);
   };
 
   return (
@@ -76,10 +114,12 @@ export const Login = () => {
               </div>
             )}
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              {t('signIn')}
+              {pendingToken ? (isAr ? 'التحقق بخطوتين' : 'Zwei-Faktor-Anmeldung') : t('signIn')}
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-gray-400 mt-1.5 break-words">
-              {t('signInToManage')}
+              {pendingToken
+                ? (isAr ? `تم إرسال رمز إلى ${email}` : `Ein Code wurde an ${email} gesendet`)
+                : t('signInToManage')}
             </p>
           </div>
 
@@ -88,50 +128,106 @@ export const Login = () => {
               {error}
             </div>
           )}
-
-          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 uppercase tracking-wider mb-1.5 sm:mb-2">
-                {t('emailAddress')}
-              </label>
-              <div className="relative">
-                <Mail className="absolute start-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 w-4 h-4 sm:w-5 sm:h-5" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full ps-10 sm:ps-11 pe-4 py-2.5 sm:py-3 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none transition text-sm"
-                  placeholder="admin@supermarket.com"
-                  required
-                />
-              </div>
+          {resendMessage && (
+            <div className="bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-xs sm:text-sm px-3.5 sm:px-4 py-3 rounded-xl mb-5 sm:mb-6 break-words">
+              {resendMessage}
             </div>
+          )}
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 uppercase tracking-wider mb-1.5 sm:mb-2">
-                {t('password')}
-              </label>
-              <div className="relative">
-                <Lock className="absolute start-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 w-4 h-4 sm:w-5 sm:h-5" />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full ps-10 sm:ps-11 pe-4 py-2.5 sm:py-3 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none transition text-sm"
-                  placeholder="••••••••"
-                  required
-                />
+          {!pendingToken ? (
+            <form onSubmit={handlePasswordSubmit} className="space-y-4 sm:space-y-5">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 uppercase tracking-wider mb-1.5 sm:mb-2">
+                  {t('emailAddress')}
+                </label>
+                <div className="relative">
+                  <Mail className="absolute start-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 w-4 h-4 sm:w-5 sm:h-5" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full ps-10 sm:ps-11 pe-4 py-2.5 sm:py-3 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none transition text-sm"
+                    placeholder="admin@supermarket.com"
+                    required
+                  />
+                </div>
               </div>
-            </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white py-3 sm:py-3.5 rounded-xl font-bold text-sm shadow-md shadow-blue-500/20 transition disabled:opacity-50 cursor-pointer touch-manipulation"
-            >
-              {loading ? t('loading') : t('signIn')}
-            </button>
-          </form>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 uppercase tracking-wider mb-1.5 sm:mb-2">
+                  {t('password')}
+                </label>
+                <div className="relative">
+                  <Lock className="absolute start-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 w-4 h-4 sm:w-5 sm:h-5" />
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full ps-10 sm:ps-11 pe-4 py-2.5 sm:py-3 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none transition text-sm"
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white py-3 sm:py-3.5 rounded-xl font-bold text-sm shadow-md shadow-blue-500/20 transition disabled:opacity-50 cursor-pointer touch-manipulation"
+              >
+                {loading ? t('loading') : t('signIn')}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleCodeSubmit} className="space-y-4 sm:space-y-5">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 uppercase tracking-wider mb-1.5 sm:mb-2">
+                  {isAr ? 'رمز التحقق' : 'Anmeldecode'}
+                </label>
+                <div className="relative">
+                  <ShieldCheck className="absolute start-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 w-4 h-4 sm:w-5 sm:h-5" />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={6}
+                    autoFocus
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                    className="w-full ps-10 sm:ps-11 pe-4 py-2.5 sm:py-3 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none transition text-sm text-center tracking-[0.4em] font-mono"
+                    placeholder="••••••"
+                    required
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading || code.length < 6}
+                className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white py-3 sm:py-3.5 rounded-xl font-bold text-sm shadow-md shadow-blue-500/20 transition disabled:opacity-50 cursor-pointer touch-manipulation"
+              >
+                {loading ? t('loading') : (isAr ? 'تأكيد' : 'Bestätigen')}
+              </button>
+
+              <div className="flex items-center justify-between gap-3 text-xs">
+                <button
+                  type="button"
+                  onClick={() => { setPendingToken(null); setCode(''); setError(''); setResendMessage(''); }}
+                  className="text-slate-500 dark:text-gray-400 hover:underline cursor-pointer"
+                >
+                  {isAr ? 'رجوع' : 'Zurück'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={resending}
+                  className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer disabled:opacity-50"
+                >
+                  {resending ? '...' : (isAr ? 'إعادة إرسال الرمز' : 'Code erneut senden')}
+                </button>
+              </div>
+            </form>
+          )}
 
           {/* Link to Public Storefront */}
           <div className="mt-5 sm:mt-6 pt-5 sm:pt-6 border-t border-slate-100 dark:border-gray-800 text-center">

@@ -19,14 +19,26 @@ export const AuthProvider = ({ children }) => {
   });
   const [loading] = useState(false);
 
-  const login = async (email, password) => {
+  // Step 1: password check. Never logs the admin in directly — always
+  // returns a pending token that must be exchanged via verifyLoginCode.
+  const requestLogin = async (email, password) => {
     try {
       const apiUrl = getApiUrl();
-      const response = await axios.post(`${apiUrl}/api/auth/login`, {
-        email,
-        password
-      });
-      
+      const response = await axios.post(`${apiUrl}/api/auth/login`, { email, password });
+      return { success: true, pendingToken: response.data.pendingToken, email: response.data.email };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Login failed'
+      };
+    }
+  };
+
+  // Step 2: the emailed 2FA code + pending token exchange for a real session.
+  const verifyLoginCode = async (pendingToken, code) => {
+    try {
+      const apiUrl = getApiUrl();
+      const response = await axios.post(`${apiUrl}/api/auth/verify-2fa`, { pendingToken, code });
       const { token: receivedToken, admin } = response.data;
       localStorage.setItem('token', receivedToken);
       localStorage.setItem('adminUser', JSON.stringify(admin));
@@ -34,9 +46,22 @@ export const AuthProvider = ({ children }) => {
       setUser(admin);
       return { success: true };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.error || 'Login failed' 
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Verification failed'
+      };
+    }
+  };
+
+  const resendLoginCode = async (pendingToken) => {
+    try {
+      const apiUrl = getApiUrl();
+      const response = await axios.post(`${apiUrl}/api/auth/resend-2fa`, { pendingToken });
+      return { success: true, pendingToken: response.data.pendingToken };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to resend code'
       };
     }
   };
@@ -49,7 +74,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ token, user, loading, login, logout }}>
+    <AuthContext.Provider value={{ token, user, loading, requestLogin, verifyLoginCode, resendLoginCode, logout }}>
       {children}
     </AuthContext.Provider>
   );

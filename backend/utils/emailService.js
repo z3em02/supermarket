@@ -761,10 +761,67 @@ const sendCustomerOrderConfirmationEmail = async (customerEmail, customerName, o
   }
 };
 
+/**
+ * Send Admin Login 2FA Code
+ *
+ * Always logs the code to the server console too (not just when SMTP is
+ * unconfigured, unlike the customer-facing sends above) — this is the sole
+ * admin account's login path, so a silent email-delivery failure must not
+ * be able to lock them out entirely.
+ */
+const sendAdminLoginOtpEmail = async (adminEmail, adminName, code) => {
+  console.log(`[Admin login 2FA] code for ${adminEmail}: ${code} (valid 10 minutes)`);
+
+  if (!isEmailConfigured()) return;
+
+  try {
+    const transporter = getTransporter();
+    if (!transporter) return;
+
+    const settings = await getStoreSettings();
+    const storeName = settings.storeNameDe || settings.storeName || 'Hajar Supermarkt';
+    const safeName = escapeHtml(adminName || 'Admin');
+
+    const title = 'Admin-Anmeldecode';
+    const subtitle = 'Zwei-Faktor-Bestätigung für Ihr Admin-Konto';
+    const subject = `Ihr Admin-Anmeldecode: ${code} - ${storeName}`;
+
+    const contentHtml = `
+      <p style="font-size: 16px; color: #0f172a; margin-top: 0;">Hallo <strong>${safeName}</strong>,</p>
+      <p style="color: #475569; line-height: 1.8; font-size: 14px;">
+        Jemand versucht sich gerade mit Ihrem Admin-Konto bei <strong>${storeName}</strong> anzumelden.
+        Geben Sie den folgenden Code ein, um die Anmeldung abzuschließen:
+      </p>
+
+      <div class="code-box" style="background: #eff6ff; border: 2px dashed #2563eb; border-radius: 14px; padding: 22px; text-align: center; margin: 24px 0;">
+        <div class="code-digits" style="font-family: 'Courier New', Courier, monospace; font-size: 38px; font-weight: 800; letter-spacing: 8px; color: #1d4ed8; line-height: 1.2;">${code}</div>
+        <div class="code-label" style="font-size: 12px; font-weight: 700; color: #1e40af; text-transform: uppercase; letter-spacing: 1px; margin-top: 8px;">Anmeldecode</div>
+      </div>
+
+      <p style="color: #64748b; font-size: 13px; line-height: 1.6;">
+        Der Code ist für 10 Minuten gültig. Falls Sie diese Anmeldung nicht angefordert haben, ändern Sie umgehend Ihr Admin-Passwort.
+      </p>
+    `;
+
+    const html = emailWrapper({ lang: 'de', title, subtitle, contentHtml, settings });
+
+    await transporter.sendMail({
+      from: `"${storeName}" <${process.env.EMAIL_FROM || process.env.EMAIL_USER || 'noreply@supermarket-b2b.com'}>`,
+      to: adminEmail,
+      subject,
+      html
+    });
+    console.log(`Admin login 2FA email sent to ${adminEmail}`);
+  } catch (error) {
+    console.error('Error sending admin login 2FA email:', error.message || error);
+  }
+};
+
 module.exports = {
   sendOrderStatusEmail,
   sendOrderModificationEmail,
   sendCustomerVerificationEmail,
   sendCustomerOrderConfirmationEmail,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  sendAdminLoginOtpEmail
 };
