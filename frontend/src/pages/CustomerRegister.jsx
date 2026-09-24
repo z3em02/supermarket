@@ -11,6 +11,7 @@ import {
 } from '../utils/firebaseClient';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { isStrongPassword, strongPasswordHint } from '../utils/validation';
 import { 
   UserPlus, 
   Mail, 
@@ -98,8 +99,8 @@ export const CustomerRegister = () => {
       return;
     }
 
-    if (formData.password.length < 8) {
-      setError(isAr ? 'كلمة المرور يجب أن تكون 8 خانات على الأقل' : 'Das Passwort muss mindestens 8 Zeichen lang sein');
+    if (!isStrongPassword(formData.password)) {
+      setError(strongPasswordHint(isAr));
       return;
     }
 
@@ -321,6 +322,9 @@ export const CustomerRegister = () => {
                     minLength={8}
                     className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
                   />
+                  <p className="text-[11px] text-slate-400 dark:text-gray-500 mt-1">
+                    {strongPasswordHint(isAr)}
+                  </p>
                 </div>
               </div>
 

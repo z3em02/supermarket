@@ -18,4 +18,22 @@ const isValidPhone = (phone) => /^\+43[1-9]\d{3,12}$/.test(normalizeAustrianPhon
 
 const isValidPostalCode = (postalCode) => /^\d+$/.test(String(postalCode || '').trim());
 
-module.exports = { isValidEmail, isValidPhone, isValidPostalCode, normalizeAustrianPhone };
+// Strong password: 8+ chars, at least one uppercase, one lowercase, one
+// digit and one special character.
+const STRONG_PASSWORD_HINT = 'Password must be at least 8 characters and include an uppercase letter, a lowercase letter, a number and a special character.';
+const isStrongPassword = (password) =>
+  typeof password === 'string' &&
+  password.length >= 8 &&
+  /[a-z]/.test(password) &&
+  /[A-Z]/.test(password) &&
+  /\d/.test(password) &&
+  /[^A-Za-z0-9]/.test(password);
+
+module.exports = {
+  isValidEmail,
+  isValidPhone,
+  isValidPostalCode,
+  normalizeAustrianPhone,
+  isStrongPassword,
+  STRONG_PASSWORD_HINT
+};

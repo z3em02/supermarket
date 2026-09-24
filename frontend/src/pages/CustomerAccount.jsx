@@ -8,6 +8,7 @@ import { LanguageSelector } from '../components/LanguageSelector';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { getApiUrl } from '../utils/api';
 import { formatDeliverySlot } from '../utils/deliverySlot';
+import { strongPasswordHint } from '../utils/validation';
 import {
   sendPhoneVerificationCode,
   confirmPhoneVerificationCode,
@@ -1044,10 +1045,15 @@ export const CustomerAccount = () => {
                     name="password"
                     value={profileForm.password}
                     onChange={handleProfileChange}
-                    placeholder={isAr ? 'اتركه فارغاً للإبقاء على الحالية (8 أحرف على الأقل)' : 'Leer lassen, um beizubehalten (mind. 8 Zeichen)'}
+                    placeholder={isAr ? 'اتركه فارغاً للإبقاء على الحالية' : 'Leer lassen, um beizubehalten'}
                     minLength={8}
                     className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
                   />
+                  {profileForm.password && (
+                    <p className="text-[11px] text-slate-400 dark:text-gray-500 mt-1">
+                      {strongPasswordHint(isAr)}
+                    </p>
+                  )}
                 </div>
               </div>
 

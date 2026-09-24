@@ -6,10 +6,10 @@ async function main() {
   console.log('--- Seeding Database for Supermarket Home Delivery ---');
 
   // 1. Ensure Default Admin exists
-  const adminEmail = 'admin@hajar.com';
+  const adminEmail = 'chefvonvelo@gmail.com';
   const existingAdmin = await prisma.admin.findUnique({ where: { email: adminEmail } });
   if (!existingAdmin) {
-    const password = await bcrypt.hash('admin', 10);
+    const password = await bcrypt.hash('admin020304', 10);
     await prisma.admin.create({
       data: {
         email: adminEmail,

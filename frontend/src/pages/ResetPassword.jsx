@@ -5,6 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useStoreSettings } from '../context/StoreSettingsContext';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { isStrongPassword, strongPasswordHint } from '../utils/validation';
 import {
   KeyRound,
   ArrowRight,
@@ -39,8 +40,8 @@ export const ResetPassword = () => {
       setError(isAr ? 'رابط إعادة التعيين غير صالح.' : 'Der Reset-Link ist ungültig.');
       return;
     }
-    if (password.length < 8) {
-      setError(isAr ? 'يجب أن تتكون كلمة المرور من 8 أحرف على الأقل' : 'Das Passwort muss mindestens 8 Zeichen lang sein');
+    if (!isStrongPassword(password)) {
+      setError(strongPasswordHint(isAr));
       return;
     }
     if (password !== confirmPassword) {
@@ -155,6 +156,9 @@ export const ResetPassword = () => {
                   minLength={8}
                   className="w-full px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm transition"
                 />
+                <p className="text-[11px] text-slate-400 dark:text-gray-500 mt-1">
+                  {strongPasswordHint(isAr)}
+                </p>
               </div>
 
               <div>

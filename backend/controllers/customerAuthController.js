@@ -5,7 +5,7 @@ const prisma = require('../lib/prisma');
 const { sendCustomerVerificationEmail, sendPasswordResetEmail } = require('../utils/emailService');
 const { verifyFirebaseIdToken } = require('../utils/firebaseAdmin');
 const { JWT_SECRET } = require('../lib/config');
-const { isValidEmail, isValidPhone, isValidPostalCode, normalizeAustrianPhone } = require('../utils/validation');
+const { isValidEmail, isValidPhone, isValidPostalCode, normalizeAustrianPhone, isStrongPassword, STRONG_PASSWORD_HINT } = require('../utils/validation');
 const { logAudit } = require('../lib/auditLog');
 const { encrypt, decrypt, hashLookup, decryptCustomerPII } = require('../utils/piiCrypto');
 
@@ -46,8 +46,8 @@ const register = async (req, res) => {
       return res.status(400).json({ error: 'Please provide a valid phone number' });
     }
 
-    if (password.length < 8) {
-      return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+    if (!isStrongPassword(password)) {
+      return res.status(400).json({ error: STRONG_PASSWORD_HINT });
     }
 
     if (postalCode && !isValidPostalCode(postalCode)) {
@@ -480,8 +480,8 @@ const updateProfile = async (req, res) => {
       return res.status(400).json({ error: 'Postal code must contain digits only' });
     }
 
-    if (password && password.length < 8) {
-      return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+    if (password && !isStrongPassword(password)) {
+      return res.status(400).json({ error: STRONG_PASSWORD_HINT });
     }
 
     const updateData = {};
@@ -713,8 +713,8 @@ const resetPassword = async (req, res) => {
     if (!token || !password) {
       return res.status(400).json({ error: 'Token and new password are required' });
     }
-    if (password.length < 8) {
-      return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+    if (!isStrongPassword(password)) {
+      return res.status(400).json({ error: STRONG_PASSWORD_HINT });
     }
 
     const customer = await prisma.customer.findFirst({
