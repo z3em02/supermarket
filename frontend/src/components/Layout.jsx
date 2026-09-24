@@ -51,6 +51,7 @@ export const Layout = () => {
 
   const handleLockSections = () => {
     sessionStorage.removeItem('admin_section_unlocked');
+    sessionStorage.removeItem('admin_section_unlock_token');
     navigate('/secret/admin/dashboard');
   };
 

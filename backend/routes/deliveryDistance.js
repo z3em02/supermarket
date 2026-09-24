@@ -2,6 +2,7 @@ const express = require('express');
 const prisma = require('../lib/prisma');
 const { calculateDeliveryDistance, geocodeAddress } = require('../utils/distanceService');
 const { authMiddleware } = require('../middleware/auth');
+const { sectionUnlockMiddleware } = require('../middleware/sectionUnlock');
 const { createRateLimiter } = require('../middleware/rateLimiter');
 
 const router = express.Router();
@@ -58,7 +59,7 @@ router.post('/calculate', distanceLimiter, async (req, res) => {
  *
  * Admin endpoint to re-geocode the store's physical address and update storeLatitude / storeLongitude.
  */
-router.post('/geocode-store', authMiddleware, async (req, res) => {
+router.post('/geocode-store', authMiddleware, sectionUnlockMiddleware, async (req, res) => {
   try {
     const storeSettings = await prisma.storeSettings.findUnique({ where: { id: 'default' } });
     if (!storeSettings || !storeSettings.address) {

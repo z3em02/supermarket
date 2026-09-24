@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const prisma = require('../lib/prisma');
 const { scrapeGoogleReviews } = require('../utils/googleScraper');
+const { issueSectionUnlockToken } = require('../middleware/sectionUnlock');
 
 // String(null) / String(undefined) produce the literal text "null"/"undefined",
 // which then reads back as a truthy, non-empty value forever — treat any
@@ -411,7 +412,7 @@ const setPasscode = async (req, res) => {
       update: { sectionPasscodeHash: hash },
       create: { ...DEFAULT_SETTINGS, sectionPasscodeHash: hash }
     });
-    res.json({ message: 'Passcode set', isSet: true });
+    res.json({ message: 'Passcode set', isSet: true, unlockToken: issueSectionUnlockToken(req.admin.id) });
   } catch (error) {
     console.error('Set passcode error:', error);
     res.status(500).json({ error: 'Failed to set passcode' });
@@ -432,7 +433,11 @@ const verifyPasscode = async (req, res) => {
     }
 
     const valid = await bcrypt.compare(String(passcode || ''), settings.sectionPasscodeHash);
-    res.json({ valid, isSet: true });
+    res.json({
+      valid,
+      isSet: true,
+      unlockToken: valid ? issueSectionUnlockToken(req.admin.id) : undefined
+    });
   } catch (error) {
     console.error('Verify passcode error:', error);
     res.status(500).json({ error: 'Failed to verify passcode' });

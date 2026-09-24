@@ -5,13 +5,16 @@ import { useLanguage } from '../context/LanguageContext';
 import { Lock, AlertCircle } from 'lucide-react';
 
 const SESSION_KEY = 'admin_section_unlocked';
+const TOKEN_KEY = 'admin_section_unlock_token';
 
 // Step-up PIN gate for the Settings/Accounting/Customers/Promotions admin
-// pages. This is a shop-terminal deterrent (the dashboard being left open
-// and someone without the admin password browsing into sensitive sections),
-// not a separate privilege boundary — there is only one Admin account, and
-// the real security boundary is the JWT auth already required to reach any
-// admin page at all.
+// pages. A successful verify/setup here also gets a short-lived unlock
+// token (stored under TOKEN_KEY) that adminAxios attaches to every request
+// as X-Section-Unlock — the backend's sectionUnlockMiddleware checks it on
+// the actual APIs behind these pages, so this is a real access boundary,
+// not just a UI overlay. There is still only one Admin account, so the JWT
+// auth required to reach any admin page at all remains the primary
+// safeguard; this adds a second, revocable layer on top of it.
 export const SectionPasscodeGate = ({ children }) => {
   const { language } = useLanguage();
   const isAr = language === 'ar';
@@ -60,9 +63,10 @@ export const SectionPasscodeGate = ({ children }) => {
         setSubmitting(true);
         const token = localStorage.getItem('token');
         const apiUrl = getApiUrl();
-        await axios.put(`${apiUrl}/api/settings/passcode`, { passcode: pin }, {
+        const setupRes = await axios.put(`${apiUrl}/api/settings/passcode`, { passcode: pin }, {
           headers: { Authorization: `Bearer ${token}` }
         });
+        if (setupRes.data.unlockToken) sessionStorage.setItem(TOKEN_KEY, setupRes.data.unlockToken);
         sessionStorage.setItem(SESSION_KEY, 'true');
         setUnlocked(true);
       } catch (err) {
@@ -81,6 +85,7 @@ export const SectionPasscodeGate = ({ children }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data.valid) {
+        if (res.data.unlockToken) sessionStorage.setItem(TOKEN_KEY, res.data.unlockToken);
         sessionStorage.setItem(SESSION_KEY, 'true');
         setUnlocked(true);
       } else {

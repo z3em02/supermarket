@@ -1,11 +1,12 @@
 const express = require('express');
 const { authMiddleware } = require('../middleware/auth');
+const { sectionUnlockMiddleware } = require('../middleware/sectionUnlock');
 const { getAccountingSummary, getAccountingRecords, exportAccountingData } = require('../controllers/accountingController');
 
 const router = express.Router();
 
-// Apply auth middleware to all routes
-router.use(authMiddleware);
+// Buchhaltung — behind the section PIN
+router.use(authMiddleware, sectionUnlockMiddleware);
 
 router.get('/summary', getAccountingSummary);
 router.get('/records', getAccountingRecords);
