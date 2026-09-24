@@ -5,15 +5,23 @@ const {
   sendOrderModificationEmail
 } = require('../utils/emailService');
 const { CUSTOMER_PUBLIC_SELECT } = require('../utils/serialize');
-const { decryptCustomerPII } = require('../utils/piiCrypto');
+const { decryptCustomerPII, encrypt, decrypt } = require('../utils/piiCrypto');
 
-// Orders carry their own plaintext customer* snapshot columns (set at
-// creation time from the decrypted customer), but the joined `customer`
-// relation itself still holds encrypted fields — decrypt it before any
-// response or email send touches it.
+// Orders carry their own encrypted customer* snapshot columns (a copy taken
+// at creation time, kept separate from the Customer row so invoices stay
+// readable even after the customer account is deleted — see
+// GDPR_DATA_POLICY.md), plus the joined `customer` relation which also
+// holds encrypted fields. Decrypt both before any response or email send
+// touches them.
 const withDecryptedCustomer = (order) => {
   if (!order) return order;
-  return order.customer ? { ...order, customer: decryptCustomerPII(order.customer) } : order;
+  return {
+    ...order,
+    customerName: 'customerName' in order ? decrypt(order.customerName) : order.customerName,
+    customerPhone: 'customerPhone' in order ? decrypt(order.customerPhone) : order.customerPhone,
+    customerEmail: 'customerEmail' in order ? decrypt(order.customerEmail) : order.customerEmail,
+    customer: order.customer ? decryptCustomerPII(order.customer) : order.customer
+  };
 };
 const withDecryptedCustomers = (orders) => orders.map(withDecryptedCustomer);
 const {
@@ -373,9 +381,9 @@ const createOrder = async (req, res) => {
       const createdOrder = await tx.order.create({
         data: {
           customerId: customer.id,
-          customerName: customer.name,
-          customerPhone: customer.phone,
-          customerEmail: customer.email,
+          customerName: encrypt(customer.name),
+          customerPhone: encrypt(customer.phone),
+          customerEmail: encrypt(customer.email),
           deliveryAddress,
           deliveryNotes,
           deliverySlot,

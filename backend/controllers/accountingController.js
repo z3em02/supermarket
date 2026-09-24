@@ -1,7 +1,18 @@
 const prisma = require('../lib/prisma');
 const { CUSTOMER_PUBLIC_SELECT } = require('../utils/serialize');
 const { logAudit } = require('../lib/auditLog');
-const { decryptCustomerPII } = require('../utils/piiCrypto');
+const { decryptCustomerPII, decrypt } = require('../utils/piiCrypto');
+
+// Orders carry their own encrypted customer* snapshot columns (see
+// GDPR_DATA_POLICY.md), plus the joined `customer` relation which also
+// holds encrypted fields — decrypt both before any of it is read.
+const withDecryptedOrder = (ord) => ({
+  ...ord,
+  customerName: 'customerName' in ord ? decrypt(ord.customerName) : ord.customerName,
+  customerPhone: 'customerPhone' in ord ? decrypt(ord.customerPhone) : ord.customerPhone,
+  customerEmail: 'customerEmail' in ord ? decrypt(ord.customerEmail) : ord.customerEmail,
+  customer: ord.customer ? decryptCustomerPII(ord.customer) : ord.customer
+});
 
 const getAccountingSummary = async (req, res) => {
   try {
@@ -27,7 +38,7 @@ const getAccountingSummary = async (req, res) => {
       orderBy: {
         createdAt: 'desc'
       }
-    })).map(ord => (ord.customer ? { ...ord, customer: decryptCustomerPII(ord.customer) } : ord));
+    })).map(withDecryptedOrder);
 
     // Total revenue sum
     const totalRevenueAmount = validOrders.reduce((sum, ord) => sum + (Number(ord.totalAmount) || 0), 0);
@@ -127,7 +138,7 @@ const getAccountingRecords = async (req, res) => {
       },
       skip: (page - 1) * limit,
       take: parseInt(limit)
-    })).map(ord => (ord.customer ? { ...ord, customer: decryptCustomerPII(ord.customer) } : ord));
+    })).map(withDecryptedOrder);
 
     const total = await prisma.order.count({ where });
 
@@ -180,7 +191,7 @@ const exportAccountingData = async (req, res) => {
       orderBy: {
         createdAt: 'desc'
       }
-    })).map(ord => (ord.customer ? { ...ord, customer: decryptCustomerPII(ord.customer) } : ord));
+    })).map(withDecryptedOrder);
 
     if (format === 'csv') {
       const csvHeader = 'Bestellnummer,Datum,Kunde,Telefon,Lieferadresse,Status,Zahlungsart,Betrag (EUR)\n';

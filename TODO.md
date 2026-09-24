@@ -19,3 +19,10 @@
 ## 2nd Version
 - [ ] Add a ticket system for problems and bugs
 - [ ] Optional 2-factor authentication
+
+## Security follow-ups (from security review)
+1. [x] Run `npm audit` on backend and frontend — frontend: 0 vulnerabilities. Backend: 2 moderate (uuid buffer-bounds issue), transitively pinned deep inside firebase-admin's own dependency tree (`@google-cloud/storage` → `google-auth-library@9.15.1` → `gaxios@6.7.1`), not fixable even with `npm audit fix --force` since no firebase-admin release yet moves that pin. Not exploitable through this app's usage (we never call `uuid` directly, Firebase Admin doesn't expose the vulnerable path to user input) — revisit when firebase-admin ships an update
+2. [x] Encrypt `Order.customerName/customerPhone/customerEmail` snapshot fields at rest (currently plaintext, unlike the `Customer` table equivalents) — migrated existing orders after a fresh pg_dump backup; live-tested reads (CSV export, accounting summary, orders list) and the write path (order creation reached deep business validation without error)
+3. [ ] Verify live server enforces HTTPS (TLS termination + HTTP→HTTPS redirect in nginx) — not verifiable from this repo, needs manual check on the actual deployment
+4. [ ] Decide whether the section PIN should also gate the underlying APIs (customers/accounting/etc.), not just the admin page — currently a documented UI-only deterrent, real boundary is JWT auth alone
+5. [ ] Consider a WAF/DDoS layer at the infra level (e.g. Cloudflare) — no protection currently visible in the app itself
