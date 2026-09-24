@@ -6,6 +6,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useStoreSettings } from '../context/StoreSettingsContext';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { OrderProgressTimeline } from '../components/OrderProgressTimeline';
 import { getApiUrl } from '../utils/api';
 import { formatDeliverySlot } from '../utils/deliverySlot';
 import { strongPasswordHint } from '../utils/validation';
@@ -114,6 +115,10 @@ export const CustomerAccount = () => {
       return;
     }
     fetchOrders();
+
+    // Poll so the order progress timeline updates live without a manual refresh.
+    const pollId = setInterval(() => fetchOrders(true), 15000);
+    return () => clearInterval(pollId);
   }, [token]);
 
   useEffect(() => {
@@ -133,9 +138,9 @@ export const CustomerAccount = () => {
     }
   }, [customer]);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (silent = false) => {
     try {
-      setLoadingOrders(true);
+      if (!silent) setLoadingOrders(true);
       const apiUrl = getApiUrl();
       const res = await axios.get(`${apiUrl}/api/orders/my-orders`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -144,7 +149,7 @@ export const CustomerAccount = () => {
     } catch (err) {
       console.error('Failed to load customer orders:', err);
     } finally {
-      setLoadingOrders(false);
+      if (!silent) setLoadingOrders(false);
     }
   };
 
@@ -853,6 +858,11 @@ export const CustomerAccount = () => {
                         </div>
                       </div>
                     </div>
+
+                    {/* Live Progress Timeline */}
+                    {!isPendingApproval && (
+                      <OrderProgressTimeline status={order.status} language={language} />
+                    )}
 
                     {/* Delivery Details Snapshot */}
                     <div className="py-3 text-xs text-slate-600 dark:text-gray-300 grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 dark:bg-gray-950 p-3 rounded-2xl my-3">

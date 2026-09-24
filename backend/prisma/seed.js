@@ -17,7 +17,7 @@ async function main() {
         name: 'Hajar Supermarkt'
       }
     });
-    console.log('✓ Admin account initialized (admin@hajar.com / admin)');
+    console.log(`✓ Admin account initialized (${adminEmail})`);
   } else {
     console.log('✓ Admin account already exists');
   }

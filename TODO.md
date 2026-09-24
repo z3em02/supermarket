@@ -19,6 +19,11 @@
 ## 2nd Version
 - [ ] Add a ticket system for problems and bugs
 - [x] Optional 2-factor authentication — admin login now requires a 6-digit code emailed on every login (password + email code), before issuing the session. Sessions last 30 days once verified ("stay logged in"). Live-tested full flow: password → email code → dashboard, wrong-code rejection, resend, single-use enforcement
+- [ ] Recurring/subscription orders — "reorder my usual weekly basket" for regulars
+- [ ] Low-stock alerts for admin — proactive restocking instead of noticing out-of-stock at checkout
+- [ ] Loyalty/rewards points — repeat-customer incentive, pairs with the existing coupon system
+- [x] Order tracking (in-app) — live progress timeline (Angenommen → Wird vorbereitet → Unterwegs → Geliefert) on the customer account page, updates automatically via 15s polling. Live-tested end-to-end: order created, admin changed status, timeline updated without a manual refresh
+- [ ] Order tracking (browser push notifications) — follow-up to the above; needs a new dependency (web-push), a service worker and a subscriptions table
 
 ## Security follow-ups (from security review)
 1. [x] Run `npm audit` on backend and frontend — frontend: 0 vulnerabilities. Backend: 2 moderate (uuid buffer-bounds issue), transitively pinned deep inside firebase-admin's own dependency tree (`@google-cloud/storage` → `google-auth-library@9.15.1` → `gaxios@6.7.1`), not fixable even with `npm audit fix --force` since no firebase-admin release yet moves that pin. Not exploitable through this app's usage (we never call `uuid` directly, Firebase Admin doesn't expose the vulnerable path to user input) — revisit when firebase-admin ships an update
