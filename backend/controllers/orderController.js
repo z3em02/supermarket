@@ -6,6 +6,7 @@ const {
 } = require('../utils/emailService');
 const { CUSTOMER_PUBLIC_SELECT } = require('../utils/serialize');
 const { decryptCustomerPII, encrypt, decrypt } = require('../utils/piiCrypto');
+const { sendPushToCustomer } = require('../utils/pushService');
 
 // Orders carry their own encrypted customer* snapshot columns (a copy taken
 // at creation time, kept separate from the Customer row so invoices stay
@@ -24,6 +25,31 @@ const withDecryptedCustomer = (order) => {
   };
 };
 const withDecryptedCustomers = (orders) => orders.map(withDecryptedCustomer);
+
+const STATUS_PUSH_TEXT = {
+  accepted: { de: 'Ihre Bestellung wurde angenommen', ar: 'تم قبول طلبك' },
+  preparing: { de: 'Ihre Bestellung wird vorbereitet', ar: 'جارٍ تجهيز طلبك' },
+  out_for_delivery: { de: 'Ihre Bestellung ist unterwegs', ar: 'طلبك في الطريق إليك' },
+  shipped: { de: 'Ihre Bestellung ist unterwegs', ar: 'طلبك في الطريق إليك' },
+  delivered: { de: 'Ihre Bestellung wurde zugestellt', ar: 'تم توصيل طلبك' },
+  declined: { de: 'Ihre Bestellung wurde storniert', ar: 'تم إلغاء طلبك' },
+  rejected: { de: 'Ihre Bestellung wurde storniert', ar: 'تم إلغاء طلبك' }
+};
+
+// Fire-and-forget push alongside the email sends above — never blocks or
+// fails the request it's called from (sendPushToCustomer already swallows
+// its own per-subscription errors).
+const pushOrderStatusUpdate = (order, status, lang) => {
+  if (!order?.customerId) return;
+  const isAr = lang === 'ar';
+  const text = STATUS_PUSH_TEXT[(status || '').toLowerCase()];
+  if (!text) return;
+  sendPushToCustomer(order.customerId, {
+    title: isAr ? text.ar : text.de,
+    body: `#${order.id.slice(0, 8).toUpperCase()}`,
+    url: '/customer/account'
+  }).catch((err) => console.error('Order status push failed:', err.message));
+};
 const {
   calculatePromotionForItem,
   validateAndCalculateCoupon
@@ -466,6 +492,13 @@ const createOrder = async (req, res) => {
       }
     }
 
+    const isAr = customer.preferredLanguage === 'ar';
+    sendPushToCustomer(customer.id, {
+      title: isAr ? 'تم استلام طلبك' : 'Bestellung eingegangen',
+      body: isAr ? `طلبك #${order.id.slice(0, 8).toUpperCase()} قيد المراجعة` : `Ihre Bestellung #${order.id.slice(0, 8).toUpperCase()} wird bearbeitet`,
+      url: '/customer/account'
+    }).catch((err) => console.error('Order confirmation push failed:', err.message));
+
     res.status(201).json(withDecryptedCustomer(order));
   } catch (error) {
     if (error.isStockError || error.isCouponError) {
@@ -619,7 +652,11 @@ const updateOrderStatus = async (req, res) => {
       const customerName = updatedOrder?.customerName || updatedOrder?.customer?.name || 'Customer';
       const customerLang = updatedOrder?.customer?.preferredLanguage || 'de';
 
-      if (customerEmail && status) {
+      // Only email on the "accepted" transition — other status changes
+      // (preparing, out_for_delivery, delivered, ...) are surfaced via the
+      // in-app tracking timeline and push notification instead, to avoid
+      // flooding the customer's inbox with one email per status click.
+      if (customerEmail && normalizedStatus === 'accepted') {
         await sendOrderStatusEmail(
           customerEmail,
           customerName,
@@ -629,6 +666,7 @@ const updateOrderStatus = async (req, res) => {
           customerLang
         );
       }
+      pushOrderStatusUpdate(updatedOrder, normalizedStatus, customerLang);
     } catch (emailError) {
       console.error('Failed to send email notification:', emailError.message || emailError);
     }
@@ -701,7 +739,7 @@ const getCustomerOrders = async (req, res) => {
       }
     });
 
-    res.json(orders);
+    res.json(withDecryptedCustomers(orders));
   } catch (error) {
     console.error('Get customer orders error:', error);
     res.status(500).json({ error: 'Failed to retrieve customer orders' });
@@ -897,6 +935,14 @@ const editOrder = async (req, res) => {
           customerLang
         );
       }
+      if (updatedOrder?.customerId) {
+        const isAr = customerLang === 'ar';
+        sendPushToCustomer(updatedOrder.customerId, {
+          title: isAr ? 'تم تعديل طلبك' : 'Ihre Bestellung wurde angepasst',
+          body: `#${updatedOrder.id.slice(0, 8).toUpperCase()}`,
+          url: '/customer/account'
+        }).catch((err) => console.error('Order modification push failed:', err.message));
+      }
     } catch (emailErr) {
       console.error('Error sending order modification email:', emailErr.message || emailErr);
     }
@@ -1000,6 +1046,7 @@ const customerRespondToModification = async (req, res) => {
         } catch (mailErr) {
           console.error('Email error on customer accept:', mailErr.message);
         }
+        pushOrderStatusUpdate(updatedOrder, 'accepted', customerLang);
       }
 
       return res.json({ success: true, message: 'Bestelländerung erfolgreich akzeptiert', order: updatedOrder });
@@ -1060,6 +1107,7 @@ const customerRespondToModification = async (req, res) => {
         } catch (mailErr) {
           console.error('Email error on customer decline:', mailErr.message);
         }
+        pushOrderStatusUpdate(updatedOrder, 'declined', customerLang);
       }
 
       return res.json({ success: true, message: 'Bestellung erfolgreich storniert', order: updatedOrder });

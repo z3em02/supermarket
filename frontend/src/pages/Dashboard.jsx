@@ -3,16 +3,17 @@ import axios from '../utils/adminAxios';
 import { getApiUrl } from '../utils/api';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import { 
-  Users, 
-  Package, 
-  ShoppingCart, 
-  DollarSign, 
+import {
+  Users,
+  Package,
+  ShoppingCart,
+  DollarSign,
   Clock,
   ArrowRight,
   Sparkles,
   Layers,
-  Store
+  Store,
+  Lock
 } from 'lucide-react';
 
 export const Dashboard = () => {
@@ -24,6 +25,9 @@ export const Dashboard = () => {
     totalRevenue: 0,
     pendingOrders: 0
   });
+  // Kunden/Buchhaltung numbers are behind the section PIN — track separately
+  // so a locked state can be shown instead of a misleading "0".
+  const [sectionLocked, setSectionLocked] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -33,19 +37,24 @@ export const Dashboard = () => {
       const apiUrl = getApiUrl();
       const headers = { Authorization: `Bearer ${token}` };
 
+      // customer-auth/customers and accounting/summary sit behind the
+      // Kunden/Buchhaltung section PIN — fall back to a "locked" marker
+      // instead of failing the whole dashboard when it isn't unlocked.
+      const LOCKED = { locked: true };
       const [customersRes, productsRes, ordersRes, accountingRes] = await Promise.all([
-        axios.get(`${apiUrl}/api/customer-auth/customers`, { headers }).catch(() => ({ data: [] })),
+        axios.get(`${apiUrl}/api/customer-auth/customers`, { headers }).catch(() => LOCKED),
         axios.get(`${apiUrl}/api/products`, { headers }),
         axios.get(`${apiUrl}/api/orders`, { headers }),
-        axios.get(`${apiUrl}/api/accounting/summary`, { headers })
+        axios.get(`${apiUrl}/api/accounting/summary`, { headers }).catch(() => LOCKED)
       ]);
 
+      setSectionLocked(customersRes.locked || accountingRes.locked);
       setStats({
-        totalCustomers: customersRes.data.length,
+        totalCustomers: customersRes.locked ? null : customersRes.data.length,
         totalProducts: productsRes.data.length,
         totalOrders: ordersRes.data.length,
-        totalRevenue: accountingRes.data.summary?.totalRevenue || 0,
-        pendingOrders: accountingRes.data.summary?.pendingOrders || 0
+        totalRevenue: accountingRes.locked ? null : (accountingRes.data.summary?.totalRevenue || 0),
+        pendingOrders: accountingRes.locked ? null : (accountingRes.data.summary?.pendingOrders || 0)
       });
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -62,6 +71,7 @@ export const Dashboard = () => {
     {
       title: t('customers') || 'Total Customers',
       value: stats.totalCustomers,
+      locked: stats.totalCustomers === null,
       icon: Users,
       color: 'bg-blue-50 text-blue-600 border border-blue-100/80 dark:bg-blue-950/60 dark:text-blue-400 dark:border-blue-900/50',
       borderColor: 'border-slate-200/80 dark:border-gray-800'
@@ -82,7 +92,8 @@ export const Dashboard = () => {
     },
     {
       title: t('totalRevenue'),
-      value: `€${stats.totalRevenue.toFixed(2)}`,
+      value: stats.totalRevenue === null ? null : `€${stats.totalRevenue.toFixed(2)}`,
+      locked: stats.totalRevenue === null,
       icon: DollarSign,
       color: 'bg-amber-50 text-amber-600 border border-amber-100/80 dark:bg-amber-950/60 dark:text-amber-400 dark:border-amber-900/50',
       borderColor: 'border-slate-200/80 dark:border-gray-800'
@@ -90,6 +101,7 @@ export const Dashboard = () => {
     {
       title: t('pendingOrders'),
       value: stats.pendingOrders,
+      locked: stats.pendingOrders === null,
       icon: Clock,
       color: 'bg-rose-50 text-rose-600 border border-rose-100/80 dark:bg-rose-950/60 dark:text-rose-400 dark:border-rose-900/50',
       borderColor: 'border-slate-200/80 dark:border-gray-800'
@@ -122,6 +134,17 @@ export const Dashboard = () => {
         </div>
       </div>
 
+      {sectionLocked && (
+        <div className="flex items-center gap-2.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 text-amber-800 dark:text-amber-300 text-xs sm:text-sm rounded-2xl px-4 py-3">
+          <Lock className="w-4 h-4 shrink-0" />
+          <span>
+            {language === 'ar'
+              ? 'بعض الأرقام مخفية — افتح قسم الإعدادات أو العملاء أو المحاسبة لعرضها'
+              : 'Einige Zahlen sind gesperrt — öffnen Sie Einstellungen, Kunden oder Buchhaltung, um sie zu sehen'}
+          </span>
+        </div>
+      )}
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-5">
         {statCards.map((stat) => {
@@ -136,9 +159,16 @@ export const Dashboard = () => {
                   <p className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
                     {stat.title}
                   </p>
-                  <p className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-1 truncate">
-                    {stat.value}
-                  </p>
+                  {stat.locked ? (
+                    <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-400 dark:text-gray-500 mt-1.5">
+                      <Lock className="w-3.5 h-3.5" />
+                      <span>{language === 'ar' ? 'مقفل' : 'Gesperrt'}</span>
+                    </p>
+                  ) : (
+                    <p className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-1 truncate">
+                      {stat.value}
+                    </p>
+                  )}
                 </div>
                 <div className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl ${stat.color} shrink-0`}>
                   <Icon className="w-5 h-5 sm:w-6 sm:h-6" />

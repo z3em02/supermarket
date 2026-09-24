@@ -62,10 +62,17 @@ export const LandingPage = () => {
     }
   });
   const [cartOpen, setCartOpen] = useState(false);
+  const [addedToast, setAddedToast] = useState(null);
 
   useEffect(() => {
     localStorage.setItem('customer_cart', JSON.stringify(cart));
   }, [cart]);
+
+  useEffect(() => {
+    if (!addedToast) return;
+    const timer = setTimeout(() => setAddedToast(null), 1800);
+    return () => clearTimeout(timer);
+  }, [addedToast]);
 
   const addToCart = (product, quantity = 1) => {
     if (product.stock <= 0) return;
@@ -89,7 +96,7 @@ export const LandingPage = () => {
         }
       ];
     });
-    setCartOpen(true);
+    setAddedToast(product.nameDe || product.name);
   };
 
   const updateCartQuantity = (productId, delta) => {
@@ -1584,6 +1591,16 @@ export const LandingPage = () => {
         removeFromCart={removeFromCart}
         clearCart={clearCart}
       />
+
+      {/* Add-to-cart confirmation toast (replaces auto-opening the cart drawer) */}
+      {addedToast && (
+        <div className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-[70] flex items-center gap-2 bg-slate-900 dark:bg-gray-800 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-full shadow-lg transition">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span className="truncate max-w-[70vw]">
+            {language === 'ar' ? `تمت إضافة "${addedToast}"` : `"${addedToast}" hinzugefügt`}
+          </span>
+        </div>
+      )}
 
     </div>
   );

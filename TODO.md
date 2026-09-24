@@ -12,6 +12,11 @@
 8. [x] Confirm HTTPS is enforced everywhere in production + backend CORS locked to the real domain — code-level check passed (CORS locked to FRONTEND_URL in prod, HSTS on, no hardcoded http:// in prod paths). Live server TLS/nginx config not verifiable from here — check manually on the actual deployment
 9. [x] Document a GDPR retention/deletion policy and a way to fulfill "delete my data" requests — see [GDPR_DATA_POLICY.md](GDPR_DATA_POLICY.md)
 
+## Bug fixes (from live testing)
+- [x] Print/report on customer account page showed raw encrypted ciphertext for name/phone — `GET /api/orders/my-orders` never decrypted the order snapshot fields; fixed
+- [x] Admin status changes emailed the customer on every transition — now only emails on "accepted"; other changes surface via the in-app timeline and push
+- [x] Cart drawer auto-opened on every "add to cart" — replaced with a small toast + cart badge count instead
+
 ## Other fixes
 - [x] Phone number can't be edited/replaced on a customer record — verified fixed via live API test (register → change phone → persists correctly); likely resolved as a side effect of the encryption refactor rewriting this exact code path
 - [x] Orders view should auto-refresh when a new order is submitted — polls every 20s while the page is open
@@ -23,7 +28,7 @@
 - [ ] Low-stock alerts for admin — proactive restocking instead of noticing out-of-stock at checkout
 - [ ] Loyalty/rewards points — repeat-customer incentive, pairs with the existing coupon system
 - [x] Order tracking (in-app) — live progress timeline (Angenommen → Wird vorbereitet → Unterwegs → Geliefert) on the customer account page, updates automatically via 15s polling. Live-tested end-to-end: order created, admin changed status, timeline updated without a manual refresh
-- [ ] Order tracking (browser push notifications) — follow-up to the above; needs a new dependency (web-push), a service worker and a subscriptions table
+- [x] Order tracking (browser push notifications) — added `web-push` + VAPID keys, a `PushSubscription` table, a minimal service worker (`public/sw.js`), and an opt-in banner on the customer account page. Pushed on order creation, status changes, and modifications. Live-tested: VAPID key endpoint, service worker registration, subscription save, and the push-send code path (graceful error handling confirmed against a malformed test key)
 
 ## Security follow-ups (from security review)
 1. [x] Run `npm audit` on backend and frontend — frontend: 0 vulnerabilities. Backend: 2 moderate (uuid buffer-bounds issue), transitively pinned deep inside firebase-admin's own dependency tree (`@google-cloud/storage` → `google-auth-library@9.15.1` → `gaxios@6.7.1`), not fixable even with `npm audit fix --force` since no firebase-admin release yet moves that pin. Not exploitable through this app's usage (we never call `uuid` directly, Firebase Admin doesn't expose the vulnerable path to user input) — revisit when firebase-admin ships an update

@@ -10,6 +10,7 @@ import { OrderProgressTimeline } from '../components/OrderProgressTimeline';
 import { getApiUrl } from '../utils/api';
 import { formatDeliverySlot } from '../utils/deliverySlot';
 import { strongPasswordHint } from '../utils/validation';
+import { isPushSupported, enablePushNotifications, getPushSubscriptionStatus } from '../utils/pushNotifications';
 import {
   sendPhoneVerificationCode,
   confirmPhoneVerificationCode,
@@ -40,7 +41,9 @@ import {
   FileText,
   Tag,
   X,
-  Navigation
+  Navigation,
+  Bell,
+  BellOff
 } from 'lucide-react';
 
 export const CustomerAccount = () => {
@@ -54,6 +57,25 @@ export const CustomerAccount = () => {
   const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'profile'
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
+
+  // Push notification opt-in ('checking' | 'not-subscribed' | 'subscribed' | 'denied' | 'unsupported')
+  const [pushStatus, setPushStatus] = useState('checking');
+  const [enablingPush, setEnablingPush] = useState(false);
+
+  useEffect(() => {
+    if (!isPushSupported()) {
+      setPushStatus('unsupported');
+      return;
+    }
+    getPushSubscriptionStatus().then(setPushStatus);
+  }, []);
+
+  const handleEnablePush = async () => {
+    setEnablingPush(true);
+    const result = await enablePushNotifications(token);
+    setPushStatus(result === 'granted' ? 'subscribed' : result);
+    setEnablingPush(false);
+  };
 
   // Modification response & Order Report Modal state
   const [reportOrder, setReportOrder] = useState(null);
@@ -720,6 +742,30 @@ export const CustomerAccount = () => {
         {/* TAB 1: Orders History */}
         {activeTab === 'orders' && (
           <div className="space-y-4">
+            {/* Push Notification Opt-in Banner */}
+            {pushStatus === 'not-subscribed' && (
+              <div className="p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-900/50 flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2.5 text-blue-800 dark:text-blue-200 text-xs sm:text-sm">
+                  <Bell className="w-4 h-4 shrink-0" />
+                  <span>{isAr ? 'فعّل الإشعارات لتصلك تحديثات حالة طلبك فور حدوثها' : 'Aktivieren Sie Benachrichtigungen, um Bestellstatus-Updates sofort zu erhalten'}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleEnablePush}
+                  disabled={enablingPush}
+                  className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shrink-0 cursor-pointer disabled:opacity-50 touch-manipulation"
+                >
+                  {enablingPush ? '...' : (isAr ? 'تفعيل' : 'Aktivieren')}
+                </button>
+              </div>
+            )}
+            {pushStatus === 'denied' && (
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-gray-900/60 border border-slate-200 dark:border-gray-800 flex items-center gap-2.5 text-slate-500 dark:text-gray-400 text-xs">
+                <BellOff className="w-4 h-4 shrink-0" />
+                <span>{isAr ? 'تم رفض إذن الإشعارات من إعدادات المتصفح' : 'Benachrichtigungen wurden in den Browser-Einstellungen blockiert'}</span>
+              </div>
+            )}
+
             {/* Action Feedback Banner */}
             {actionFeedback.message && (
               <div className={`p-4 rounded-2xl text-xs sm:text-sm flex items-start gap-3 ${actionFeedback.isError ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-200 border border-rose-300' : 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200 border border-emerald-300'}`}>

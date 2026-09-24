@@ -96,6 +96,22 @@ model Customer {
   updatedAt            DateTime      @updatedAt
   orders               Order[]
   couponUsages         CouponUsage[]
+  pushSubscriptions    PushSubscription[]
+}
+
+// A browser's Web Push subscription (one per browser/device that granted
+// notification permission) — used to push order-status updates even when
+// the site isn't open. endpoint is the subscription's unique push URL.
+model PushSubscription {
+  id         String   @id @default(uuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  endpoint   String   @unique
+  p256dh     String
+  auth       String
+  createdAt  DateTime @default(now())
+
+  @@index([customerId])
 }
 
 model Order {

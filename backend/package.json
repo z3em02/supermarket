@@ -30,6 +30,7 @@
     "jsonwebtoken": "^9.0.3",
     "nodemailer": "^10.0.10",
     "prisma": "^5.22.0",
-    "puppeteer-core": "^25.11.0"
+    "puppeteer-core": "^25.11.0",
+    "web-push": "^3.6.7"
   }
 }

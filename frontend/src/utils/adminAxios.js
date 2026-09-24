@@ -29,14 +29,15 @@ adminAxios.interceptors.response.use(
         window.location.href = '/secret/admin/login';
       }
     } else if (error.response?.data?.code === 'SECTION_LOCKED') {
-      // The unlock token expired or was never issued (e.g. stale tab) —
-      // clear the stale unlock state and reload so SectionPasscodeGate
-      // re-mounts and prompts for the PIN again.
+      // The unlock token expired, was never issued, or this call came from
+      // a page that isn't behind SectionPasscodeGate at all (e.g. Dashboard
+      // calling a gated endpoint) — clear the stale unlock state but do NOT
+      // reload here. A reload would re-fire the same request and loop
+      // forever on any page that keeps calling a gated endpoint without a
+      // valid token. SectionPasscodeGate re-checks status on its own next
+      // mount/navigation instead.
       sessionStorage.removeItem(SECTION_UNLOCK_FLAG_KEY);
       sessionStorage.removeItem(SECTION_UNLOCK_TOKEN_KEY);
-      if (typeof window !== 'undefined') {
-        window.location.reload();
-      }
     }
     return Promise.reject(error);
   }
