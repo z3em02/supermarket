@@ -33,11 +33,8 @@ export const Catalogs = () => {
 
   const fetchCategories = async () => {
     try {
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
-      const response = await axios.get(`${apiUrl}/api/categories`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(`${apiUrl}/api/categories`);
       setCategories(response.data);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -90,14 +87,12 @@ export const Catalogs = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
-      const headers = { Authorization: `Bearer ${token}` };
 
       if (editingCategory) {
-        await axios.put(`${apiUrl}/api/categories/${editingCategory.id}`, formData, { headers });
+        await axios.put(`${apiUrl}/api/categories/${editingCategory.id}`, formData);
       } else {
-        await axios.post(`${apiUrl}/api/categories`, formData, { headers });
+        await axios.post(`${apiUrl}/api/categories`, formData);
       }
 
       setShowModal(false);
@@ -114,11 +109,8 @@ export const Catalogs = () => {
     if (!window.confirm(t('confirmDeleteCatalog'))) return;
 
     try {
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
-      await axios.delete(`${apiUrl}/api/categories/${cat.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.delete(`${apiUrl}/api/categories/${cat.id}`);
       fetchCategories();
     } catch (error) {
       console.error('Error deleting category:', error);

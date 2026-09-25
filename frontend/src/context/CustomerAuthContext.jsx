@@ -1,9 +1,18 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import customerAxios from '../utils/customerAxios';
 import { getApiUrl } from '../utils/api';
 
 const CustomerAuthContext = createContext(null);
 
+// The customer session lives entirely in the HttpOnly `customer_token`
+// cookie now — never in localStorage, which is what let any XSS on the
+// storefront read it straight out. Since JS can't read an HttpOnly cookie,
+// "am I logged in" is answered by asking the backend (refreshProfile, which
+// succeeds iff the cookie is present and valid), not by checking local
+// state. `customer_user` in localStorage is kept purely as a non-sensitive
+// cache (profile fields, no secret) so the UI doesn't flash a loading state
+// on every reload — refreshProfile is still the authority and overwrites it.
 export const CustomerAuthProvider = ({ children }) => {
   const [customer, setCustomer] = useState(() => {
     try {
@@ -14,35 +23,20 @@ export const CustomerAuthProvider = ({ children }) => {
     }
   });
 
-  const [token, setToken] = useState(() => localStorage.getItem('customer_token') || null);
   const [loading, setLoading] = useState(true);
 
-  // Configure axios authorization header if token exists
-  useEffect(() => {
-    if (token) {
-      localStorage.setItem('customer_token', token);
-    } else {
-      localStorage.removeItem('customer_token');
-      localStorage.removeItem('customer_user');
-    }
-  }, [token]);
-
   const refreshProfile = async () => {
-    if (!token) {
-      setLoading(false);
-      return null;
-    }
     try {
       const apiUrl = getApiUrl();
-      const res = await axios.get(`${apiUrl}/api/customer/profile`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await customerAxios.get(`${apiUrl}/api/customer/profile`);
       setCustomer(res.data);
       localStorage.setItem('customer_user', JSON.stringify(res.data));
       return res.data;
     } catch (err) {
-      console.warn('Customer session expired or invalid:', err.response?.data?.error || err.message);
-      logout();
+      // No valid session cookie (never logged in, expired, or revoked) —
+      // this is the expected/common case on first load, not a real error.
+      setCustomer(null);
+      localStorage.removeItem('customer_user');
       return null;
     } finally {
       setLoading(false);
@@ -50,20 +44,14 @@ export const CustomerAuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (token) {
-      refreshProfile();
-    } else {
-      setLoading(false);
-    }
+    refreshProfile();
   }, []);
 
   const register = async (formData) => {
     const apiUrl = getApiUrl();
-    const res = await axios.post(`${apiUrl}/api/customer/register`, formData);
-    if (res.data.token) {
-      setToken(res.data.token);
+    const res = await axios.post(`${apiUrl}/api/customer/register`, formData, { withCredentials: true });
+    if (res.data.customer) {
       setCustomer(res.data.customer);
-      localStorage.setItem('customer_token', res.data.token);
       localStorage.setItem('customer_user', JSON.stringify(res.data.customer));
     }
     return res.data;
@@ -71,11 +59,9 @@ export const CustomerAuthProvider = ({ children }) => {
 
   const login = async (identifier, password) => {
     const apiUrl = getApiUrl();
-    const res = await axios.post(`${apiUrl}/api/customer/login`, { identifier, password });
-    if (res.data.token) {
-      setToken(res.data.token);
+    const res = await axios.post(`${apiUrl}/api/customer/login`, { identifier, password }, { withCredentials: true });
+    if (res.data.customer) {
       setCustomer(res.data.customer);
-      localStorage.setItem('customer_token', res.data.token);
       localStorage.setItem('customer_user', JSON.stringify(res.data.customer));
     }
     return res.data;
@@ -83,11 +69,9 @@ export const CustomerAuthProvider = ({ children }) => {
 
   const verifyEmail = async (code) => {
     const apiUrl = getApiUrl();
-    const res = await axios.post(`${apiUrl}/api/customer/verify-email`, {
+    const res = await customerAxios.post(`${apiUrl}/api/customer/verify-email`, {
       code,
       customerId: customer?.id
-    }, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
     if (res.data.emailVerified) {
       setCustomer(prev => prev ? { ...prev, emailVerified: true } : prev);
@@ -100,11 +84,7 @@ export const CustomerAuthProvider = ({ children }) => {
   // the customer confirms the SMS code with Firebase directly.
   const verifyPhone = async (idToken) => {
     const apiUrl = getApiUrl();
-    const res = await axios.post(`${apiUrl}/api/customer/verify-phone`, {
-      idToken
-    }, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const res = await customerAxios.post(`${apiUrl}/api/customer/verify-phone`, { idToken });
     if (res.data.phoneVerified) {
       setCustomer(prev => prev ? { ...prev, phoneVerified: true } : prev);
       localStorage.setItem('customer_user', JSON.stringify({ ...customer, phoneVerified: true }));
@@ -114,47 +94,32 @@ export const CustomerAuthProvider = ({ children }) => {
 
   const resendOtp = async (type) => {
     const apiUrl = getApiUrl();
-    const res = await axios.post(`${apiUrl}/api/customer/resend-otp`, {
+    const res = await customerAxios.post(`${apiUrl}/api/customer/resend-otp`, {
       type,
       customerId: customer?.id,
       email: customer?.email,
       phone: customer?.phone
-    }, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
     return res.data;
   };
 
   const updateProfile = async (updateData) => {
     const apiUrl = getApiUrl();
-    const res = await axios.put(`${apiUrl}/api/customer/profile`, updateData, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const res = await customerAxios.put(`${apiUrl}/api/customer/profile`, updateData);
     if (res.data.customer) {
       setCustomer(res.data.customer);
       localStorage.setItem('customer_user', JSON.stringify(res.data.customer));
-    }
-    if (res.data.token) {
-      setToken(res.data.token);
-      localStorage.setItem('customer_token', res.data.token);
     }
     return res.data;
   };
 
   const logout = () => {
-    const currentToken = token;
-    setToken(null);
     setCustomer(null);
-    localStorage.removeItem('customer_token');
     localStorage.removeItem('customer_user');
     // Best-effort: revoke the session server-side (bumps tokenVersion, clears
-    // the HttpOnly cookie) so a stolen token/cookie can't outlive logout.
-    if (currentToken) {
-      const apiUrl = getApiUrl();
-      axios.post(`${apiUrl}/api/customer/logout`, {}, {
-        headers: { Authorization: `Bearer ${currentToken}` }
-      }).catch(() => {});
-    }
+    // the HttpOnly + CSRF cookies) so a stolen cookie can't outlive logout.
+    const apiUrl = getApiUrl();
+    customerAxios.post(`${apiUrl}/api/customer/logout`, {}).catch(() => {});
   };
 
   const requestPasswordReset = async (email) => {
@@ -176,9 +141,8 @@ export const CustomerAuthProvider = ({ children }) => {
     <CustomerAuthContext.Provider
       value={{
         customer,
-        token,
         loading,
-        isAuthenticated: Boolean(token && customer),
+        isAuthenticated: Boolean(customer),
         isVerified,
         register,
         login,

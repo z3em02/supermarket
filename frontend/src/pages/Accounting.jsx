@@ -43,16 +43,12 @@ export const Accounting = () => {
 
   const fetchAccountingData = async () => {
     try {
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
       const params = {};
       if (dateRange.start) params.startDate = dateRange.start;
       if (dateRange.end) params.endDate = dateRange.end;
 
-      const response = await axios.get(`${apiUrl}/api/accounting/summary`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params
-      });
+      const response = await axios.get(`${apiUrl}/api/accounting/summary`, { params });
       setData(response.data);
     } catch (error) {
       console.error('Error fetching accounting data:', error);
@@ -68,14 +64,12 @@ export const Accounting = () => {
 
   const handleExport = async () => {
     try {
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
       const params = {};
       if (dateRange.start) params.startDate = dateRange.start;
       if (dateRange.end) params.endDate = dateRange.end;
 
       const response = await axios.get(`${apiUrl}/api/accounting/export`, {
-        headers: { Authorization: `Bearer ${token}` },
         params: { ...params, format: 'csv' },
         responseType: 'blob'
       });

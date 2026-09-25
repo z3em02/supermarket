@@ -5,7 +5,7 @@ const { customerAuthMiddleware } = require('../middleware/customerAuth');
 const { authMiddleware } = require('../middleware/auth');
 const { authLimiter } = require('../middleware/rateLimiter');
 const { sectionUnlockMiddleware } = require('../middleware/sectionUnlock');
-const { clearCsrfCookie } = require('../middleware/csrf');
+const { clearCsrfCookie, requireCsrfForCookieAuth } = require('../middleware/csrf');
 
 const jwt = require('jsonwebtoken');
 const prisma = require('../lib/prisma');
@@ -21,7 +21,14 @@ router.post('/resend-otp', authLimiter, customerAuthMiddleware, customerAuthCont
 router.post('/login', authLimiter, customerAuthController.login);
 router.post('/logout', async (req, res) => {
   const authHeader = req.headers.authorization || req.header('Authorization');
+  const usedCookieAuth = Boolean(req.cookies?.customer_token);
   const token = req.cookies?.customer_token || (authHeader?.startsWith('Bearer ') ? authHeader.replace(/^Bearer\s+/, '').trim() : null);
+
+  // Not behind customerAuthMiddleware (an already-expired/invalid cookie must
+  // still be able to log out and clear itself), so the CSRF check has to
+  // happen here manually — otherwise a cross-site page could force this
+  // cookie-only mutating request through with no auth middleware ever running.
+  if (!requireCsrfForCookieAuth(req, res, usedCookieAuth)) return;
 
   if (token) {
     try {

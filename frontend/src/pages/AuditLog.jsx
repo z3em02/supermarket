@@ -19,11 +19,8 @@ export const AuditLog = () => {
     try {
       setLoading(true);
       setError('');
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
-      const res = await axios.get(`${apiUrl}/api/audit-log`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${apiUrl}/api/audit-log`);
       setEntries(res.data);
     } catch (err) {
       console.error('Error fetching audit log:', err);

@@ -8,6 +8,7 @@ import { StoreSettingsProvider } from './context/StoreSettingsContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { SectionPasscodeGate } from './components/SectionPasscodeGate';
 import { Layout } from './components/Layout';
+import { ADMIN_BASE } from './config/adminPath';
 
 // Public customer storefront pages (eager loaded for instant first paint)
 import { LandingPage } from './pages/LandingPage';
@@ -38,7 +39,7 @@ const PageLoader = () => (
   </div>
 );
 
-const ADMIN = '/secret/admin';
+const ADMIN = ADMIN_BASE;
 
 function App() {
   return (
@@ -73,10 +74,10 @@ function App() {
                   <Route path="/agb" element={<AGB />} />
                   <Route path="/terms" element={<Navigate to="/agb" replace />} />
 
-                {/* Secret Admin Login */}
+                {/* Admin Login */}
                 <Route path={`${ADMIN}/login`} element={<Suspense fallback={<PageLoader />}><Login /></Suspense>} />
 
-                {/* Secret Admin Shortcuts & Protected Routes — all under /secret/admin/* */}
+                {/* Admin Shortcuts & Protected Routes — all under ADMIN_BASE/* */}
                 <Route path={ADMIN} element={<Navigate to={`${ADMIN}/dashboard`} replace />} />
                 <Route path={`${ADMIN}/`} element={<Navigate to={`${ADMIN}/dashboard`} replace />} />
 

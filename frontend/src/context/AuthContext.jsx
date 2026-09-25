@@ -1,23 +1,55 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import adminAxios, { ADMIN_AUTH_EXPIRED_EVENT } from '../utils/adminAxios';
 import { getApiUrl } from '../utils/api';
 
 const AuthContext = createContext(null);
 
+// The admin session lives entirely in the HttpOnly `token` cookie now — it's
+// never stored in localStorage (that's what let any XSS on this app read it
+// straight out and impersonate the admin). Since JS can't read an HttpOnly
+// cookie either, "am I logged in" is answered by asking the backend
+// (GET /api/auth/me, which succeeds iff the cookie is present and valid),
+// not by checking local state. `adminUser` in localStorage is kept purely
+// as a non-sensitive cache (name/email only) so the UI doesn't flash a
+// loading spinner on every reload — the /me check below is still the
+// authority and overwrites it as soon as it resolves.
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('adminUser');
-    if (savedUser) {
-      try {
-        return JSON.parse(savedUser);
-      } catch (e) {
-        console.error('Failed to parse adminUser from localStorage', e);
-      }
+    try {
+      const saved = localStorage.getItem('adminUser');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
     }
-    return localStorage.getItem('token') ? { email: 'admin@supermarket.com', name: 'Admin' } : null;
   });
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const apiUrl = getApiUrl();
+    adminAxios.get(`${apiUrl}/api/auth/me`)
+      .then((res) => {
+        setUser(res.data);
+        localStorage.setItem('adminUser', JSON.stringify(res.data));
+      })
+      .catch(() => {
+        setUser(null);
+        localStorage.removeItem('adminUser');
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Any other adminAxios call (not just the /me probe above) can 401 once
+  // the session dies mid-use — e.g. logged out elsewhere, or the token
+  // expires while the admin is active. adminAxios dispatches this instead
+  // of redirecting itself, so it doesn't affect public pages; clearing
+  // `user` here is what lets ProtectedRoute notice and navigate to login,
+  // but only for someone who's actually inside the admin section.
+  useEffect(() => {
+    const handleAuthExpired = () => setUser(null);
+    window.addEventListener(ADMIN_AUTH_EXPIRED_EVENT, handleAuthExpired);
+    return () => window.removeEventListener(ADMIN_AUTH_EXPIRED_EVENT, handleAuthExpired);
+  }, []);
 
   // Step 1: password check. Never logs the admin in directly — always
   // returns a pending token that must be exchanged via verifyLoginCode.
@@ -34,16 +66,20 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Step 2: the emailed 2FA code + pending token exchange for a real session.
+  // Step 2: the emailed 2FA code + pending token exchange for a real
+  // session. The response still includes the JWT for API compatibility, but
+  // the browser already stored it via Set-Cookie — we deliberately don't
+  // persist the value from the response body anywhere.
   const verifyLoginCode = async (pendingToken, code) => {
     try {
       const apiUrl = getApiUrl();
-      const response = await axios.post(`${apiUrl}/api/auth/verify-2fa`, { pendingToken, code });
-      const { token: receivedToken, admin } = response.data;
-      localStorage.setItem('token', receivedToken);
-      localStorage.setItem('adminUser', JSON.stringify(admin));
-      setToken(receivedToken);
-      setUser(admin);
+      const response = await axios.post(
+        `${apiUrl}/api/auth/verify-2fa`,
+        { pendingToken, code },
+        { withCredentials: true }
+      );
+      setUser(response.data.admin);
+      localStorage.setItem('adminUser', JSON.stringify(response.data.admin));
       return { success: true };
     } catch (error) {
       return {
@@ -67,26 +103,21 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    const currentToken = localStorage.getItem('token');
-    localStorage.removeItem('token');
     localStorage.removeItem('adminUser');
-    setToken(null);
     setUser(null);
     // Best-effort: revoke the session server-side (bumps tokenVersion, clears
-    // the HttpOnly cookie) so a stolen token/cookie can't outlive logout.
-    // The local state is already cleared above regardless of this succeeding.
+    // the HttpOnly + CSRF cookies) so a stolen cookie can't outlive logout.
+    // Local state is already cleared above regardless of this succeeding.
     try {
       const apiUrl = getApiUrl();
-      await axios.post(`${apiUrl}/api/auth/logout`, {}, {
-        headers: currentToken ? { Authorization: `Bearer ${currentToken}` } : {}
-      });
+      await adminAxios.post(`${apiUrl}/api/auth/logout`, {});
     } catch (err) {
       // Ignore — the admin is logged out locally either way.
     }
   };
 
   return (
-    <AuthContext.Provider value={{ token, user, loading, requestLogin, verifyLoginCode, resendLoginCode, logout }}>
+    <AuthContext.Provider value={{ user, loading, requestLogin, verifyLoginCode, resendLoginCode, logout }}>
       {children}
     </AuthContext.Provider>
   );

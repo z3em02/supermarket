@@ -32,6 +32,7 @@ import { useCustomerAuth } from '../context/CustomerAuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useStoreSettings } from '../context/StoreSettingsContext';
 import { getApiUrl } from '../utils/api';
+import { getCsrfToken } from '../utils/csrf';
 import {
   todayIso,
   tomorrowIso,
@@ -53,7 +54,7 @@ export const CustomerCartDrawer = ({
   removeFromCart,
   clearCart
 }) => {
-  const { customer, isAuthenticated, token } = useCustomerAuth();
+  const { customer, isAuthenticated } = useCustomerAuth();
   const { t, direction, language } = useLanguage();
   const { settings } = useStoreSettings();
   const navigate = useNavigate();
@@ -265,12 +266,11 @@ export const CustomerCartDrawer = ({
       setValidatingCoupon(true);
       setCouponError('');
       const apiUrl = getApiUrl();
-      const headers = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
 
       const res = await fetch(`${apiUrl}/api/coupons/validate`, {
         method: 'POST',
-        headers,
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() || '' },
         body: JSON.stringify({
           code: clean,
           items: cart.map(i => ({ productId: i.productId, quantity: i.quantity }))
@@ -306,12 +306,11 @@ export const CustomerCartDrawer = ({
   useEffect(() => {
     if (appliedCoupon && cart.length > 0) {
       const apiUrl = getApiUrl();
-      const headers = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
 
       fetch(`${apiUrl}/api/coupons/validate`, {
         method: 'POST',
-        headers,
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCsrfToken() || '' },
         body: JSON.stringify({
           code: appliedCoupon.code,
           items: cart.map(i => ({ productId: i.productId, quantity: i.quantity }))
@@ -332,7 +331,7 @@ export const CustomerCartDrawer = ({
         })
         .catch(() => {});
     }
-  }, [cart, token]);
+  }, [cart]);
 
   const allowedPostalCodes = useMemo(() => {
     const raw = settings?.allowedPostalCodes;
@@ -443,9 +442,10 @@ export const CustomerCartDrawer = ({
       const apiUrl = getApiUrl();
       const res = await fetch(`${apiUrl}/api/orders`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+          'X-CSRF-Token': getCsrfToken() || ''
         },
         body: JSON.stringify({
           orderItems: cart.map(i => ({ productId: i.productId, quantity: i.quantity })),

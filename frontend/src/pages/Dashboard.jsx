@@ -3,6 +3,7 @@ import axios from '../utils/adminAxios';
 import { getApiUrl } from '../utils/api';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import { ADMIN_BASE } from '../config/adminPath';
 import {
   Users,
   Package,
@@ -200,7 +201,7 @@ export const Dashboard = () => {
           </button>
 
           <button
-            onClick={() => navigate('/secret/admin/catalogs')}
+            onClick={() => navigate(`${ADMIN_BASE}/catalogs`)}
             className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-gray-800 hover:border-indigo-500 dark:hover:border-indigo-500 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/30 group transition"
           >
             <div className="flex items-center gap-3">
@@ -215,7 +216,7 @@ export const Dashboard = () => {
           </button>
 
           <button
-            onClick={() => navigate('/secret/admin/products')}
+            onClick={() => navigate(`${ADMIN_BASE}/products`)}
             className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-gray-800 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/30 group transition"
           >
             <div className="flex items-center gap-3">
@@ -230,7 +231,7 @@ export const Dashboard = () => {
           </button>
 
           <button
-            onClick={() => navigate('/secret/admin/orders')}
+            onClick={() => navigate(`${ADMIN_BASE}/orders`)}
             className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-gray-800 hover:border-purple-500 dark:hover:border-purple-500 hover:bg-purple-50/50 dark:hover:bg-purple-950/30 group transition"
           >
             <div className="flex items-center gap-3">

@@ -5,7 +5,7 @@ const { JWT_SECRET } = require('../lib/config');
 const { login, verify2FA, resend2FA, changePassword } = require('../controllers/authController');
 const { authLimiter, createRateLimiter } = require('../middleware/rateLimiter');
 const { authMiddleware } = require('../middleware/auth');
-const { clearCsrfCookie } = require('../middleware/csrf');
+const { clearCsrfCookie, requireCsrfForCookieAuth } = require('../middleware/csrf');
 
 const router = express.Router();
 
@@ -22,10 +22,24 @@ router.post('/verify-2fa', authLimiter, twoFactorLimiter, verify2FA);
 router.post('/resend-2fa', authLimiter, resend2FA);
 router.put('/change-password', authMiddleware, changePassword);
 
+// Session check for cookie-only auth: the frontend no longer stores the JWT
+// itself (can't — it's HttpOnly), so it calls this on load to learn whether
+// the browser's cookie still represents a valid session, and who it is.
+router.get('/me', authMiddleware, (req, res) => {
+  res.json({ id: req.admin.id, email: req.admin.email, name: req.admin.name });
+});
+
 // #38 & Finding 1.5 fix: clear cookie with full attributes and revoke admin token
 router.post('/logout', async (req, res) => {
   const authHeader = req.headers.authorization;
+  const usedCookieAuth = Boolean(req.cookies?.token);
   const token = req.cookies?.token || (authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null);
+
+  // Not behind authMiddleware (an already-expired/invalid cookie must still
+  // be able to log out and clear itself), so the CSRF check has to happen
+  // here manually — otherwise a cross-site page could force this cookie-only
+  // mutating request through with no auth middleware ever running it.
+  if (!requireCsrfForCookieAuth(req, res, usedCookieAuth)) return;
 
   if (token) {
     try {

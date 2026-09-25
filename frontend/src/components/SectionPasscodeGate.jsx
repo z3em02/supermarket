@@ -30,11 +30,8 @@ export const SectionPasscodeGate = ({ children }) => {
     if (unlocked) return;
     const checkStatus = async () => {
       try {
-        const token = localStorage.getItem('token');
         const apiUrl = getApiUrl();
-        const res = await axios.get(`${apiUrl}/api/settings/passcode-status`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await axios.get(`${apiUrl}/api/settings/passcode-status`);
         setStatus(res.data.isSet ? 'enter' : 'setup');
       } catch (err) {
         console.error('Passcode status error:', err);
@@ -61,11 +58,8 @@ export const SectionPasscodeGate = ({ children }) => {
       }
       try {
         setSubmitting(true);
-        const token = localStorage.getItem('token');
         const apiUrl = getApiUrl();
-        const setupRes = await axios.put(`${apiUrl}/api/settings/passcode`, { passcode: pin }, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const setupRes = await axios.put(`${apiUrl}/api/settings/passcode`, { passcode: pin });
         if (setupRes.data.unlockToken) sessionStorage.setItem(TOKEN_KEY, setupRes.data.unlockToken);
         sessionStorage.setItem(SESSION_KEY, 'true');
         setUnlocked(true);
@@ -79,11 +73,8 @@ export const SectionPasscodeGate = ({ children }) => {
 
     try {
       setSubmitting(true);
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
-      const res = await axios.post(`${apiUrl}/api/settings/passcode/verify`, { passcode: pin }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.post(`${apiUrl}/api/settings/passcode/verify`, { passcode: pin });
       if (res.data.valid) {
         if (res.data.unlockToken) sessionStorage.setItem(TOKEN_KEY, res.data.unlockToken);
         sessionStorage.setItem(SESSION_KEY, 'true');

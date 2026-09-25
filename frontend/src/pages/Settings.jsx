@@ -90,11 +90,8 @@ export const Settings = () => {
   const fetchDeliveryWindows = async () => {
     try {
       setLoadingWindows(true);
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
-      const res = await axios.get(`${apiUrl}/api/delivery-windows`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.get(`${apiUrl}/api/delivery-windows`);
       setDeliveryWindows(res.data);
     } catch (err) {
       console.error('Error fetching delivery windows:', err);
@@ -112,6 +109,7 @@ export const Settings = () => {
   const [showPasscodeForm, setShowPasscodeForm] = useState(false);
   const [newPasscode, setNewPasscode] = useState('');
   const [confirmPasscode, setConfirmPasscode] = useState('');
+  const [currentPasscode, setCurrentPasscode] = useState('');
   const [passcodeError, setPasscodeError] = useState('');
   const [passcodeMessage, setPasscodeMessage] = useState('');
   const [savingPasscode, setSavingPasscode] = useState(false);
@@ -119,11 +117,8 @@ export const Settings = () => {
   useEffect(() => {
     const fetchPasscodeStatus = async () => {
       try {
-        const token = localStorage.getItem('token');
         const apiUrl = getApiUrl();
-        const res = await axios.get(`${apiUrl}/api/settings/passcode-status`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await axios.get(`${apiUrl}/api/settings/passcode-status`);
         setPasscodeIsSet(res.data.isSet);
       } catch (err) {
         console.error('Error fetching passcode status:', err);
@@ -144,17 +139,19 @@ export const Settings = () => {
       setPasscodeError(language === 'ar' ? 'الرمزان غير متطابقين' : 'Die PINs stimmen nicht überein');
       return;
     }
+    if (passcodeIsSet && !/^\d{4,8}$/.test(currentPasscode)) {
+      setPasscodeError(language === 'ar' ? 'يرجى إدخال الرمز الحالي' : 'Bitte aktuellen PIN eingeben');
+      return;
+    }
     try {
       setSavingPasscode(true);
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
-      await axios.put(`${apiUrl}/api/settings/passcode`, { passcode: newPasscode }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.put(`${apiUrl}/api/settings/passcode`, { passcode: newPasscode, currentPasscode: passcodeIsSet ? currentPasscode : undefined });
       setPasscodeIsSet(true);
       setShowPasscodeForm(false);
       setNewPasscode('');
       setConfirmPasscode('');
+      setCurrentPasscode('');
       setPasscodeMessage(language === 'ar' ? 'تم حفظ الرمز بنجاح' : 'PIN erfolgreich gespeichert');
     } catch (err) {
       setPasscodeError(err.response?.data?.error || (language === 'ar' ? 'حدث خطأ' : 'Ein Fehler ist aufgetreten'));
@@ -164,14 +161,13 @@ export const Settings = () => {
   };
 
   const handleRemovePasscode = async () => {
-    if (!window.confirm(language === 'ar' ? 'هل تريد إزالة حماية الرمز عن هذه الأقسام؟' : 'PIN-Schutz für diese Bereiche wirklich entfernen?')) return;
+    const promptText = language === 'ar' ? 'أدخل الرمز الحالي لإزالة الحماية' : 'Aktuellen PIN zum Entfernen eingeben';
+    const entered = window.prompt(promptText);
+    if (entered === null) return;
     try {
       setSavingPasscode(true);
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
-      await axios.put(`${apiUrl}/api/settings/passcode`, { passcode: null }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.put(`${apiUrl}/api/settings/passcode`, { passcode: null, currentPasscode: entered });
       setPasscodeIsSet(false);
       setPasscodeMessage(language === 'ar' ? 'تمت إزالة الرمز' : 'PIN entfernt');
     } catch (err) {
@@ -195,12 +191,10 @@ export const Settings = () => {
       return;
     }
     try {
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
       await axios.post(
         `${apiUrl}/api/delivery-windows`,
-        { startHour: start, endHour: end, sortOrder: deliveryWindows.length },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { startHour: start, endHour: end, sortOrder: deliveryWindows.length }
       );
       await fetchDeliveryWindows();
       setNewStartHour('10');
@@ -213,12 +207,10 @@ export const Settings = () => {
   const handleToggleDeliveryWindow = async (win) => {
     setSavingWindowId(win.id);
     try {
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
       await axios.put(
         `${apiUrl}/api/delivery-windows/${win.id}`,
-        { isActive: !win.isActive },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { isActive: !win.isActive }
       );
       setDeliveryWindows((prev) => prev.map((w) => (w.id === win.id ? { ...w, isActive: !w.isActive } : w)));
     } catch (err) {
@@ -231,11 +223,8 @@ export const Settings = () => {
   const handleDeleteDeliveryWindow = async (id) => {
     if (!window.confirm(language === 'ar' ? 'هل تريد حذف هذا الوقت؟' : 'Dieses Zeitfenster löschen?')) return;
     try {
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
-      await axios.delete(`${apiUrl}/api/delivery-windows/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.delete(`${apiUrl}/api/delivery-windows/${id}`);
       setDeliveryWindows((prev) => prev.filter((w) => w.id !== id));
     } catch (err) {
       console.error('Error deleting delivery window:', err);
@@ -287,11 +276,8 @@ export const Settings = () => {
       setGeocodingStore(true);
       setSuccessMessage('');
       setErrorMessage('');
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
-      const res = await axios.post(`${apiUrl}/api/delivery-distance/geocode-store`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.post(`${apiUrl}/api/delivery-distance/geocode-store`, {});
       if (res.data && res.data.latitude && res.data.longitude) {
         setFormData((prev) => ({
           ...prev,
@@ -790,6 +776,22 @@ export const Settings = () => {
                 </div>
               ) : (
                 <form onSubmit={handleSavePasscode} className="flex flex-wrap items-end gap-2.5">
+                  {passcodeIsSet && (
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400 mb-1">
+                        {language === 'ar' ? 'الرمز الحالي' : 'Aktueller PIN'}
+                      </label>
+                      <input
+                        type="password"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={8}
+                        value={currentPasscode}
+                        onChange={(e) => setCurrentPasscode(e.target.value.replace(/\D/g, ''))}
+                        className="w-32 px-3 py-2 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs font-mono text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:outline-none transition"
+                      />
+                    </div>
+                  )}
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400 mb-1">
                       {language === 'ar' ? 'رمز جديد (4-8 أرقام)' : 'Neuer PIN (4–8 Ziffern)'}
@@ -827,7 +829,7 @@ export const Settings = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setShowPasscodeForm(false); setNewPasscode(''); setConfirmPasscode(''); setPasscodeError(''); }}
+                    onClick={() => { setShowPasscodeForm(false); setNewPasscode(''); setConfirmPasscode(''); setCurrentPasscode(''); setPasscodeError(''); }}
                     className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-600 dark:text-gray-300 text-xs font-bold cursor-pointer"
                   >
                     {language === 'ar' ? 'إلغاء' : 'Abbrechen'}

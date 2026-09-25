@@ -142,12 +142,10 @@ export const Orders = () => {
 
   const fetchCreateFormData = async () => {
     try {
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
-      const headers = { Authorization: `Bearer ${token}` };
       const [customersRes, productsRes] = await Promise.all([
-        axios.get(`${apiUrl}/api/customer-auth/customers`, { headers }).catch(() => ({ data: [] })),
-        axios.get(`${apiUrl}/api/products`, { headers })
+        axios.get(`${apiUrl}/api/customer-auth/customers`).catch(() => ({ data: [] })),
+        axios.get(`${apiUrl}/api/products`)
       ]);
       setCustomers(customersRes.data);
       setProducts(productsRes.data);
@@ -158,11 +156,8 @@ export const Orders = () => {
 
   const fetchOrders = async () => {
     try {
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
-      const response = await axios.get(`${apiUrl}/api/orders`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(`${apiUrl}/api/orders`);
       setOrders(response.data);
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -210,7 +205,6 @@ export const Orders = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
       await axios.post(
         `${apiUrl}/api/orders`,
@@ -222,8 +216,7 @@ export const Orders = () => {
           paymentMethod: 'cash_on_delivery',
           notes: orderForm.notes,
           items
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
+        }
       );
       setShowCreateModal(false);
       setOrderForm({ customerId: '', customerName: '', customerPhone: '', deliveryAddress: '', notes: '', items: [{ productId: '', quantity: 1 }] });
@@ -246,7 +239,6 @@ export const Orders = () => {
     if (!statusModalOrder) return;
     setUpdating(true);
     try {
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
       await axios.put(
         `${apiUrl}/api/orders/${statusModalOrder.id}/status`,
@@ -254,15 +246,12 @@ export const Orders = () => {
           status: targetStatus,
           notes: customerNoteInput,
           adminNotes: adminNoteInput
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
+        }
       );
       setStatusModalOrder(null);
       await fetchOrders();
       if (selectedOrder && selectedOrder.id === statusModalOrder.id) {
-        const updatedOrder = await axios.get(`${apiUrl}/api/orders/${statusModalOrder.id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const updatedOrder = await axios.get(`${apiUrl}/api/orders/${statusModalOrder.id}`);
         setSelectedOrder(updatedOrder.data);
       }
     } catch (error) {
@@ -277,17 +266,13 @@ export const Orders = () => {
   const handleQuickStatusChange = async (orderId, newStatus) => {
     setUpdating(true);
     try {
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
-      await axios.put(`${apiUrl}/api/orders/${orderId}/status`, 
-        { status: newStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
+      await axios.put(`${apiUrl}/api/orders/${orderId}/status`,
+        { status: newStatus }
       );
       await fetchOrders();
       if (selectedOrder && selectedOrder.id === orderId) {
-        const updatedOrder = await axios.get(`${apiUrl}/api/orders/${orderId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const updatedOrder = await axios.get(`${apiUrl}/api/orders/${orderId}`);
         setSelectedOrder(updatedOrder.data);
       }
     } catch (error) {
@@ -313,19 +298,15 @@ export const Orders = () => {
   const handleSaveDeliverySlot = async (orderId) => {
     setSavingDeliverySlot(true);
     try {
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
       await axios.put(
         `${apiUrl}/api/orders/${orderId}/status`,
-        { deliverySlot: buildDeliverySlot(editDeliveryDate, editSelectedWindow?.startHour, editSelectedWindow?.endHour) },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { deliverySlot: buildDeliverySlot(editDeliveryDate, editSelectedWindow?.startHour, editSelectedWindow?.endHour) }
       );
       setEditingDeliverySlot(false);
       await fetchOrders();
       if (selectedOrder && selectedOrder.id === orderId) {
-        const updatedOrder = await axios.get(`${apiUrl}/api/orders/${orderId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const updatedOrder = await axios.get(`${apiUrl}/api/orders/${orderId}`);
         setSelectedOrder(updatedOrder.data);
       }
     } catch (error) {
@@ -340,11 +321,8 @@ export const Orders = () => {
 
   const handleViewDetails = async (order) => {
     try {
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
-      const response = await axios.get(`${apiUrl}/api/orders/${order.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(`${apiUrl}/api/orders/${order.id}`);
       setSelectedOrder(response.data);
       setShowDetailModal(true);
       setEditingDeliverySlot(false);
@@ -497,7 +475,6 @@ export const Orders = () => {
 
     try {
       setSavingEdit(true);
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
       const payload = {
         items: editItems.map((it) => ({
@@ -508,9 +485,7 @@ export const Orders = () => {
         modificationReason: editReason.trim() || (language === 'ar' ? 'تعديل بسبب عدم توفر بعض المنتجات' : 'Anpassung wegen fehlender Verfügbarkeit einzelner Artikel.')
       };
 
-      const res = await axios.put(`${apiUrl}/api/orders/${editingOrder.id}/edit`, payload, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axios.put(`${apiUrl}/api/orders/${editingOrder.id}/edit`, payload);
 
       setShowEditModal(false);
       setEditingOrder(null);

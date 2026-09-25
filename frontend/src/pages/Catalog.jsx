@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useStoreSettings } from '../context/StoreSettingsContext';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { LanguageSelector } from '../components/LanguageSelector';
+import { ADMIN_BASE } from '../config/adminPath';
 import { 
   Search, 
   Package, 
@@ -48,16 +49,13 @@ export const Catalog = () => {
     try {
       setLoading(true);
       setError(null);
-      const token = localStorage.getItem('token');
+      // credentials: 'include' lets the (optional) admin session cookie ride
+      // along automatically if present — no token to read from localStorage.
       const headers = { 'Content-Type': 'application/json' };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
       const apiUrl = getApiUrl();
       const [prodRes, catRes] = await Promise.all([
-        fetch(`${apiUrl}/api/products/catalog`, { headers }),
-        fetch(`${apiUrl}/api/categories`, { headers })
+        fetch(`${apiUrl}/api/products/catalog`, { headers, credentials: 'include' }),
+        fetch(`${apiUrl}/api/categories`, { headers, credentials: 'include' })
       ]);
 
       if (!prodRes.ok) {
@@ -262,7 +260,7 @@ export const Catalog = () => {
 
             {user ? (
               <Link
-                to="/secret/admin/dashboard"
+                to={`${ADMIN_BASE}/dashboard`}
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-sm transition-colors cursor-pointer"
               >
                 {direction === 'rtl' ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
@@ -766,7 +764,7 @@ export const Catalog = () => {
                 </button>
                 {user ? (
                   <Link
-                    to="/secret/admin/products"
+                    to={`${ADMIN_BASE}/products`}
                     className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 transition-colors cursor-pointer"
                   >
                     {t('editProduct')}

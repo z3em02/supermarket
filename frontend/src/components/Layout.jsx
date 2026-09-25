@@ -23,6 +23,7 @@ import {
 import { LanguageSelector } from './LanguageSelector';
 import { ThemeToggle } from './ThemeToggle';
 import { useNavigate } from 'react-router-dom';
+import { ADMIN_BASE } from '../config/adminPath';
 
 export const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -33,16 +34,16 @@ export const Layout = () => {
   const navigate = useNavigate();
 
   const navigation = [
-    { name: t('dashboard'), href: '/secret/admin/dashboard', icon: LayoutDashboard },
-    { name: t('catalogs'),  href: '/secret/admin/catalogs',  icon: Layers },
-    { name: t('products'),  href: '/secret/admin/products',  icon: Package },
-    { name: t('promotions'), href: '/secret/admin/promotions', icon: Sparkles },
+    { name: t('dashboard'), href: `${ADMIN_BASE}/dashboard`, icon: LayoutDashboard },
+    { name: t('catalogs'),  href: `${ADMIN_BASE}/catalogs`,  icon: Layers },
+    { name: t('products'),  href: `${ADMIN_BASE}/products`,  icon: Package },
+    { name: t('promotions'), href: `${ADMIN_BASE}/promotions`, icon: Sparkles },
     { name: t('publicCatalog'), href: '/', icon: Store },
-    { name: t('orders'),    href: '/secret/admin/orders',    icon: ShoppingCart },
-    { name: t('customers'), href: '/secret/admin/customers', icon: Users },
-    { name: t('accounting'), href: '/secret/admin/accounting', icon: TrendingUp },
-    { name: t('settings'),   href: '/secret/admin/settings',   icon: Settings },
-    { name: language === 'ar' ? 'سجل الوصول' : 'Zugriffsprotokoll', href: '/secret/admin/audit-log', icon: ScrollText },
+    { name: t('orders'),    href: `${ADMIN_BASE}/orders`,    icon: ShoppingCart },
+    { name: t('customers'), href: `${ADMIN_BASE}/customers`, icon: Users },
+    { name: t('accounting'), href: `${ADMIN_BASE}/accounting`, icon: TrendingUp },
+    { name: t('settings'),   href: `${ADMIN_BASE}/settings`,   icon: Settings },
+    { name: language === 'ar' ? 'سجل الوصول' : 'Zugriffsprotokoll', href: `${ADMIN_BASE}/audit-log`, icon: ScrollText },
   ];
 
   const handleLogout = () => {
@@ -52,7 +53,7 @@ export const Layout = () => {
   const handleLockSections = () => {
     sessionStorage.removeItem('admin_section_unlocked');
     sessionStorage.removeItem('admin_section_unlock_token');
-    navigate('/secret/admin/dashboard');
+    navigate(`${ADMIN_BASE}/dashboard`);
   };
 
   const navContent = (

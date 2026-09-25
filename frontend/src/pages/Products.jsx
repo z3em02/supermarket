@@ -3,6 +3,7 @@ import axios from '../utils/adminAxios';
 import { Link } from 'react-router-dom';
 import { getApiUrl } from '../utils/api';
 import { useLanguage } from '../context/LanguageContext';
+import { ADMIN_BASE } from '../config/adminPath';
 import { 
   Plus, 
   Edit, 
@@ -50,13 +51,11 @@ export const Products = () => {
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
-      const headers = { Authorization: `Bearer ${token}` };
 
       const [prodRes, catRes] = await Promise.all([
-        axios.get(`${apiUrl}/api/products`, { headers }),
-        axios.get(`${apiUrl}/api/categories`, { headers })
+        axios.get(`${apiUrl}/api/products`),
+        axios.get(`${apiUrl}/api/categories`)
       ]);
       setProducts(prodRes.data);
       setCategories(catRes.data);
@@ -78,9 +77,7 @@ export const Products = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
-      const headers = { Authorization: `Bearer ${token}` };
 
       const payload = {
         nameDe: formData.nameDe.trim(),
@@ -97,9 +94,9 @@ export const Products = () => {
       };
 
       if (editingProduct) {
-        await axios.put(`${apiUrl}/api/products/${editingProduct.id}`, payload, { headers });
+        await axios.put(`${apiUrl}/api/products/${editingProduct.id}`, payload);
       } else {
-        await axios.post(`${apiUrl}/api/products`, payload, { headers });
+        await axios.post(`${apiUrl}/api/products`, payload);
       }
 
       setShowModal(false);
@@ -147,11 +144,8 @@ export const Products = () => {
     if (!window.confirm(t('confirmDeleteProduct'))) return;
 
     try {
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
-      await axios.delete(`${apiUrl}/api/products/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.delete(`${apiUrl}/api/products/${id}`);
       fetchData();
     } catch (error) {
       console.error('Error deleting product:', error);
@@ -172,13 +166,11 @@ export const Products = () => {
 
     setIsRestocking(true);
     try {
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
       const newStock = Number(restockProduct.stock || 0) + qtyToAdd;
       await axios.patch(
         `${apiUrl}/api/products/${restockProduct.id}/stock`,
-        { stock: newStock },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { stock: newStock }
       );
       setRestockProduct(null);
       setRestockAmount(10);
@@ -231,7 +223,7 @@ export const Products = () => {
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
           <Link
-            to="/secret/admin/catalogs"
+            to={`${ADMIN_BASE}/catalogs`}
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-slate-50 dark:hover:bg-gray-850 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-medium shadow-2xs transition touch-manipulation"
           >
             <Layers className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
@@ -602,7 +594,7 @@ export const Products = () => {
                     {t('category')}
                   </label>
                   <Link
-                    to="/secret/admin/catalogs"
+                    to={`${ADMIN_BASE}/catalogs`}
                     target="_blank"
                     className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
                   >

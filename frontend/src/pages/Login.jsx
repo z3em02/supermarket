@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { Lock, Mail, Building2, Store, ShieldCheck } from 'lucide-react';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { ADMIN_BASE } from '../config/adminPath';
 
 export const Login = () => {
   const { t, language } = useLanguage();
@@ -48,7 +49,7 @@ export const Login = () => {
     const result = await verifyLoginCode(pendingToken, code);
 
     if (result.success) {
-      navigate('/secret/admin/dashboard');
+      navigate(`${ADMIN_BASE}/dashboard`);
     } else {
       setError(result.error);
     }

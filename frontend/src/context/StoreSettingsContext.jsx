@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getApiUrl } from '../utils/api';
+import adminAxios from '../utils/adminAxios';
 
 const DEFAULT_SETTINGS = {
   id: 'default',
@@ -81,6 +82,22 @@ export const StoreSettingsProvider = ({ children }) => {
     }
   }, [settings?.storeName]);
 
+  // Update browser tab favicon dynamically from the admin-configured logo.
+  // The static tag in index.html has type="image/svg+xml" for the default
+  // favicon.svg — an uploaded logo is usually a PNG/JPG, so that leftover
+  // type attribute must go or browsers may refuse to render it.
+  useEffect(() => {
+    if (!settings?.logoUrl) return;
+    let link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
+    link.removeAttribute('type');
+    link.href = settings.logoUrl;
+  }, [settings?.logoUrl]);
+
   // Localized store name helper
   const getStoreName = useCallback((lang) => {
     if (!settings) return DEFAULT_SETTINGS.storeName;
@@ -97,26 +114,12 @@ export const StoreSettingsProvider = ({ children }) => {
   const updateStoreSettings = async (newSettingsData) => {
     try {
       const apiUrl = getApiUrl();
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${apiUrl}/api/settings`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(newSettingsData)
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to update store settings');
-      }
-
-      const updated = data.settings || data;
+      const res = await adminAxios.put(`${apiUrl}/api/settings`, newSettingsData);
+      const updated = res.data.settings || res.data;
       setSettings(updated);
       return { success: true, settings: updated };
     } catch (err) {
-      return { success: false, error: err.message };
+      return { success: false, error: err.response?.data?.error || err.message };
     }
   };
 
@@ -124,21 +127,11 @@ export const StoreSettingsProvider = ({ children }) => {
   const addReview = async (reviewData) => {
     try {
       const apiUrl = getApiUrl();
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${apiUrl}/api/settings/reviews`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(reviewData)
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to add review');
-      setReviews((prev) => [data, ...prev]);
-      return { success: true, review: data };
+      const res = await adminAxios.post(`${apiUrl}/api/settings/reviews`, reviewData);
+      setReviews((prev) => [res.data, ...prev]);
+      return { success: true, review: res.data };
     } catch (err) {
-      return { success: false, error: err.message };
+      return { success: false, error: err.response?.data?.error || err.message };
     }
   };
 
@@ -146,18 +139,11 @@ export const StoreSettingsProvider = ({ children }) => {
   const deleteReview = async (id) => {
     try {
       const apiUrl = getApiUrl();
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${apiUrl}/api/settings/reviews/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (!res.ok) throw new Error('Failed to delete review');
+      await adminAxios.delete(`${apiUrl}/api/settings/reviews/${id}`);
       setReviews((prev) => prev.filter((r) => r.id !== id));
       return { success: true };
     } catch (err) {
-      return { success: false, error: err.message };
+      return { success: false, error: err.response?.data?.error || err.message };
     }
   };
 
@@ -165,17 +151,8 @@ export const StoreSettingsProvider = ({ children }) => {
   const syncGoogleReviews = async (googleReviewsUrl) => {
     try {
       const apiUrl = getApiUrl();
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${apiUrl}/api/settings/sync-google-reviews`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ googleReviewsUrl })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to sync reviews');
+      const res = await adminAxios.post(`${apiUrl}/api/settings/sync-google-reviews`, { googleReviewsUrl });
+      const data = res.data;
       if (Array.isArray(data.reviews)) {
         setReviews(data.reviews);
       }
@@ -188,7 +165,7 @@ export const StoreSettingsProvider = ({ children }) => {
       }
       return { success: true, message: data.message, synced: data.synced };
     } catch (err) {
-      return { success: false, error: err.message };
+      return { success: false, error: err.response?.data?.error || err.message };
     }
   };
 

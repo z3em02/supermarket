@@ -68,11 +68,8 @@ export const Customers = () => {
     try {
       setLoading(true);
       setError('');
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
-      const response = await axios.get(`${apiUrl}/api/customer-auth/customers`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(`${apiUrl}/api/customer-auth/customers`);
       if (Array.isArray(response.data)) {
         setCustomers(response.data);
       } else {
@@ -99,11 +96,8 @@ export const Customers = () => {
 
     try {
       setDeletingId(id);
-      const token = localStorage.getItem('token');
       const apiUrl = getApiUrl();
-      await axios.delete(`${apiUrl}/api/customer-auth/customers/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.delete(`${apiUrl}/api/customer-auth/customers/${id}`);
       setCustomers(prev => Array.isArray(prev) ? prev.filter(c => c.id !== id) : []);
       if (selectedCustomer?.id === id) {
         setSelectedCustomer(null);

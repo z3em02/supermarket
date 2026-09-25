@@ -66,7 +66,10 @@ to launch both at once.
 
 The seed script creates a default admin login: **admin@hajar.com / admin**.
 **Change this password immediately** if you run the seed against anything
-other than a throwaway local database — admin login is at `/secret/admin/login`.
+other than a throwaway local database — admin login is at the path defined by
+`ADMIN_BASE` in `frontend/src/config/adminPath.js` (currently
+`/console-eb68a2f3/login`). Change that constant to your own value before
+deploying — see the comment there for why it's not real secrecy on its own.
 
 ### Schema changes
 

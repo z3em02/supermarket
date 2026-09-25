@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import customerAxios from '../utils/customerAxios';
 import { useCustomerAuth } from '../context/CustomerAuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useStoreSettings } from '../context/StoreSettingsContext';
@@ -47,7 +47,7 @@ import {
 } from 'lucide-react';
 
 export const CustomerAccount = () => {
-  const { customer, token, logout, updateProfile, verifyEmail, verifyPhone, resendOtp, refreshProfile } = useCustomerAuth();
+  const { customer, loading: authLoading, logout, updateProfile, verifyEmail, verifyPhone, resendOtp, refreshProfile } = useCustomerAuth();
   const { t, direction, language } = useLanguage();
   const { getStoreName } = useStoreSettings();
   const navigate = useNavigate();
@@ -72,7 +72,7 @@ export const CustomerAccount = () => {
 
   const handleEnablePush = async () => {
     setEnablingPush(true);
-    const result = await enablePushNotifications(token);
+    const result = await enablePushNotifications();
     setPushStatus(result === 'granted' ? 'subscribed' : result);
     setEnablingPush(false);
   };
@@ -133,21 +133,20 @@ export const CustomerAccount = () => {
   };
 
   useEffect(() => {
-    if (!token) {
+    if (authLoading) return; // wait for the initial session check to resolve
+    if (!customer) {
       navigate('/customer/login');
       return;
     }
     fetchOrders();
 
-    // #37 fix: only poll if active token exists in storage; clean up interval properly
+    // #37 fix: stop polling once the session is gone (cookie-based now —
+    // customer becomes null via refreshProfile/logout, not a stored token).
     const pollId = setInterval(() => {
-      const currentToken = localStorage.getItem('customer_token');
-      if (currentToken) {
-        fetchOrders(true);
-      }
+      fetchOrders(true);
     }, 15000);
     return () => clearInterval(pollId);
-  }, [token]);
+  }, [authLoading, Boolean(customer)]);
 
   useEffect(() => {
     if (customer) {
@@ -168,14 +167,10 @@ export const CustomerAccount = () => {
   }, [customer]);
 
   const fetchOrders = async (silent = false) => {
-    const currentToken = token || localStorage.getItem('customer_token');
-    if (!currentToken) return;
     try {
       if (!silent) setLoadingOrders(true);
       const apiUrl = getApiUrl();
-      const res = await axios.get(`${apiUrl}/api/orders/my-orders`, {
-        headers: { Authorization: `Bearer ${currentToken}` }
-      });
+      const res = await customerAxios.get(`${apiUrl}/api/orders/my-orders`);
       setOrders(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       if (err.response?.status !== 401) {
@@ -292,10 +287,9 @@ export const CustomerAccount = () => {
       setRespondingOrderId(orderId);
       setActionFeedback({ message: '', isError: false });
       const apiUrl = getApiUrl();
-      await axios.put(
+      await customerAxios.put(
         `${apiUrl}/api/orders/${orderId}/customer-response`,
-        { action },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { action }
       );
       setActionFeedback({
         message: isAr 

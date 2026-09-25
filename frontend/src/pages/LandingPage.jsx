@@ -152,16 +152,13 @@ export const LandingPage = () => {
     try {
       setLoading(true);
       setError(null);
-      const token = localStorage.getItem('token');
+      // credentials: 'include' lets the (optional) admin session cookie ride
+      // along automatically if present — no token to read from localStorage.
       const headers = { 'Content-Type': 'application/json' };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
       const apiUrl = getApiUrl();
       const [prodRes, catRes, promoRes] = await Promise.all([
-        fetch(`${apiUrl}/api/products/catalog`, { headers }),
-        fetch(`${apiUrl}/api/categories`, { headers }),
+        fetch(`${apiUrl}/api/products/catalog`, { headers, credentials: 'include' }),
+        fetch(`${apiUrl}/api/categories`, { headers, credentials: 'include' }),
         fetch(`${apiUrl}/api/promotions/active`).catch(() => null)
       ]);
 

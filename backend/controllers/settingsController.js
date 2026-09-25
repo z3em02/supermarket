@@ -344,7 +344,15 @@ const syncGoogleReviews = async (req, res) => {
       updateData.googleReviewCount = scraped.reviewCount;
     }
     if (googleReviewsUrl) {
-      updateData.googleReviewsUrl = googleReviewsUrl.trim();
+      const cleaned = googleReviewsUrl.trim();
+      const s = cleaned.toLowerCase();
+      // Same validation as updateSettings — this endpoint writes googleReviewsUrl
+      // to the DB independently and was missing the check, allowing a stored
+      // javascript:/data: URL to slip in via sync instead of the settings form.
+      if (s.startsWith('javascript:') || s.startsWith('data:') || s.startsWith('vbscript:') || s.startsWith('//') || !s.startsWith('https://')) {
+        return res.status(400).json({ error: 'googleReviewsUrl must be a secure HTTPS URL (starting with https://)' });
+      }
+      updateData.googleReviewsUrl = cleaned;
     }
 
     if (Object.keys(updateData).length > 0) {
@@ -430,30 +438,19 @@ const setPasscode = async (req, res) => {
       select: { sectionPasscodeHash: true }
     });
 
-    // Finding 1.1 fix: if a passcode is already set, require either an active
-    // section-unlock token or verification of currentPasscode
+    // Always require the current passcode to change or remove it, even from
+    // an already-unlocked session — a section-unlock token only proves "you
+    // could read gated data recently", not "you know the PIN right now", and
+    // it lives for hours in sessionStorage where an XSS could read it. Making
+    // this step-up auth (re-prove the PIN itself, not just the unlock state)
+    // means a stolen unlock token alone can no longer take over the gate.
     if (settings?.sectionPasscodeHash) {
-      const unlockHeader = req.headers['x-section-unlock'];
-      let isUnlocked = false;
-      if (unlockHeader) {
-        try {
-          const jwt = require('jsonwebtoken');
-          const { SECTION_UNLOCK_SECRET } = require('../lib/config');
-          const decoded = jwt.verify(unlockHeader, SECTION_UNLOCK_SECRET);
-          if (decoded.scope === 'section-unlock' && decoded.adminId === req.admin?.id) {
-            isUnlocked = true;
-          }
-        } catch (_) {}
+      if (!currentPasscode) {
+        return res.status(400).json({ error: 'Aktueller PIN ist erforderlich / Current passcode is required' });
       }
-
-      if (!isUnlocked) {
-        if (!currentPasscode) {
-          return res.status(400).json({ error: 'Aktueller PIN ist erforderlich / Current passcode is required' });
-        }
-        const matches = await bcrypt.compare(String(currentPasscode).trim(), settings.sectionPasscodeHash);
-        if (!matches) {
-          return res.status(403).json({ error: 'Aktueller PIN ist falsch / Current passcode is incorrect' });
-        }
+      const matches = await bcrypt.compare(String(currentPasscode).trim(), settings.sectionPasscodeHash);
+      if (!matches) {
+        return res.status(403).json({ error: 'Aktueller PIN ist falsch / Current passcode is incorrect' });
       }
     }
 

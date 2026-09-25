@@ -1,4 +1,5 @@
 import axios from 'axios';
+import customerAxios from './customerAxios';
 import { getApiUrl } from './api';
 
 export const isPushSupported = () =>
@@ -15,7 +16,9 @@ const urlBase64ToUint8Array = (base64String) => {
 // Registers the service worker (idempotent), asks for notification
 // permission, subscribes with the backend's VAPID public key, and saves the
 // subscription. Returns 'granted' | 'denied' | 'unsupported' | 'error'.
-export const enablePushNotifications = async (token) => {
+// Relies on the customer's session cookie (via customerAxios) — no token
+// needed as a parameter.
+export const enablePushNotifications = async () => {
   if (!isPushSupported()) return 'unsupported';
 
   try {
@@ -34,11 +37,7 @@ export const enablePushNotifications = async (token) => {
     });
 
     const json = subscription.toJSON();
-    await axios.post(
-      `${apiUrl}/api/push/subscribe`,
-      { endpoint: json.endpoint, keys: json.keys },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    await customerAxios.post(`${apiUrl}/api/push/subscribe`, { endpoint: json.endpoint, keys: json.keys });
 
     return 'granted';
   } catch (err) {

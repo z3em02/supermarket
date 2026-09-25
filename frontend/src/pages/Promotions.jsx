@@ -85,13 +85,11 @@ export const Promotions = () => {
     try {
       setLoading(true);
       const apiUrl = getApiUrl();
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
 
       const [coupRes, promoRes, prodRes] = await Promise.all([
-        axios.get(`${apiUrl}/api/coupons`, { headers }),
-        axios.get(`${apiUrl}/api/promotions`, { headers }),
-        axios.get(`${apiUrl}/api/products`, { headers })
+        axios.get(`${apiUrl}/api/coupons`),
+        axios.get(`${apiUrl}/api/promotions`),
+        axios.get(`${apiUrl}/api/products`)
       ]);
 
       setCoupons(coupRes.data);
@@ -162,8 +160,6 @@ export const Promotions = () => {
 
     try {
       const apiUrl = getApiUrl();
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
 
       const payload = {
         code: couponForm.code.trim().toUpperCase(),
@@ -181,9 +177,9 @@ export const Promotions = () => {
       };
 
       if (editingCoupon) {
-        await axios.put(`${apiUrl}/api/coupons/${editingCoupon.id}`, payload, { headers });
+        await axios.put(`${apiUrl}/api/coupons/${editingCoupon.id}`, payload);
       } else {
-        await axios.post(`${apiUrl}/api/coupons`, payload, { headers });
+        await axios.post(`${apiUrl}/api/coupons`, payload);
       }
 
       setShowCouponModal(false);
@@ -198,11 +194,9 @@ export const Promotions = () => {
   const handleToggleCouponStatus = async (coup) => {
     try {
       const apiUrl = getApiUrl();
-      const token = localStorage.getItem('token');
       await axios.put(
         `${apiUrl}/api/coupons/${coup.id}`,
-        { isActive: !coup.isActive },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { isActive: !coup.isActive }
       );
       setCoupons(prev => prev.map(c => (c.id === coup.id ? { ...c, isActive: !c.isActive } : c)));
     } catch (err) {
@@ -214,10 +208,7 @@ export const Promotions = () => {
     if (!window.confirm('Möchten Sie diesen Gutschein wirklich löschen?')) return;
     try {
       const apiUrl = getApiUrl();
-      const token = localStorage.getItem('token');
-      await axios.delete(`${apiUrl}/api/coupons/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.delete(`${apiUrl}/api/coupons/${id}`);
       setCoupons(prev => prev.filter(c => c.id !== id));
     } catch (err) {
       console.error('Delete coupon error:', err);
@@ -274,8 +265,6 @@ export const Promotions = () => {
 
     try {
       const apiUrl = getApiUrl();
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
 
       const payload = {
         productId: offerForm.productId,
@@ -294,9 +283,9 @@ export const Promotions = () => {
       };
 
       if (editingOffer) {
-        await axios.put(`${apiUrl}/api/promotions/${editingOffer.id}`, payload, { headers });
+        await axios.put(`${apiUrl}/api/promotions/${editingOffer.id}`, payload);
       } else {
-        await axios.post(`${apiUrl}/api/promotions`, payload, { headers });
+        await axios.post(`${apiUrl}/api/promotions`, payload);
       }
 
       setShowOfferModal(false);
@@ -311,11 +300,9 @@ export const Promotions = () => {
   const handleToggleOfferStatus = async (off) => {
     try {
       const apiUrl = getApiUrl();
-      const token = localStorage.getItem('token');
       await axios.put(
         `${apiUrl}/api/promotions/${off.id}`,
-        { isActive: !off.isActive },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { isActive: !off.isActive }
       );
       setPromotions(prev => prev.map(p => (p.id === off.id ? { ...p, isActive: !p.isActive } : p)));
     } catch (err) {
@@ -327,10 +314,7 @@ export const Promotions = () => {
     if (!window.confirm('Möchten Sie dieses Angebot wirklich löschen?')) return;
     try {
       const apiUrl = getApiUrl();
-      const token = localStorage.getItem('token');
-      await axios.delete(`${apiUrl}/api/promotions/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.delete(`${apiUrl}/api/promotions/${id}`);
       setPromotions(prev => prev.filter(p => p.id !== id));
     } catch (err) {
       console.error('Delete promotion error:', err);

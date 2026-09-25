@@ -1,5 +1,6 @@
 import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
+import { ADMIN_BASE } from '../config/adminPath';
 
 export const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -13,7 +14,7 @@ export const ProtectedRoute = ({ children }) => {
   }
 
   if (!user) {
-    return <Navigate to="/secret/admin/login" replace />;
+    return <Navigate to={`${ADMIN_BASE}/login`} replace />;
   }
 
   return children;
