@@ -42,8 +42,13 @@ const authMiddleware = async (req, res, next) => {
 
 const driverOrAdminAuthMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
-  const usedCookieAuth = Boolean(req.cookies?.token) && !authHeader?.startsWith('Bearer ');
-  const token = req.cookies?.token || (authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null);
+  const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+  // Driver sessions live in their own `driver_token` cookie (separate from
+  // the admin `token` cookie) so an admin and a driver can be logged in from
+  // the same browser without one session's cookie clobbering the other's.
+  const cookieToken = req.cookies?.token || req.cookies?.driver_token;
+  const usedCookieAuth = Boolean(cookieToken) && !bearerToken;
+  const token = cookieToken || bearerToken;
   if (!token) {
     return res.status(401).json({ error: 'Authentication required' });
   }

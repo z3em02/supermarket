@@ -16,6 +16,7 @@ const {
   setDriverPasscode,
   driverLogin,
   pollDriverLoginRequest,
+  driverLogout,
   listDriverLoginRequests,
   approveDriverLoginRequest,
   rejectDriverLoginRequest,
@@ -61,6 +62,7 @@ router.get('/driver-passcode-status', authMiddleware, getDriverPasscodeStatus);
 router.put('/driver-passcode', authMiddleware, passcodeVerifyLimiter, setDriverPasscode);
 router.post('/driver/login', driverLoginLimiter, driverLogin);
 router.get('/driver/login-poll/:pollToken', driverPollLimiter, pollDriverLoginRequest);
+router.post('/driver/logout', driverLogout);
 
 // Admin-side approval queue for pending driver logins (Dashboard)
 router.get('/driver-login-requests', authMiddleware, listDriverLoginRequests);

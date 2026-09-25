@@ -7,10 +7,17 @@ Internal reference for how Hajar Supermarkt handles customer personal data under
 | Data | Where | Encrypted at rest? |
 |---|---|---|
 | Name, email, phone, address | `Customer` table | Yes — email/phone/address fields (see [piiCrypto.js](backend/utils/piiCrypto.js)) |
-| Order history, delivery address, order-time name/phone/email snapshot | `Order` table | No (see note below) |
+| Order history, delivery address/notes, order-time name/phone/email snapshot | `Order` table | Yes — `customerName`/`customerPhone`/`customerEmail`/`deliveryAddress`/`deliveryNotes` (see note below) |
 | Password | `Customer.password` | Hashed (bcrypt), not reversible |
 
-**Note:** `Order.customerName/customerPhone/customerEmail` are a plaintext snapshot taken at order time, kept separately from the encrypted `Customer` record specifically so invoices remain readable even after a customer's account is deleted (see Retention below). Encrypting these too is a possible future hardening step but isn't done yet.
+**Note:** `Order.customerName/customerPhone/customerEmail/deliveryAddress/deliveryNotes`
+are an encrypted snapshot taken at order time, kept separately from the
+encrypted `Customer` record specifically so invoices remain readable even
+after a customer's account is deleted (see Retention below). New orders are
+encrypted on write (`orderController.js`) and decrypted on read
+(`withDecryptedOrder()` in `orderController.js`/`accountingController.js`).
+Older rows created before encryption was added are backfilled by
+`backend/scripts/encryptOrderSnapshotPii.js`, which is safe to re-run.
 
 ## Retention periods
 
@@ -29,4 +36,4 @@ Internal reference for how Hajar Supermarkt handles customer personal data under
 
 - No self-service "delete my account" button in the customer-facing account page — deletion is admin-mediated only. Acceptable for GDPR compliance (a request channel exists) but adds friction; worth revisiting if request volume grows.
 - No automatic retention-expiry job (e.g. auto-purging unverified accounts after N months of inactivity).
-- `Order.customerName/Phone/Email` snapshot fields are unencrypted plaintext (see note in the table above).
+- `piiCrypto.js` only *requires* `ENCRYPTION_KEY` to be set when `NODE_ENV=production`; outside production a missing/misconfigured key silently falls back to storing PII as plaintext (now logged loudly as a warning at startup, but still worth double-checking `NODE_ENV`/`ENCRYPTION_KEY` are both set correctly on any real deployment).

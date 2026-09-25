@@ -8,6 +8,15 @@ if (process.env.NODE_ENV === 'production' && (!KEY || KEY.length !== 32)) {
   throw new Error('FATAL: ENCRYPTION_KEY must be a 64-char hex string (32 bytes) in production.');
 }
 
+if (!KEY) {
+  // Not fatal outside production (e.g. local dev without an .env), but this
+  // means PII is being stored as plaintext — make that loud rather than a
+  // silent per-call fallback, so a missing NODE_ENV=production doesn't mask it.
+  console.warn('WARNING: ENCRYPTION_KEY is not set — PII will be stored as plaintext, unencrypted.');
+} else if (KEY.length !== 32) {
+  console.warn('WARNING: ENCRYPTION_KEY is not 32 bytes (64 hex chars) — PII will be stored as plaintext, unencrypted.');
+}
+
 // AES-256-GCM with a random IV per call, so identical plaintext never
 // produces identical ciphertext. Format: enc:v1:<iv>:<authTag>:<ciphertext>, all hex.
 const encrypt = (plaintext) => {

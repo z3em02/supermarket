@@ -2,11 +2,14 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const prisma = require('../lib/prisma');
-const { JWT_SECRET } = require('../lib/config');
+const { JWT_SECRET, SECURE_COOKIES } = require('../lib/config');
 const { scrapeGoogleReviews, isPrivateOrLocalHost } = require('../utils/googleScraper');
 const { downloadAndCacheLogo, deleteCachedLogo } = require('../utils/imageProxy');
 const { issueSectionUnlockToken, invalidateSectionPasscodeCache } = require('../middleware/sectionUnlock');
 const { logAudit } = require('../lib/auditLog');
+const { generateCsrfToken, setCsrfCookie, clearCsrfCookie, requireCsrfForCookieAuth } = require('../middleware/csrf');
+
+const DRIVER_SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 // String(null) / String(undefined) produce the literal text "null"/"undefined",
 // which then reads back as a truthy, non-empty value forever — treat any
@@ -707,7 +710,7 @@ const pollDriverLoginRequest = async (req, res) => {
       // checks that row on every request instead, which is what lets an
       // admin actually force this driver logged out before the 24h expiry.
       const jti = crypto.randomBytes(16).toString('hex');
-      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const expiresAt = new Date(Date.now() + DRIVER_SESSION_MAX_AGE_MS);
       const token = jwt.sign(
         { role: 'driver', name: request.driverName, id: 'driver-session', jti },
         JWT_SECRET,
@@ -718,9 +721,22 @@ const pollDriverLoginRequest = async (req, res) => {
       });
       await prisma.driverLoginRequest.delete({ where: { id: request.id } }).catch(() => {});
       logAudit('DRIVER_AUTH', 'DRIVER_LOGIN', `Fahrer "${request.driverName}" wurde freigegeben und angemeldet`);
+
+      // Deliver the JWT as an HttpOnly cookie rather than in the JSON body —
+      // a driver_token cookie (distinct from the admin `token` cookie, so
+      // the two sessions can coexist in one browser) means it's never
+      // readable by JS, unlike the localStorage-based session this replaced.
+      res.cookie('driver_token', token, {
+        httpOnly: true,
+        secure: SECURE_COOKIES,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: DRIVER_SESSION_MAX_AGE_MS
+      });
+      setCsrfCookie(res, generateCsrfToken(), DRIVER_SESSION_MAX_AGE_MS);
+
       return res.json({
         status: 'approved',
-        token,
         driver: { role: 'driver', name: request.driverName }
       });
     }
@@ -831,6 +847,41 @@ const logoutDriverSession = async (req, res) => {
   }
 };
 
+// POST /api/settings/driver/logout - Driver's own logout (mirrors the admin
+// and customer logout endpoints). Not behind driverOrAdminAuthMiddleware: an
+// already-expired/invalid cookie must still be able to log out and clear
+// itself, so the CSRF check happens here manually.
+const driverLogout = async (req, res) => {
+  const authHeader = req.headers.authorization;
+  const usedCookieAuth = Boolean(req.cookies?.driver_token);
+  const token = req.cookies?.driver_token || (authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null);
+
+  if (!requireCsrfForCookieAuth(req, res, usedCookieAuth)) return;
+
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      if (decoded.role === 'driver' && decoded.jti) {
+        await prisma.driverSession.updateMany({
+          where: { jti: decoded.jti, revokedAt: null },
+          data: { revokedAt: new Date() }
+        });
+      }
+    } catch (e) {
+      // Token may already be expired or malformed; proceed with clearing the cookie
+    }
+  }
+
+  res.clearCookie('driver_token', {
+    httpOnly: true,
+    secure: SECURE_COOKIES,
+    sameSite: 'lax',
+    path: '/'
+  });
+  clearCsrfCookie(res);
+  res.json({ message: 'Logged out successfully' });
+};
+
 module.exports = {
   getSettings,
   updateSettings,
@@ -845,6 +896,7 @@ module.exports = {
   setDriverPasscode,
   driverLogin,
   pollDriverLoginRequest,
+  driverLogout,
   listDriverLoginRequests,
   approveDriverLoginRequest,
   rejectDriverLoginRequest,

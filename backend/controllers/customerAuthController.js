@@ -5,7 +5,7 @@ const prisma = require('../lib/prisma');
 const { sendCustomerVerificationEmail, sendPasswordResetEmail } = require('../utils/emailService');
 const { verifyFirebaseIdToken } = require('../utils/firebaseAdmin');
 const { JWT_SECRET, SECURE_COOKIES } = require('../lib/config');
-const { isValidEmail, isValidPhone, isValidPostalCode, normalizeAustrianPhone, isStrongPassword, STRONG_PASSWORD_HINT } = require('../utils/validation');
+const { isValidEmail, isValidPhone, isValidPostalCode, normalizeAustrianPhone, isStrongPassword, STRONG_PASSWORD_HINT, secureCompare } = require('../utils/validation');
 const { logAudit } = require('../lib/auditLog');
 const { encrypt, decrypt, hashLookup, decryptCustomerPII } = require('../utils/piiCrypto');
 const { generateCsrfToken, setCsrfCookie } = require('../middleware/csrf');
@@ -207,7 +207,7 @@ const verifyEmail = async (req, res) => {
       return res.status(429).json({ error: 'Too many incorrect attempts. Please request a new code.' });
     }
 
-    if (customer.emailOtp !== code.trim()) {
+    if (!secureCompare(customer.emailOtp, code.trim())) {
       const attempts = customer.otpAttempts + 1;
       const lockedOut = attempts >= 5;
       await prisma.customer.update({

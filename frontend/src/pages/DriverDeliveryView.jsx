@@ -125,9 +125,10 @@ export const DriverDeliveryView = () => {
         if (cancelled) return;
 
         if (res.data.status === 'approved') {
-          const { token, driver } = res.data;
-          sessionStorage.setItem('driver_token', token);
-          localStorage.setItem('driver_token', token);
+          // The session itself now lives entirely in the HttpOnly
+          // `driver_token` cookie the backend just set — nothing for the
+          // frontend to store beyond the display-only driver name/role.
+          const { driver } = res.data;
           sessionStorage.setItem('driver_user', JSON.stringify(driver));
           localStorage.setItem('driver_user', JSON.stringify(driver));
           setDriverUser(driver);
@@ -154,6 +155,13 @@ export const DriverDeliveryView = () => {
   }, [pendingPollToken, isAr]);
 
   const handleDriverLogout = () => {
+    // Fire-and-forget: revokes the DriverSession row and clears the HttpOnly
+    // driver_token cookie server-side (JS can't clear an HttpOnly cookie
+    // itself). Local UI state is cleared immediately regardless of outcome.
+    const apiUrl = getApiUrl();
+    axios.post(`${apiUrl}/api/settings/driver/logout`).catch(() => {});
+    // Clears any leftover driver_token from before this session moved to an
+    // HttpOnly cookie — harmless no-op once nothing is left to remove.
     sessionStorage.removeItem('driver_token');
     localStorage.removeItem('driver_token');
     sessionStorage.removeItem('driver_user');
