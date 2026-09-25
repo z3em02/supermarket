@@ -82,9 +82,11 @@ const driverOrAdminAuthMiddleware = async (req, res, next) => {
       }
       // Also re-check the driver account itself: deactivating a driver in
       // Settings must take effect immediately, the same way revoking a
-      // session does, not just block their next login.
-      const driver = await prisma.driver.findFirst({
-        where: { name: { equals: session.driverName, mode: 'insensitive' } },
+      // session does, not just block their next login. findUnique on
+      // nameLower, not a case-insensitive findFirst — the latter could
+      // resolve ambiguously if two same-named-different-case rows exist.
+      const driver = await prisma.driver.findUnique({
+        where: { nameLower: session.driverName.toLowerCase() },
         select: { active: true }
       });
       if (!driver || !driver.active) {

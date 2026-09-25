@@ -247,6 +247,15 @@ model StoreSettings {
 model Driver {
   id        String   @id @default(uuid())
   name      String   @unique
+  // Lowercased mirror of `name`, with its own DB-enforced unique
+  // constraint. `name` alone is only case-sensitively unique, which left a
+  // TOCTOU race between the application-level case-insensitive duplicate
+  // check and the actual insert: two concurrent creates for e.g. "Ahmad"
+  // and "ahmad" could both pass the pre-check and both succeed, after
+  // which driver lookups by name became ambiguous between the two rows.
+  // Always set to name.toLowerCase() — the database, not application
+  // logic, is what makes a second insert for either casing impossible.
+  nameLower String   @unique
   pinHash   String
   active    Boolean  @default(true)
   createdAt DateTime @default(now())

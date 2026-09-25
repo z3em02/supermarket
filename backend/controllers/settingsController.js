@@ -592,10 +592,13 @@ const createDriver = async (req, res) => {
     if (!cleanName) {
       return res.status(400).json({ error: 'Fahrername ist erforderlich / Driver name is required' });
     }
+    const nameLower = cleanName.toLowerCase();
 
-    const duplicate = await prisma.driver.findFirst({
-      where: { name: { equals: cleanName, mode: 'insensitive' } }
-    });
+    // Friendly pre-check for the common case — not the actual guarantee.
+    // Two concurrent requests for names differing only in case could both
+    // pass this and still race each other; `nameLower`'s DB-level unique
+    // constraint (caught as P2002 below) is what actually prevents it.
+    const duplicate = await prisma.driver.findUnique({ where: { nameLower } });
     if (duplicate) {
       return res.status(400).json({ error: `Fahrer "${cleanName}" existiert bereits / Driver already exists` });
     }
@@ -613,13 +616,16 @@ const createDriver = async (req, res) => {
 
     const pinHash = await bcrypt.hash(cleanPin, 10);
     const driver = await prisma.driver.create({
-      data: { name: cleanName, pinHash },
+      data: { name: cleanName, nameLower, pinHash },
       select: { id: true, name: true, active: true, createdAt: true }
     });
 
     logAudit(req.admin?.email, 'CREATE_DRIVER', `Fahrer "${cleanName}" angelegt`);
     res.status(201).json({ ...driver, pin: generated ? cleanPin : undefined });
   } catch (error) {
+    if (error.code === 'P2002') {
+      return res.status(400).json({ error: `Fahrer "${req.body?.name}" existiert bereits / Driver already exists` });
+    }
     console.error('Create driver error:', error);
     res.status(500).json({ error: 'Failed to create driver' });
   }
@@ -644,15 +650,18 @@ const updateDriver = async (req, res) => {
       if (!cleanName) {
         return res.status(400).json({ error: 'Fahrername ist erforderlich / Driver name is required' });
       }
-      if (cleanName.toLowerCase() !== existing.name.toLowerCase()) {
-        const duplicate = await prisma.driver.findFirst({
-          where: { name: { equals: cleanName, mode: 'insensitive' } }
-        });
+      const nameLower = cleanName.toLowerCase();
+      if (nameLower !== existing.nameLower) {
+        // Friendly pre-check only — the nameLower unique constraint (P2002
+        // below) is what actually prevents a race against a concurrent
+        // create/rename.
+        const duplicate = await prisma.driver.findUnique({ where: { nameLower } });
         if (duplicate) {
           return res.status(400).json({ error: `Fahrer "${cleanName}" existiert bereits / Driver already exists` });
         }
       }
       data.name = cleanName;
+      data.nameLower = nameLower;
     }
     if (active !== undefined) data.active = Boolean(active);
 
@@ -665,6 +674,9 @@ const updateDriver = async (req, res) => {
     logAudit(req.admin?.email, 'UPDATE_DRIVER', `Fahrer "${existing.name}" aktualisiert (Aktiv: ${driver.active})`);
     res.json(driver);
   } catch (error) {
+    if (error.code === 'P2002') {
+      return res.status(400).json({ error: `Fahrer "${req.body?.name}" existiert bereits / Driver already exists` });
+    }
     if (error.code === 'P2025') {
       return res.status(404).json({ error: 'Driver not found' });
     }
@@ -760,8 +772,11 @@ const driverLogin = async (req, res) => {
     // letting a login attempt confirm which driver names are registered.
     const invalidCredentialsError = { error: 'Ungültiger Name oder PIN / Invalid name or PIN' };
 
-    const driver = await prisma.driver.findFirst({
-      where: { name: { equals: cleanName, mode: 'insensitive' } }
+    // findUnique on nameLower (not findFirst on a case-insensitive name
+    // match) — a non-unique lookup here could silently resolve to the
+    // wrong one of two same-named-different-case rows.
+    const driver = await prisma.driver.findUnique({
+      where: { nameLower: cleanName.toLowerCase() }
     });
     if (!driver || !driver.active) {
       return res.status(401).json(invalidCredentialsError);

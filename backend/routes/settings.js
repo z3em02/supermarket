@@ -30,16 +30,21 @@ const {
 const router = express.Router();
 
 // Guards brute-forcing PIN-setting endpoints in general (section passcode,
-// resetting a driver's PIN).
+// resetting a driver's PIN). Own prefix so this doesn't share a Redis
+// bucket with unrelated limiters that default to the same 'rl' prefix
+// (2FA verify, driver login, delivery-distance lookups) — without it,
+// heavy traffic on one of those could silently exhaust another's budget.
 const passcodeVerifyLimiter = createRateLimiter({
   windowMs: 10 * 60 * 1000,
   max: 10,
+  prefix: 'rl:pin-manage',
   message: 'Zu viele Versuche. Bitte warten Sie 10 Minuten / Too many attempts. Please try again after 10 minutes.'
 });
 
 const driverLoginLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000,
   max: 10,
+  prefix: 'rl:driver-login',
   message: 'Zu viele Login-Versuche. Bitte warten Sie 15 Minuten / Too many login attempts. Please try again after 15 minutes.'
 });
 
@@ -48,6 +53,7 @@ const driverLoginLimiter = createRateLimiter({
 const driverPollLimiter = createRateLimiter({
   windowMs: 5 * 60 * 1000,
   max: 150,
+  prefix: 'rl:driver-poll',
   message: 'Zu viele Anfragen. Bitte warten Sie einen Moment.'
 });
 

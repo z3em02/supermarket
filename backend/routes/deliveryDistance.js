@@ -14,6 +14,7 @@ const router = express.Router();
 const distanceLimiter = createRateLimiter({
   windowMs: 60 * 1000,
   max: 30,
+  prefix: 'rl:distance',
   message: 'Too many delivery distance requests. Please slow down.'
 });
 

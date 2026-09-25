@@ -14,6 +14,7 @@ const router = express.Router();
 const twoFactorLimiter = createRateLimiter({
   windowMs: 10 * 60 * 1000,
   max: 10,
+  prefix: 'rl:admin-2fa',
   message: 'Zu viele Versuche. Bitte warten Sie 10 Minuten / Too many attempts. Please try again after 10 minutes.'
 });
 
