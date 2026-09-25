@@ -322,8 +322,13 @@ export const LandingPage = () => {
       });
   }, [products, selectedCategory, stockFilter, searchQuery, sortBy, language]);
 
-  const ratingNum = settings?.googleRating || 5.0;
   const countNum = settings?.googleReviewCount ?? 0;
+  // Only trust a rating once there's at least one real review behind it —
+  // same fix as TrustindexWidget.jsx: a bare `|| 5.0` fallback showed a
+  // "perfect" 5.0 badge with "0 reviews" next to it, which reads as
+  // fabricated rather than an honest "no reviews yet" state.
+  const hasRealRating = countNum > 0 && Number.isFinite(settings?.googleRating);
+  const ratingNum = hasRealRating ? settings.googleRating : null;
 
   const getStockBadge = (stock) => {
     if (stock <= 0) {
@@ -569,32 +574,50 @@ export const LandingPage = () => {
           <div className="max-w-3xl mx-auto text-center space-y-4 sm:space-y-6">
             
             {/* Google Rating Trust Badge */}
-            <div className="inline-flex flex-wrap items-center justify-center gap-1.5 sm:gap-2.5 px-3 sm:px-4 py-1.5 rounded-full bg-white dark:bg-gray-850 border border-slate-200/80 dark:border-gray-750 shadow-xs text-xs max-w-full">
-              <div className="flex items-center gap-0.5 sm:gap-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                ))}
+            {hasRealRating ? (
+              <div className="inline-flex flex-wrap items-center justify-center gap-1.5 sm:gap-2.5 px-3 sm:px-4 py-1.5 rounded-full bg-white dark:bg-gray-850 border border-slate-200/80 dark:border-gray-750 shadow-xs text-xs max-w-full">
+                <div className="flex items-center gap-0.5 sm:gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                  ))}
+                </div>
+                <span className="font-extrabold text-slate-900 dark:text-white">
+                  {ratingNum.toFixed(1)}
+                </span>
+                <span className="text-slate-400 dark:text-slate-500 hidden xs:inline">•</span>
+                <span className="font-semibold text-slate-700 dark:text-slate-300 text-[11px] sm:text-xs">
+                  {countNum === 1
+                    ? (language === 'ar' ? 'تقييم حقيقي واحد على Google' : '1 verifizierte Google-Bewertung')
+                    : `${countNum} ${language === 'ar' ? (countNum <= 10 ? 'تقييمات حقيقية على Google' : 'تقييم حقيقي على Google') : 'verifizierte Google-Bewertungen'}`}
+                </span>
+                {settings?.googleReviewsUrl && (
+                  <a
+                    href={settings.googleReviewsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-0.5 text-blue-600 hover:text-blue-700 dark:text-blue-400 font-bold ms-1"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
               </div>
-              <span className="font-extrabold text-slate-900 dark:text-white">
-                {ratingNum ? ratingNum.toFixed(1) : '5.0'}
-              </span>
-              <span className="text-slate-400 dark:text-slate-500 hidden xs:inline">•</span>
-              <span className="font-semibold text-slate-700 dark:text-slate-300 text-[11px] sm:text-xs">
-                {countNum === 1
-                  ? (language === 'ar' ? 'تقييم حقيقي واحد على Google' : '1 verifizierte Google-Bewertung')
-                  : `${countNum} ${language === 'ar' ? (countNum <= 10 ? 'تقييمات حقيقية على Google' : 'تقييم حقيقي على Google') : 'verifizierte Google-Bewertungen'}`}
-              </span>
-              {settings?.googleReviewsUrl && (
-                <a
-                  href={settings.googleReviewsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-0.5 text-blue-600 hover:text-blue-700 dark:text-blue-400 font-bold ms-1"
-                >
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              )}
-            </div>
+            ) : (
+              <div className="inline-flex flex-wrap items-center justify-center gap-1.5 sm:gap-2.5 px-3 sm:px-4 py-1.5 rounded-full bg-white dark:bg-gray-850 border border-dashed border-slate-200/80 dark:border-gray-750 text-xs max-w-full">
+                <span className="font-semibold text-slate-500 dark:text-slate-400 text-[11px] sm:text-xs">
+                  {language === 'ar' ? 'لا توجد تقييمات بعد — كن أول من يقيّم' : 'Noch keine Bewertungen — seien Sie der/die Erste'}
+                </span>
+                {settings?.googleReviewsUrl && (
+                  <a
+                    href={settings.googleReviewsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-0.5 text-blue-600 hover:text-blue-700 dark:text-blue-400 font-bold ms-1"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+              </div>
+            )}
 
             {/* Main Headline */}
             <h1 className="text-2xl xs:text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.18] sm:leading-[1.15]">
