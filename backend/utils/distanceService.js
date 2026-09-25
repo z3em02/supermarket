@@ -239,49 +239,62 @@ async function geocodeAddress(addressText, storeLat = DEFAULT_STORE_LAT, storeLn
     // Photon network error or timeout — proceed to secondary Nominatim
   }
 
-  // 2. Secondary Geocoder: OpenStreetMap Nominatim with Austria scope
-  try {
+  // 2. Secondary Geocoder: OpenStreetMap Nominatim with Austria scope.
+  // #12 fix: one short-backoff retry before giving up on it — Nominatim is
+  // the one of the two that's actually rate-limited (per the code comment on
+  // Photon above), so a transient 429/timeout here shouldn't immediately
+  // fall through past a real, resolvable address to the (coarser) postal
+  // centroid table or the hard reject below.
+  const queryNominatim = async () => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 2500);
+    try {
+      const query = encodeURIComponent(`${normalized}, Austria`);
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1&addressdetails=0`;
 
-    const query = encodeURIComponent(`${normalized}, Austria`);
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1&addressdetails=0`;
-
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: {
-        'User-Agent': 'HajarSupermarketDelivery/1.0 (info@hajar-supermarkt.de)',
-        'Accept': 'application/json'
-      }
-    });
-    clearTimeout(timeoutId);
-
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
-        const lat = parseFloat(data[0].lat);
-        const lon = parseFloat(data[0].lon);
-        if (!isNaN(lat) && !isNaN(lon)) {
-          const coords = {
-            lat,
-            lon,
-            source: 'nominatim_address',
-            isExactAddress: true,
-            displayName: data[0].display_name
-          };
-
-          if (geocodeCache.size >= MAX_CACHE_SIZE) {
-            const firstKey = geocodeCache.keys().next().value;
-            geocodeCache.delete(firstKey);
-          }
-          geocodeCache.set(normalized.toLowerCase(), { coords, timestamp: Date.now() });
-
-          return coords;
+      const res = await fetch(url, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'HajarSupermarketDelivery/1.0 (info@hajar-supermarkt.de)',
+          'Accept': 'application/json'
         }
-      }
+      });
+      if (!res.ok) return null;
+
+      const data = await res.json();
+      if (!Array.isArray(data) || data.length === 0) return null;
+
+      const lat = parseFloat(data[0].lat);
+      const lon = parseFloat(data[0].lon);
+      if (isNaN(lat) || isNaN(lon)) return null;
+
+      return {
+        lat,
+        lon,
+        source: 'nominatim_address',
+        isExactAddress: true,
+        displayName: data[0].display_name
+      };
+    } catch (err) {
+      return null; // timeout or network error
+    } finally {
+      clearTimeout(timeoutId);
     }
-  } catch (err) {
-    // Nominatim timeout or error — proceed to tertiary offline fallback
+  };
+
+  let nominatimCoords = await queryNominatim();
+  if (!nominatimCoords) {
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    nominatimCoords = await queryNominatim();
+  }
+
+  if (nominatimCoords) {
+    if (geocodeCache.size >= MAX_CACHE_SIZE) {
+      const firstKey = geocodeCache.keys().next().value;
+      geocodeCache.delete(firstKey);
+    }
+    geocodeCache.set(normalized.toLowerCase(), { coords: nominatimCoords, timestamp: Date.now() });
+    return nominatimCoords;
   }
 
   // 3. Tertiary Offline Fallback: Local postal code centroid table

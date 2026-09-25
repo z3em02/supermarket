@@ -90,6 +90,17 @@ const couponError = (message) => {
   return err;
 };
 
+// Thrown when a status transition's guarded updateMany affects 0 rows,
+// meaning a concurrent request already moved the order out of the status
+// this one was about to act on (double-click, retry, two admins at once).
+// Reported as a 409 so stock/coupon rollback logic downstream never runs
+// twice for the same transition.
+const concurrentUpdateError = () => {
+  const err = new Error('This order was just updated by another request. Please refresh and try again.');
+  err.isConcurrentUpdateError = true;
+  return err;
+};
+
 const getOrders = async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
@@ -589,12 +600,11 @@ const updateOrderStatus = async (req, res) => {
       // (e.g. an admin un-declining an order): re-deduct stock atomically.
       try {
         await prisma.$transaction(async (tx) => {
-          for (const item of order.orderItems) {
-            await decrementStockOrThrow(tx, item.productId, item.quantity, item.product?.name);
-          }
-
-          await tx.order.update({
-            where: { id },
+          // #9 fix: guard the transition on the status this request actually
+          // observed — if a concurrent request already moved the order off
+          // that status, abort before touching stock at all (double-submit guard).
+          const guarded = await tx.order.updateMany({
+            where: { id, status: order.status },
             data: {
               status: normalizedStatus,
               notes: finalNotes,
@@ -602,6 +612,11 @@ const updateOrderStatus = async (req, res) => {
               deliverySlot: finalDeliverySlot
             }
           });
+          if (guarded.count === 0) throw concurrentUpdateError();
+
+          for (const item of order.orderItems) {
+            await decrementStockOrThrow(tx, item.productId, item.quantity, item.product?.name);
+          }
 
           if (!order.accounting) {
             await tx.accounting.create({
@@ -623,55 +638,68 @@ const updateOrderStatus = async (req, res) => {
         if (error.isStockError) {
           return res.status(400).json({ error: error.message });
         }
+        if (error.isConcurrentUpdateError) {
+          return res.status(409).json({ error: error.message });
+        }
         throw error;
       }
     } else if (wasStockDeducted && !shouldStockBeDeducted) {
       // Transitioning into a declined/cancelled state: restore stock!
       // #17 fix: also roll back any coupon usage so the customer isn't
       // permanently penalized for an order that was never fulfilled.
-      await prisma.$transaction(async (tx) => {
-        for (const item of order.orderItems) {
-          await tx.product.update({
-            where: { id: item.productId },
+      try {
+        await prisma.$transaction(async (tx) => {
+          // #9 fix: same double-submit guard as the branch above — abort
+          // before restoring any stock/coupon usage if another request
+          // already transitioned this order off the status we observed.
+          const guarded = await tx.order.updateMany({
+            where: { id, status: order.status },
             data: {
-              stock: {
-                increment: item.quantity
-              }
+              status: normalizedStatus,
+              notes: finalNotes,
+              adminNotes: finalAdminNotes,
+              deliverySlot: finalDeliverySlot
             }
           });
-        }
+          if (guarded.count === 0) throw concurrentUpdateError();
 
-        // Roll back coupon usage if one was applied to this order
-        if (order.couponId) {
-          // Decrement the global usedCount (floor at 0 to prevent going negative)
-          await tx.coupon.updateMany({
-            where: { id: order.couponId, usedCount: { gt: 0 } },
-            data: { usedCount: { decrement: 1 } }
-          });
-          // Remove the per-customer usage record so they can use it again
-          await tx.couponUsage.deleteMany({
-            where: { orderId: id }
-          });
-        }
+          for (const item of order.orderItems) {
+            await tx.product.update({
+              where: { id: item.productId },
+              data: {
+                stock: {
+                  increment: item.quantity
+                }
+              }
+            });
+          }
 
-        await tx.order.update({
-          where: { id },
-          data: {
-            status: normalizedStatus,
-            notes: finalNotes,
-            adminNotes: finalAdminNotes,
-            deliverySlot: finalDeliverySlot
+          // Roll back coupon usage if one was applied to this order
+          if (order.couponId) {
+            // Decrement the global usedCount (floor at 0 to prevent going negative)
+            await tx.coupon.updateMany({
+              where: { id: order.couponId, usedCount: { gt: 0 } },
+              data: { usedCount: { decrement: 1 } }
+            });
+            // Remove the per-customer usage record so they can use it again
+            await tx.couponUsage.deleteMany({
+              where: { orderId: id }
+            });
+          }
+
+          if (order.accounting) {
+            await tx.accounting.update({
+              where: { orderId: id },
+              data: { status: 'cancelled' }
+            });
           }
         });
-
-        if (order.accounting) {
-          await tx.accounting.update({
-            where: { orderId: id },
-            data: { status: 'cancelled' }
-          });
+      } catch (error) {
+        if (error.isConcurrentUpdateError) {
+          return res.status(409).json({ error: error.message });
         }
-      });
-
+        throw error;
+      }
     } else {
       // Stock state does not change (e.g. accepted -> preparing, declined -> rejected, or notes update only)
       await prisma.order.update({
@@ -1152,48 +1180,58 @@ const customerRespondToModification = async (req, res) => {
       return res.json({ success: true, message: 'Bestelländerung erfolgreich akzeptiert', order: updatedOrder });
     } else if (action === 'decline' || action === 'cancel') {
       // Customer declined and cancels the order -> restore any stock!
-      await prisma.$transaction(async (tx) => {
-        for (const item of order.orderItems) {
-          await tx.product.update({
-            where: { id: item.productId },
-            data: { stock: { increment: item.quantity } }
+      const declineDateStr = new Date().toLocaleString(customerLang === 'ar' ? 'ar-EG' : 'de-DE');
+      const declineNoteText = customerLang === 'ar'
+        ? `[رفض العميل التعديل وتم إلغاء الطلب بتاريخ ${declineDateStr}]`
+        : `[Kunde hat Änderung abgelehnt und Bestellung storniert am ${declineDateStr}]`;
+      const declineAdminNotes = order.adminNotes ? `${order.adminNotes}\n${declineNoteText}` : declineNoteText;
+
+      try {
+        await prisma.$transaction(async (tx) => {
+          // #9 fix: guard on the pending_customer_approval status this
+          // request observed — a double-click/retry that lands after a first
+          // request already declined the order must not restore stock/coupon
+          // usage a second time.
+          const guarded = await tx.order.updateMany({
+            where: { id, status: 'pending_customer_approval' },
+            data: {
+              status: 'declined',
+              adminNotes: declineAdminNotes
+            }
           });
-        }
+          if (guarded.count === 0) throw concurrentUpdateError();
 
-        const dateStr = new Date().toLocaleString(customerLang === 'ar' ? 'ar-EG' : 'de-DE');
-        const noteText = customerLang === 'ar'
-          ? `[رفض العميل التعديل وتم إلغاء الطلب بتاريخ ${dateStr}]`
-          : `[Kunde hat Änderung abgelehnt und Bestellung storniert am ${dateStr}]`;
-        const updatedAdminNotes = order.adminNotes
-          ? `${order.adminNotes}\n${noteText}`
-          : noteText;
+          for (const item of order.orderItems) {
+            await tx.product.update({
+              where: { id: item.productId },
+              data: { stock: { increment: item.quantity } }
+            });
+          }
 
-        await tx.order.update({
-          where: { id },
-          data: {
-            status: 'declined',
-            adminNotes: updatedAdminNotes
+          // Roll back coupon usage if one was applied so customer doesn't lose coupon
+          if (order.couponId) {
+            await tx.coupon.updateMany({
+              where: { id: order.couponId, usedCount: { gt: 0 } },
+              data: { usedCount: { decrement: 1 } }
+            });
+            await tx.couponUsage.deleteMany({
+              where: { orderId: id }
+            });
+          }
+
+          if (order.accounting) {
+            await tx.accounting.update({
+              where: { orderId: id },
+              data: { status: 'cancelled' }
+            });
           }
         });
-
-        // Roll back coupon usage if one was applied so customer doesn't lose coupon
-        if (order.couponId) {
-          await tx.coupon.updateMany({
-            where: { id: order.couponId, usedCount: { gt: 0 } },
-            data: { usedCount: { decrement: 1 } }
-          });
-          await tx.couponUsage.deleteMany({
-            where: { orderId: id }
-          });
+      } catch (error) {
+        if (error.isConcurrentUpdateError) {
+          return res.status(409).json({ error: error.message });
         }
-
-        if (order.accounting) {
-          await tx.accounting.update({
-            where: { orderId: id },
-            data: { status: 'cancelled' }
-          });
-        }
-      });
+        throw error;
+      }
 
       const updatedOrder = withDecryptedCustomer(await prisma.order.findUnique({
         where: { id },

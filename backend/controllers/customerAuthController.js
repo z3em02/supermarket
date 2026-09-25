@@ -8,6 +8,7 @@ const { JWT_SECRET } = require('../lib/config');
 const { isValidEmail, isValidPhone, isValidPostalCode, normalizeAustrianPhone, isStrongPassword, STRONG_PASSWORD_HINT } = require('../utils/validation');
 const { logAudit } = require('../lib/auditLog');
 const { encrypt, decrypt, hashLookup, decryptCustomerPII } = require('../utils/piiCrypto');
+const { generateCsrfToken, setCsrfCookie } = require('../middleware/csrf');
 
 // Helper to generate 6-digit numeric OTP code
 const generateOTP = () => crypto.randomInt(100000, 1000000).toString();
@@ -139,6 +140,8 @@ const register = async (req, res) => {
       path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
+    // #4 fix: issue the CSRF cookie alongside the session cookie.
+    setCsrfCookie(res, generateCsrfToken(), 7 * 24 * 60 * 60 * 1000);
 
     res.status(201).json({
       message: 'Registration successful. Verification codes have been generated.',
@@ -420,6 +423,8 @@ const login = async (req, res) => {
       path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
+    // #4 fix: issue the CSRF cookie alongside the session cookie.
+    setCsrfCookie(res, generateCsrfToken(), 7 * 24 * 60 * 60 * 1000);
 
     res.json({
       token,
@@ -645,6 +650,8 @@ const updateProfile = async (req, res) => {
         path: '/',
         maxAge: 7 * 24 * 60 * 60 * 1000
       });
+      // #4 fix: the old CSRF token must not survive a password/email/phone change.
+      setCsrfCookie(res, generateCsrfToken(), 7 * 24 * 60 * 60 * 1000);
     }
 
     res.json({

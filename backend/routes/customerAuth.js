@@ -5,6 +5,7 @@ const { customerAuthMiddleware } = require('../middleware/customerAuth');
 const { authMiddleware } = require('../middleware/auth');
 const { authLimiter } = require('../middleware/rateLimiter');
 const { sectionUnlockMiddleware } = require('../middleware/sectionUnlock');
+const { clearCsrfCookie } = require('../middleware/csrf');
 
 const jwt = require('jsonwebtoken');
 const prisma = require('../lib/prisma');
@@ -42,6 +43,7 @@ router.post('/logout', async (req, res) => {
     sameSite: 'lax',
     path: '/'
   });
+  clearCsrfCookie(res);
   res.json({ message: 'Logged out successfully' });
 });
 router.post('/request-password-reset', authLimiter, customerAuthController.requestPasswordReset);

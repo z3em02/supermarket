@@ -1,16 +1,23 @@
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../lib/config');
 const prisma = require('../lib/prisma');
+const { requireCsrfForCookieAuth } = require('./csrf');
 
 const customerAuthMiddleware = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization || req.header('Authorization');
     // #38 fix: support HttpOnly cookie or Authorization Bearer header
+    const usedCookieAuth = Boolean(req.cookies?.customer_token) && !authHeader?.startsWith('Bearer ');
     const token = req.cookies?.customer_token || (authHeader?.startsWith('Bearer ') ? authHeader.replace(/^Bearer\s+/, '').trim() : null);
 
     if (!token) {
       return res.status(401).json({ error: 'Authentication required. No token provided.' });
     }
+
+    // #4 fix: cookie-authenticated mutating requests must also carry a
+    // matching CSRF header.
+    if (!requireCsrfForCookieAuth(req, res, usedCookieAuth)) return;
+
     const decoded = jwt.verify(token, JWT_SECRET);
 
     if (decoded.role !== 'customer') {

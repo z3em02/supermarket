@@ -5,6 +5,7 @@ const { JWT_SECRET } = require('../lib/config');
 const { login, verify2FA, resend2FA, changePassword } = require('../controllers/authController');
 const { authLimiter, createRateLimiter } = require('../middleware/rateLimiter');
 const { authMiddleware } = require('../middleware/auth');
+const { clearCsrfCookie } = require('../middleware/csrf');
 
 const router = express.Router();
 
@@ -46,6 +47,7 @@ router.post('/logout', async (req, res) => {
     sameSite: 'lax',
     path: '/'
   });
+  clearCsrfCookie(res);
   res.json({ message: 'Logged out successfully' });
 });
 
