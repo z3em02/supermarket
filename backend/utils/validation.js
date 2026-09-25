@@ -32,6 +32,16 @@ const isValidPhone = (phone) => /^\+43[1-9]\d{3,12}$/.test(normalizeAustrianPhon
 
 const isValidPostalCode = (postalCode) => /^\d+$/.test(String(postalCode || '').trim());
 
+// Parses a date string, returning null for anything that isn't a valid date
+// (rather than letting an unparseable string reach Prisma as an Invalid
+// Date, which throws a PrismaClientValidationError / 500 instead of a
+// clean 400).
+const parseValidDate = (str) => {
+  if (!str) return null;
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? null : d;
+};
+
 // Strong password: 8+ chars, at least one uppercase, one lowercase, one
 // digit and one special character.
 const STRONG_PASSWORD_HINT = 'Password must be at least 8 characters and include an uppercase letter, a lowercase letter, a number and a special character.';
@@ -50,5 +60,6 @@ module.exports = {
   normalizeAustrianPhone,
   isStrongPassword,
   STRONG_PASSWORD_HINT,
-  secureCompare
+  secureCompare,
+  parseValidDate
 };

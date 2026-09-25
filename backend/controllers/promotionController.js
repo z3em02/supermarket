@@ -1,5 +1,6 @@
 const prisma = require('../lib/prisma');
 const { logAudit } = require('../lib/auditLog');
+const { parseValidDate } = require('../utils/validation');
 
 // GET /api/promotions - Admin: list all promotions
 const getPromotions = async (req, res) => {
@@ -147,6 +148,20 @@ const createPromotion = async (req, res) => {
       }
     }
 
+    let parsedStartDate = null;
+    if (startDate) {
+      parsedStartDate = parseValidDate(startDate);
+      if (!parsedStartDate) return res.status(400).json({ error: 'Invalid startDate format' });
+    }
+    let parsedEndDate = null;
+    if (endDate) {
+      parsedEndDate = parseValidDate(endDate);
+      if (!parsedEndDate) return res.status(400).json({ error: 'Invalid endDate format' });
+    }
+    if (parsedStartDate && parsedEndDate && parsedStartDate > parsedEndDate) {
+      return res.status(400).json({ error: 'startDate must be before endDate' });
+    }
+
     const promotion = await prisma.promotion.create({
       data: {
         productId,
@@ -159,8 +174,8 @@ const createPromotion = async (req, res) => {
         getYQuantity: parsedGetYQty,
         badgeTextDe: defBadgeDe || null,
         badgeTextAr: defBadgeAr || null,
-        startDate: startDate ? new Date(startDate) : null,
-        endDate: endDate ? new Date(endDate) : null,
+        startDate: parsedStartDate,
+        endDate: parsedEndDate,
         isActive: isActive !== false
       },
       include: {
@@ -209,8 +224,31 @@ const updatePromotion = async (req, res) => {
     if (titleAr !== undefined) updateData.titleAr = titleAr ? titleAr.trim() : null;
     if (badgeTextDe !== undefined) updateData.badgeTextDe = badgeTextDe ? badgeTextDe.trim() : null;
     if (badgeTextAr !== undefined) updateData.badgeTextAr = badgeTextAr ? badgeTextAr.trim() : null;
-    if (startDate !== undefined) updateData.startDate = startDate ? new Date(startDate) : null;
-    if (endDate !== undefined) updateData.endDate = endDate ? new Date(endDate) : null;
+
+    let newStartDate = existing.startDate;
+    let newEndDate = existing.endDate;
+    if (startDate !== undefined) {
+      if (startDate) {
+        newStartDate = parseValidDate(startDate);
+        if (!newStartDate) return res.status(400).json({ error: 'Invalid startDate format' });
+      } else {
+        newStartDate = null;
+      }
+      updateData.startDate = newStartDate;
+    }
+    if (endDate !== undefined) {
+      if (endDate) {
+        newEndDate = parseValidDate(endDate);
+        if (!newEndDate) return res.status(400).json({ error: 'Invalid endDate format' });
+      } else {
+        newEndDate = null;
+      }
+      updateData.endDate = newEndDate;
+    }
+    if (newStartDate && newEndDate && newStartDate > newEndDate) {
+      return res.status(400).json({ error: 'startDate must be before endDate' });
+    }
+
     if (isActive !== undefined) updateData.isActive = Boolean(isActive);
 
     const currentType = type || existing.type;

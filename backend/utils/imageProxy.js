@@ -1,6 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const dns = require('dns');
+const http = require('http');
+const https = require('https');
 const { isPrivateOrLocalHost } = require('./googleScraper');
 
 const UPLOADS_DIR = path.join(__dirname, '..', 'uploads');
@@ -57,6 +60,103 @@ function validateImageBuffer(buffer, contentType) {
   }
 }
 
+// Custom `lookup` for http(s).request: resolves the hostname ourselves and
+// rejects the connection outright if any candidate address is private/
+// internal/loopback/link-local. A plain hostname-string check (like the one
+// above) only guards the *label* — the actual TCP connection still does its
+// own independent DNS lookup at connect time, so a hostname whose DNS record
+// changes between the check and the connection (DNS rebinding) sails
+// straight through a string-only guard. Passing this as `lookup` means our
+// validation happens inside the exact function that decides which IP gets
+// connected to, closing that gap rather than racing it.
+const pinnedLookup = (hostname, options, callback) => {
+  dns.lookup(hostname, { all: true, verbatim: true }, (err, addresses) => {
+    if (err) return callback(err);
+    if (!addresses || addresses.length === 0) {
+      return callback(new Error(`DNS resolution for "${hostname}" returned no addresses`));
+    }
+    for (const { address } of addresses) {
+      if (isPrivateOrLocalHost(address)) {
+        return callback(new Error(`Resolved address ${address} for "${hostname}" is a private/internal host`));
+      }
+    }
+    // Node's net module can call a custom `lookup` in two different shapes
+    // depending on internal Happy-Eyeballs behavior: `options.all` requests
+    // the full address array back, otherwise it wants a single
+    // (address, family) pair. Match whichever shape was actually requested —
+    // returning the wrong shape corrupts net's internal connect logic.
+    if (options && options.all) {
+      return callback(null, addresses);
+    }
+    const chosen = addresses[0];
+    callback(null, chosen.address, chosen.family);
+  });
+};
+
+// Fetches a single URL with the DNS-pinned lookup above. Does not follow
+// redirects itself — the caller loops so every hop gets its own hostname
+// check and its own pinned DNS resolution (a redirect target must not be
+// trusted just because the original URL passed validation).
+function requestOnce(urlString, { timeoutMs, maxBytes }) {
+  return new Promise((resolve, reject) => {
+    let parsed;
+    try {
+      parsed = new URL(urlString);
+    } catch {
+      return reject(new Error('Invalid URL'));
+    }
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return reject(new Error('Only http/https URLs are allowed'));
+    }
+    if (isPrivateOrLocalHost(parsed.hostname)) {
+      return reject(new Error('Logo URL must not point to a private or internal host'));
+    }
+
+    const transport = parsed.protocol === 'https:' ? https : http;
+    const req = transport.request(parsed, {
+      method: 'GET',
+      lookup: pinnedLookup,
+      timeout: timeoutMs,
+      headers: {
+        'User-Agent': 'SupermarketApp/1.0 LogoFetcher',
+        'Accept': 'image/*',
+      },
+    }, (res) => {
+      const chunks = [];
+      let total = 0;
+      res.on('data', (chunk) => {
+        total += chunk.length;
+        if (total > maxBytes) {
+          req.destroy(new Error(`Logo image is too large. Maximum is ${maxBytes / 1024 / 1024} MB.`));
+          return;
+        }
+        chunks.push(chunk);
+      });
+      res.on('end', () => {
+        resolve({ statusCode: res.statusCode, headers: res.headers, buffer: Buffer.concat(chunks) });
+      });
+      res.on('error', reject);
+    });
+
+    req.on('timeout', () => req.destroy(new Error('Request timed out')));
+    req.on('error', reject);
+    req.end();
+  });
+}
+
+async function fetchWithPinnedDns(urlString, { timeoutMs = 10000, maxRedirects = 5, maxBytes = MAX_LOGO_SIZE } = {}) {
+  let currentUrl = urlString;
+  for (let i = 0; i <= maxRedirects; i++) {
+    const res = await requestOnce(currentUrl, { timeoutMs, maxBytes });
+    if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+      currentUrl = new URL(res.headers.location, currentUrl).toString();
+      continue;
+    }
+    return { ...res, finalUrl: currentUrl };
+  }
+  throw new Error('Too many redirects');
+}
+
 /**
  * Downloads an external image URL, validates it (content-type, size, host, magic bytes),
  * saves it to backend/uploads/, and returns the local /api/uploads path that can be stored
@@ -72,37 +172,20 @@ async function downloadAndCacheLogo(externalUrl) {
     throw new Error('Logo URL must not point to a private or internal host');
   }
 
-  // Fetch with a short timeout and redirect limit
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10000);
+  const response = await fetchWithPinnedDns(externalUrl, { timeoutMs: 10000, maxBytes: MAX_LOGO_SIZE });
 
-  let response;
-  try {
-    response = await fetch(externalUrl, {
-      signal: controller.signal,
-      redirect: 'follow',
-      headers: {
-        'User-Agent': 'SupermarketApp/1.0 LogoFetcher',
-        'Accept': 'image/*',
-      },
-    });
-  } finally {
-    clearTimeout(timeout);
-  }
-
-  if (!response.ok) {
-    throw new Error(`Failed to download logo: HTTP ${response.status}`);
+  if (response.statusCode < 200 || response.statusCode >= 300) {
+    throw new Error(`Failed to download logo: HTTP ${response.statusCode}`);
   }
 
   // Validate content-type
-  const contentType = (response.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
+  const contentType = (response.headers['content-type'] || '').split(';')[0].trim().toLowerCase();
   const ext = ALLOWED_CONTENT_TYPES.get(contentType);
   if (!ext) {
     throw new Error(`Invalid logo content type: ${contentType}. Must be a common image format (PNG, JPEG, GIF, SVG, WebP, ICO).`);
   }
 
-  // Read the body with a size limit
-  const buffer = Buffer.from(await response.arrayBuffer());
+  const buffer = response.buffer;
   const totalSize = buffer.length;
 
   if (totalSize > MAX_LOGO_SIZE) {
@@ -115,20 +198,6 @@ async function downloadAndCacheLogo(externalUrl) {
 
   // Verify image integrity / structure
   validateImageBuffer(buffer, contentType);
-
-  // Verify the final URL (after redirects) isn't internal
-  const finalUrl = response.url;
-  if (finalUrl && finalUrl !== externalUrl) {
-    try {
-      const finalParsed = new URL(finalUrl);
-      if (isPrivateOrLocalHost(finalParsed.hostname)) {
-        throw new Error('Logo URL redirected to a private or internal host');
-      }
-    } catch (e) {
-      if (e.message.includes('private') || e.message.includes('internal')) throw e;
-      throw new Error('Logo URL redirected to an unparseable destination');
-    }
-  }
 
   // Generate a stable filename based on a hash of the content
   const hash = crypto.createHash('sha256').update(buffer).digest('hex').slice(0, 16);

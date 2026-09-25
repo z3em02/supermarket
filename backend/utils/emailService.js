@@ -513,7 +513,16 @@ const sendOrderModificationEmail = async (customerEmail, customerName, orderDeta
 const sendCustomerVerificationEmail = async (customerEmail, customerName, verificationCode, lang = 'de') => {
   customerName = escapeHtml(customerName);
   if (!isEmailConfigured()) {
-    console.log(`[Email skipped - SMTP not configured] Customer OTP '${verificationCode}' (${lang}) -> ${customerEmail}`);
+    // Only echo the actual code to console outside production — gating this
+    // on the placeholder-string heuristic in isEmailConfigured() alone means
+    // a production deploy that simply forgets to set EMAIL_* (rather than
+    // leaving the literal placeholder text) would still print a real,
+    // usable OTP straight into server/PM2 logs.
+    if (process.env.NODE_ENV === 'production') {
+      console.warn(`[Email not sent - SMTP not configured] Customer OTP delivery failed for ${customerEmail}. Set EMAIL_* env vars.`);
+    } else {
+      console.log(`[Email skipped - SMTP not configured] Customer OTP '${verificationCode}' (${lang}) -> ${customerEmail}`);
+    }
     return;
   }
 
