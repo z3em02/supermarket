@@ -1505,7 +1505,7 @@ export const LandingPage = () => {
 
               <div className="pt-4 border-t border-slate-100 dark:border-gray-800 flex flex-col xs:flex-row items-stretch xs:items-center justify-between gap-3">
                 <div>
-                  <span className="block text-[11px] text-slate-400 font-semibold">{isAr ? 'السعر للتوصيل' : 'Preis für Hauszustellung'}</span>
+                  <span className="block text-[11px] text-slate-400 font-semibold">{language === 'ar' ? 'السعر للتوصيل' : 'Preis für Hauszustellung'}</span>
                   {(() => {
                     const priceInfo = getProductPrices(selectedProduct);
                     return (
