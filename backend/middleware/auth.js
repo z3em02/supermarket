@@ -80,6 +80,16 @@ const driverOrAdminAuthMiddleware = async (req, res, next) => {
       if (!session || session.revokedAt || session.expiresAt < new Date()) {
         return res.status(401).json({ error: 'Session invalidated or expired. Please sign in again.' });
       }
+      // Also re-check the driver account itself: deactivating a driver in
+      // Settings must take effect immediately, the same way revoking a
+      // session does, not just block their next login.
+      const driver = await prisma.driver.findFirst({
+        where: { name: { equals: session.driverName, mode: 'insensitive' } },
+        select: { active: true }
+      });
+      if (!driver || !driver.active) {
+        return res.status(401).json({ error: 'Session invalidated or expired. Please sign in again.' });
+      }
       req.driver = {
         name: decoded.name || 'Fahrer',
         role: 'driver',

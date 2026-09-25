@@ -12,8 +12,11 @@ const {
   getPasscodeStatus,
   setPasscode,
   verifyPasscode,
-  getDriverPasscodeStatus,
-  setDriverPasscode,
+  listDrivers,
+  createDriver,
+  updateDriver,
+  resetDriverPin,
+  deleteDriver,
   driverLogin,
   pollDriverLoginRequest,
   driverLogout,
@@ -26,7 +29,8 @@ const {
 
 const router = express.Router();
 
-// Guards brute-forcing the 4-8 digit section passcode and driver passcode.
+// Guards brute-forcing PIN-setting endpoints in general (section passcode,
+// resetting a driver's PIN).
 const passcodeVerifyLimiter = createRateLimiter({
   windowMs: 10 * 60 * 1000,
   max: 10,
@@ -57,9 +61,15 @@ router.get('/passcode-status', authMiddleware, getPasscodeStatus);
 router.put('/passcode', authMiddleware, passcodeVerifyLimiter, setPasscode);
 router.post('/passcode/verify', authMiddleware, passcodeVerifyLimiter, verifyPasscode);
 
-// Driver passcode (configured in Settings, verified at driver portal)
-router.get('/driver-passcode-status', authMiddleware, getDriverPasscodeStatus);
-router.put('/driver-passcode', authMiddleware, passcodeVerifyLimiter, setDriverPasscode);
+// Driver accounts (managed in Settings, behind the section PIN gate since a
+// driver's PIN is a real credential — same sensitivity class as the section
+// PIN itself, unlike the read-only settings routes above).
+router.get('/drivers', authMiddleware, sectionUnlockMiddleware, listDrivers);
+router.post('/drivers', authMiddleware, sectionUnlockMiddleware, passcodeVerifyLimiter, createDriver);
+router.put('/drivers/:id', authMiddleware, sectionUnlockMiddleware, updateDriver);
+router.post('/drivers/:id/reset-pin', authMiddleware, sectionUnlockMiddleware, passcodeVerifyLimiter, resetDriverPin);
+router.delete('/drivers/:id', authMiddleware, sectionUnlockMiddleware, deleteDriver);
+
 router.post('/driver/login', driverLoginLimiter, driverLogin);
 router.get('/driver/login-poll/:pollToken', driverPollLimiter, pollDriverLoginRequest);
 router.post('/driver/logout', driverLogout);

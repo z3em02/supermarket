@@ -86,6 +86,13 @@ export const DriverDeliveryView = () => {
   const handleDriverLogin = async (e) => {
     e.preventDefault();
     setLoginError('');
+    // Each driver now has their own account (name + individual PIN), so the
+    // name can no longer default to a generic "Fahrer" — it has to match a
+    // real registered driver.
+    if (!inputDriverName.trim()) {
+      setLoginError(isAr ? 'يرجى إدخال اسم السائق' : 'Bitte Fahrername eingeben');
+      return;
+    }
     if (!inputPasscode.trim()) {
       setLoginError(isAr ? 'يرجى إدخال رمز الدخول (PIN)' : 'Bitte Fahrer-PIN eingeben');
       return;
@@ -95,7 +102,7 @@ export const DriverDeliveryView = () => {
       setLoggingIn(true);
       const apiUrl = getApiUrl();
       const res = await axios.post(`${apiUrl}/api/settings/driver/login`, {
-        driverName: inputDriverName.trim() || (isAr ? 'سائق' : 'Fahrer'),
+        driverName: inputDriverName.trim(),
         passcode: inputPasscode.trim()
       });
 
@@ -416,10 +423,11 @@ export const DriverDeliveryView = () => {
               )}
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
-                  {isAr ? 'اسم السائق (اختياري)' : 'Fahrername (optional)'}
+                  {isAr ? 'اسم السائق' : 'Fahrername'}
                 </label>
                 <input
                   type="text"
+                  required
                   value={inputDriverName}
                   onChange={(e) => setInputDriverName(e.target.value)}
                   placeholder={isAr ? 'مثال: أحمد' : 'z.B. Ahmed'}
@@ -428,7 +436,7 @@ export const DriverDeliveryView = () => {
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
-                  {isAr ? 'رمز السائق (PIN)' : 'Fahrer-PIN'}
+                  {isAr ? 'رمزك الشخصي (PIN)' : 'Dein persönlicher PIN'}
                 </label>
                 <input
                   type="password"
