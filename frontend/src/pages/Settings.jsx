@@ -177,6 +177,85 @@ export const Settings = () => {
     }
   };
 
+  // Driver Passcode for courier delivery login
+  const [driverPasscodeIsSet, setDriverPasscodeIsSet] = useState(null);
+  const [showDriverPasscodeForm, setShowDriverPasscodeForm] = useState(false);
+  const [newDriverPasscode, setNewDriverPasscode] = useState('');
+  const [confirmDriverPasscode, setConfirmDriverPasscode] = useState('');
+  const [driverPasscodeAdminCurrent, setDriverPasscodeAdminCurrent] = useState('');
+  const [driverPasscodeError, setDriverPasscodeError] = useState('');
+  const [driverPasscodeMessage, setDriverPasscodeMessage] = useState('');
+  const [savingDriverPasscode, setSavingDriverPasscode] = useState(false);
+
+  useEffect(() => {
+    const fetchDriverPasscodeStatus = async () => {
+      try {
+        const apiUrl = getApiUrl();
+        const res = await axios.get(`${apiUrl}/api/settings/driver-passcode-status`);
+        setDriverPasscodeIsSet(res.data.isSet);
+      } catch (err) {
+        console.error('Error fetching driver passcode status:', err);
+      }
+    };
+    fetchDriverPasscodeStatus();
+  }, []);
+
+  const handleSaveDriverPasscode = async (e) => {
+    e.preventDefault();
+    setDriverPasscodeError('');
+    setDriverPasscodeMessage('');
+    if (!/^\d{4,8}$/.test(newDriverPasscode)) {
+      setDriverPasscodeError(language === 'ar' ? 'يجب أن يتكون رمز السائق من 4 إلى 8 أرقام' : 'Der Fahrer-PIN muss 4–8 Ziffern haben');
+      return;
+    }
+    if (newDriverPasscode !== confirmDriverPasscode) {
+      setDriverPasscodeError(language === 'ar' ? 'الرمزان غير متطابقين' : 'Die PINs stimmen nicht überein');
+      return;
+    }
+    if (passcodeIsSet && !/^\d{4,8}$/.test(driverPasscodeAdminCurrent)) {
+      setDriverPasscodeError(language === 'ar' ? 'يرجى إدخال رمز المشرف (Admin-PIN) للتأكيد' : 'Bitte aktuellen Admin-PIN eingeben');
+      return;
+    }
+    try {
+      setSavingDriverPasscode(true);
+      const apiUrl = getApiUrl();
+      await axios.put(`${apiUrl}/api/settings/driver-passcode`, {
+        passcode: newDriverPasscode,
+        currentPasscode: passcodeIsSet ? driverPasscodeAdminCurrent : undefined
+      });
+      setDriverPasscodeIsSet(true);
+      setShowDriverPasscodeForm(false);
+      setNewDriverPasscode('');
+      setConfirmDriverPasscode('');
+      setDriverPasscodeAdminCurrent('');
+      setDriverPasscodeMessage(language === 'ar' ? 'تم حفظ رمز السائق بنجاح' : 'Fahrer-PIN erfolgreich gespeichert');
+    } catch (err) {
+      setDriverPasscodeError(err.response?.data?.error || (language === 'ar' ? 'حدث خطأ' : 'Ein Fehler ist aufgetreten'));
+    } finally {
+      setSavingDriverPasscode(false);
+    }
+  };
+
+  const handleRemoveDriverPasscode = async () => {
+    let entered = undefined;
+    if (passcodeIsSet) {
+      const promptText = language === 'ar' ? 'أدخل رمز المشرف (Admin-PIN) لإزالة رمز السائق' : 'Aktuellen Admin-PIN zum Entfernen des Fahrer-PINs eingeben';
+      entered = window.prompt(promptText);
+      if (entered === null) return;
+    }
+    try {
+      setSavingDriverPasscode(true);
+      const apiUrl = getApiUrl();
+      await axios.put(`${apiUrl}/api/settings/driver-passcode`, { passcode: null, currentPasscode: entered });
+      setDriverPasscodeIsSet(false);
+      setDriverPasscodeMessage(language === 'ar' ? 'تمت إزالة رمز السائق' : 'Fahrer-PIN entfernt');
+    } catch (err) {
+      setDriverPasscodeError(err.response?.data?.error || (language === 'ar' ? 'حدث خطأ' : 'Ein Fehler ist aufgetreten'));
+    } finally {
+      setSavingDriverPasscode(false);
+    }
+  };
+
   const handleAddDeliveryWindow = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     setWindowError('');
@@ -775,7 +854,11 @@ export const Settings = () => {
                   </div>
                 </div>
               ) : (
-                <form onSubmit={handleSavePasscode} className="flex flex-wrap items-end gap-2.5">
+                // Not a <form> — this whole page is already one <form onSubmit={handleSubmit}>
+                // (see the "Einstellungen speichern" button), and nested <form> elements are
+                // invalid HTML: browsers silently break out of the nesting on submit, which
+                // fires a real page navigation instead of running this handler.
+                <div className="flex flex-wrap items-end gap-2.5">
                   {passcodeIsSet && (
                     <div>
                       <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400 mb-1">
@@ -821,8 +904,9 @@ export const Settings = () => {
                     />
                   </div>
                   <button
-                    type="submit"
+                    type="button"
                     disabled={savingPasscode}
+                    onClick={handleSavePasscode}
                     className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold cursor-pointer"
                   >
                     {savingPasscode ? '...' : (language === 'ar' ? 'حفظ' : 'Speichern')}
@@ -834,7 +918,128 @@ export const Settings = () => {
                   >
                     {language === 'ar' ? 'إلغاء' : 'Abbrechen'}
                   </button>
-                </form>
+                </div>
+              )}
+            </div>
+
+            {/* Driver Passcode (Courier access to /driver portal) */}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-gray-850 p-4 sm:p-8 shadow-sm space-y-5">
+              <div className="flex items-center gap-2.5 sm:gap-3 pb-4 border-b border-slate-100 dark:border-gray-800">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                  <Truck className="w-4 sm:w-5 h-4 sm:h-5" />
+                </div>
+                <div>
+                  <h2 className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white">
+                    {language === 'ar' ? 'رمز دخول السائق والتوصيل (Fahrer-PIN)' : 'Fahrer- & Lieferanten-Zugang (PIN)'}
+                  </h2>
+                  <p className="text-[11px] sm:text-xs text-slate-500 dark:text-gray-400">
+                    {language === 'ar'
+                      ? 'يُستخدم هذا الرمز من قبل سائقي التوصيل لتسجيل الدخول إلى واجهة السائق (/driver) ومتابعة الطلبات وتحديث حالتها على الطريق.'
+                      : 'Wird von den Zustellfahrern zum Einloggen in das Lieferportal (/driver) verwendet, um Aufträge auf Tour zu sehen und zuzustellen.'}
+                  </p>
+                </div>
+              </div>
+
+              {driverPasscodeMessage && (
+                <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">{driverPasscodeMessage}</p>
+              )}
+              {driverPasscodeError && (
+                <p className="text-xs text-rose-600 dark:text-rose-400 font-semibold">{driverPasscodeError}</p>
+              )}
+
+              {driverPasscodeIsSet === null ? (
+                <p className="text-xs text-slate-400">{language === 'ar' ? 'جارٍ التحميل...' : 'Wird geladen...'}</p>
+              ) : !showDriverPasscodeForm ? (
+                <div className="flex items-center justify-between gap-3">
+                  <span className={`text-xs font-bold ${driverPasscodeIsSet ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-gray-500'}`}>
+                    {driverPasscodeIsSet
+                      ? (language === 'ar' ? 'رمز السائق مفعّل ونشط' : 'Fahrer-PIN ist eingerichtet & aktiv')
+                      : (language === 'ar' ? 'لا يوجد رمز سائق مفعّل حالياً' : 'Kein Fahrer-PIN eingerichtet')}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => { setShowDriverPasscodeForm(true); setDriverPasscodeError(''); setDriverPasscodeMessage(''); }}
+                      className="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold cursor-pointer transition shadow-xs"
+                    >
+                      {driverPasscodeIsSet ? (language === 'ar' ? 'تغيير رمز السائق' : 'Fahrer-PIN ändern') : (language === 'ar' ? 'إعداد رمز للسائق' : 'Fahrer-PIN festlegen')}
+                    </button>
+                    {driverPasscodeIsSet && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveDriverPasscode}
+                        disabled={savingDriverPasscode}
+                        className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-950/60 text-rose-600 dark:text-rose-400 text-xs font-bold cursor-pointer disabled:opacity-50 transition"
+                      >
+                        {language === 'ar' ? 'إزالة' : 'Entfernen'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                // Not a <form> — same nested-form issue as the section-PIN block above:
+                // this whole page is already wrapped in one <form onSubmit={handleSubmit}>.
+                <div className="flex flex-wrap items-end gap-2.5">
+                  {passcodeIsSet && (
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400 mb-1">
+                        {language === 'ar' ? 'رمز المشرف الحالي للتأكيد' : 'Admin-PIN zur Bestätigung'}
+                      </label>
+                      <input
+                        type="password"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={8}
+                        value={driverPasscodeAdminCurrent}
+                        onChange={(e) => setDriverPasscodeAdminCurrent(e.target.value.replace(/\D/g, ''))}
+                        className="w-32 px-3 py-2 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs font-mono text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 focus:outline-none transition"
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400 mb-1">
+                      {language === 'ar' ? 'رمز السائق الجديد (4-8 أرقام)' : 'Neuer Fahrer-PIN (4–8 Ziffern)'}
+                    </label>
+                    <input
+                      type="password"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={8}
+                      value={newDriverPasscode}
+                      onChange={(e) => setNewDriverPasscode(e.target.value.replace(/\D/g, ''))}
+                      className="w-32 px-3 py-2 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs font-mono text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 focus:outline-none transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400 mb-1">
+                      {language === 'ar' ? 'تأكيد رمز السائق' : 'Fahrer-PIN bestätigen'}
+                    </label>
+                    <input
+                      type="password"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={8}
+                      value={confirmDriverPasscode}
+                      onChange={(e) => setConfirmDriverPasscode(e.target.value.replace(/\D/g, ''))}
+                      className="w-32 px-3 py-2 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs font-mono text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 focus:outline-none transition"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    disabled={savingDriverPasscode}
+                    onClick={handleSaveDriverPasscode}
+                    className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-xs font-bold cursor-pointer transition shadow-xs"
+                  >
+                    {savingDriverPasscode ? '...' : (language === 'ar' ? 'حفظ رمز السائق' : 'PIN speichern')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowDriverPasscodeForm(false); setNewDriverPasscode(''); setConfirmDriverPasscode(''); setDriverPasscodeAdminCurrent(''); setDriverPasscodeError(''); }}
+                    className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-600 dark:text-gray-300 text-xs font-bold cursor-pointer transition"
+                  >
+                    {language === 'ar' ? 'إلغاء' : 'Abbrechen'}
+                  </button>
+                </div>
               )}
             </div>
           </div>

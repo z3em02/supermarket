@@ -18,7 +18,8 @@ import {
   Settings,
   Sparkles,
   Lock,
-  ScrollText
+  ScrollText,
+  Truck
 } from 'lucide-react';
 import { LanguageSelector } from './LanguageSelector';
 import { ThemeToggle } from './ThemeToggle';
@@ -40,6 +41,7 @@ export const Layout = () => {
     { name: t('promotions'), href: `${ADMIN_BASE}/promotions`, icon: Sparkles },
     { name: t('publicCatalog'), href: '/', icon: Store },
     { name: t('orders'),    href: `${ADMIN_BASE}/orders`,    icon: ShoppingCart },
+    { name: language === 'ar' ? 'واجهة التوصيل للسائق' : 'Fahrer- & Lieferansicht', href: `${ADMIN_BASE}/driver`, icon: Truck },
     { name: t('customers'), href: `${ADMIN_BASE}/customers`, icon: Users },
     { name: t('accounting'), href: `${ADMIN_BASE}/accounting`, icon: TrendingUp },
     { name: t('settings'),   href: `${ADMIN_BASE}/settings`,   icon: Settings },

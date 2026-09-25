@@ -850,9 +850,28 @@ export const CustomerAccount = () => {
               </div>
             )}
             {pushStatus === 'denied' && (
-              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-gray-900/60 border border-slate-200 dark:border-gray-800 flex items-center gap-2.5 text-slate-500 dark:text-gray-400 text-xs">
-                <BellOff className="w-4 h-4 shrink-0" />
-                <span>{isAr ? 'تم رفض إذن الإشعارات من إعدادات المتصفح' : 'Benachrichtigungen wurden in den Browser-Einstellungen blockiert'}</span>
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-gray-900/60 border border-slate-200 dark:border-gray-800 flex items-start gap-2.5 text-slate-500 dark:text-gray-400 text-xs">
+                <BellOff className="w-4 h-4 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p>{isAr ? 'تم رفض إذن الإشعارات من إعدادات المتصفح' : 'Benachrichtigungen wurden in den Browser-Einstellungen blockiert'}</p>
+                  {/* Once denied, JS can never re-prompt for permission — a website can't
+                      undo this itself, only the browser's own site settings can. */}
+                  <p>
+                    {isAr
+                      ? 'لا يمكن للموقع طلب الإذن مرة أخرى تلقائياً. لتفعيلها: اضغط على رمز القفل 🔒 بجانب عنوان الموقع في المتصفح ← الإشعارات ← السماح، ثم أعد تحميل الصفحة.'
+                      : 'Die Seite kann die Erlaubnis nicht selbst erneut anfragen. Zum Aktivieren: Klicken Sie auf das Schloss-Symbol 🔒 neben der Adresse in Ihrem Browser → Benachrichtigungen → Zulassen, und laden Sie die Seite danach neu.'}
+                  </p>
+                </div>
+              </div>
+            )}
+            {pushStatus === 'unsupported' && (
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-gray-900/60 border border-slate-200 dark:border-gray-800 flex items-start gap-2.5 text-slate-500 dark:text-gray-400 text-xs">
+                <BellOff className="w-4 h-4 shrink-0 mt-0.5" />
+                <p>
+                  {isAr
+                    ? 'الإشعارات غير مدعومة في هذا المتصفح، أو أن الصفحة غير محمّلة عبر اتصال آمن (HTTPS).'
+                    : 'Benachrichtigungen werden von diesem Browser nicht unterstützt, oder die Seite wird nicht über eine sichere Verbindung (HTTPS) geladen.'}
+                </p>
               </div>
             )}
 

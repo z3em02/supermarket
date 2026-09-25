@@ -15,7 +15,12 @@ import {
   Layers,
   Store,
   Lock,
-  AlertTriangle
+  AlertTriangle,
+  Truck,
+  UserCheck,
+  X,
+  Hourglass,
+  LogOut
 } from 'lucide-react';
 
 export const Dashboard = () => {
@@ -33,6 +38,75 @@ export const Dashboard = () => {
   const [sectionLocked, setSectionLocked] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  // Drivers can't log in on a correct PIN alone — they wait here for an
+  // admin to approve/reject. Polled regularly since a driver may be
+  // standing at the door waiting on this.
+  const [pendingDriverRequests, setPendingDriverRequests] = useState([]);
+  const [resolvingRequestId, setResolvingRequestId] = useState(null);
+
+  const fetchPendingDriverRequests = async () => {
+    try {
+      const apiUrl = getApiUrl();
+      const res = await axios.get(`${apiUrl}/api/settings/driver-login-requests`);
+      setPendingDriverRequests(Array.isArray(res.data) ? res.data : []);
+    } catch (error) {
+      console.error('Error fetching pending driver login requests:', error);
+    }
+  };
+
+  const handleResolveDriverRequest = async (id, action) => {
+    setResolvingRequestId(id);
+    try {
+      const apiUrl = getApiUrl();
+      await axios.post(`${apiUrl}/api/settings/driver-login-requests/${id}/${action}`);
+      setPendingDriverRequests((prev) => prev.filter((r) => r.id !== id));
+    } catch (error) {
+      console.error(`Error ${action === 'approve' ? 'approving' : 'rejecting'} driver login:`, error);
+      fetchPendingDriverRequests();
+    } finally {
+      setResolvingRequestId(null);
+    }
+  };
+
+  // Currently logged-in drivers — lets an admin see who's active and force
+  // one out early instead of waiting for their 24h session to expire.
+  const [activeDrivers, setActiveDrivers] = useState([]);
+  const [loggingOutSessionId, setLoggingOutSessionId] = useState(null);
+
+  const fetchActiveDrivers = async () => {
+    try {
+      const apiUrl = getApiUrl();
+      const res = await axios.get(`${apiUrl}/api/settings/driver-sessions`);
+      setActiveDrivers(Array.isArray(res.data) ? res.data : []);
+    } catch (error) {
+      console.error('Error fetching active driver sessions:', error);
+    }
+  };
+
+  const handleLogoutDriver = async (sessionId) => {
+    setLoggingOutSessionId(sessionId);
+    try {
+      const apiUrl = getApiUrl();
+      await axios.post(`${apiUrl}/api/settings/driver-sessions/${sessionId}/logout`);
+      setActiveDrivers((prev) => prev.filter((s) => s.id !== sessionId));
+    } catch (error) {
+      console.error('Error logging out driver:', error);
+      fetchActiveDrivers();
+    } finally {
+      setLoggingOutSessionId(null);
+    }
+  };
+
+  useEffect(() => {
+    fetchPendingDriverRequests();
+    fetchActiveDrivers();
+    const interval = setInterval(() => {
+      fetchPendingDriverRequests();
+      fetchActiveDrivers();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const fetchDashboardData = async () => {
     try {
@@ -136,6 +210,111 @@ export const Dashboard = () => {
         <div className="flex items-center gap-2 self-start sm:self-auto bg-white/15 dark:bg-blue-950/70 dark:border dark:border-blue-800/60 backdrop-blur px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium">
           <Sparkles className="w-4 h-4 text-amber-300 shrink-0" />
           <span>{language === 'ar' ? 'إدارة التوصيل المنزلي' : 'Hauszustellung im Überblick'}</span>
+        </div>
+      </div>
+
+      {/* Drivers — always visible (not just when there's something pending)
+          so this is discoverable even before any driver has ever logged in. */}
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-850 shadow-xs overflow-hidden">
+        <div className="flex items-center gap-2.5 px-4 sm:px-5 py-3 bg-slate-50 dark:bg-gray-950/50 border-b border-slate-100 dark:border-gray-850">
+          <Truck className="w-4 h-4 text-slate-500 dark:text-gray-400 shrink-0" />
+          <h3 className="font-bold text-slate-800 dark:text-white text-xs sm:text-sm">
+            {language === 'ar' ? 'السائقون' : 'Fahrer'}
+          </h3>
+        </div>
+
+        {/* Pending approvals */}
+        {pendingDriverRequests.length > 0 && (
+          <div className="border-b border-slate-100 dark:border-gray-850">
+            <p className="px-4 sm:px-5 pt-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+              {language === 'ar' ? 'بانتظار الموافقة' : 'Warten auf Freigabe'}
+            </p>
+            <p className="px-4 sm:px-5 pb-2 text-[11px] text-slate-400 dark:text-gray-500">
+              {language === 'ar'
+                ? 'الاسم يُدخله السائق بنفسه ولا يُثبت هويته — تحقق منه (مثلاً بالاتصال) قبل القبول.'
+                : 'Der Name wird vom Fahrer selbst eingegeben und beweist keine Identität — bei Unsicherheit vor dem Zulassen kurz anrufen.'}
+            </p>
+            <div className="divide-y divide-slate-100 dark:divide-gray-850">
+              {pendingDriverRequests.map((reqItem) => (
+                <div key={reqItem.id} className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
+                      <Hourglass className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-slate-800 dark:text-white truncate">{reqItem.driverName}</p>
+                      <p className="text-[11px] text-slate-400 dark:text-gray-500">
+                        {new Date(reqItem.createdAt).toLocaleTimeString(language === 'ar' ? 'ar-DE' : 'de-DE')}
+                        {reqItem.ipAddress && <span className="font-mono"> · {reqItem.ipAddress}</span>}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      disabled={resolvingRequestId === reqItem.id}
+                      onClick={() => handleResolveDriverRequest(reqItem.id, 'approve')}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition disabled:opacity-50 cursor-pointer"
+                    >
+                      <UserCheck className="w-3.5 h-3.5" />
+                      <span>{language === 'ar' ? 'قبول' : 'Zulassen'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={resolvingRequestId === reqItem.id}
+                      onClick={() => handleResolveDriverRequest(reqItem.id, 'reject')}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-gray-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-600 dark:text-gray-300 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-bold transition disabled:opacity-50 cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      <span>{language === 'ar' ? 'رفض' : 'Ablehnen'}</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Currently logged in */}
+        <div>
+          <p className="px-4 sm:px-5 pt-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400">
+            {language === 'ar' ? 'مسجلون حالياً' : 'Aktuell angemeldet'}
+          </p>
+          {activeDrivers.length === 0 ? (
+            <p className="px-4 sm:px-5 pb-4 text-xs text-slate-400 dark:text-gray-500">
+              {language === 'ar'
+                ? 'لا يوجد سائق مسجل الدخول حالياً. يمكن للسائقين تسجيل الدخول عبر /driver باستخدام رمز السائق من الإعدادات.'
+                : 'Kein Fahrer aktuell angemeldet. Fahrer können sich über /driver mit dem Fahrer-PIN aus den Einstellungen anmelden.'}
+            </p>
+          ) : (
+            <div className="divide-y divide-slate-100 dark:divide-gray-850">
+              {activeDrivers.map((session) => (
+                <div key={session.id} className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                      <Truck className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-slate-800 dark:text-white truncate">{session.driverName}</p>
+                      <p className="text-[11px] text-slate-400 dark:text-gray-500">
+                        {language === 'ar' ? 'مسجل منذ' : 'Angemeldet seit'}{' '}
+                        {new Date(session.createdAt).toLocaleTimeString(language === 'ar' ? 'ar-DE' : 'de-DE')}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={loggingOutSessionId === session.id}
+                    onClick={() => handleLogoutDriver(session.id)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-950/60 text-rose-600 dark:text-rose-400 text-xs font-bold transition disabled:opacity-50 cursor-pointer shrink-0"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>{language === 'ar' ? 'تسجيل خروج' : 'Abmelden'}</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -281,6 +460,20 @@ export const Dashboard = () => {
             <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-purple-600 rtl:rotate-180 transition" />
           </button>
 
+          <button
+            onClick={() => navigate(`${ADMIN_BASE}/driver`)}
+            className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-gray-800 hover:border-amber-500 dark:hover:border-amber-500 hover:bg-amber-50/50 dark:hover:bg-amber-950/30 group transition"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-100/80 dark:bg-amber-950/60 dark:border-amber-900/50 text-amber-600 dark:text-amber-400">
+                <Truck className="w-5 h-5" />
+              </div>
+              <span className="font-semibold text-slate-800 dark:text-slate-200 text-sm text-left rtl:text-right">
+                {language === 'ar' ? 'واجهة التوصيل للسائق' : 'Fahrer-Lieferansicht'}
+              </span>
+            </div>
+            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-amber-600 rtl:rotate-180 transition" />
+          </button>
         </div>
       </div>
 

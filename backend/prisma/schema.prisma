@@ -144,6 +144,11 @@ model Order {
   modificationReason  String?
   notes               String?
   adminNotes          String?
+  // Which driver an admin has picked to deliver this order. A name, not a
+  // foreign key — drivers aren't persistent accounts (see DriverSession),
+  // so this is just a label the admin sets and both the admin's Orders
+  // page and the driver's own delivery view can display.
+  assignedDriverName  String?
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @updatedAt
   orderItems          OrderItem[]
@@ -153,6 +158,7 @@ model Order {
   @@index([status])
   @@index([createdAt])
   @@index([couponCode])
+  @@index([assignedDriverName])
 }
 
 model OrderItem {
@@ -228,7 +234,49 @@ model StoreSettings {
   // privilege boundary — there is only one Admin account). Never sent to the
   // frontend; only a verify endpoint compares against it.
   sectionPasscodeHash   String?
+  // Hashed driver PIN configured by admin in Settings. Allows couriers to
+  // log in / authenticate to the /driver delivery portal.
+  driverPasscodeHash    String?
   updatedAt         DateTime @updatedAt
+}
+
+// A driver who knows the correct Fahrer-PIN still can't get a session on
+// their own — this row exists so an admin has to explicitly approve the
+// login from the dashboard first (stops a leaked/guessed PIN alone from
+// granting delivery-portal access unattended). pollToken is the opaque
+// value the driver's browser polls with; the JWT itself is only ever
+// handed out once status flips to "approved".
+model DriverLoginRequest {
+  id          String    @id @default(uuid())
+  driverName  String
+  pollToken   String    @unique
+  status      String    @default("pending") // pending | approved | rejected
+  // Requester's IP — the driverName itself is free text the requester
+  // chose, not a real credential (the PIN is shared by every driver), so
+  // this is the only signal an admin has to sanity-check "is this actually
+  // our driver" before approving. Not proof by itself, just a hint.
+  ipAddress   String?
+  createdAt   DateTime  @default(now())
+  respondedAt DateTime?
+  respondedBy String?
+
+  @@index([status, createdAt])
+}
+
+// One row per approved driver login. The JWT alone can't be revoked once
+// handed out (it's just a signed token), so driverOrAdminAuthMiddleware
+// checks this row on every request instead of trusting the JWT signature
+// alone — that's what lets an admin actually force a driver logged out
+// from the dashboard before their 24h token would otherwise expire.
+model DriverSession {
+  id         String    @id @default(uuid())
+  driverName String
+  jti        String    @unique
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime
+  revokedAt  DateTime?
+
+  @@index([revokedAt, expiresAt])
 }
 
 // Admin-configurable delivery time windows offered to customers at checkout

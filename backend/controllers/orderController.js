@@ -103,7 +103,12 @@ const concurrentUpdateError = () => {
 
 const getOrders = async (req, res) => {
   try {
+    // A driver only sees orders an admin has actually assigned to them —
+    // not the whole book (financial detail, other drivers' customers, etc).
+    const where = req.driver ? { assignedDriverName: req.driver.name } : {};
+
     const orders = await prisma.order.findMany({
+      where,
       include: {
         customer: { select: CUSTOMER_PUBLIC_SELECT },
         orderItems: {
@@ -145,6 +150,12 @@ const getOrderById = async (req, res) => {
     });
 
     if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    // Same rule as getOrders: a driver requesting a single order they
+    // aren't assigned to gets a 404, not a peek at someone else's delivery.
+    if (req.driver && order.assignedDriverName !== req.driver.name) {
       return res.status(404).json({ error: 'Order not found' });
     }
 
@@ -567,6 +578,12 @@ const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ error: 'Order not found' });
     }
 
+    // A driver can only touch an order actually assigned to them — knowing
+    // the ID (e.g. from an old link) isn't enough.
+    if (req.driver && order.assignedDriverName !== req.driver.name) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
     if (deliverySlot !== undefined && deliverySlot !== null && !(await isValidDeliverySlot(deliverySlot, { allowPastHoursForToday: true }))) {
       return res.status(400).json({ error: 'Invalid delivery slot' });
     }
@@ -583,6 +600,14 @@ const updateOrderStatus = async (req, res) => {
 
     if (status !== undefined && !VALID_STATUSES.includes(normalizedStatus)) {
       return res.status(400).json({ error: `Invalid status "${normalizedStatus}". Allowed: ${VALID_STATUSES.join(', ')}` });
+    }
+
+    // Drivers reach this route via driverOrAdminAuthMiddleware to update
+    // delivery progress — not to decline/cancel orders or revert them back
+    // to earlier stages, which stays admin-only.
+    const DRIVER_ALLOWED_STATUSES = ['out_for_delivery', 'shipped', 'delivered'];
+    if (req.driver && status !== undefined && !DRIVER_ALLOWED_STATUSES.includes(normalizedStatus)) {
+      return res.status(403).json({ error: 'Drivers can only mark orders as out for delivery or delivered' });
     }
 
     const finalNotes = notes !== undefined ? notes : order.notes;
@@ -751,11 +776,53 @@ const updateOrderStatus = async (req, res) => {
       console.error('Failed to send email notification:', emailError.message || emailError);
     }
 
-    logAudit(req.admin?.email, 'UPDATE_ORDER_STATUS', `Bestellstatus geändert für #${id.slice(0, 8).toUpperCase()} -> ${normalizedStatus}`);
+    const actorEmail = req.admin?.email || (req.driver ? `Fahrer (${req.driver.name})` : 'System');
+    logAudit(actorEmail, 'UPDATE_ORDER_STATUS', `Bestellstatus geändert für #${id.slice(0, 8).toUpperCase()} -> ${normalizedStatus}`);
 
     res.json(updatedOrder);
   } catch (error) {
     console.error('Update order status error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// PUT /api/orders/:id/assign-driver - Admin only. Picks which driver
+// delivers this order (or clears it with assignedDriverName: null). Not
+// driver-reachable — that's an admin decision, not something a driver
+// grants themselves.
+const assignOrderDriver = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { assignedDriverName } = req.body;
+
+    const order = await prisma.order.findUnique({ where: { id }, select: { id: true } });
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const clean = assignedDriverName ? String(assignedDriverName).trim().slice(0, 60) : null;
+    const updated = await prisma.order.update({
+      where: { id },
+      data: { assignedDriverName: clean || null },
+      include: {
+        customer: { select: CUSTOMER_PUBLIC_SELECT },
+        orderItems: { include: { product: true } },
+        accounting: true,
+        coupon: true
+      }
+    });
+
+    logAudit(
+      req.admin?.email,
+      'ASSIGN_ORDER_DRIVER',
+      clean
+        ? `Bestellung #${id.slice(0, 8).toUpperCase()} Fahrer "${clean}" zugewiesen`
+        : `Fahrer-Zuweisung für Bestellung #${id.slice(0, 8).toUpperCase()} entfernt`
+    );
+
+    res.json(withDecryptedCustomer(updated));
+  } catch (error) {
+    console.error('Assign order driver error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -1279,6 +1346,7 @@ module.exports = {
   createOrder,
   getCustomerOrders,
   updateOrderStatus,
+  assignOrderDriver,
   deleteOrder,
   editOrder,
   customerRespondToModification

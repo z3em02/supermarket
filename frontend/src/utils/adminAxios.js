@@ -33,6 +33,12 @@ adminAxios.interceptors.request.use((config) => {
     config.headers['X-Section-Unlock'] = unlockToken;
   }
 
+  // If request is made by an authenticated delivery driver using driver token
+  const driverToken = sessionStorage.getItem('driver_token') || localStorage.getItem('driver_token');
+  if (driverToken && !config.headers['Authorization']) {
+    config.headers['Authorization'] = `Bearer ${driverToken}`;
+  }
+
   // Cookie-based auth needs the matching CSRF header on any request that
   // changes state — see backend/middleware/csrf.js. Reading it fresh per
   // request instead of caching, since it's reissued on every login/password

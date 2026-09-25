@@ -1,5 +1,8 @@
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const prisma = require('../lib/prisma');
+const { JWT_SECRET } = require('../lib/config');
 const { scrapeGoogleReviews, isPrivateOrLocalHost } = require('../utils/googleScraper');
 const { downloadAndCacheLogo, deleteCachedLogo } = require('../utils/imageProxy');
 const { issueSectionUnlockToken, invalidateSectionPasscodeCache } = require('../middleware/sectionUnlock');
@@ -553,6 +556,281 @@ const verifyPasscode = async (req, res) => {
   }
 };
 
+// GET /api/settings/driver-passcode-status - Admin only
+const getDriverPasscodeStatus = async (req, res) => {
+  try {
+    const settings = await prisma.storeSettings.findUnique({
+      where: { id: 'default' },
+      select: { driverPasscodeHash: true }
+    });
+    res.json({ isSet: Boolean(settings?.driverPasscodeHash) });
+  } catch (error) {
+    console.error('Get driver passcode status error:', error);
+    res.status(500).json({ error: 'Failed to check driver passcode status' });
+  }
+};
+
+// PUT /api/settings/driver-passcode - Admin only
+const setDriverPasscode = async (req, res) => {
+  try {
+    const { passcode, currentPasscode } = req.body;
+
+    const settings = await prisma.storeSettings.findUnique({
+      where: { id: 'default' },
+      select: { driverPasscodeHash: true, sectionPasscodeHash: true }
+    });
+
+    if (settings?.driverPasscodeHash && settings?.sectionPasscodeHash) {
+      if (!currentPasscode) {
+        return res.status(400).json({ error: 'Aktueller Admin-PIN ist erforderlich / Current PIN is required' });
+      }
+      const matches = await bcrypt.compare(String(currentPasscode).trim(), settings.sectionPasscodeHash);
+      if (!matches) {
+        return res.status(403).json({ error: 'Aktueller Admin-PIN ist falsch / Current PIN is incorrect' });
+      }
+    }
+
+    if (passcode === null || passcode === '') {
+      await prisma.storeSettings.upsert({
+        where: { id: 'default' },
+        update: { driverPasscodeHash: null },
+        create: { ...DEFAULT_SETTINGS, driverPasscodeHash: null }
+      });
+      logAudit(req.admin?.email, 'REMOVE_DRIVER_PASSCODE', 'Fahrer-Zugangs-PIN entfernt');
+      return res.json({ message: 'Driver passcode removed', isSet: false });
+    }
+
+    const clean = String(passcode || '').trim();
+    if (!/^\d{4,8}$/.test(clean)) {
+      return res.status(400).json({ error: 'Passcode must be 4-8 digits' });
+    }
+
+    const hash = await bcrypt.hash(clean, 10);
+    await prisma.storeSettings.upsert({
+      where: { id: 'default' },
+      update: { driverPasscodeHash: hash },
+      create: { ...DEFAULT_SETTINGS, driverPasscodeHash: hash }
+    });
+    logAudit(req.admin?.email, 'SET_DRIVER_PASSCODE', 'Fahrer-Zugangs-PIN erfolgreich aktualisiert');
+    res.json({ message: 'Driver passcode set', isSet: true });
+  } catch (error) {
+    console.error('Set driver passcode error:', error);
+    res.status(500).json({ error: 'Failed to set driver passcode' });
+  }
+};
+
+// A pending request older than this is treated as expired — otherwise a
+// driver who never got approved/rejected would sit in the admin's list
+// forever, and a stale pollToken would stay valid indefinitely.
+const DRIVER_LOGIN_REQUEST_TTL_MS = 5 * 60 * 1000;
+
+// POST /api/settings/driver/login - Driver auth endpoint (step 1: PIN check).
+// Knowing the PIN is no longer enough to get a session on its own — this
+// only creates a pending request; an admin must approve it from the
+// dashboard (see approveDriverLoginRequest) before a JWT is ever issued.
+const driverLogin = async (req, res) => {
+  try {
+    const { driverName, passcode } = req.body;
+    if (!passcode) {
+      return res.status(400).json({ error: 'Passcode is required' });
+    }
+
+    const settings = await prisma.storeSettings.findUnique({
+      where: { id: 'default' },
+      select: { driverPasscodeHash: true }
+    });
+
+    if (!settings?.driverPasscodeHash) {
+      return res.status(403).json({
+        error: 'Kein Fahrer-PIN im Admin-Dashboard eingerichtet. Bitte Administrator kontaktieren.'
+      });
+    }
+
+    const matches = await bcrypt.compare(String(passcode).trim(), settings.driverPasscodeHash);
+    if (!matches) {
+      return res.status(401).json({
+        error: 'Ungültiger Fahrer-PIN / Invalid driver passcode'
+      });
+    }
+
+    const cleanName = String(driverName || 'Fahrer').trim().slice(0, 60);
+    const pollToken = crypto.randomBytes(32).toString('hex');
+
+    const request = await prisma.driverLoginRequest.create({
+      data: { driverName: cleanName, pollToken, status: 'pending', ipAddress: req.ip || null }
+    });
+
+    logAudit('DRIVER_AUTH', 'DRIVER_LOGIN_REQUESTED', `Fahrer "${cleanName}" hat einen Login angefragt (wartet auf Freigabe)`);
+
+    res.json({
+      pending: true,
+      pollToken,
+      requestId: request.id
+    });
+  } catch (error) {
+    console.error('Driver login error:', error);
+    res.status(500).json({ error: 'Driver login failed' });
+  }
+};
+
+// GET /api/settings/driver/login-poll/:pollToken - Driver polls this while
+// waiting for admin approval. Public (no auth — the driver has no session
+// yet), but pollToken is an unguessable 32-byte random value only ever
+// returned to the original requester, so this isn't a meaningful IDOR surface.
+const pollDriverLoginRequest = async (req, res) => {
+  try {
+    const { pollToken } = req.params;
+    const request = await prisma.driverLoginRequest.findUnique({ where: { pollToken } });
+
+    if (!request) {
+      return res.status(404).json({ status: 'not_found' });
+    }
+
+    if (request.status === 'pending' && Date.now() - request.createdAt.getTime() > DRIVER_LOGIN_REQUEST_TTL_MS) {
+      await prisma.driverLoginRequest.update({ where: { id: request.id }, data: { status: 'expired', respondedAt: new Date() } });
+      return res.json({ status: 'expired' });
+    }
+
+    if (request.status === 'pending') {
+      return res.json({ status: 'pending' });
+    }
+
+    if (request.status === 'rejected') {
+      return res.json({ status: 'rejected' });
+    }
+
+    if (request.status === 'approved') {
+      // One-time delivery: issue the JWT now and immediately delete the row
+      // so this pollToken can't be replayed to mint another session later.
+      // jti ties this JWT to a DriverSession row — the JWT signature alone
+      // can't be revoked once handed out, so driverOrAdminAuthMiddleware
+      // checks that row on every request instead, which is what lets an
+      // admin actually force this driver logged out before the 24h expiry.
+      const jti = crypto.randomBytes(16).toString('hex');
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const token = jwt.sign(
+        { role: 'driver', name: request.driverName, id: 'driver-session', jti },
+        JWT_SECRET,
+        { expiresIn: '24h' }
+      );
+      await prisma.driverSession.create({
+        data: { driverName: request.driverName, jti, expiresAt }
+      });
+      await prisma.driverLoginRequest.delete({ where: { id: request.id } }).catch(() => {});
+      logAudit('DRIVER_AUTH', 'DRIVER_LOGIN', `Fahrer "${request.driverName}" wurde freigegeben und angemeldet`);
+      return res.json({
+        status: 'approved',
+        token,
+        driver: { role: 'driver', name: request.driverName }
+      });
+    }
+
+    // 'expired' already persisted from a prior poll
+    return res.json({ status: request.status });
+  } catch (error) {
+    console.error('Poll driver login request error:', error);
+    res.status(500).json({ error: 'Failed to check login status' });
+  }
+};
+
+// GET /api/settings/driver-login-requests - Admin only. Pending requests
+// the dashboard shows for approve/reject; auto-expires stale ones first.
+const listDriverLoginRequests = async (req, res) => {
+  try {
+    await prisma.driverLoginRequest.updateMany({
+      where: { status: 'pending', createdAt: { lt: new Date(Date.now() - DRIVER_LOGIN_REQUEST_TTL_MS) } },
+      data: { status: 'expired', respondedAt: new Date() }
+    });
+    // pollToken deliberately excluded — the admin never needs it, and it's
+    // the one value that could let someone complete this specific driver's
+    // login (defense in depth, not the primary protection: that's the fact
+    // this endpoint requires an authenticated admin at all).
+    const requests = await prisma.driverLoginRequest.findMany({
+      where: { status: 'pending' },
+      select: { id: true, driverName: true, ipAddress: true, createdAt: true },
+      orderBy: { createdAt: 'asc' }
+    });
+    res.json(requests);
+  } catch (error) {
+    console.error('List driver login requests error:', error);
+    res.status(500).json({ error: 'Failed to load driver login requests' });
+  }
+};
+
+// POST /api/settings/driver-login-requests/:id/approve - Admin only
+const approveDriverLoginRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const request = await prisma.driverLoginRequest.findUnique({ where: { id } });
+    if (!request || request.status !== 'pending') {
+      return res.status(404).json({ error: 'Request not found or already resolved' });
+    }
+    await prisma.driverLoginRequest.update({
+      where: { id },
+      data: { status: 'approved', respondedAt: new Date(), respondedBy: req.admin?.email || null }
+    });
+    logAudit(req.admin?.email, 'APPROVE_DRIVER_LOGIN', `Login von Fahrer "${request.driverName}" genehmigt`);
+    res.json({ message: 'Approved' });
+  } catch (error) {
+    console.error('Approve driver login request error:', error);
+    res.status(500).json({ error: 'Failed to approve request' });
+  }
+};
+
+// POST /api/settings/driver-login-requests/:id/reject - Admin only
+const rejectDriverLoginRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const request = await prisma.driverLoginRequest.findUnique({ where: { id } });
+    if (!request || request.status !== 'pending') {
+      return res.status(404).json({ error: 'Request not found or already resolved' });
+    }
+    await prisma.driverLoginRequest.update({
+      where: { id },
+      data: { status: 'rejected', respondedAt: new Date(), respondedBy: req.admin?.email || null }
+    });
+    logAudit(req.admin?.email, 'REJECT_DRIVER_LOGIN', `Login von Fahrer "${request.driverName}" abgelehnt`);
+    res.json({ message: 'Rejected' });
+  } catch (error) {
+    console.error('Reject driver login request error:', error);
+    res.status(500).json({ error: 'Failed to reject request' });
+  }
+};
+
+// GET /api/settings/driver-sessions - Admin only. Currently logged-in
+// drivers, for the Dashboard's "log this driver out" control.
+const listActiveDriverSessions = async (req, res) => {
+  try {
+    const sessions = await prisma.driverSession.findMany({
+      where: { revokedAt: null, expiresAt: { gt: new Date() } },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(sessions);
+  } catch (error) {
+    console.error('List active driver sessions error:', error);
+    res.status(500).json({ error: 'Failed to load active driver sessions' });
+  }
+};
+
+// POST /api/settings/driver-sessions/:id/logout - Admin only. Revokes the
+// session row; driverOrAdminAuthMiddleware rejects that driver's very next
+// request (their app already treats any 401/403 there as "logged out").
+const logoutDriverSession = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const session = await prisma.driverSession.findUnique({ where: { id } });
+    if (!session || session.revokedAt) {
+      return res.status(404).json({ error: 'Session not found or already ended' });
+    }
+    await prisma.driverSession.update({ where: { id }, data: { revokedAt: new Date() } });
+    logAudit(req.admin?.email, 'LOGOUT_DRIVER_SESSION', `Fahrer "${session.driverName}" wurde vom Administrator abgemeldet`);
+    res.json({ message: 'Driver logged out' });
+  } catch (error) {
+    console.error('Logout driver session error:', error);
+    res.status(500).json({ error: 'Failed to log out driver' });
+  }
+};
+
 module.exports = {
   getSettings,
   updateSettings,
@@ -562,5 +840,14 @@ module.exports = {
   syncGoogleReviews,
   getPasscodeStatus,
   setPasscode,
-  verifyPasscode
+  verifyPasscode,
+  getDriverPasscodeStatus,
+  setDriverPasscode,
+  driverLogin,
+  pollDriverLoginRequest,
+  listDriverLoginRequests,
+  approveDriverLoginRequest,
+  rejectDriverLoginRequest,
+  listActiveDriverSessions,
+  logoutDriverSession
 };

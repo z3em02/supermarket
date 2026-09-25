@@ -32,6 +32,7 @@ const Settings = lazy(() => import('./pages/Settings').then(m => ({ default: m.S
 const Customers = lazy(() => import('./pages/Customers').then(m => ({ default: m.Customers })));
 const Promotions = lazy(() => import('./pages/Promotions').then(m => ({ default: m.Promotions })));
 const AuditLog = lazy(() => import('./pages/AuditLog').then(m => ({ default: m.AuditLog })));
+const DriverDeliveryView = lazy(() => import('./pages/DriverDeliveryView').then(m => ({ default: m.DriverDeliveryView })));
 
 const PageLoader = () => (
   <div className="min-h-[50vh] flex items-center justify-center">
@@ -98,7 +99,18 @@ function App() {
                   <Route path={`${ADMIN}/accounting`} element={<SectionPasscodeGate><Suspense fallback={<PageLoader />}><Accounting /></Suspense></SectionPasscodeGate>} />
                   <Route path={`${ADMIN}/settings`}   element={<SectionPasscodeGate><Suspense fallback={<PageLoader />}><Settings /></Suspense></SectionPasscodeGate>} />
                   <Route path={`${ADMIN}/audit-log`}  element={<SectionPasscodeGate><Suspense fallback={<PageLoader />}><AuditLog /></Suspense></SectionPasscodeGate>} />
+                  <Route path={`${ADMIN}/driver`}     element={<Suspense fallback={<PageLoader />}><DriverDeliveryView /></Suspense>} />
+                  <Route path={`${ADMIN}/delivery`}   element={<Navigate to={`${ADMIN}/driver`} replace />} />
                 </Route>
+
+                {/* Standalone mobile driver portal route for drivers on the road */}
+                <Route
+                  path="/driver"
+                  element={
+                    <Suspense fallback={<PageLoader />}><DriverDeliveryView /></Suspense>
+                  }
+                />
+                <Route path="/delivery" element={<Navigate to="/driver" replace />} />
 
                 {/* Fallback to main catalog */}
                 <Route path="*" element={<Navigate to="/" replace />} />

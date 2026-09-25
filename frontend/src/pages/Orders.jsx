@@ -1,7 +1,9 @@
 import { useEffect, useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import axios from '../utils/adminAxios';
 import { getApiUrl } from '../utils/api';
 import { useLanguage } from '../context/LanguageContext';
+import { ADMIN_BASE } from '../config/adminPath';
 import { 
   Search, 
   Check, 
@@ -103,6 +105,78 @@ export const Orders = () => {
   useEffect(() => {
     fetchActiveDeliveryWindows().then(setDeliveryWindows).catch(() => {});
   }, []);
+
+  // Currently logged-in drivers, fetched for the "assign to driver" dropdowns
+  // (both the standalone reassignment control and the required accept-modal
+  // selection below) — combined with knownDriverNames so someone who's
+  // previously logged in but currently offline is still selectable.
+  const [activeDrivers, setActiveDrivers] = useState([]);
+  const [assigningDriverId, setAssigningDriverId] = useState(null);
+
+  const fetchActiveDrivers = async () => {
+    try {
+      const apiUrl = getApiUrl();
+      const res = await axios.get(`${apiUrl}/api/settings/driver-sessions`);
+      setActiveDrivers(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error('Error fetching active driver sessions:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchActiveDrivers();
+    const interval = setInterval(fetchActiveDrivers, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Union of who's online now and every name ever assigned on a loaded
+  // order, so the autocomplete still suggests someone even while they're
+  // offline.
+  const knownDriverNames = useMemo(() => {
+    const names = new Set(activeDrivers.map((s) => s.driverName));
+    orders.forEach((o) => { if (o.assignedDriverName) names.add(o.assignedDriverName); });
+    return Array.from(names);
+  }, [activeDrivers, orders]);
+
+  const handleAssignDriver = async (orderId, assignedDriverName) => {
+    setAssigningDriverId(orderId);
+    try {
+      const apiUrl = getApiUrl();
+      const res = await axios.put(`${apiUrl}/api/orders/${orderId}/assign-driver`, { assignedDriverName: assignedDriverName || null });
+      setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, assignedDriverName: res.data.assignedDriverName } : o)));
+      setSelectedOrder((prev) => (prev && prev.id === orderId ? { ...prev, assignedDriverName: res.data.assignedDriverName } : prev));
+    } catch (err) {
+      console.error('Error assigning driver:', err);
+      alert(err.response?.data?.error || (language === 'ar' ? 'فشل تعيين السائق' : 'Fahrer konnte nicht zugewiesen werden'));
+    } finally {
+      setAssigningDriverId(null);
+    }
+  };
+
+  // Accepting an order now requires picking who delivers it in the same
+  // step — a driver only ever sees orders assigned to them, so an order
+  // accepted with nobody assigned would be invisible to every driver.
+  const [acceptModalOrder, setAcceptModalOrder] = useState(null);
+  const [acceptModalDriver, setAcceptModalDriver] = useState('');
+  const [acceptingOrder, setAcceptingOrder] = useState(false);
+
+  const handleConfirmAccept = async () => {
+    if (!acceptModalOrder || !acceptModalDriver) return;
+    setAcceptingOrder(true);
+    try {
+      const apiUrl = getApiUrl();
+      await axios.put(`${apiUrl}/api/orders/${acceptModalOrder.id}/assign-driver`, { assignedDriverName: acceptModalDriver });
+      await axios.put(`${apiUrl}/api/orders/${acceptModalOrder.id}/status`, { status: 'accepted' });
+      await fetchOrders();
+      setAcceptModalOrder(null);
+      setAcceptModalDriver('');
+    } catch (error) {
+      console.error('Error accepting order:', error);
+      alert(error.response?.data?.error || t('error'));
+    } finally {
+      setAcceptingOrder(false);
+    }
+  };
 
   const toggleOrderItemsExpand = (id) => {
     setExpandedOrders((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -902,13 +976,22 @@ export const Orders = () => {
             {t('manageTrack')}
           </p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 sm:py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs sm:text-sm rounded-xl shadow-sm transition touch-manipulation cursor-pointer"
-        >
-          <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span>{t('createOrder')}</span>
-        </button>
+        <div className="w-full sm:w-auto flex items-center gap-2">
+          <Link
+            to={`${ADMIN_BASE}/driver`}
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 py-2 sm:py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-medium text-xs sm:text-sm rounded-xl shadow-xs transition touch-manipulation cursor-pointer"
+          >
+            <Truck className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span>{language === 'ar' ? 'واجهة التوصيل للسائق' : 'Fahreransicht'}</span>
+          </Link>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2 sm:py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs sm:text-sm rounded-xl shadow-sm transition touch-manipulation cursor-pointer"
+          >
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span>{t('createOrder')}</span>
+          </button>
+        </div>
       </div>
 
       {/* Admin Quick Metric Summary Bar */}
@@ -1106,6 +1189,13 @@ export const Orders = () => {
                     <Truck className="w-3 h-3" />
                     {language === 'ar' ? 'توصيل منزلي' : 'Hauszustellung'}
                   </span>
+
+                  {order.assignedDriverName && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 text-[11px] font-bold border border-amber-200/80 dark:border-amber-900/50">
+                      <User className="w-3 h-3 text-amber-500" />
+                      <span>{order.assignedDriverName}</span>
+                    </span>
+                  )}
 
                   {Number(order.promotionDiscount) > 0 && (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-[11px] font-bold border border-rose-200/80 dark:border-rose-900/50">
@@ -1328,7 +1418,7 @@ export const Orders = () => {
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {currentStatus === 'pending' && (
                       <>
-                        <button onClick={() => handleQuickStatusChange(order.id, 'accepted')} disabled={updating}
+                        <button onClick={() => { setAcceptModalOrder(order); setAcceptModalDriver(order.assignedDriverName || ''); }} disabled={updating}
                           className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs transition shadow-2xs cursor-pointer touch-manipulation">
                           {t('accept')}
                         </button>
@@ -1360,7 +1450,7 @@ export const Orders = () => {
                       </button>
                     )}
                     {currentStatus === 'declined' && (
-                      <button onClick={() => handleQuickStatusChange(order.id, 'accepted')} disabled={updating}
+                      <button onClick={() => { setAcceptModalOrder(order); setAcceptModalDriver(order.assignedDriverName || ''); }} disabled={updating}
                         className="px-3 py-1.5 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 rounded-lg font-bold text-xs transition cursor-pointer touch-manipulation">
                         {t('accept')}
                       </button>
@@ -1383,6 +1473,85 @@ export const Orders = () => {
       </div>
 
       {/* Status Change & Admin Note Modal */}
+      {/* Accept Order — requires choosing a driver, since a driver only ever
+          sees orders assigned to them; an order accepted with nobody chosen
+          would be invisible to every driver. */}
+      {acceptModalOrder && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-md overflow-y-auto border border-slate-200 dark:border-gray-800 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-gray-800">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-100/80 dark:border-emerald-900/50 text-emerald-600 dark:text-emerald-400">
+                  <Truck className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                    {language === 'ar' ? 'قبول الطلب وتعيين السائق' : 'Bestellung annehmen & Fahrer zuweisen'}
+                  </h3>
+                  <span className="text-xs text-slate-400 font-mono">
+                    Order #{acceptModalOrder.id.slice(0, 8)}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => { setAcceptModalOrder(null); setAcceptModalDriver(''); }}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-gray-800"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  {language === 'ar' ? 'السائق *' : 'Fahrer *'}
+                </label>
+                <select
+                  value={acceptModalDriver}
+                  onChange={(e) => setAcceptModalDriver(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-950 text-sm font-semibold text-slate-800 dark:text-gray-200 outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                  <option value="">
+                    {language === 'ar' ? '— اختر السائق —' : '— Fahrer auswählen —'}
+                  </option>
+                  {knownDriverNames.map((name) => (
+                    <option key={name} value={name}>
+                      {name}{!activeDrivers.some((s) => s.driverName === name) ? (language === 'ar' ? ' (غير متصل)' : ' (offline)') : ''}
+                    </option>
+                  ))}
+                </select>
+                {knownDriverNames.length === 0 && (
+                  <p className="text-[11px] text-amber-700 dark:text-amber-400 mt-1.5">
+                    {language === 'ar'
+                      ? 'لا يوجد سائقون معروفون بعد. يجب على سائق تسجيل الدخول عبر /driver مرة واحدة على الأقل.'
+                      : 'Noch kein Fahrer bekannt. Ein Fahrer muss sich mindestens einmal über /driver anmelden.'}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => { setAcceptModalOrder(null); setAcceptModalDriver(''); }}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-gray-700 text-slate-700 dark:text-gray-300 font-bold text-sm hover:bg-slate-100 dark:hover:bg-gray-800 transition cursor-pointer"
+                >
+                  {language === 'ar' ? 'إلغاء' : 'Abbrechen'}
+                </button>
+                <button
+                  type="button"
+                  disabled={!acceptModalDriver || acceptingOrder}
+                  onClick={handleConfirmAccept}
+                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm shadow-md shadow-emerald-600/20 transition cursor-pointer"
+                >
+                  {acceptingOrder
+                    ? (language === 'ar' ? 'جارٍ...' : 'Wird bestätigt...')
+                    : (language === 'ar' ? 'قبول وتعيين' : 'Annehmen & zuweisen')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {statusModalOrder && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-lg overflow-y-auto border border-slate-200 dark:border-gray-800 shadow-2xl space-y-5">
@@ -1604,6 +1773,34 @@ export const Orders = () => {
                         {language === 'ar' ? 'تعديل الوقت' : 'Zeit bearbeiten'}
                       </button>
                     )}
+                  </div>
+
+                  {/* Assigned driver — who delivers this order. Options come from
+                      knownDriverNames (currently logged-in drivers, plus anyone
+                      previously assigned on any loaded order) so the dropdown
+                      isn't empty just because nobody's online right now. */}
+                  <div className="flex items-center justify-between gap-2 pt-2 mt-1 border-t border-emerald-200/50 dark:border-emerald-850">
+                    <span className="inline-flex items-center gap-1.5 min-w-0 shrink-0">
+                      <User className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span className="font-semibold text-slate-500 dark:text-gray-400 shrink-0">
+                        {language === 'ar' ? 'السائق المسؤول:' : 'Zugewiesener Fahrer:'}
+                      </span>
+                    </span>
+                    <select
+                      value={selectedOrder.assignedDriverName || ''}
+                      disabled={assigningDriverId === selectedOrder.id}
+                      onChange={(e) => handleAssignDriver(selectedOrder.id, e.target.value)}
+                      className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 text-xs font-bold text-slate-800 dark:text-gray-200 outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer disabled:opacity-50 max-w-[60%]"
+                    >
+                      <option value="">
+                        {language === 'ar' ? 'غير مُعيَّن' : 'Nicht zugewiesen'}
+                      </option>
+                      {knownDriverNames.map((name) => (
+                        <option key={name} value={name}>
+                          {name}{!activeDrivers.some((s) => s.driverName === name) ? (language === 'ar' ? ' (غير متصل)' : ' (offline)') : ''}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   {editingDeliverySlot && (
