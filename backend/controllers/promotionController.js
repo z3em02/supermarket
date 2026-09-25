@@ -1,4 +1,5 @@
 const prisma = require('../lib/prisma');
+const { logAudit } = require('../lib/auditLog');
 
 // GET /api/promotions - Admin: list all promotions
 const getPromotions = async (req, res) => {
@@ -167,6 +168,8 @@ const createPromotion = async (req, res) => {
       }
     });
 
+    logAudit(req.admin?.email, 'CREATE_PROMOTION', `Aktion erstellt für ${promotion.product?.nameDe || promotion.product?.name || promotion.productId}: ${promotion.titleDe}`);
+
     res.status(201).json(promotion);
   } catch (error) {
     console.error('Create promotion error:', error);
@@ -245,6 +248,8 @@ const updatePromotion = async (req, res) => {
       include: { product: true }
     });
 
+    logAudit(req.admin?.email, 'UPDATE_PROMOTION', `Aktion aktualisiert: ${updated.titleDe} (Aktiv: ${updated.isActive})`);
+
     res.json(updated);
   } catch (error) {
     console.error('Update promotion error:', error);
@@ -263,6 +268,9 @@ const deletePromotion = async (req, res) => {
     }
 
     await prisma.promotion.delete({ where: { id } });
+
+    logAudit(req.admin?.email, 'DELETE_PROMOTION', `Aktion gelöscht: ${existing.titleDe}`);
+
     res.json({ success: true, message: 'Promotion deleted successfully' });
   } catch (error) {
     console.error('Delete promotion error:', error);

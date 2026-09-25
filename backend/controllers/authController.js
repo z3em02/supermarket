@@ -5,6 +5,7 @@ const prisma = require('../lib/prisma');
 const { JWT_SECRET, SECURE_COOKIES } = require('../lib/config');
 const { sendAdminLoginOtpEmail } = require('../utils/emailService');
 const { generateCsrfToken, setCsrfCookie } = require('../middleware/csrf');
+const { logAudit } = require('../lib/auditLog');
 
 const PENDING_2FA_SCOPE = 'admin-2fa-pending';
 const SESSION_TTL = '24h'; // #22 fix: limit admin JWT lifetime to 24h (previously 30d)
@@ -121,6 +122,8 @@ const verify2FA = async (req, res) => {
     // cookie-authenticated mutating request to pass requireCsrfForCookieAuth.
     setCsrfCookie(res, generateCsrfToken(), 24 * 60 * 60 * 1000);
 
+    logAudit(admin.email, 'ADMIN_LOGIN', 'Erfolgreiche 2FA-Anmeldung im Admin-Dashboard');
+
     res.json({
       token,
       admin: { id: admin.id, email: admin.email, name: admin.name }
@@ -226,6 +229,8 @@ const changePassword = async (req, res) => {
     });
     // #4 fix: the old CSRF token must not survive a password change either.
     setCsrfCookie(res, generateCsrfToken(), 24 * 60 * 60 * 1000);
+
+    logAudit(updated.email, 'ADMIN_CHANGE_PASSWORD', 'Admin-Passwort geändert und alte Sitzungen widerrufen');
 
     res.json({
       message: 'Password changed successfully. All other admin sessions have been revoked.',

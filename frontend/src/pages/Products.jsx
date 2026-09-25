@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import axios from '../utils/adminAxios';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { getApiUrl } from '../utils/api';
 import { useLanguage } from '../context/LanguageContext';
 import { ADMIN_BASE } from '../config/adminPath';
@@ -23,6 +23,7 @@ const generateSku = () => `PRD-${Math.floor(100000 + Math.random() * 900000)}`;
 
 export const Products = () => {
   const { t, language } = useLanguage();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +31,7 @@ export const Products = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [stockTab, setStockTab] = useState('all'); // 'all' or 'low'
+  const [stockTab, setStockTab] = useState(() => searchParams.get('stock') === 'low' ? 'low' : 'all'); // 'all' or 'low'
 
   // Quick Restock Modal State
   const [restockProduct, setRestockProduct] = useState(null);

@@ -3,12 +3,10 @@
 > For the full log of completed and verified items, see [COMPLETED_TODOS.md](COMPLETED_TODOS.md).
 
 ## Customer & UI Features
-- [ ] The customer could pick preferred language so the system will communicate with them in the selected language (including notifications)
+> All currently planned customer & UI features have been completed. See [COMPLETED_TODOS.md](COMPLETED_TODOS.md).
 
 ## 2nd Version
 - [ ] Add a ticket system for problems and bugs
-- [ ] Recurring/subscription orders — "reorder my usual weekly basket" for regulars
-- [ ] Low-stock alerts for admin — proactive restocking instead of noticing out-of-stock at checkout
 - [ ] Loyalty/rewards points — repeat-customer incentive, pairs with the existing coupon system
 
 ## Deployment & Infrastructure Follow-Ups

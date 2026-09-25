@@ -14,7 +14,8 @@ import {
   Sparkles,
   Layers,
   Store,
-  Lock
+  Lock,
+  AlertTriangle
 } from 'lucide-react';
 
 export const Dashboard = () => {
@@ -26,6 +27,7 @@ export const Dashboard = () => {
     totalRevenue: 0,
     pendingOrders: 0
   });
+  const [lowStockCount, setLowStockCount] = useState(0);
   // Kunden/Buchhaltung numbers are behind the section PIN — track separately
   // so a locked state can be shown instead of a misleading "0".
   const [sectionLocked, setSectionLocked] = useState(false);
@@ -49,9 +51,12 @@ export const Dashboard = () => {
       ]);
 
       setSectionLocked(customersRes.locked || accountingRes.locked);
+      const allProducts = Array.isArray(productsRes.data) ? productsRes.data : [];
+      setLowStockCount(allProducts.filter(p => Number(p.stock) <= 15).length);
+
       setStats({
         totalCustomers: customersRes.locked ? null : customersRes.data.length,
-        totalProducts: productsRes.data.length,
+        totalProducts: allProducts.length,
         totalOrders: ordersRes.data.length,
         totalRevenue: accountingRes.locked ? null : (accountingRes.data.summary?.totalRevenue || 0),
         pendingOrders: accountingRes.locked ? null : (accountingRes.data.summary?.pendingOrders || 0)
@@ -142,6 +147,37 @@ export const Dashboard = () => {
               ? 'بعض الأرقام مخفية — افتح قسم الإعدادات أو العملاء أو المحاسبة لعرضها'
               : 'Einige Zahlen sind gesperrt — öffnen Sie Einstellungen, Kunden oder Buchhaltung, um sie zu sehen'}
           </span>
+        </div>
+      )}
+
+      {/* Proactive Low-Stock Admin Alert Banner */}
+      {lowStockCount > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-300 dark:border-amber-700/60 rounded-2xl p-4 sm:p-5 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-400 shrink-0">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">
+                {language === 'ar'
+                  ? `تنبيه المخزون: ${lowStockCount} منتج قارب على النفاد (≤ 15 قطعة)`
+                  : `Lagerbestands-Warnung: ${lowStockCount} Artikel mit geringem Bestand (≤ 15 Stk.)`}
+              </h3>
+              <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                {language === 'ar'
+                  ? 'يُنصح بإعادة تزويد المخزون لتجنب نفاد المنتجات عند طلبات الزبائن.'
+                  : 'Prüfen und stocken Sie diese Artikel rechtzeitig auf, um Lieferengpässe zu vermeiden.'}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate(`${ADMIN_BASE}/products?stock=low`)}
+            className="self-start sm:self-auto px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition shadow-sm shrink-0 cursor-pointer touch-manipulation flex items-center gap-1.5"
+          >
+            <span>{language === 'ar' ? 'عرض المنتجات وإعادة التزويد' : 'Artikel ansehen & auffüllen'}</span>
+            <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
+          </button>
         </div>
       )}
 

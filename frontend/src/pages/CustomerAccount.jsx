@@ -43,12 +43,13 @@ import {
   X,
   Navigation,
   Bell,
-  BellOff
+  BellOff,
+  Globe
 } from 'lucide-react';
 
 export const CustomerAccount = () => {
   const { customer, loading: authLoading, logout, updateProfile, verifyEmail, verifyPhone, resendOtp, refreshProfile } = useCustomerAuth();
-  const { t, direction, language } = useLanguage();
+  const { t, direction, language, setLanguage } = useLanguage();
   const { getStoreName } = useStoreSettings();
   const navigate = useNavigate();
 
@@ -57,6 +58,7 @@ export const CustomerAccount = () => {
   const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'profile'
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const [reorderingOrderId, setReorderingOrderId] = useState(null);
 
   // Push notification opt-in ('checking' | 'not-subscribed' | 'subscribed' | 'denied' | 'unsupported')
   const [pushStatus, setPushStatus] = useState('checking');
@@ -100,6 +102,7 @@ export const CustomerAccount = () => {
     city: customer?.city || '',
     floorApartment: customer?.floorApartment || '',
     deliveryNotes: customer?.deliveryNotes || '',
+    preferredLanguage: customer?.preferredLanguage || 'de',
     password: '',
     currentPassword: ''
   });
@@ -160,6 +163,7 @@ export const CustomerAccount = () => {
         city: customer.city || '',
         floorApartment: customer.floorApartment || '',
         deliveryNotes: customer.deliveryNotes || '',
+        preferredLanguage: customer.preferredLanguage || 'de',
         password: '',
         currentPassword: ''
       });
@@ -194,13 +198,93 @@ export const CustomerAccount = () => {
       setSaveSuccess('');
 
       await updateProfile(profileForm);
+      if (profileForm.preferredLanguage && (profileForm.preferredLanguage === 'de' || profileForm.preferredLanguage === 'ar')) {
+        setLanguage(profileForm.preferredLanguage);
+      }
       setProfileForm(prev => ({ ...prev, password: '', currentPassword: '' }));
-      setSaveSuccess(isAr ? 'تم تحديث بياناتك بنجاح!' : 'Profildaten erfolgreich aktualisiert!');
+      setSaveSuccess(isAr ? 'تم تحديث بياناتك ولغة الحساب بنجاح!' : 'Profildaten und bevorzugte Sprache erfolgreich aktualisiert!');
     } catch (err) {
       console.error('Update profile error:', err);
       setProfileError(err.response?.data?.error || (isAr ? 'فشل تحديث البيانات' : 'Fehler beim Speichern'));
     } finally {
       setSavingProfile(false);
+    }
+  };
+
+  const handleReorderOrder = async (order) => {
+    if (!order?.orderItems?.length) return;
+    try {
+      setReorderingOrderId(order.id);
+      const apiUrl = getApiUrl();
+      const catalogRes = await customerAxios.get(`${apiUrl}/api/products`);
+      const availableProducts = Array.isArray(catalogRes.data) ? catalogRes.data : [];
+      const productMap = new Map(availableProducts.map(p => [p.id, p]));
+
+      let existingCart = [];
+      try {
+        const saved = localStorage.getItem('customer_cart');
+        existingCart = saved ? JSON.parse(saved) : [];
+      } catch {
+        existingCart = [];
+      }
+
+      let addedCount = 0;
+      let outOfStockCount = 0;
+
+      for (const item of order.orderItems) {
+        const liveProduct = productMap.get(item.productId);
+        if (!liveProduct || liveProduct.stock <= 0) {
+          outOfStockCount++;
+          continue;
+        }
+
+        const existingIdx = existingCart.findIndex(c => c.productId === item.productId);
+        const desiredQty = item.quantity || 1;
+        if (existingIdx >= 0) {
+          const newQty = Math.min(liveProduct.stock, existingCart[existingIdx].quantity + desiredQty);
+          existingCart[existingIdx] = {
+            ...existingCart[existingIdx],
+            quantity: newQty,
+            stock: liveProduct.stock,
+            price: liveProduct.b2bPrice
+          };
+        } else {
+          existingCart.push({
+            productId: liveProduct.id,
+            name: liveProduct.name,
+            nameDe: liveProduct.nameDe,
+            nameAr: liveProduct.nameAr,
+            price: liveProduct.b2bPrice,
+            imageUrl: liveProduct.imageUrl,
+            stock: liveProduct.stock,
+            quantity: Math.min(liveProduct.stock, desiredQty)
+          });
+        }
+        addedCount++;
+      }
+
+      localStorage.setItem('customer_cart', JSON.stringify(existingCart));
+
+      if (addedCount > 0) {
+        const msg = isAr
+          ? `تمت إضافة منتجات الطلب إلى سلة التسوق! (${addedCount} متوفر${outOfStockCount > 0 ? `، ${outOfStockCount} غير متوفر` : ''})`
+          : `Artikel wurden in den Warenkorb gelegt! (${addedCount} verfügbar${outOfStockCount > 0 ? `, ${outOfStockCount} nicht vorrätig` : ''})`;
+        setActionFeedback({ message: msg, isError: false });
+        setTimeout(() => navigate('/'), 1200);
+      } else {
+        const msg = isAr
+          ? 'عذراً، جميع منتجات هذا الطلب نفدت من المخزون حالياً.'
+          : 'Leider sind derzeit alle Artikel dieser Bestellung vergriffen.';
+        setActionFeedback({ message: msg, isError: true });
+      }
+    } catch (err) {
+      console.error('Failed to reorder:', err);
+      setActionFeedback({
+        message: isAr ? 'فشلت إعادة إضافة الطلب إلى السلة' : 'Fehler beim Übernehmen der Bestellung',
+        isError: true
+      });
+    } finally {
+      setReorderingOrderId(null);
     }
   };
 
@@ -982,16 +1066,29 @@ export const CustomerAccount = () => {
                       </div>
                     </div>
 
-                    {/* Footer Actions: Print/View Order Report */}
+                    {/* Footer Actions: Print/View Order Report & Reorder */}
                     <div className="mt-4 pt-3 border-t border-slate-100 dark:border-gray-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
-                      <button
-                        type="button"
-                        onClick={() => handleOpenReport(order)}
-                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-slate-700 dark:text-gray-300 text-xs font-semibold transition cursor-pointer touch-manipulation"
-                      >
-                        <FileText className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                        <span>{isAr ? 'عرض تقرير الطلب الرسمي (طباعة)' : 'Bestellbericht anzeigen / drucken'}</span>
-                      </button>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenReport(order)}
+                          className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-slate-700 dark:text-gray-300 text-xs font-semibold transition cursor-pointer touch-manipulation"
+                        >
+                          <FileText className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <span>{isAr ? 'عرض تقرير الطلب (طباعة)' : 'Bestellbericht drucken'}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={reorderingOrderId === order.id}
+                          onClick={() => handleReorderOrder(order)}
+                          className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold transition cursor-pointer disabled:opacity-50 touch-manipulation"
+                          title={isAr ? 'إعادة طلب نفس المنتجات المتوفرة إلى السلة' : 'Gleiche verfügbare Artikel erneut in den Warenkorb legen'}
+                        >
+                          <RotateCcw className={`w-3.5 h-3.5 text-emerald-600 shrink-0 ${reorderingOrderId === order.id ? 'animate-spin' : ''}`} />
+                          <span>{reorderingOrderId === order.id ? (isAr ? 'جارٍ الإضافة...' : 'Wird hinzugefügt...') : (isAr ? 'إعادة الطلب ↺' : 'Erneut bestellen')}</span>
+                        </button>
+                      </div>
 
                       <span className="text-[11px] text-slate-400 text-center sm:text-end">
                         {order.orderItems?.length || 0} {isAr ? 'منتجات' : 'Positionen'}
@@ -1096,6 +1193,27 @@ export const CustomerAccount = () => {
                     required
                     className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <Globe className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>{isAr ? 'اللغة المفضلة للإشعارات والمراسلات' : 'Bevorzugte Sprache'}</span>
+                  </label>
+                  <select
+                    name="preferredLanguage"
+                    value={profileForm.preferredLanguage || 'de'}
+                    onChange={handleProfileChange}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                  >
+                    <option value="de">🇩🇪 Deutsch (Standard)</option>
+                    <option value="ar">🇦🇪 العربية</option>
+                  </select>
+                  <p className="text-[11px] text-slate-400 dark:text-gray-500 mt-1">
+                    {isAr 
+                      ? 'سيتم إرسال رسائل البريد الإلكتروني والإشعارات باللغة المحددة.' 
+                      : 'Bestellbestätigungen, E-Mails & Benachrichtigungen werden in dieser Sprache gesendet.'}
+                  </p>
                 </div>
 
                 <div>

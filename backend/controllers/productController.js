@@ -1,5 +1,6 @@
 const prisma = require('../lib/prisma');
 const { isPrivateOrLocalHost } = require('../utils/googleScraper');
+const { logAudit } = require('../lib/auditLog');
 
 const generateProductId = () => {
   const randomPart = Math.floor(100000 + Math.random() * 900000);
@@ -198,6 +199,8 @@ const createProduct = async (req, res) => {
       }
     });
 
+    logAudit(req.admin?.email, 'CREATE_PRODUCT', `Produkt erstellt: ${product.nameDe || product.name} (SKU: ${product.sku}, Preis: €${product.b2bPrice})`);
+
     res.status(201).json(product);
   } catch (error) {
     console.error('Create product error:', error);
@@ -266,6 +269,8 @@ const updateProduct = async (req, res) => {
       }
     });
 
+    logAudit(req.admin?.email, 'UPDATE_PRODUCT', `Produkt aktualisiert: ${product.nameDe || product.name} (SKU: ${product.sku}, Bestand: ${product.stock}, Preis: €${product.b2bPrice})`);
+
     res.json(product);
   } catch (error) {
     console.error('Update product error:', error);
@@ -301,6 +306,8 @@ const deleteProduct = async (req, res) => {
       where: { id }
     });
 
+    logAudit(req.admin?.email, 'DELETE_PRODUCT', `Produkt gelöscht: ${product.nameDe || product.name} (SKU: ${product.sku})`);
+
     res.json({ message: 'Product deleted successfully' });
   } catch (error) {
     console.error('Delete product error:', error);
@@ -331,6 +338,8 @@ const updateStock = async (req, res) => {
         category: true
       }
     });
+
+    logAudit(req.admin?.email, 'UPDATE_STOCK', `Lagerbestand geändert für ${product.nameDe || product.name}: ${parsedStock} Einheiten`);
 
     res.json(product);
   } catch (error) {

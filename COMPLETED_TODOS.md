@@ -123,3 +123,21 @@ Archived from `SECURITY_TODO.md`:
 - **#60 (Finding 4.1 / #6)** — Enforced authoritative DB pricing in `editOrder`, removing client `it.price` overrides completely (`orderController.js:828`).
 - **#61 (Finding 4.3)** — Required re-authentication (`currentPassword`) before modifying customer password, email, or phone number in profile update; re-issued fresh session JWT and cookie upon password change (`customerAuthController.js:528,604`, `CustomerAccount.jsx:1126`).
 - **#62 (Finding 4.4)** — Hardened Redis distributed rate limiter against immortal keys using atomic pipeline and automatic TTL recovery (`rateLimiter.js:80-95`).
+
+---
+
+## 4. Feature Improvements & Roadmap Implementations — 2026-09-25
+
+- **Customer Preferred Language & Localized Communications** (`CustomerAccount.jsx`, `customerAuthController.js`, `orderController.js`, `emailService.js`):
+  - Added dedicated Preferred Language selection (`Deutsch`, `العربية`) in the customer profile tab of `CustomerAccount.jsx`.
+  - Saving the profile updates both backend `preferredLanguage` column and frontend active language session (`LanguageContext`).
+  - Localized transactional customer communications: order confirmation emails, order status notifications, order modification alerts, password reset emails, and push notifications are delivered in the customer's selected language.
+- **Repeat / Reorder Past Basket** (`CustomerAccount.jsx`):
+  - Added single-click **"Erneut bestellen" / "إعادة الطلب ↺"** button to customer order history cards in `CustomerAccount.jsx`.
+  - Intelligently cross-checks current real-time inventory against past order items, merges in-stock items into `customer_cart`, skips out-of-stock items, provides localized feedback on availability, and redirects to shop for checkout.
+- **Proactive Low-Stock Admin Alerts** (`Dashboard.jsx`, `Products.jsx`):
+  - Added a real-time proactive low-stock alert banner to the Admin Dashboard whenever products fall to or below the safety threshold (<= 15 units).
+  - Linked to `Products.jsx` with automatic `?stock=low` URL filter support for 1-click review and inventory restock.
+- **Comprehensive Audit Logging & Bilingual UI Redesign** (`AuditLog.jsx`, `auditLogController.js`, `authController.js`, `productController.js`, `orderController.js`, `settingsController.js`, `couponController.js`, `promotionController.js`):
+  - Instrument full audit logging across all critical mutations: Admin login (2FA), password changes, product creation/updating/deletion/stock adjustments, order status updates & modifications, store settings & section PIN adjustments, coupon & promotion lifecycle.
+  - Complete overhaul of `AuditLog.jsx`: bilingual German (`de`) and Arabic (`ar`) support with RTL alignment, search across admin email / action / details, category filtering (Auth, Orders, Catalog, Customers, Promotions, Accounting, Settings), real-time KPI statistics cards, and styled timeline badges.

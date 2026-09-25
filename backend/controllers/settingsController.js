@@ -296,6 +296,8 @@ const updateSettings = async (req, res) => {
       update: data
     });
 
+    logAudit(req.admin?.email, 'UPDATE_SETTINGS', 'Geschäftseinstellungen aktualisiert (Name, Logo, Mindestbestellwert oder Lieferparameter)');
+
     res.json({
       message: 'Store settings updated successfully',
       settings: updated

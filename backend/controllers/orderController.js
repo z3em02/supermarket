@@ -751,6 +751,8 @@ const updateOrderStatus = async (req, res) => {
       console.error('Failed to send email notification:', emailError.message || emailError);
     }
 
+    logAudit(req.admin?.email, 'UPDATE_ORDER_STATUS', `Bestellstatus geändert für #${id.slice(0, 8).toUpperCase()} -> ${normalizedStatus}`);
+
     res.json(updatedOrder);
   } catch (error) {
     console.error('Update order status error:', error);
@@ -1074,6 +1076,8 @@ const editOrder = async (req, res) => {
     } catch (emailErr) {
       console.error('Error sending order modification email:', emailErr.message || emailErr);
     }
+
+    logAudit(req.admin?.email, 'EDIT_ORDER', `Bestellung angepasst #${id.slice(0, 8).toUpperCase()}: Grund "${reason || 'Kein Grund angegeben'}", Neuer Betrag €${updatedOrder.totalAmount}`);
 
     res.json(updatedOrder);
   } catch (error) {

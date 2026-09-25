@@ -1,5 +1,6 @@
 const prisma = require('../lib/prisma');
 const { calculatePromotionForItem, validateAndCalculateCoupon } = require('../utils/pricingService');
+const { logAudit } = require('../lib/auditLog');
 
 // Sanitize coupon code: trim, uppercase, alphanumeric with underscores/hyphens
 const sanitizeCode = (code) => {
@@ -94,6 +95,8 @@ const createCoupon = async (req, res) => {
       }
     });
 
+    logAudit(req.admin?.email, 'CREATE_COUPON', `Gutscheincode erstellt: ${coupon.code} (${coupon.discountType} ${coupon.discountValue})`);
+
     res.status(201).json(coupon);
   } catch (error) {
     console.error('Create coupon error:', error);
@@ -174,6 +177,8 @@ const updateCoupon = async (req, res) => {
       data: dataToUpdate
     });
 
+    logAudit(req.admin?.email, 'UPDATE_COUPON', `Gutscheincode aktualisiert: ${updated.code} (Aktiv: ${updated.isActive})`);
+
     res.json(updated);
   } catch (error) {
     console.error('Update coupon error:', error);
@@ -192,6 +197,9 @@ const deleteCoupon = async (req, res) => {
     }
 
     await prisma.coupon.delete({ where: { id } });
+
+    logAudit(req.admin?.email, 'DELETE_COUPON', `Gutscheincode gelöscht: ${existing.code}`);
+
     res.json({ success: true, message: 'Coupon deleted successfully' });
   } catch (error) {
     console.error('Delete coupon error:', error);
