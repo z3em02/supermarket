@@ -79,7 +79,8 @@ const PUBLIC_SETTINGS_SELECT = {
   isKleinunternehmer: true,
   vatId: true,
   businessPurposeDe: true,
-  businessPurposeAr: true
+  businessPurposeAr: true,
+  maintenanceMode: true
 };
 
 // GET /api/settings - Public
@@ -134,13 +135,17 @@ const updateSettings = async (req, res) => {
       isKleinunternehmer,
       vatId,
       businessPurposeDe,
-      businessPurposeAr
+      businessPurposeAr,
+      maintenanceMode
     } = req.body;
 
     const data = {};
 
     if (showGoogleReviews !== undefined) {
       data.showGoogleReviews = Boolean(showGoogleReviews);
+    }
+    if (maintenanceMode !== undefined) {
+      data.maintenanceMode = Boolean(maintenanceMode);
     }
 
     if (storeName !== undefined) {
@@ -303,6 +308,17 @@ const updateSettings = async (req, res) => {
     });
 
     logAudit(req.admin?.email, 'UPDATE_SETTINGS', 'Geschäftseinstellungen aktualisiert (Name, Logo, Mindestbestellwert oder Lieferparameter)');
+
+    // Own audit entry, separate from the generic one above — toggling this
+    // takes the whole storefront offline, worth being easy to find in the
+    // audit trail rather than lumped in with routine settings edits.
+    if (maintenanceMode !== undefined) {
+      logAudit(
+        req.admin?.email,
+        updated.maintenanceMode ? 'ENABLE_MAINTENANCE_MODE' : 'DISABLE_MAINTENANCE_MODE',
+        updated.maintenanceMode ? 'Wartungsmodus aktiviert — Shop für Kunden gesperrt' : 'Wartungsmodus deaktiviert — Shop wieder erreichbar'
+      );
+    }
 
     res.json({
       message: 'Store settings updated successfully',
