@@ -64,9 +64,11 @@ npm run dev               # starts Vite on http://localhost:5173
 Or use the bundled convenience scripts from the repo root (`start.sh` / `start.bat`)
 to launch both at once.
 
-The seed script creates a default admin login: **admin@hajar.com / admin**.
-**Change this password immediately** if you run the seed against anything
-other than a throwaway local database — admin login is at the path defined by
+The seed script creates a default admin account. Set `SEED_ADMIN_EMAIL` and
+`SEED_ADMIN_PASSWORD` in `backend/.env` to control its login; if
+`SEED_ADMIN_PASSWORD` is left unset, the script generates a random one-time
+password and prints it to the console — write it down, it isn't stored
+anywhere and won't be shown again. Admin login is at the path defined by
 `ADMIN_BASE` in `frontend/src/config/adminPath.js` (currently
 `/console-eb68a2f3/login`). Change that constant to your own value before
 deploying — see the comment there for why it's not real secrecy on its own.

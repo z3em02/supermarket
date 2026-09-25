@@ -2,6 +2,7 @@ const prisma = require('../lib/prisma');
 const { CUSTOMER_PUBLIC_SELECT } = require('../utils/serialize');
 const { logAudit } = require('../lib/auditLog');
 const { decryptCustomerPII, decrypt } = require('../utils/piiCrypto');
+const { parseValidDate } = require('../utils/validation');
 
 // Orders carry their own encrypted customer* snapshot columns (see
 // GDPR_DATA_POLICY.md), plus the joined `customer` relation which also
@@ -15,12 +16,6 @@ const withDecryptedOrder = (ord) => ({
   deliveryNotes: 'deliveryNotes' in ord ? decrypt(ord.deliveryNotes) : ord.deliveryNotes,
   customer: ord.customer ? decryptCustomerPII(ord.customer) : ord.customer
 });
-
-const parseValidDate = (str) => {
-  if (!str) return null;
-  const d = new Date(str);
-  return isNaN(d.getTime()) ? null : d;
-};
 
 const getAccountingSummary = async (req, res) => {
   try {

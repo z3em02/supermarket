@@ -7,6 +7,19 @@ const generateProductId = () => {
   return `PRD-${randomPart}`;
 };
 
+const MAX_NAME_LENGTH = 200;
+const MAX_DESCRIPTION_LENGTH = 5000;
+
+// Returns an error message if a text field exceeds its sane length cap, else null.
+const validateTextLengths = (fields) => {
+  for (const [label, value, max] of fields) {
+    if (typeof value === 'string' && value.length > max) {
+      return `${label} must be ${max} characters or fewer`;
+    }
+  }
+  return null;
+};
+
 // #30 fix: validate image URLs to prevent script injection / XSS schemes
 const isValidImageUrl = (url) => {
   if (!url) return true;
@@ -165,19 +178,42 @@ const createProduct = async (req, res) => {
       return res.status(400).json({ error: 'Invalid image URL. Must be an HTTP(S) URL or local path.' });
     }
 
-    // Auto-generate SKU / Product ID if not provided or left blank
-    let resolvedSku = (sku && sku.trim()) ? sku.trim().toUpperCase() : generateProductId();
-
-    // Ensure generated SKU is unique (#42 fix: graceful failure after 5 attempts)
-    let existingSku = await prisma.product.findUnique({ where: { sku: resolvedSku } });
-    let attempts = 0;
-    while (existingSku && attempts < 5) {
-      resolvedSku = generateProductId();
-      existingSku = await prisma.product.findUnique({ where: { sku: resolvedSku } });
-      attempts++;
+    const lengthError = validateTextLengths([
+      ['Name', name, MAX_NAME_LENGTH],
+      ['German name', nameDe, MAX_NAME_LENGTH],
+      ['Arabic name', nameAr, MAX_NAME_LENGTH],
+      ['Description', description, MAX_DESCRIPTION_LENGTH],
+      ['German description', descriptionDe, MAX_DESCRIPTION_LENGTH],
+      ['Arabic description', descriptionAr, MAX_DESCRIPTION_LENGTH]
+    ]);
+    if (lengthError) {
+      return res.status(400).json({ error: lengthError });
     }
-    if (existingSku) {
-      return res.status(500).json({ error: 'Failed to generate unique SKU after multiple attempts. Please provide a SKU manually.' });
+
+    let resolvedSku;
+    if (sku && sku.trim()) {
+      // An explicitly-provided SKU must be rejected on conflict, not
+      // silently swapped for a random one — an admin reconciling against a
+      // real-world barcode/SKU needs to know their SKU wasn't used.
+      resolvedSku = sku.trim().toUpperCase();
+      const existingSku = await prisma.product.findUnique({ where: { sku: resolvedSku } });
+      if (existingSku) {
+        return res.status(400).json({ error: 'A product with this SKU already exists' });
+      }
+    } else {
+      // Auto-generate SKU / Product ID if not provided or left blank
+      // (#42 fix: graceful failure after 5 attempts)
+      resolvedSku = generateProductId();
+      let existingSku = await prisma.product.findUnique({ where: { sku: resolvedSku } });
+      let attempts = 0;
+      while (existingSku && attempts < 5) {
+        resolvedSku = generateProductId();
+        existingSku = await prisma.product.findUnique({ where: { sku: resolvedSku } });
+        attempts++;
+      }
+      if (existingSku) {
+        return res.status(500).json({ error: 'Failed to generate unique SKU after multiple attempts. Please provide a SKU manually.' });
+      }
     }
 
     const product = await prisma.product.create({
@@ -203,10 +239,13 @@ const createProduct = async (req, res) => {
 
     res.status(201).json(product);
   } catch (error) {
-    console.error('Create product error:', error);
     if (error.code === 'P2002') {
       return res.status(400).json({ error: 'A product with this SKU / ID already exists' });
     }
+    if (error.code === 'P2003') {
+      return res.status(400).json({ error: 'Selected category does not exist' });
+    }
+    console.error('Create product error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -249,6 +288,18 @@ const updateProduct = async (req, res) => {
       return res.status(400).json({ error: 'Invalid image URL. Must be an HTTP(S) URL or local path.' });
     }
 
+    const lengthError = validateTextLengths([
+      ['Name', name, MAX_NAME_LENGTH],
+      ['German name', nameDe, MAX_NAME_LENGTH],
+      ['Arabic name', nameAr, MAX_NAME_LENGTH],
+      ['Description', description, MAX_DESCRIPTION_LENGTH],
+      ['German description', descriptionDe, MAX_DESCRIPTION_LENGTH],
+      ['Arabic description', descriptionAr, MAX_DESCRIPTION_LENGTH]
+    ]);
+    if (lengthError) {
+      return res.status(400).json({ error: lengthError });
+    }
+
     const product = await prisma.product.update({
       where: { id },
       data: {
@@ -273,10 +324,16 @@ const updateProduct = async (req, res) => {
 
     res.json(product);
   } catch (error) {
-    console.error('Update product error:', error);
     if (error.code === 'P2002') {
       return res.status(400).json({ error: 'A product with this SKU / ID already exists' });
     }
+    if (error.code === 'P2003') {
+      return res.status(400).json({ error: 'Selected category does not exist' });
+    }
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+    console.error('Update product error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -343,6 +400,9 @@ const updateStock = async (req, res) => {
 
     res.json(product);
   } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Product not found' });
+    }
     console.error('Update stock error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }

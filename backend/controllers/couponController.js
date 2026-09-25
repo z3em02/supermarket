@@ -1,6 +1,7 @@
 const prisma = require('../lib/prisma');
 const { calculatePromotionForItem, validateAndCalculateCoupon } = require('../utils/pricingService');
 const { logAudit } = require('../lib/auditLog');
+const { parseValidDate } = require('../utils/validation');
 
 // Sanitize coupon code: trim, uppercase, alphanumeric with underscores/hyphens
 const sanitizeCode = (code) => {
@@ -77,6 +78,20 @@ const createCoupon = async (req, res) => {
       return res.status(400).json({ error: `Gutscheincode "${cleanCode}" existiert bereits / Coupon code already exists.` });
     }
 
+    let parsedStartDate = null;
+    if (startDate) {
+      parsedStartDate = parseValidDate(startDate);
+      if (!parsedStartDate) return res.status(400).json({ error: 'Invalid startDate format' });
+    }
+    let parsedEndDate = null;
+    if (endDate) {
+      parsedEndDate = parseValidDate(endDate);
+      if (!parsedEndDate) return res.status(400).json({ error: 'Invalid endDate format' });
+    }
+    if (parsedStartDate && parsedEndDate && parsedStartDate > parsedEndDate) {
+      return res.status(400).json({ error: 'startDate must be before endDate' });
+    }
+
     const coupon = await prisma.coupon.create({
       data: {
         code: cleanCode,
@@ -89,8 +104,8 @@ const createCoupon = async (req, res) => {
         maxDiscountAmount: maxDiscountAmount ? Math.max(0, Number(maxDiscountAmount)) : null,
         usageLimit: usageLimit ? Math.max(1, parseInt(usageLimit, 10)) : null,
         usageLimitPerCustomer: usageLimitPerCustomer ? Math.max(1, parseInt(usageLimitPerCustomer, 10)) : 1,
-        startDate: startDate ? new Date(startDate) : null,
-        endDate: endDate ? new Date(endDate) : null,
+        startDate: parsedStartDate,
+        endDate: parsedEndDate,
         isActive: isActive !== false
       }
     });
@@ -168,8 +183,31 @@ const updateCoupon = async (req, res) => {
     if (maxDiscountAmount !== undefined) dataToUpdate.maxDiscountAmount = maxDiscountAmount ? Math.max(0, Number(maxDiscountAmount)) : null;
     if (usageLimit !== undefined) dataToUpdate.usageLimit = usageLimit ? Math.max(1, parseInt(usageLimit, 10)) : null;
     if (usageLimitPerCustomer !== undefined) dataToUpdate.usageLimitPerCustomer = usageLimitPerCustomer ? Math.max(1, parseInt(usageLimitPerCustomer, 10)) : 1;
-    if (startDate !== undefined) dataToUpdate.startDate = startDate ? new Date(startDate) : null;
-    if (endDate !== undefined) dataToUpdate.endDate = endDate ? new Date(endDate) : null;
+
+    let newStartDate = existing.startDate;
+    let newEndDate = existing.endDate;
+    if (startDate !== undefined) {
+      if (startDate) {
+        newStartDate = parseValidDate(startDate);
+        if (!newStartDate) return res.status(400).json({ error: 'Invalid startDate format' });
+      } else {
+        newStartDate = null;
+      }
+      dataToUpdate.startDate = newStartDate;
+    }
+    if (endDate !== undefined) {
+      if (endDate) {
+        newEndDate = parseValidDate(endDate);
+        if (!newEndDate) return res.status(400).json({ error: 'Invalid endDate format' });
+      } else {
+        newEndDate = null;
+      }
+      dataToUpdate.endDate = newEndDate;
+    }
+    if (newStartDate && newEndDate && newStartDate > newEndDate) {
+      return res.status(400).json({ error: 'startDate must be before endDate' });
+    }
+
     if (isActive !== undefined) dataToUpdate.isActive = Boolean(isActive);
 
     const updated = await prisma.coupon.update({

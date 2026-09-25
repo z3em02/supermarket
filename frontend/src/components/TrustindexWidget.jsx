@@ -8,8 +8,13 @@ export default function TrustindexWidget({
 }) {
   const { language, t } = useLanguage();
 
-  const ratingNum = settings?.googleRating || 5.0;
   const countNum = settings?.googleReviewCount || 0;
+  // Only trust a rating number when there's at least one real review behind
+  // it — a bare `|| 5.0` fallback used to show a "perfect" 5.0★ badge with
+  // "0 reviews" next to it, which reads as a fabricated/gamed rating to a
+  // skeptical customer rather than an honest "no reviews yet" state.
+  const hasRealRating = countNum > 0 && Number.isFinite(settings?.googleRating);
+  const ratingNum = hasRealRating ? settings.googleRating : null;
 
   return (
     <div className="w-full space-y-10">
@@ -34,34 +39,55 @@ export default function TrustindexWidget({
           {t('googleReviewsSubtitle')}
         </p>
 
-        {/* Live Rating Pill */}
-        <div className="mt-5 sm:mt-6 inline-flex flex-wrap items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl bg-white dark:bg-gray-850 border border-slate-200 dark:border-gray-800 shadow-sm max-w-full">
-          <div className="flex items-center gap-0.5 sm:gap-1">
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} className="w-4 h-4 sm:w-5 sm:h-5 fill-amber-400 text-amber-400" />
-            ))}
+        {/* Live Rating Pill — only shown once there's a real rating behind
+            it; otherwise an honest "no reviews yet" pill instead of a
+            fabricated-looking perfect score. */}
+        {hasRealRating ? (
+          <div className="mt-5 sm:mt-6 inline-flex flex-wrap items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl bg-white dark:bg-gray-850 border border-slate-200 dark:border-gray-800 shadow-sm max-w-full">
+            <div className="flex items-center gap-0.5 sm:gap-1">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="w-4 h-4 sm:w-5 sm:h-5 fill-amber-400 text-amber-400" />
+              ))}
+            </div>
+            <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+              {ratingNum.toFixed(1)} / 5.0
+            </span>
+            <span className="text-xs text-slate-400 dark:text-slate-500 hidden xs:inline">•</span>
+            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              {countNum === 1
+                ? (language === 'ar' ? 'تقييم حقيقي واحد' : '1 echte Bewertung')
+                : `${countNum} ${language === 'ar' ? (countNum <= 10 ? 'تقييمات حقيقية' : 'تقييم حقيقي') : 'echte Bewertungen'}`}
+            </span>
+            {settings?.googleReviewsUrl && (
+              <a
+                href={settings.googleReviewsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 underline underline-offset-2"
+              >
+                <span>{t('writeGoogleReview')}</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            )}
           </div>
-          <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-            {ratingNum ? ratingNum.toFixed(1) : '5.0'} / 5.0
-          </span>
-          <span className="text-xs text-slate-400 dark:text-slate-500 hidden xs:inline">•</span>
-          <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-            {countNum === 1
-              ? (language === 'ar' ? 'تقييم حقيقي واحد' : '1 echte Bewertung')
-              : `${countNum} ${language === 'ar' ? (countNum <= 10 ? 'تقييمات حقيقية' : 'تقييم حقيقي') : 'echte Bewertungen'}`}
-          </span>
-          {settings?.googleReviewsUrl && (
-            <a
-              href={settings.googleReviewsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 underline underline-offset-2"
-            >
-              <span>{t('writeGoogleReview')}</span>
-              <ExternalLink className="w-3 h-3" />
-            </a>
-          )}
-        </div>
+        ) : (
+          <div className="mt-5 sm:mt-6 inline-flex flex-wrap items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl bg-white dark:bg-gray-850 border border-dashed border-slate-200 dark:border-gray-800 max-w-full">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              {language === 'ar' ? 'لا توجد تقييمات بعد — كن أول من يقيّم' : 'Noch keine Bewertungen — seien Sie der/die Erste'}
+            </span>
+            {settings?.googleReviewsUrl && (
+              <a
+                href={settings.googleReviewsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 underline underline-offset-2"
+              >
+                <span>{t('writeGoogleReview')}</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Review Cards Grid */}

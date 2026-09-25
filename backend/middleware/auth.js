@@ -42,8 +42,13 @@ const authMiddleware = async (req, res, next) => {
 
 const driverOrAdminAuthMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
-  const usedCookieAuth = Boolean(req.cookies?.token) && !authHeader?.startsWith('Bearer ');
-  const token = req.cookies?.token || (authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null);
+  const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+  // Driver sessions live in their own `driver_token` cookie (separate from
+  // the admin `token` cookie) so an admin and a driver can be logged in from
+  // the same browser without one session's cookie clobbering the other's.
+  const cookieToken = req.cookies?.token || req.cookies?.driver_token;
+  const usedCookieAuth = Boolean(cookieToken) && !bearerToken;
+  const token = cookieToken || bearerToken;
   if (!token) {
     return res.status(401).json({ error: 'Authentication required' });
   }
@@ -73,6 +78,18 @@ const driverOrAdminAuthMiddleware = async (req, res, next) => {
         ? await prisma.driverSession.findUnique({ where: { jti: decoded.jti } })
         : null;
       if (!session || session.revokedAt || session.expiresAt < new Date()) {
+        return res.status(401).json({ error: 'Session invalidated or expired. Please sign in again.' });
+      }
+      // Also re-check the driver account itself: deactivating a driver in
+      // Settings must take effect immediately, the same way revoking a
+      // session does, not just block their next login. findUnique on
+      // nameLower, not a case-insensitive findFirst — the latter could
+      // resolve ambiguously if two same-named-different-case rows exist.
+      const driver = await prisma.driver.findUnique({
+        where: { nameLower: session.driverName.toLowerCase() },
+        select: { active: true }
+      });
+      if (!driver || !driver.active) {
         return res.status(401).json({ error: 'Session invalidated or expired. Please sign in again.' });
       }
       req.driver = {

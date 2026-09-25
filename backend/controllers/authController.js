@@ -6,6 +6,7 @@ const { JWT_SECRET, SECURE_COOKIES } = require('../lib/config');
 const { sendAdminLoginOtpEmail } = require('../utils/emailService');
 const { generateCsrfToken, setCsrfCookie } = require('../middleware/csrf');
 const { logAudit } = require('../lib/auditLog');
+const { secureCompare } = require('../utils/validation');
 
 const PENDING_2FA_SCOPE = 'admin-2fa-pending';
 const SESSION_TTL = '24h'; // #22 fix: limit admin JWT lifetime to 24h (previously 30d)
@@ -84,10 +85,10 @@ const verify2FA = async (req, res) => {
     }
 
     if (admin.twoFactorAttempts >= 5) {
-      return res.status(429).json({ error: 'Too many incorrect attempts. Please request a new code.' });
+      return res.status(429).json({ error: 'Zu viele fehlerhafte Versuche. Bitte fordern Sie einen neuen Code an / Too many incorrect attempts. Please request a new code.' });
     }
 
-    if (admin.twoFactorOtp !== String(code).trim()) {
+    if (!secureCompare(admin.twoFactorOtp, String(code).trim())) {
       await prisma.admin.update({
         where: { id: admin.id },
         data: { twoFactorAttempts: admin.twoFactorAttempts + 1 }

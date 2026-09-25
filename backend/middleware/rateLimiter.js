@@ -121,12 +121,15 @@ const createRateLimiter = ({
   };
 };
 
-// 15 login attempts per 10 minutes per IP
+// 15 login attempts per 10 minutes per IP. Shared by admin login and every
+// customer-facing auth flow (register/login/verify-OTP/password-reset), so
+// the message needs to work in German for a bilingual DE/AR site rather
+// than surfacing English at the exact moment a customer gets locked out.
 const authLimiter = createRateLimiter({
   windowMs: 10 * 60 * 1000,
   max: 15,
   prefix: 'rl:auth',
-  message: 'Too many login attempts. Please try again after 10 minutes.'
+  message: 'Zu viele Versuche. Bitte warten Sie 10 Minuten / Too many attempts. Please try again after 10 minutes.'
 });
 
 // General API limiter: 300 requests per 1 minute per IP

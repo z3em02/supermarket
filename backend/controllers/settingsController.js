@@ -2,11 +2,14 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const prisma = require('../lib/prisma');
-const { JWT_SECRET } = require('../lib/config');
+const { JWT_SECRET, SECURE_COOKIES } = require('../lib/config');
 const { scrapeGoogleReviews, isPrivateOrLocalHost } = require('../utils/googleScraper');
 const { downloadAndCacheLogo, deleteCachedLogo } = require('../utils/imageProxy');
 const { issueSectionUnlockToken, invalidateSectionPasscodeCache } = require('../middleware/sectionUnlock');
 const { logAudit } = require('../lib/auditLog');
+const { generateCsrfToken, setCsrfCookie, clearCsrfCookie, requireCsrfForCookieAuth } = require('../middleware/csrf');
+
+const DRIVER_SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 // String(null) / String(undefined) produce the literal text "null"/"undefined",
 // which then reads back as a truthy, non-empty value forever — treat any
@@ -556,66 +559,189 @@ const verifyPasscode = async (req, res) => {
   }
 };
 
-// GET /api/settings/driver-passcode-status - Admin only
-const getDriverPasscodeStatus = async (req, res) => {
+// Generates a random numeric PIN (default 6 digits) for a new/reset driver
+// account, in the same style as the OTP generators elsewhere in this app.
+const generateDriverPin = (digits = 6) => {
+  const min = Math.pow(10, digits - 1);
+  const max = Math.pow(10, digits) - 1;
+  return String(crypto.randomInt(min, max + 1));
+};
+
+// GET /api/settings/drivers - Admin only. Never returns pinHash.
+const listDrivers = async (req, res) => {
   try {
-    const settings = await prisma.storeSettings.findUnique({
-      where: { id: 'default' },
-      select: { driverPasscodeHash: true }
+    const drivers = await prisma.driver.findMany({
+      select: { id: true, name: true, active: true, createdAt: true, updatedAt: true },
+      orderBy: { name: 'asc' }
     });
-    res.json({ isSet: Boolean(settings?.driverPasscodeHash) });
+    res.json(drivers);
   } catch (error) {
-    console.error('Get driver passcode status error:', error);
-    res.status(500).json({ error: 'Failed to check driver passcode status' });
+    console.error('List drivers error:', error);
+    res.status(500).json({ error: 'Failed to load drivers' });
   }
 };
 
-// PUT /api/settings/driver-passcode - Admin only
-const setDriverPasscode = async (req, res) => {
+// POST /api/settings/drivers - Admin only. Creates a driver with either an
+// admin-supplied PIN or a randomly generated one, returned once in the
+// response — same pattern as the seed script's generated admin password:
+// it isn't stored anywhere in plaintext and won't be shown again.
+const createDriver = async (req, res) => {
   try {
-    const { passcode, currentPasscode } = req.body;
+    const { name, pin } = req.body;
+    const cleanName = String(name || '').trim().slice(0, 60);
+    if (!cleanName) {
+      return res.status(400).json({ error: 'Fahrername ist erforderlich / Driver name is required' });
+    }
+    const nameLower = cleanName.toLowerCase();
 
-    const settings = await prisma.storeSettings.findUnique({
-      where: { id: 'default' },
-      select: { driverPasscodeHash: true, sectionPasscodeHash: true }
+    // Friendly pre-check for the common case — not the actual guarantee.
+    // Two concurrent requests for names differing only in case could both
+    // pass this and still race each other; `nameLower`'s DB-level unique
+    // constraint (caught as P2002 below) is what actually prevents it.
+    const duplicate = await prisma.driver.findUnique({ where: { nameLower } });
+    if (duplicate) {
+      return res.status(400).json({ error: `Fahrer "${cleanName}" existiert bereits / Driver already exists` });
+    }
+
+    let cleanPin = pin !== undefined && pin !== null && pin !== '' ? String(pin).trim() : null;
+    let generated = false;
+    if (cleanPin) {
+      if (!/^\d{4,8}$/.test(cleanPin)) {
+        return res.status(400).json({ error: 'PIN must be 4-8 digits' });
+      }
+    } else {
+      cleanPin = generateDriverPin();
+      generated = true;
+    }
+
+    const pinHash = await bcrypt.hash(cleanPin, 10);
+    const driver = await prisma.driver.create({
+      data: { name: cleanName, nameLower, pinHash },
+      select: { id: true, name: true, active: true, createdAt: true }
     });
 
-    if (settings?.driverPasscodeHash && settings?.sectionPasscodeHash) {
-      if (!currentPasscode) {
-        return res.status(400).json({ error: 'Aktueller Admin-PIN ist erforderlich / Current PIN is required' });
-      }
-      const matches = await bcrypt.compare(String(currentPasscode).trim(), settings.sectionPasscodeHash);
-      if (!matches) {
-        return res.status(403).json({ error: 'Aktueller Admin-PIN ist falsch / Current PIN is incorrect' });
-      }
-    }
-
-    if (passcode === null || passcode === '') {
-      await prisma.storeSettings.upsert({
-        where: { id: 'default' },
-        update: { driverPasscodeHash: null },
-        create: { ...DEFAULT_SETTINGS, driverPasscodeHash: null }
-      });
-      logAudit(req.admin?.email, 'REMOVE_DRIVER_PASSCODE', 'Fahrer-Zugangs-PIN entfernt');
-      return res.json({ message: 'Driver passcode removed', isSet: false });
-    }
-
-    const clean = String(passcode || '').trim();
-    if (!/^\d{4,8}$/.test(clean)) {
-      return res.status(400).json({ error: 'Passcode must be 4-8 digits' });
-    }
-
-    const hash = await bcrypt.hash(clean, 10);
-    await prisma.storeSettings.upsert({
-      where: { id: 'default' },
-      update: { driverPasscodeHash: hash },
-      create: { ...DEFAULT_SETTINGS, driverPasscodeHash: hash }
-    });
-    logAudit(req.admin?.email, 'SET_DRIVER_PASSCODE', 'Fahrer-Zugangs-PIN erfolgreich aktualisiert');
-    res.json({ message: 'Driver passcode set', isSet: true });
+    logAudit(req.admin?.email, 'CREATE_DRIVER', `Fahrer "${cleanName}" angelegt`);
+    res.status(201).json({ ...driver, pin: generated ? cleanPin : undefined });
   } catch (error) {
-    console.error('Set driver passcode error:', error);
-    res.status(500).json({ error: 'Failed to set driver passcode' });
+    if (error.code === 'P2002') {
+      return res.status(400).json({ error: `Fahrer "${req.body?.name}" existiert bereits / Driver already exists` });
+    }
+    console.error('Create driver error:', error);
+    res.status(500).json({ error: 'Failed to create driver' });
+  }
+};
+
+// PUT /api/settings/drivers/:id - Admin only. Renames and/or (de)activates
+// a driver. Deactivating takes effect immediately, not just on next
+// login — driverOrAdminAuthMiddleware re-checks `active` on every request.
+const updateDriver = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, active } = req.body;
+
+    const existing = await prisma.driver.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ error: 'Driver not found' });
+    }
+
+    const data = {};
+    if (name !== undefined) {
+      const cleanName = String(name || '').trim().slice(0, 60);
+      if (!cleanName) {
+        return res.status(400).json({ error: 'Fahrername ist erforderlich / Driver name is required' });
+      }
+      const nameLower = cleanName.toLowerCase();
+      if (nameLower !== existing.nameLower) {
+        // Friendly pre-check only — the nameLower unique constraint (P2002
+        // below) is what actually prevents a race against a concurrent
+        // create/rename.
+        const duplicate = await prisma.driver.findUnique({ where: { nameLower } });
+        if (duplicate) {
+          return res.status(400).json({ error: `Fahrer "${cleanName}" existiert bereits / Driver already exists` });
+        }
+      }
+      data.name = cleanName;
+      data.nameLower = nameLower;
+    }
+    if (active !== undefined) data.active = Boolean(active);
+
+    const driver = await prisma.driver.update({
+      where: { id },
+      data,
+      select: { id: true, name: true, active: true, createdAt: true, updatedAt: true }
+    });
+
+    logAudit(req.admin?.email, 'UPDATE_DRIVER', `Fahrer "${existing.name}" aktualisiert (Aktiv: ${driver.active})`);
+    res.json(driver);
+  } catch (error) {
+    if (error.code === 'P2002') {
+      return res.status(400).json({ error: `Fahrer "${req.body?.name}" existiert bereits / Driver already exists` });
+    }
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Driver not found' });
+    }
+    console.error('Update driver error:', error);
+    res.status(500).json({ error: 'Failed to update driver' });
+  }
+};
+
+// POST /api/settings/drivers/:id/reset-pin - Admin only. Generates a fresh
+// PIN and returns it once (or accepts an admin-supplied one, same as create).
+const resetDriverPin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { pin } = req.body;
+
+    const existing = await prisma.driver.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ error: 'Driver not found' });
+    }
+
+    let cleanPin = pin !== undefined && pin !== null && pin !== '' ? String(pin).trim() : null;
+    let generated = false;
+    if (cleanPin) {
+      if (!/^\d{4,8}$/.test(cleanPin)) {
+        return res.status(400).json({ error: 'PIN must be 4-8 digits' });
+      }
+    } else {
+      cleanPin = generateDriverPin();
+      generated = true;
+    }
+
+    const pinHash = await bcrypt.hash(cleanPin, 10);
+    await prisma.driver.update({ where: { id }, data: { pinHash } });
+
+    logAudit(req.admin?.email, 'RESET_DRIVER_PIN', `PIN für Fahrer "${existing.name}" zurückgesetzt`);
+    res.json({ message: 'PIN reset', pin: generated ? cleanPin : undefined });
+  } catch (error) {
+    console.error('Reset driver PIN error:', error);
+    res.status(500).json({ error: 'Failed to reset driver PIN' });
+  }
+};
+
+// DELETE /api/settings/drivers/:id - Admin only. Requires the driver to
+// already be deactivated first — a cheap guard against deleting someone
+// who's currently logged in or actively assigned deliveries by mistake.
+const deleteDriver = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const existing = await prisma.driver.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ error: 'Driver not found' });
+    }
+    if (existing.active) {
+      return res.status(400).json({ error: 'Fahrer muss zuerst deaktiviert werden / Driver must be deactivated first' });
+    }
+
+    await prisma.driver.delete({ where: { id } });
+    logAudit(req.admin?.email, 'DELETE_DRIVER', `Fahrer "${existing.name}" gelöscht`);
+    res.json({ message: 'Driver deleted' });
+  } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Driver not found' });
+    }
+    console.error('Delete driver error:', error);
+    res.status(500).json({ error: 'Failed to delete driver' });
   }
 };
 
@@ -624,43 +750,53 @@ const setDriverPasscode = async (req, res) => {
 // forever, and a stale pollToken would stay valid indefinitely.
 const DRIVER_LOGIN_REQUEST_TTL_MS = 5 * 60 * 1000;
 
-// POST /api/settings/driver/login - Driver auth endpoint (step 1: PIN check).
-// Knowing the PIN is no longer enough to get a session on its own — this
-// only creates a pending request; an admin must approve it from the
-// dashboard (see approveDriverLoginRequest) before a JWT is ever issued.
+// POST /api/settings/driver/login - Driver auth endpoint (step 1: name + own
+// PIN check). Each driver now has their own account and PIN (see the Driver
+// model) instead of one PIN shared by every courier — a driver must supply
+// their exact registered name and its matching PIN. Knowing a valid PIN is
+// still not enough to get a session on its own: this only creates a pending
+// request; an admin must approve it from the dashboard (see
+// approveDriverLoginRequest) before a JWT is ever issued.
 const driverLogin = async (req, res) => {
   try {
     const { driverName, passcode } = req.body;
+    const cleanName = String(driverName || '').trim().slice(0, 60);
+    if (!cleanName) {
+      return res.status(400).json({ error: 'Fahrername ist erforderlich / Driver name is required' });
+    }
     if (!passcode) {
       return res.status(400).json({ error: 'Passcode is required' });
     }
 
-    const settings = await prisma.storeSettings.findUnique({
-      where: { id: 'default' },
-      select: { driverPasscodeHash: true }
+    // Same generic error for "no such driver" and "wrong PIN" — avoids
+    // letting a login attempt confirm which driver names are registered.
+    const invalidCredentialsError = { error: 'Ungültiger Name oder PIN / Invalid name or PIN' };
+
+    // findUnique on nameLower (not findFirst on a case-insensitive name
+    // match) — a non-unique lookup here could silently resolve to the
+    // wrong one of two same-named-different-case rows.
+    const driver = await prisma.driver.findUnique({
+      where: { nameLower: cleanName.toLowerCase() }
     });
-
-    if (!settings?.driverPasscodeHash) {
-      return res.status(403).json({
-        error: 'Kein Fahrer-PIN im Admin-Dashboard eingerichtet. Bitte Administrator kontaktieren.'
-      });
+    if (!driver || !driver.active) {
+      return res.status(401).json(invalidCredentialsError);
     }
 
-    const matches = await bcrypt.compare(String(passcode).trim(), settings.driverPasscodeHash);
+    const matches = await bcrypt.compare(String(passcode).trim(), driver.pinHash);
     if (!matches) {
-      return res.status(401).json({
-        error: 'Ungültiger Fahrer-PIN / Invalid driver passcode'
-      });
+      return res.status(401).json(invalidCredentialsError);
     }
 
-    const cleanName = String(driverName || 'Fahrer').trim().slice(0, 60);
     const pollToken = crypto.randomBytes(32).toString('hex');
 
+    // Use the driver's own registered name (canonical casing), not
+    // whatever casing was typed at login, so DriverSession/Order labels
+    // stay consistent.
     const request = await prisma.driverLoginRequest.create({
-      data: { driverName: cleanName, pollToken, status: 'pending', ipAddress: req.ip || null }
+      data: { driverName: driver.name, pollToken, status: 'pending', ipAddress: req.ip || null }
     });
 
-    logAudit('DRIVER_AUTH', 'DRIVER_LOGIN_REQUESTED', `Fahrer "${cleanName}" hat einen Login angefragt (wartet auf Freigabe)`);
+    logAudit('DRIVER_AUTH', 'DRIVER_LOGIN_REQUESTED', `Fahrer "${driver.name}" hat einen Login angefragt (wartet auf Freigabe)`);
 
     res.json({
       pending: true,
@@ -707,7 +843,7 @@ const pollDriverLoginRequest = async (req, res) => {
       // checks that row on every request instead, which is what lets an
       // admin actually force this driver logged out before the 24h expiry.
       const jti = crypto.randomBytes(16).toString('hex');
-      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      const expiresAt = new Date(Date.now() + DRIVER_SESSION_MAX_AGE_MS);
       const token = jwt.sign(
         { role: 'driver', name: request.driverName, id: 'driver-session', jti },
         JWT_SECRET,
@@ -718,9 +854,22 @@ const pollDriverLoginRequest = async (req, res) => {
       });
       await prisma.driverLoginRequest.delete({ where: { id: request.id } }).catch(() => {});
       logAudit('DRIVER_AUTH', 'DRIVER_LOGIN', `Fahrer "${request.driverName}" wurde freigegeben und angemeldet`);
+
+      // Deliver the JWT as an HttpOnly cookie rather than in the JSON body —
+      // a driver_token cookie (distinct from the admin `token` cookie, so
+      // the two sessions can coexist in one browser) means it's never
+      // readable by JS, unlike the localStorage-based session this replaced.
+      res.cookie('driver_token', token, {
+        httpOnly: true,
+        secure: SECURE_COOKIES,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: DRIVER_SESSION_MAX_AGE_MS
+      });
+      setCsrfCookie(res, generateCsrfToken(), DRIVER_SESSION_MAX_AGE_MS);
+
       return res.json({
         status: 'approved',
-        token,
         driver: { role: 'driver', name: request.driverName }
       });
     }
@@ -831,6 +980,41 @@ const logoutDriverSession = async (req, res) => {
   }
 };
 
+// POST /api/settings/driver/logout - Driver's own logout (mirrors the admin
+// and customer logout endpoints). Not behind driverOrAdminAuthMiddleware: an
+// already-expired/invalid cookie must still be able to log out and clear
+// itself, so the CSRF check happens here manually.
+const driverLogout = async (req, res) => {
+  const authHeader = req.headers.authorization;
+  const usedCookieAuth = Boolean(req.cookies?.driver_token);
+  const token = req.cookies?.driver_token || (authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null);
+
+  if (!requireCsrfForCookieAuth(req, res, usedCookieAuth)) return;
+
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      if (decoded.role === 'driver' && decoded.jti) {
+        await prisma.driverSession.updateMany({
+          where: { jti: decoded.jti, revokedAt: null },
+          data: { revokedAt: new Date() }
+        });
+      }
+    } catch (e) {
+      // Token may already be expired or malformed; proceed with clearing the cookie
+    }
+  }
+
+  res.clearCookie('driver_token', {
+    httpOnly: true,
+    secure: SECURE_COOKIES,
+    sameSite: 'lax',
+    path: '/'
+  });
+  clearCsrfCookie(res);
+  res.json({ message: 'Logged out successfully' });
+};
+
 module.exports = {
   getSettings,
   updateSettings,
@@ -841,10 +1025,14 @@ module.exports = {
   getPasscodeStatus,
   setPasscode,
   verifyPasscode,
-  getDriverPasscodeStatus,
-  setDriverPasscode,
+  listDrivers,
+  createDriver,
+  updateDriver,
+  resetDriverPin,
+  deleteDriver,
   driverLogin,
   pollDriverLoginRequest,
+  driverLogout,
   listDriverLoginRequests,
   approveDriverLoginRequest,
   rejectDriverLoginRequest,

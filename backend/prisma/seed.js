@@ -1,15 +1,36 @@
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const { PrismaClient } = require('@prisma/client');
+const { isStrongPassword, STRONG_PASSWORD_HINT } = require('../utils/validation');
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('--- Seeding Database for Supermarket Home Delivery ---');
 
   // 1. Ensure Default Admin exists
-  const adminEmail = 'chefvonvelo@gmail.com';
+  //
+  // No credentials are hardcoded here — a real email/password baked into
+  // source and committed to git is a permanent leak, not a placeholder,
+  // the moment the repo is shared or pushed anywhere. Set SEED_ADMIN_EMAIL /
+  // SEED_ADMIN_PASSWORD in your .env to control the seeded login; otherwise
+  // a one-time random password is generated and printed below (write it
+  // down, it's not stored anywhere and won't be shown again).
+  const adminEmail = process.env.SEED_ADMIN_EMAIL || 'admin@hajar.local';
   const existingAdmin = await prisma.admin.findUnique({ where: { email: adminEmail } });
   if (!existingAdmin) {
-    const password = await bcrypt.hash('admin020304', 10);
+    let plainPassword = process.env.SEED_ADMIN_PASSWORD;
+    let generated = false;
+    if (plainPassword) {
+      if (!isStrongPassword(plainPassword)) {
+        console.error(`FATAL: SEED_ADMIN_PASSWORD does not meet the password policy. ${STRONG_PASSWORD_HINT}`);
+        process.exit(1);
+      }
+    } else {
+      plainPassword = crypto.randomBytes(18).toString('base64url');
+      generated = true;
+    }
+
+    const password = await bcrypt.hash(plainPassword, 10);
     await prisma.admin.create({
       data: {
         email: adminEmail,
@@ -18,6 +39,9 @@ async function main() {
       }
     });
     console.log(`✓ Admin account initialized (${adminEmail})`);
+    if (generated) {
+      console.log(`  Generated password (shown once, not stored — change it after first login): ${plainPassword}`);
+    }
   } else {
     console.log('✓ Admin account already exists');
   }

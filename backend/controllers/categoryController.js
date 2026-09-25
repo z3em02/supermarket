@@ -96,6 +96,9 @@ const updateCategory = async (req, res) => {
 
     res.json(category);
   } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Category not found' });
+    }
     console.error('Update category error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -117,6 +120,9 @@ const deleteCategory = async (req, res) => {
 
     res.json({ message: 'Category deleted successfully' });
   } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Category not found' });
+    }
     console.error('Delete category error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }

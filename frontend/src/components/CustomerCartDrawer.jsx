@@ -652,15 +652,18 @@ export const CustomerCartDrawer = ({
                         </div>
                       </div>
 
-                      {/* Quantity Controls */}
+                      {/* Quantity Controls — buttons sized for a real touch
+                          target (min ~40px), not just the visual icon size,
+                          since this is the most-repeated tap in the cart. */}
                       <div className="flex items-center gap-2 shrink-0">
                         <div className="flex items-center border border-slate-200 dark:border-gray-800 rounded-xl bg-slate-50 dark:bg-gray-900 p-0.5">
                           <button
                             type="button"
                             onClick={() => updateQuantity(item.productId, -1)}
-                            className="p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-gray-800 text-slate-600 dark:text-gray-300 transition cursor-pointer"
+                            className="min-w-10 min-h-10 flex items-center justify-center rounded-lg hover:bg-slate-200 dark:hover:bg-gray-800 text-slate-600 dark:text-gray-300 transition cursor-pointer touch-manipulation"
+                            aria-label={isAr ? 'تقليل الكمية' : 'Menge verringern'}
                           >
-                            <Minus className="w-3.5 h-3.5" />
+                            <Minus className="w-4 h-4" />
                           </button>
                           <span className="w-7 text-center font-bold text-xs text-slate-800 dark:text-gray-200 font-mono">
                             {item.quantity}
@@ -669,16 +672,18 @@ export const CustomerCartDrawer = ({
                             type="button"
                             onClick={() => updateQuantity(item.productId, 1)}
                             disabled={item.quantity >= item.stock}
-                            className="p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-gray-800 text-slate-600 dark:text-gray-300 disabled:opacity-30 transition cursor-pointer"
+                            className="min-w-10 min-h-10 flex items-center justify-center rounded-lg hover:bg-slate-200 dark:hover:bg-gray-800 text-slate-600 dark:text-gray-300 disabled:opacity-30 transition cursor-pointer touch-manipulation"
+                            aria-label={isAr ? 'زيادة الكمية' : 'Menge erhöhen'}
                           >
-                            <Plus className="w-3.5 h-3.5" />
+                            <Plus className="w-4 h-4" />
                           </button>
                         </div>
 
                         <button
                           type="button"
                           onClick={() => removeFromCart(item.productId)}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
+                          className="min-w-10 min-h-10 flex items-center justify-center text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer touch-manipulation"
+                          aria-label={isAr ? 'حذف' : 'Entfernen'}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

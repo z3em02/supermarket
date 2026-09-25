@@ -86,6 +86,13 @@ export const DriverDeliveryView = () => {
   const handleDriverLogin = async (e) => {
     e.preventDefault();
     setLoginError('');
+    // Each driver now has their own account (name + individual PIN), so the
+    // name can no longer default to a generic "Fahrer" — it has to match a
+    // real registered driver.
+    if (!inputDriverName.trim()) {
+      setLoginError(isAr ? 'يرجى إدخال اسم السائق' : 'Bitte Fahrername eingeben');
+      return;
+    }
     if (!inputPasscode.trim()) {
       setLoginError(isAr ? 'يرجى إدخال رمز الدخول (PIN)' : 'Bitte Fahrer-PIN eingeben');
       return;
@@ -95,7 +102,7 @@ export const DriverDeliveryView = () => {
       setLoggingIn(true);
       const apiUrl = getApiUrl();
       const res = await axios.post(`${apiUrl}/api/settings/driver/login`, {
-        driverName: inputDriverName.trim() || (isAr ? 'سائق' : 'Fahrer'),
+        driverName: inputDriverName.trim(),
         passcode: inputPasscode.trim()
       });
 
@@ -125,9 +132,10 @@ export const DriverDeliveryView = () => {
         if (cancelled) return;
 
         if (res.data.status === 'approved') {
-          const { token, driver } = res.data;
-          sessionStorage.setItem('driver_token', token);
-          localStorage.setItem('driver_token', token);
+          // The session itself now lives entirely in the HttpOnly
+          // `driver_token` cookie the backend just set — nothing for the
+          // frontend to store beyond the display-only driver name/role.
+          const { driver } = res.data;
           sessionStorage.setItem('driver_user', JSON.stringify(driver));
           localStorage.setItem('driver_user', JSON.stringify(driver));
           setDriverUser(driver);
@@ -154,6 +162,13 @@ export const DriverDeliveryView = () => {
   }, [pendingPollToken, isAr]);
 
   const handleDriverLogout = () => {
+    // Fire-and-forget: revokes the DriverSession row and clears the HttpOnly
+    // driver_token cookie server-side (JS can't clear an HttpOnly cookie
+    // itself). Local UI state is cleared immediately regardless of outcome.
+    const apiUrl = getApiUrl();
+    axios.post(`${apiUrl}/api/settings/driver/logout`).catch(() => {});
+    // Clears any leftover driver_token from before this session moved to an
+    // HttpOnly cookie — harmless no-op once nothing is left to remove.
     sessionStorage.removeItem('driver_token');
     localStorage.removeItem('driver_token');
     sessionStorage.removeItem('driver_user');
@@ -408,10 +423,11 @@ export const DriverDeliveryView = () => {
               )}
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
-                  {isAr ? 'اسم السائق (اختياري)' : 'Fahrername (optional)'}
+                  {isAr ? 'اسم السائق' : 'Fahrername'}
                 </label>
                 <input
                   type="text"
+                  required
                   value={inputDriverName}
                   onChange={(e) => setInputDriverName(e.target.value)}
                   placeholder={isAr ? 'مثال: أحمد' : 'z.B. Ahmed'}
@@ -420,7 +436,7 @@ export const DriverDeliveryView = () => {
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
-                  {isAr ? 'رمز السائق (PIN)' : 'Fahrer-PIN'}
+                  {isAr ? 'رمزك الشخصي (PIN)' : 'Dein persönlicher PIN'}
                 </label>
                 <input
                   type="password"

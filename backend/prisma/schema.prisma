@@ -8,26 +8,26 @@ datasource db {
 }
 
 model Admin {
-  id                   String    @id @default(uuid())
-  email                String    @unique
-  password             String
-  name                 String
-  tokenVersion         Int       @default(0)
+  id                 String    @id @default(uuid())
+  email              String    @unique
+  password           String
+  name               String
+  tokenVersion       Int       @default(0)
   // Login 2FA: a code emailed on every login, checked before the session JWT is issued.
-  twoFactorOtp         String?
-  twoFactorOtpExpiry   DateTime?
-  twoFactorAttempts    Int       @default(0)
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  twoFactorOtp       String?
+  twoFactorOtpExpiry DateTime?
+  twoFactorAttempts  Int       @default(0)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 }
 
 // Tracks admin access to customer records (view/export), for accountability.
 model AuditLog {
-  id          String   @id @default(uuid())
-  adminEmail  String
-  action      String   // e.g. 'VIEW_CUSTOMERS', 'EXPORT_ACCOUNTING'
-  detail      String?
-  createdAt   DateTime @default(now())
+  id         String   @id @default(uuid())
+  adminEmail String
+  action     String // e.g. 'VIEW_CUSTOMERS', 'EXPORT_ACCOUNTING'
+  detail     String?
+  createdAt  DateTime @default(now())
 
   @@index([createdAt])
 }
@@ -67,38 +67,38 @@ model Product {
 }
 
 model Customer {
-  id                   String        @id @default(uuid())
-  name                 String
+  id                String             @id @default(uuid())
+  name              String
   // email/phone are encrypted at rest (see utils/piiCrypto.js); emailHash/
   // phoneHash are deterministic SHA-256 hashes used for exact-match lookups
   // (login, uniqueness checks) since the ciphertext itself isn't comparable.
-  email                String
-  emailHash            String        @unique
-  emailVerified        Boolean       @default(false)
-  emailOtp             String?
-  emailOtpExpiry       DateTime?
-  phone                String
-  phoneHash            String        @unique
-  phoneVerified        Boolean       @default(false)
-  phoneOtp             String?
-  phoneOtpExpiry       DateTime?
-  password             String
-  resetToken           String?
-  resetTokenExpiry     DateTime?
-  otpAttempts          Int           @default(0)
-  tokenVersion         Int           @default(0)
-  street               String?
-  houseNumber          String?
-  postalCode           String?
-  city                 String?
-  floorApartment       String?
-  deliveryNotes        String?
-  preferredLanguage    String        @default("de")
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
-  orders               Order[]
-  couponUsages         CouponUsage[]
-  pushSubscriptions    PushSubscription[]
+  email             String
+  emailHash         String             @unique
+  emailVerified     Boolean            @default(false)
+  emailOtp          String?
+  emailOtpExpiry    DateTime?
+  phone             String
+  phoneHash         String             @unique
+  phoneVerified     Boolean            @default(false)
+  phoneOtp          String?
+  phoneOtpExpiry    DateTime?
+  password          String
+  resetToken        String?
+  resetTokenExpiry  DateTime?
+  otpAttempts       Int                @default(0)
+  tokenVersion      Int                @default(0)
+  street            String?
+  houseNumber       String?
+  postalCode        String?
+  city              String?
+  floorApartment    String?
+  deliveryNotes     String?
+  preferredLanguage String             @default("de")
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  orders            Order[]
+  couponUsages      CouponUsage[]
+  pushSubscriptions PushSubscription[]
 }
 
 // A browser's Web Push subscription (one per browser/device that granted
@@ -162,17 +162,17 @@ model Order {
 }
 
 model OrderItem {
-  id              String   @id @default(uuid())
-  orderId         String
-  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId       String
-  product         Product  @relation(fields: [productId], references: [id])
-  quantity        Int
-  price           Float
-  originalPrice   Float?
-  discountAmount  Float    @default(0)
-  promotionType   String?
-  subtotal        Float
+  id             String  @id @default(uuid())
+  orderId        String
+  order          Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId      String
+  product        Product @relation(fields: [productId], references: [id])
+  quantity       Int
+  price          Float
+  originalPrice  Float?
+  discountAmount Float   @default(0)
+  promotionType  String?
+  subtotal       Float
 
   @@index([orderId])
   @@index([productId])
@@ -194,23 +194,23 @@ model Accounting {
 }
 
 model StoreSettings {
-  id                String   @id @default("default")
-  storeName         String   @default("Hajar Supermarkt")
-  storeNameDe       String   @default("Hajar Supermarkt")
-  storeNameAr       String   @default("سوبرماركت هاجر")
-  logoUrl           String?
-  phone             String?  @default("+49 123 4567890")
-  email             String?  @default("info@hajar-supermarkt.de")
-  address           String?  @default("Musterstraße 123, 10115 Berlin")
-  mapUrl            String?  @default("https://maps.google.com")
-  mapEmbedUrl       String?
-  googleReviewsUrl  String?  @default("https://search.google.com/local/reviews")
-  googleRating      Float    @default(5.0)
-  googleReviewCount Int      @default(120)
-  googlePlaceId     String?
-  googleApiKey      String?
-  trustindexWidgetCode String?
-  showGoogleReviews Boolean  @default(true)
+  id                    String   @id @default("default")
+  storeName             String   @default("Hajar Supermarkt")
+  storeNameDe           String   @default("Hajar Supermarkt")
+  storeNameAr           String   @default("سوبرماركت هاجر")
+  logoUrl               String?
+  phone                 String?  @default("+49 123 4567890")
+  email                 String?  @default("info@hajar-supermarkt.de")
+  address               String?  @default("Musterstraße 123, 10115 Berlin")
+  mapUrl                String?  @default("https://maps.google.com")
+  mapEmbedUrl           String?
+  googleReviewsUrl      String?  @default("https://search.google.com/local/reviews")
+  googleRating          Float    @default(5.0)
+  googleReviewCount     Int      @default(120)
+  googlePlaceId         String?
+  googleApiKey          String?
+  trustindexWidgetCode  String?
+  showGoogleReviews     Boolean  @default(true)
   minOrderValue         Float    @default(0)
   deliveryFee           Float    @default(2.0)
   deliveryFeePerKm      Float    @default(0.10)
@@ -234,13 +234,37 @@ model StoreSettings {
   // privilege boundary — there is only one Admin account). Never sent to the
   // frontend; only a verify endpoint compares against it.
   sectionPasscodeHash   String?
-  // Hashed driver PIN configured by admin in Settings. Allows couriers to
-  // log in / authenticate to the /driver delivery portal.
-  driverPasscodeHash    String?
-  updatedAt         DateTime @updatedAt
+  updatedAt             DateTime @updatedAt
 }
 
-// A driver who knows the correct Fahrer-PIN still can't get a session on
+// A registered delivery driver with their own PIN — replaces the old
+// single Fahrer-PIN shared by every courier. Driver.name is the stable
+// identity used everywhere a driver is referenced (DriverLoginRequest,
+// DriverSession, Order.assignedDriverName), so renaming a driver here
+// only affects future assignments; past orders keep the name that was
+// assigned at the time, the same snapshot approach already used for
+// Order.customerName elsewhere in this schema.
+model Driver {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  // Lowercased mirror of `name`, with its own DB-enforced unique
+  // constraint. `name` alone is only case-sensitively unique, which left a
+  // TOCTOU race between the application-level case-insensitive duplicate
+  // check and the actual insert: two concurrent creates for e.g. "Ahmad"
+  // and "ahmad" could both pass the pre-check and both succeed, after
+  // which driver lookups by name became ambiguous between the two rows.
+  // Always set to name.toLowerCase() — the database, not application
+  // logic, is what makes a second insert for either casing impossible.
+  nameLower String   @unique
+  pinHash   String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active])
+}
+
+// A driver who knows their own correct PIN still can't get a session on
 // their own — this row exists so an admin has to explicitly approve the
 // login from the dashboard first (stops a leaked/guessed PIN alone from
 // granting delivery-portal access unattended). pollToken is the opaque
@@ -251,10 +275,8 @@ model DriverLoginRequest {
   driverName  String
   pollToken   String    @unique
   status      String    @default("pending") // pending | approved | rejected
-  // Requester's IP — the driverName itself is free text the requester
-  // chose, not a real credential (the PIN is shared by every driver), so
-  // this is the only signal an admin has to sanity-check "is this actually
-  // our driver" before approving. Not proof by itself, just a hint.
+  // Requester's IP — an extra sanity-check signal for the admin approving
+  // the request, not proof by itself.
   ipAddress   String?
   createdAt   DateTime  @default(now())
   respondedAt DateTime?
@@ -315,15 +337,15 @@ model Coupon {
   id                    String        @id @default(uuid())
   code                  String        @unique
   description           String?
-  discountType          String        // "PERCENTAGE", "FIXED", "COMBO"
-  discountValue         Float         // e.g. 10 for 10% or 5 for €5
+  discountType          String // "PERCENTAGE", "FIXED", "COMBO"
+  discountValue         Float // e.g. 10 for 10% or 5 for €5
   freeShipping          Boolean       @default(false)
-  requiredProductIds    String?       // comma-separated product IDs required for bundle combo
+  requiredProductIds    String? // comma-separated product IDs required for bundle combo
   minOrderValue         Float         @default(0)
-  maxDiscountAmount     Float?        // optional cap for percentage discounts
+  maxDiscountAmount     Float? // optional cap for percentage discounts
   startDate             DateTime?
   endDate               DateTime?
-  usageLimit            Int?          // total max uses across all users, null = unlimited
+  usageLimit            Int? // total max uses across all users, null = unlimited
   usageLimitPerCustomer Int           @default(1)
   usedCount             Int           @default(0)
   isActive              Boolean       @default(true)
@@ -355,13 +377,13 @@ model Promotion {
   product          Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
   titleDe          String
   titleAr          String?
-  type             String    // "PRODUCT_DISCOUNT", "BUY_X_GET_Y"
-  discountPercent  Float?    // e.g. 20 for 20% off
-  promotionalPrice Float?    // e.g. 2.99
+  type             String // "PRODUCT_DISCOUNT", "BUY_X_GET_Y"
+  discountPercent  Float? // e.g. 20 for 20% off
+  promotionalPrice Float? // e.g. 2.99
   buyQuantity      Int?      @default(2) // for 2+1: buy 2
   getYQuantity     Int?      @default(1) // for 2+1: get 1 free
-  badgeTextDe      String?   // e.g. "2+1 Gratis", "Angebot -20%"
-  badgeTextAr      String?   // e.g. "2+1 مجاناً"
+  badgeTextDe      String? // e.g. "2+1 Gratis", "Angebot -20%"
+  badgeTextAr      String? // e.g. "2+1 مجاناً"
   startDate        DateTime?
   endDate          DateTime?
   isActive         Boolean   @default(true)
@@ -371,5 +393,3 @@ model Promotion {
   @@index([productId])
   @@index([isActive])
 }
-
-

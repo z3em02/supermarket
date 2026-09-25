@@ -5,7 +5,7 @@ const prisma = require('../lib/prisma');
 const { sendCustomerVerificationEmail, sendPasswordResetEmail } = require('../utils/emailService');
 const { verifyFirebaseIdToken } = require('../utils/firebaseAdmin');
 const { JWT_SECRET, SECURE_COOKIES } = require('../lib/config');
-const { isValidEmail, isValidPhone, isValidPostalCode, normalizeAustrianPhone, isStrongPassword, STRONG_PASSWORD_HINT } = require('../utils/validation');
+const { isValidEmail, isValidPhone, isValidPostalCode, normalizeAustrianPhone, isStrongPassword, STRONG_PASSWORD_HINT, secureCompare } = require('../utils/validation');
 const { logAudit } = require('../lib/auditLog');
 const { encrypt, decrypt, hashLookup, decryptCustomerPII } = require('../utils/piiCrypto');
 const { generateCsrfToken, setCsrfCookie } = require('../middleware/csrf');
@@ -200,14 +200,14 @@ const verifyEmail = async (req, res) => {
 
     // #12 & #24 fix: check expiry BEFORE checking code match or attempt limits
     if (customer.emailOtpExpiry && new Date() > customer.emailOtpExpiry) {
-      return res.status(400).json({ error: 'Verification code has expired. Please request a new one.' });
+      return res.status(400).json({ error: 'Der Verifizierungscode ist abgelaufen. Bitte fordern Sie einen neuen an / Verification code has expired. Please request a new one.' });
     }
 
     if (customer.otpAttempts >= 5) {
-      return res.status(429).json({ error: 'Too many incorrect attempts. Please request a new code.' });
+      return res.status(429).json({ error: 'Zu viele fehlerhafte Versuche. Bitte fordern Sie einen neuen Code an / Too many incorrect attempts. Please request a new code.' });
     }
 
-    if (customer.emailOtp !== code.trim()) {
+    if (!secureCompare(customer.emailOtp, code.trim())) {
       const attempts = customer.otpAttempts + 1;
       const lockedOut = attempts >= 5;
       await prisma.customer.update({
@@ -219,8 +219,8 @@ const verifyEmail = async (req, res) => {
       });
       return res.status(lockedOut ? 429 : 400).json({
         error: lockedOut
-          ? 'Too many incorrect attempts. Please request a new code.'
-          : 'Invalid email verification code'
+          ? 'Zu viele fehlerhafte Versuche. Bitte fordern Sie einen neuen Code an / Too many incorrect attempts. Please request a new code.'
+          : 'Ungültiger Bestätigungscode / Invalid email verification code'
       });
     }
 

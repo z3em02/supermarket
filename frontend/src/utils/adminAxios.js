@@ -12,12 +12,13 @@ export const ADMIN_AUTH_EXPIRED_EVENT = 'admin-auth-expired';
 // plain axios (see AuthContext.jsx) since a 401 there means "wrong password",
 // not "session expired", and must not trigger a redirect.
 //
-// localStorage migration: the admin session lives entirely in the HttpOnly
-// `token` cookie now — there is nothing for this file to read from
-// localStorage or attach as an Authorization header. `withCredentials` is
-// what makes the browser actually send that cookie (and receive new ones)
-// on cross-origin requests; same-origin production deploys don't strictly
-// need it but it's harmless there.
+// localStorage migration: both the admin session (`token` cookie) and the
+// driver session (`driver_token` cookie) live entirely in HttpOnly cookies
+// now — there is nothing for this file to read from localStorage or attach
+// as an Authorization header. `withCredentials` is what makes the browser
+// actually send those cookies (and receive new ones) on cross-origin
+// requests; same-origin production deploys don't strictly need it but it's
+// harmless there.
 const adminAxios = axios.create({ withCredentials: true });
 
 const SECTION_UNLOCK_TOKEN_KEY = 'admin_section_unlock_token';
@@ -31,12 +32,6 @@ adminAxios.interceptors.request.use((config) => {
   const unlockToken = sessionStorage.getItem(SECTION_UNLOCK_TOKEN_KEY);
   if (unlockToken) {
     config.headers['X-Section-Unlock'] = unlockToken;
-  }
-
-  // If request is made by an authenticated delivery driver using driver token
-  const driverToken = sessionStorage.getItem('driver_token') || localStorage.getItem('driver_token');
-  if (driverToken && !config.headers['Authorization']) {
-    config.headers['Authorization'] = `Bearer ${driverToken}`;
   }
 
   // Cookie-based auth needs the matching CSRF header on any request that
