@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const dotenv = require('dotenv');
+const path = require('path');
 
 dotenv.config();
 
@@ -58,6 +59,22 @@ app.use(cookieParser());
 if (process.env.TRUST_PROXY !== 'false') {
   app.set('trust proxy', 1);
 }
+
+// Serve uploaded/cached images (e.g. locally cached logos) with hardened headers
+const uploadsDir = path.join(__dirname, 'uploads');
+const staticUploadsConfig = {
+  maxAge: '7d',
+  immutable: true,
+  dotfiles: 'ignore',
+  index: false,
+  setHeaders: (res) => {
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('Content-Security-Policy', "default-src 'none'");
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+  }
+};
+app.use('/uploads', express.static(uploadsDir, staticUploadsConfig));
+app.use('/api/uploads', express.static(uploadsDir, staticUploadsConfig));
 
 const { apiLimiter } = require('./middleware/rateLimiter');
 

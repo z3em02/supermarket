@@ -67,7 +67,7 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
-    # Backend API Proxy
+    # Backend API Proxy (includes /api/uploads/ cached logos)
     location /api/ {
         proxy_pass http://127.0.0.1:5000;
         proxy_http_version 1.1;
@@ -80,6 +80,13 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_cache_bypass $http_upgrade;
         client_max_body_size 5M;
+    }
+
+    # Uploads Proxy (direct /uploads/ fallback)
+    location /uploads/ {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
     }
 }
 ```
@@ -99,6 +106,9 @@ DATABASE_URL=postgresql://user:password@localhost:5432/supermarket
 JWT_SECRET=<64-char-random-hex>
 SECTION_UNLOCK_SECRET=<64-char-random-hex-different-from-jwt>
 ENCRYPTION_KEY=<64-char-random-hex>
+
+# For staging/preview deployments over HTTPS that don't set NODE_ENV=production:
+# FORCE_SECURE_COOKIES=true
 ```
 
 ---

@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const prisma = require('../lib/prisma');
 const { sendCustomerVerificationEmail, sendPasswordResetEmail } = require('../utils/emailService');
 const { verifyFirebaseIdToken } = require('../utils/firebaseAdmin');
-const { JWT_SECRET } = require('../lib/config');
+const { JWT_SECRET, SECURE_COOKIES } = require('../lib/config');
 const { isValidEmail, isValidPhone, isValidPostalCode, normalizeAustrianPhone, isStrongPassword, STRONG_PASSWORD_HINT } = require('../utils/validation');
 const { logAudit } = require('../lib/auditLog');
 const { encrypt, decrypt, hashLookup, decryptCustomerPII } = require('../utils/piiCrypto');
@@ -135,7 +135,7 @@ const register = async (req, res) => {
     // #38 fix: set HttpOnly cookie alongside token in JSON response
     res.cookie('customer_token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: SECURE_COOKIES,
       sameSite: 'lax',
       path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000
@@ -418,7 +418,7 @@ const login = async (req, res) => {
     // #38 fix: set HttpOnly cookie alongside token in JSON response
     res.cookie('customer_token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: SECURE_COOKIES,
       sameSite: 'lax',
       path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000
@@ -645,7 +645,7 @@ const updateProfile = async (req, res) => {
       );
       res.cookie('customer_token', freshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: SECURE_COOKIES,
         sameSite: 'lax',
         path: '/',
         maxAge: 7 * 24 * 60 * 60 * 1000

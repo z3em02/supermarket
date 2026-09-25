@@ -1,4 +1,5 @@
 const prisma = require('../lib/prisma');
+const { isPrivateOrLocalHost } = require('../utils/googleScraper');
 
 const generateProductId = () => {
   const randomPart = Math.floor(100000 + Math.random() * 900000);
@@ -13,18 +14,87 @@ const isValidImageUrl = (url) => {
   // A protocol-relative URL ("//evil.com/x.jpg") also starts with "/" but
   // resolves to an attacker-controlled origin — reject it before the local-path allowance.
   if (s.startsWith('//')) return false;
-  return s.startsWith('https://') || s.startsWith('http://') || s.startsWith('/');
+  if (s.startsWith('/')) return true;
+  if (s.startsWith('https://') || s.startsWith('http://')) {
+    try {
+      const parsed = new URL(url);
+      if (isPrivateOrLocalHost(parsed.hostname)) return false;
+    } catch { return false; }
+    return true;
+  }
+  return false;
 };
 
 const getProducts = async (req, res) => {
   try {
+    const { categoryId, search, stockFilter, page, limit, sort } = req.query;
+
+    const where = {};
+
+    // Filter by Category
+    if (categoryId && categoryId !== 'all') {
+      where.categoryId = categoryId;
+    }
+
+    // Filter by Search (Case-insensitive across SKU, name, nameDe, nameAr, descriptionDe, descriptionAr)
+    if (search && String(search).trim()) {
+      const q = String(search).trim();
+      where.OR = [
+        { name: { contains: q, mode: 'insensitive' } },
+        { nameDe: { contains: q, mode: 'insensitive' } },
+        { nameAr: { contains: q, mode: 'insensitive' } },
+        { sku: { contains: q, mode: 'insensitive' } },
+        { descriptionDe: { contains: q, mode: 'insensitive' } },
+        { descriptionAr: { contains: q, mode: 'insensitive' } }
+      ];
+    }
+
+    // Filter by Stock status
+    if (stockFilter === 'inStock') {
+      where.stock = { gt: 0 };
+    } else if (stockFilter === 'outOfStock') {
+      where.stock = { lte: 0 };
+    } else if (stockFilter === 'lowStock') {
+      where.stock = { gt: 0, lte: 15 };
+    }
+
+    // Dynamic Ordering / Sorting
+    let orderBy = { createdAt: 'desc' };
+    if (sort === 'price-low') {
+      orderBy = { b2bPrice: 'asc' };
+    } else if (sort === 'price-high') {
+      orderBy = { b2bPrice: 'desc' };
+    } else if (sort === 'stock-high') {
+      orderBy = { stock: 'desc' };
+    } else if (sort === 'stock-low') {
+      orderBy = { stock: 'asc' };
+    } else if (sort === 'name-asc') {
+      orderBy = { name: 'asc' };
+    } else if (sort === 'name-desc') {
+      orderBy = { name: 'desc' };
+    }
+
+    // Optional Pagination: only applies if limit is explicitly provided
+    let take = undefined;
+    let skip = undefined;
+    if (limit !== undefined) {
+      const parsedLimit = parseInt(limit, 10);
+      if (!isNaN(parsedLimit) && parsedLimit > 0) {
+        take = Math.min(parsedLimit, 200); // capped at 200 to prevent DOS
+        const parsedPage = parseInt(page, 10);
+        const currentPage = (!isNaN(parsedPage) && parsedPage > 0) ? parsedPage : 1;
+        skip = (currentPage - 1) * take;
+      }
+    }
+
     const products = await prisma.product.findMany({
+      where,
       include: {
         category: true
       },
-      orderBy: {
-        createdAt: 'desc'
-      }
+      orderBy,
+      take,
+      skip
     });
 
     res.json(products);
@@ -80,8 +150,8 @@ const createProduct = async (req, res) => {
     }
 
     const parsedPrice = parseFloat(b2bPrice);
-    if (isNaN(parsedPrice) || parsedPrice < 0) {
-      return res.status(400).json({ error: 'B2B Price must be a non-negative number' });
+    if (isNaN(parsedPrice) || parsedPrice <= 0) {
+      return res.status(400).json({ error: 'B2B Price must be a positive number greater than 0' });
     }
 
     const parsedStock = stock !== undefined && stock !== '' ? parseInt(stock, 10) : 0;
@@ -158,8 +228,8 @@ const updateProduct = async (req, res) => {
     let parsedPrice = undefined;
     if (b2bPrice !== undefined && b2bPrice !== '') {
       parsedPrice = parseFloat(b2bPrice);
-      if (isNaN(parsedPrice) || parsedPrice < 0) {
-        return res.status(400).json({ error: 'B2B Price must be a non-negative number' });
+      if (isNaN(parsedPrice) || parsedPrice <= 0) {
+        return res.status(400).json({ error: 'B2B Price must be a positive number greater than 0' });
       }
     }
 

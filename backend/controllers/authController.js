@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const prisma = require('../lib/prisma');
-const { JWT_SECRET } = require('../lib/config');
+const { JWT_SECRET, SECURE_COOKIES } = require('../lib/config');
 const { sendAdminLoginOtpEmail } = require('../utils/emailService');
 const { generateCsrfToken, setCsrfCookie } = require('../middleware/csrf');
 
@@ -112,7 +112,7 @@ const verify2FA = async (req, res) => {
     // #38 fix: set HttpOnly cookie alongside token in JSON response
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: SECURE_COOKIES,
       sameSite: 'lax',
       path: '/',
       maxAge: 24 * 60 * 60 * 1000
@@ -219,7 +219,7 @@ const changePassword = async (req, res) => {
 
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: SECURE_COOKIES,
       sameSite: 'lax',
       path: '/',
       maxAge: 24 * 60 * 60 * 1000

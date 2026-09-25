@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from '../utils/adminAxios';
 import { useLanguage } from '../context/LanguageContext';
 import { useStoreSettings } from '../context/StoreSettingsContext';
-import { getApiUrl } from '../utils/api';
+import { getApiUrl, resolveImageUrl } from '../utils/api';
 import { windowLabel } from '../utils/deliverySlot';
 import {
   Store,
@@ -569,7 +569,7 @@ export const Settings = () => {
                       {t('logoUrl')}
                     </label>
                     <input
-                      type="url"
+                      type="text"
                       value={formData.logoUrl}
                       onChange={(e) => handleChange('logoUrl', e.target.value)}
                       placeholder={t('logoUrlPlaceholder')}
@@ -587,7 +587,7 @@ export const Settings = () => {
                     <div className="h-24 rounded-xl bg-slate-50 dark:bg-gray-950 border border-dashed border-slate-200 dark:border-gray-800 flex items-center justify-center p-3">
                       {formData.logoUrl && !logoPreviewError ? (
                         <img
-                          src={formData.logoUrl}
+                          src={resolveImageUrl(formData.logoUrl)}
                           alt="Store Logo"
                           onError={() => setLogoPreviewError(true)}
                           className="max-h-16 max-w-full object-contain drop-shadow-xs"
@@ -684,7 +684,7 @@ export const Settings = () => {
                 <div className="flex items-center gap-3">
                   {formData.logoUrl && !logoPreviewError ? (
                     <img
-                      src={formData.logoUrl}
+                      src={resolveImageUrl(formData.logoUrl)}
                       alt="Logo preview"
                       className="w-9 h-9 object-contain rounded-xl bg-white p-1 shadow-sm shrink-0"
                     />

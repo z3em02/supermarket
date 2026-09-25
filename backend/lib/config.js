@@ -35,4 +35,9 @@ if (process.env.NODE_ENV === 'production' && (!ENCRYPTION_KEY || !/^[0-9a-fA-F]{
   process.exit(1);
 }
 
-module.exports = { JWT_SECRET, SECTION_UNLOCK_SECRET, ENCRYPTION_KEY };
+// Cookie security: force `secure` flag whenever explicitly requested (e.g. for
+// staging/preview deployments that serve over HTTPS but don't set NODE_ENV=production),
+// or when running in production mode.
+const SECURE_COOKIES = process.env.FORCE_SECURE_COOKIES === 'true' || process.env.NODE_ENV === 'production';
+
+module.exports = { JWT_SECRET, SECTION_UNLOCK_SECRET, ENCRYPTION_KEY, SECURE_COOKIES };

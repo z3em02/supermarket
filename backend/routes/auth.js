@@ -1,7 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const prisma = require('../lib/prisma');
-const { JWT_SECRET } = require('../lib/config');
+const { JWT_SECRET, SECURE_COOKIES } = require('../lib/config');
 const { login, verify2FA, resend2FA, changePassword } = require('../controllers/authController');
 const { authLimiter, createRateLimiter } = require('../middleware/rateLimiter');
 const { authMiddleware } = require('../middleware/auth');
@@ -57,7 +57,7 @@ router.post('/logout', async (req, res) => {
 
   res.clearCookie('token', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: SECURE_COOKIES,
     sameSite: 'lax',
     path: '/'
   });

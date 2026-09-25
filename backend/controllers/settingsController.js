@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const prisma = require('../lib/prisma');
-const { scrapeGoogleReviews } = require('../utils/googleScraper');
+const { scrapeGoogleReviews, isPrivateOrLocalHost } = require('../utils/googleScraper');
+const { downloadAndCacheLogo, deleteCachedLogo } = require('../utils/imageProxy');
 const { issueSectionUnlockToken, invalidateSectionPasscodeCache } = require('../middleware/sectionUnlock');
 const { logAudit } = require('../lib/auditLog');
 
@@ -158,8 +159,36 @@ const updateSettings = async (req, res) => {
         if (!s.startsWith('https://') && !s.startsWith('http://') && !s.startsWith('/')) {
           return res.status(400).json({ error: 'Logo URL must be an HTTP(S) URL or local path' });
         }
+        if (s.startsWith('https://') || s.startsWith('http://')) {
+          try {
+            const parsed = new URL(cleaned);
+            if (isPrivateOrLocalHost(parsed.hostname)) {
+              return res.status(400).json({ error: 'Logo URL must not point to a private or internal host' });
+            }
+          } catch { return res.status(400).json({ error: 'Invalid logo URL' }); }
+
+          // Cache external logo locally to prevent visitor beaconing / tracking / remote tampering
+          try {
+            const localCachedUrl = await downloadAndCacheLogo(cleaned);
+            data.logoUrl = localCachedUrl;
+          } catch (downloadErr) {
+            return res.status(400).json({
+              error: `Fehler beim Herunterladen des Logos: ${downloadErr.message}`
+            });
+          }
+        } else {
+          data.logoUrl = cleaned;
+        }
+      } else {
+        // Logo was removed — clean up cached file if present
+        try {
+          const currentSettings = await prisma.storeSettings.findUnique({ where: { id: 'default' } });
+          if (currentSettings?.logoUrl) {
+            deleteCachedLogo(currentSettings.logoUrl);
+          }
+        } catch {}
+        data.logoUrl = '';
       }
-      data.logoUrl = cleaned;
     }
     if (phone !== undefined) {
       data.phone = cleanString(phone);
@@ -197,6 +226,12 @@ const updateSettings = async (req, res) => {
         if (s.startsWith('javascript:') || s.startsWith('data:') || s.startsWith('vbscript:') || s.startsWith('//') || !s.startsWith('https://')) {
           return res.status(400).json({ error: 'googleReviewsUrl must be a secure HTTPS URL (starting with https://)' });
         }
+        try {
+          const parsed = new URL(cleaned);
+          if (isPrivateOrLocalHost(parsed.hostname)) {
+            return res.status(400).json({ error: 'googleReviewsUrl must not point to a private or internal host' });
+          }
+        } catch { return res.status(400).json({ error: 'Invalid googleReviewsUrl' }); }
       }
       data.googleReviewsUrl = cleaned;
     }
@@ -338,10 +373,16 @@ const syncGoogleReviews = async (req, res) => {
     // Update settings with scraped rating and review count
     const updateData = {};
     if (scraped.rating !== null && scraped.rating !== undefined) {
-      updateData.googleRating = scraped.rating;
+      const r = Number(scraped.rating);
+      if (Number.isFinite(r) && r >= 0 && r <= 5) {
+        updateData.googleRating = Math.round(r * 10) / 10; // one decimal place
+      }
     }
     if (scraped.reviewCount !== null && scraped.reviewCount !== undefined) {
-      updateData.googleReviewCount = scraped.reviewCount;
+      const c = Number(scraped.reviewCount);
+      if (Number.isInteger(c) && c >= 0) {
+        updateData.googleReviewCount = c;
+      }
     }
     if (googleReviewsUrl) {
       const cleaned = googleReviewsUrl.trim();

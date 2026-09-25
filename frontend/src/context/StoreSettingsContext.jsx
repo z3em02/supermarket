@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { getApiUrl } from '../utils/api';
+import { getApiUrl, resolveImageUrl } from '../utils/api';
 import adminAxios from '../utils/adminAxios';
 
 const DEFAULT_SETTINGS = {
@@ -36,6 +36,12 @@ export const StoreSettingsProvider = ({ children }) => {
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const normalizeSettings = useCallback((raw) => {
+    if (!raw) return raw;
+    const logoUrl = raw.logoUrl ? resolveImageUrl(raw.logoUrl) : '';
+    return { ...raw, logoUrl };
+  }, []);
+
   const fetchSettings = useCallback(async () => {
     try {
       setLoading(true);
@@ -43,7 +49,7 @@ export const StoreSettingsProvider = ({ children }) => {
       const res = await fetch(`${apiUrl}/api/settings`);
       if (res.ok) {
         const data = await res.json();
-        setSettings((prev) => ({ ...prev, ...data }));
+        setSettings((prev) => ({ ...prev, ...normalizeSettings(data) }));
         setError(null);
       }
     } catch (err) {
@@ -116,8 +122,9 @@ export const StoreSettingsProvider = ({ children }) => {
       const apiUrl = getApiUrl();
       const res = await adminAxios.put(`${apiUrl}/api/settings`, newSettingsData);
       const updated = res.data.settings || res.data;
-      setSettings(updated);
-      return { success: true, settings: updated };
+      const normalized = normalizeSettings(updated);
+      setSettings(normalized);
+      return { success: true, settings: normalized };
     } catch (err) {
       return { success: false, error: err.response?.data?.error || err.message };
     }

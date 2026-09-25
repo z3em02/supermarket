@@ -9,7 +9,7 @@ const { clearCsrfCookie, requireCsrfForCookieAuth } = require('../middleware/csr
 
 const jwt = require('jsonwebtoken');
 const prisma = require('../lib/prisma');
-const { JWT_SECRET } = require('../lib/config');
+const { JWT_SECRET, SECURE_COOKIES } = require('../lib/config');
 
 // Public customer auth & verification endpoints (protected by authLimiter against brute-force)
 router.post('/register', authLimiter, customerAuthController.register);
@@ -46,7 +46,7 @@ router.post('/logout', async (req, res) => {
 
   res.clearCookie('customer_token', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: SECURE_COOKIES,
     sameSite: 'lax',
     path: '/'
   });
