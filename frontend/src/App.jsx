@@ -13,13 +13,19 @@ import { ADMIN_BASE } from './config/adminPath';
 // Public customer storefront pages (eager loaded for instant first paint)
 import { LandingPage } from './pages/LandingPage';
 import { CustomerLogin } from './pages/CustomerLogin';
-import { CustomerRegister } from './pages/CustomerRegister';
-import { CustomerAccount } from './pages/CustomerAccount';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { ResetPassword } from './pages/ResetPassword';
 import { Impressum } from './pages/Impressum';
 import { Datenschutz } from './pages/Datenschutz';
 import { AGB } from './pages/AGB';
+
+// CustomerRegister and CustomerAccount both import Firebase Auth (phone
+// verification / push notifications) — lazy-loading them keeps that SDK out
+// of the bundle every anonymous landing-page visitor downloads before first
+// paint, since it's only needed once someone actually registers or opens
+// their account.
+const CustomerRegister = lazy(() => import('./pages/CustomerRegister').then(m => ({ default: m.CustomerRegister })));
+const CustomerAccount = lazy(() => import('./pages/CustomerAccount').then(m => ({ default: m.CustomerAccount })));
 
 // Admin and back-office pages (lazy loaded to minimize customer bundle size)
 const Login = lazy(() => import('./pages/Login').then(m => ({ default: m.Login })));
@@ -59,10 +65,10 @@ function App() {
                   {/* Customer Home Delivery Portal */}
                   <Route path="/login" element={<CustomerLogin />} />
                   <Route path="/customer/login" element={<CustomerLogin />} />
-                  <Route path="/register" element={<CustomerRegister />} />
-                  <Route path="/customer/register" element={<CustomerRegister />} />
-                  <Route path="/account" element={<CustomerAccount />} />
-                  <Route path="/customer/account" element={<CustomerAccount />} />
+                  <Route path="/register" element={<Suspense fallback={<PageLoader />}><CustomerRegister /></Suspense>} />
+                  <Route path="/customer/register" element={<Suspense fallback={<PageLoader />}><CustomerRegister /></Suspense>} />
+                  <Route path="/account" element={<Suspense fallback={<PageLoader />}><CustomerAccount /></Suspense>} />
+                  <Route path="/customer/account" element={<Suspense fallback={<PageLoader />}><CustomerAccount /></Suspense>} />
                   <Route path="/customer/orders" element={<Navigate to="/account" replace />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/reset-password" element={<ResetPassword />} />

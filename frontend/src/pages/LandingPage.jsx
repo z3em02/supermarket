@@ -358,7 +358,7 @@ export const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-20 flex items-center justify-between gap-2 sm:gap-4">
           
           {/* Logo & Brand */}
-          <Link to="/" className="flex items-center gap-2 sm:gap-3 group min-w-0">
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 group min-w-0 shrink lg:shrink-0">
             {settings?.logoUrl ? (
               <img
                 src={settings.logoUrl}
@@ -371,7 +371,7 @@ export const LandingPage = () => {
               </div>
             )}
             <div className="min-w-0">
-              <span className="text-sm sm:text-base md:text-lg font-black tracking-tight text-slate-900 dark:text-white block leading-tight truncate max-w-[130px] xs:max-w-[180px] sm:max-w-none">
+              <span className="text-sm sm:text-base md:text-lg font-black tracking-tight text-slate-900 dark:text-white block leading-tight truncate max-w-[130px] xs:max-w-[180px] lg:max-w-none">
                 {getStoreName(language) || 'Hajar Supermarkt'}
               </span>
               <span className="text-[10px] sm:text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hidden xs:block truncate">
@@ -381,7 +381,7 @@ export const LandingPage = () => {
           </Link>
 
           {/* Center Navigation Links (Desktop lg+) */}
-          <nav className="hidden lg:flex items-center gap-6 text-sm font-semibold text-slate-600 dark:text-gray-300">
+          <nav className="hidden lg:flex items-center gap-5 text-sm font-semibold text-slate-600 dark:text-gray-300 shrink-0">
             <a href="#catalog" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               {t('catalog')}
             </a>
@@ -436,13 +436,14 @@ export const LandingPage = () => {
                     <LogIn className="w-4 h-4" />
                     <span className="hidden md:inline">{language === 'ar' ? 'دخول' : 'Anmelden'}</span>
                   </Link>
-                  <Link
-                    to="/customer/register"
-                    className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-850 text-xs sm:text-sm font-bold transition"
-                  >
-                    <UserPlus className="w-4 h-4" />
-                    <span>{language === 'ar' ? 'تسجيل' : 'Registrieren'}</span>
-                  </Link>
+                  {/* Desktop header intentionally doesn't repeat this as its
+                      own button — at the widths where the center nav is also
+                      visible, the header's total content (brand + nav + cart
+                      + both auth buttons) doesn't fit max-w-7xl's ~1216px
+                      content budget without something giving, and this was
+                      the one genuinely redundant element: registration stays
+                      reachable via "Anmelden" -> the login page's own sign-up
+                      link, the mobile menu, and the landing page's own CTA. */}
                 </div>
               )}
             </div>

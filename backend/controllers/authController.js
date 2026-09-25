@@ -85,7 +85,7 @@ const verify2FA = async (req, res) => {
     }
 
     if (admin.twoFactorAttempts >= 5) {
-      return res.status(429).json({ error: 'Too many incorrect attempts. Please request a new code.' });
+      return res.status(429).json({ error: 'Zu viele fehlerhafte Versuche. Bitte fordern Sie einen neuen Code an / Too many incorrect attempts. Please request a new code.' });
     }
 
     if (!secureCompare(admin.twoFactorOtp, String(code).trim())) {

@@ -188,9 +188,19 @@ export const Dashboard = () => {
   ];
 
   if (loading) {
+    // Roughly matches the real layout's shape (banner, driver panel, stat
+    // grid, quick actions) instead of a bare centered spinner, so the page
+    // doesn't jump from a small spinner to the full grid once data arrives.
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+      <div className="space-y-6 sm:space-y-8 animate-pulse">
+        <div className="h-[92px] sm:h-[116px] rounded-2xl bg-slate-200 dark:bg-gray-800" />
+        <div className="h-24 rounded-2xl bg-slate-200 dark:bg-gray-800" />
+        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-5">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-24 rounded-2xl bg-slate-200 dark:bg-gray-800" />
+          ))}
+        </div>
+        <div className="h-40 rounded-2xl bg-slate-200 dark:bg-gray-800" />
       </div>
     );
   }
@@ -371,7 +381,7 @@ export const Dashboard = () => {
             >
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
+                  <p className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">
                     {stat.title}
                   </p>
                   {stat.locked ? (

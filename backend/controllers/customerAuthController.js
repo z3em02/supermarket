@@ -200,11 +200,11 @@ const verifyEmail = async (req, res) => {
 
     // #12 & #24 fix: check expiry BEFORE checking code match or attempt limits
     if (customer.emailOtpExpiry && new Date() > customer.emailOtpExpiry) {
-      return res.status(400).json({ error: 'Verification code has expired. Please request a new one.' });
+      return res.status(400).json({ error: 'Der Verifizierungscode ist abgelaufen. Bitte fordern Sie einen neuen an / Verification code has expired. Please request a new one.' });
     }
 
     if (customer.otpAttempts >= 5) {
-      return res.status(429).json({ error: 'Too many incorrect attempts. Please request a new code.' });
+      return res.status(429).json({ error: 'Zu viele fehlerhafte Versuche. Bitte fordern Sie einen neuen Code an / Too many incorrect attempts. Please request a new code.' });
     }
 
     if (!secureCompare(customer.emailOtp, code.trim())) {
@@ -219,8 +219,8 @@ const verifyEmail = async (req, res) => {
       });
       return res.status(lockedOut ? 429 : 400).json({
         error: lockedOut
-          ? 'Too many incorrect attempts. Please request a new code.'
-          : 'Invalid email verification code'
+          ? 'Zu viele fehlerhafte Versuche. Bitte fordern Sie einen neuen Code an / Too many incorrect attempts. Please request a new code.'
+          : 'Ungültiger Bestätigungscode / Invalid email verification code'
       });
     }
 
