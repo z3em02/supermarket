@@ -21,8 +21,10 @@ settings. There's also a driver-facing delivery view.
 npm install
 npx prisma db push       # sync schema to DB — this project uses `db push`, NOT `prisma migrate`
 npm run prisma:seed      # seed default admin (admin@hajar.com / admin) + sample data
-npm run dev               # start API on :5000 (no watch/reload — plain `node server.js`)
-node tests/test_promotions_and_coupons.js   # run the one test file (plain assert script, not a test runner)
+npm run dev               # start API on :5000 with `node --watch` (restarts on file changes)
+npm test                  # all backend unit tests (`node --test "tests/**/*.js"`)
+node --test tests/orderPricing.test.js      # a single test file
+node --test --test-name-pattern="coupon" "tests/**/*.js"   # tests matching a name
 
 # Frontend (from frontend/)
 npm install
@@ -35,10 +37,13 @@ npm run preview
 ./start.sh   # or start.bat on Windows
 ```
 
-There is no test runner config (no jest/mocha) — `backend/tests/test_promotions_and_coupons.js`
-is a standalone Node script using `assert`, run directly with `node`. There's
-no single-test-by-name mechanism; edit/comment out blocks in that file or add
-a new script alongside it.
+Backend tests use Node's built-in `node:test` runner (no jest/mocha). They
+cover the DB-free logic only: order pricing (`utils/orderPricing.js`),
+promotions/coupons, validation, PII crypto, delivery slots and delivery-fee
+calculation (network stubbed so it uses the postal-code centroids). Put pure
+logic in `utils/` rather than inline in controllers so it can be tested this
+way. `.github/workflows/ci.yml` runs backend tests plus frontend lint + build
+on every PR and push to `main`.
 
 Env setup: `cp backend/.env.example backend/.env` and `cp frontend/.env.example frontend/.env`,
 then fill in `DATABASE_URL`, `JWT_SECRET` (min 32 chars — server refuses to start otherwise),
@@ -59,11 +64,13 @@ where noted below). Shared logic lives in `utils/` and `lib/`:
 
 - `lib/prisma.js` — the shared Prisma client singleton.
 - `lib/config.js`, `lib/auditLog.js` — config loading and audit-log writes (see `AuditLog` model / `/api/audit-log`).
-- `utils/pricingService.js` — promotion & coupon price calculation (`calculatePromotionForItem`, `validateAndCalculateCoupon`); this is the one part of pricing logic that's unit-tested.
+- `utils/pricingService.js` — promotion & coupon price calculation (`calculatePromotionForItem`, `validateAndCalculateCoupon`).
+- `utils/orderPricing.js` — pure order math shared by `createOrder` and `editOrder` (line items, subtotals, postal-code allow-list, free delivery, totals). Change pricing here, not in the controller.
 - `utils/deliverySlot.js` / `DISTANCE_BASED_DELIVERY.md` — delivery window/slot logic; `utils/distanceService.js` does distance-based delivery fee/eligibility, backed by `routes/deliveryDistance.js` and `routes/deliveryWindows.js`.
 - `utils/piiCrypto.js` — field-level encryption for customer/order PII (see `GDPR_DATA_POLICY.md`); `scripts/encryptCustomerPii.js` and `scripts/encryptOrderSnapshotPii.js` are one-off migration scripts for encrypting existing rows.
 - `utils/emailService.js` — Nodemailer wrapper for OTPs, order status emails, password reset. If SMTP env vars are left as placeholders, emails are skipped and logged to console instead of failing the request.
-- `utils/pushService.js` / `utils/firebaseAdmin.js` — Web Push via Firebase Admin (`routes/push.js`, `PushSubscription` model).
+- `utils/pushService.js` — Web Push via the `web-push` library with VAPID keys (`routes/push.js`, `PushSubscription` model).
+- `utils/firebaseAdmin.js` — verifies Firebase ID tokens for phone-number OTP verification (not used for push).
 - `utils/googleScraper.js` — feeds the `GoogleReview` model (shown via `TrustindexWidget` on the frontend).
 - `utils/imageProxy.js`, `utils/serialize.js`, `utils/validation.js` — image proxying, response serialization helpers, shared input validation.
 

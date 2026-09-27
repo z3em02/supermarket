@@ -54,10 +54,20 @@ const pushOrderStatusUpdate = (order, status, lang) => {
   }).catch((err) => console.error('Order status push failed:', err.message));
 };
 const {
-  calculatePromotionForItem,
   validateAndCalculateCoupon,
   calculateCouponDiscountAmount
 } = require('../utils/pricingService');
+const {
+  roundMoney,
+  parseQuantity,
+  buildOrderLine,
+  summarizeOrderLines,
+  parseAllowedPostalCodes,
+  isPostalCodeAllowed,
+  isFreeDelivery: qualifiesForFreeDelivery,
+  calculateOrderTotal,
+  isCouponStillEligible
+} = require('../utils/orderPricing');
 const { isValidDeliverySlot } = require('../utils/deliverySlot');
 const { calculateDeliveryDistance } = require('../utils/distanceService');
 
@@ -260,12 +270,11 @@ const createOrder = async (req, res) => {
     const productMap = new Map(dbProducts.map(p => [p.id, p]));
     const promoMap = new Map(activePromotions.map(pr => [pr.productId, pr]));
 
-    let itemsSubtotal = 0;
-    let totalPromoSavings = 0;
     const orderItemsWithDetails = [];
 
     for (const item of rawItems) {
-      if (!item.productId || !item.quantity || Number(item.quantity) <= 0) {
+      const qty = parseQuantity(item.quantity);
+      if (!item.productId || qty === null) {
         continue;
       }
 
@@ -274,37 +283,20 @@ const createOrder = async (req, res) => {
         return res.status(404).json({ error: `Product with id ${item.productId} not found` });
       }
 
-      const qty = parseInt(item.quantity, 10);
       if (product.stock < qty) {
         return res.status(400).json({
           error: `Insufficient stock for "${product.name}". Available: ${product.stock}, Requested: ${qty}`
         });
       }
 
-      const promo = promoMap.get(item.productId);
-      const promoResult = calculatePromotionForItem(product, qty, promo);
-
-      itemsSubtotal += promoResult.subtotal;
-      totalPromoSavings += promoResult.appliedSavings;
-
-      orderItemsWithDetails.push({
-        productId: item.productId,
-        productName: product.name,
-        quantity: qty,
-        price: promoResult.price,
-        originalPrice: promoResult.originalPrice,
-        discountAmount: promoResult.discountAmount,
-        promotionType: promoResult.promotionType,
-        subtotal: promoResult.subtotal
-      });
+      orderItemsWithDetails.push(buildOrderLine(product, qty, promoMap.get(item.productId)));
     }
 
     if (orderItemsWithDetails.length === 0) {
       return res.status(400).json({ error: 'Order must contain at least one valid item' });
     }
 
-    itemsSubtotal = Number(itemsSubtotal.toFixed(2));
-    totalPromoSavings = Number(totalPromoSavings.toFixed(2));
+    const { itemsSubtotal, promotionDiscount: totalPromoSavings } = summarizeOrderLines(orderItemsWithDetails);
 
     // Resolve delivery address and notes early for postal code and distance checks
     const addressParts = [
@@ -320,11 +312,7 @@ const createOrder = async (req, res) => {
     const storeSettings = await prisma.storeSettings.findUnique({ where: { id: 'default' } });
     const minOrderValue = storeSettings?.minOrderValue || 0;
     const freeDeliveryThreshold = storeSettings?.freeDeliveryThreshold || 0;
-    const rawAllowed = storeSettings?.allowedPostalCodes;
-    const allowedPostalCodes = (rawAllowed && rawAllowed !== 'null' ? rawAllowed : '')
-      .split(/[,;\s]+/)
-      .map((code) => code.trim())
-      .filter((code) => code && code !== 'null');
+    const allowedPostalCodes = parseAllowedPostalCodes(storeSettings?.allowedPostalCodes);
 
     if (minOrderValue > 0 && itemsSubtotal < minOrderValue) {
       return res.status(400).json({
@@ -332,21 +320,10 @@ const createOrder = async (req, res) => {
       });
     }
 
-    if (allowedPostalCodes.length > 0) {
-      const custPostal = (customer.postalCode || '').trim();
-      const addr = String(deliveryAddress).trim();
-
-      const matchesProfile = custPostal && allowedPostalCodes.includes(custPostal);
-      const matchesAddress = allowedPostalCodes.some((code) => {
-        const regex = new RegExp(`(^|[^0-9])${code}([^0-9]|$)`);
-        return regex.test(addr);
+    if (!isPostalCodeAllowed(allowedPostalCodes, customer.postalCode, deliveryAddress)) {
+      return res.status(400).json({
+        error: `Wir liefern derzeit nur an folgende Postleitzahlen: ${allowedPostalCodes.join(', ')} / We currently only deliver to: ${allowedPostalCodes.join(', ')}`
       });
-
-      if (!matchesProfile && !matchesAddress) {
-        return res.status(400).json({
-          error: `Wir liefern derzeit nur an folgende Postleitzahlen: ${allowedPostalCodes.join(', ')} / We currently only deliver to: ${allowedPostalCodes.join(', ')}`
-        });
-      }
     }
 
     // Distance and delivery fee calculation
@@ -398,14 +375,13 @@ const createOrder = async (req, res) => {
       isFreeShipping = couponEval.isFreeShipping;
     }
 
-    const isFreeDelivery = isFreeShipping || (freeDeliveryThreshold > 0 && itemsSubtotal >= freeDeliveryThreshold);
+    const isFreeDelivery = qualifiesForFreeDelivery({ isFreeShipping, freeDeliveryThreshold, itemsSubtotal });
     const chargedDeliveryFee = isFreeDelivery ? 0 : distanceResult.totalDeliveryFee;
     const deliveryDistanceKm = distanceResult.distanceKm;
     const baseDeliveryFee = isFreeDelivery ? 0 : distanceResult.baseFee;
     const distanceDeliveryFee = isFreeDelivery ? 0 : distanceResult.distanceFee;
 
-    const finalItemsTotal = Math.max(0, Number((itemsSubtotal - couponDiscount).toFixed(2)));
-    const totalAmount = Number((finalItemsTotal + chargedDeliveryFee).toFixed(2));
+    const totalAmount = calculateOrderTotal({ itemsSubtotal, couponDiscount, deliveryFee: chargedDeliveryFee });
 
     const activeWindowsCount = await prisma.deliveryWindow.count({ where: { isActive: true } });
     let deliverySlot = null;
@@ -931,26 +907,26 @@ const editOrder = async (req, res) => {
     // so line-item pricing/discounts are recalculated fresh rather than
     // reusing stale values computed for the pre-edit item list.
     const editedProductIds = items.map((it) => it.productId).filter(Boolean);
-    const activePromotions = await prisma.promotion.findMany({
-      where: { productId: { in: editedProductIds }, isActive: true }
-    });
+    const [editedProducts, activePromotions] = await Promise.all([
+      prisma.product.findMany({ where: { id: { in: editedProductIds } } }),
+      prisma.promotion.findMany({
+        where: { productId: { in: editedProductIds }, isActive: true }
+      })
+    ]);
+    const productMap = new Map(editedProducts.map((p) => [p.id, p]));
     const promoMap = new Map(activePromotions.map((pr) => [pr.productId, pr]));
 
-    // Validate incoming items and fetch latest product details
-    let newItemsSubtotal = 0;
-    let newTotalPromoSavings = 0;
+    // Validate incoming items against the latest product details
     const newItemsToCreate = [];
     const stockAdjustments = []; // { productId, delta, productName }
 
     for (const it of items) {
-      const qty = parseInt(it.quantity, 10);
-      if (!it.productId || isNaN(qty) || qty <= 0) {
+      const qty = parseQuantity(it.quantity);
+      if (!it.productId || qty === null) {
         continue;
       }
 
-      const product = await prisma.product.findUnique({
-        where: { id: it.productId }
-      });
+      const product = productMap.get(it.productId);
 
       if (!product) {
         return res.status(404).json({ error: `Product ${it.productId} not found` });
@@ -963,21 +939,7 @@ const editOrder = async (req, res) => {
         return res.status(400).json({ error: `Product "${product.name}" has an invalid catalog price (${product.b2bPrice})` });
       }
 
-      const promo = promoMap.get(it.productId);
-      const promoResult = calculatePromotionForItem(product, qty, promo);
-
-      newItemsSubtotal += promoResult.subtotal;
-      newTotalPromoSavings += promoResult.appliedSavings;
-
-      newItemsToCreate.push({
-        productId: it.productId,
-        quantity: qty,
-        price: promoResult.price,
-        originalPrice: promoResult.originalPrice,
-        discountAmount: promoResult.discountAmount,
-        promotionType: promoResult.promotionType,
-        subtotal: promoResult.subtotal
-      });
+      newItemsToCreate.push(buildOrderLine(product, qty, promoMap.get(it.productId)));
 
       if (wasStockDeducted) {
         const oldItem = oldItemsMap.get(it.productId);
@@ -991,8 +953,10 @@ const editOrder = async (req, res) => {
       return res.status(400).json({ error: 'Order must contain at least one valid item' });
     }
 
-    newItemsSubtotal = Number(newItemsSubtotal.toFixed(2));
-    newTotalPromoSavings = Number(newTotalPromoSavings.toFixed(2));
+    const {
+      itemsSubtotal: newItemsSubtotal,
+      promotionDiscount: newTotalPromoSavings
+    } = summarizeOrderLines(newItemsToCreate);
 
     // Check for removed items if stock was deducted (return all oldQty to stock)
     if (wasStockDeducted) {
@@ -1026,13 +990,7 @@ const editOrder = async (req, res) => {
     // usage was already counted when the coupon was first applied.
     let finalCouponDiscount = 0;
     if (order.coupon && Number(order.couponDiscount) > 0) {
-      const now = new Date();
-      const couponMinOrder = Number(order.coupon.minOrderValue) || 0;
-      const stillEligible = order.coupon.isActive
-        && !(order.coupon.startDate && new Date(order.coupon.startDate) > now)
-        && !(order.coupon.endDate && new Date(order.coupon.endDate) < now)
-        && newItemsSubtotal >= couponMinOrder;
-      if (stillEligible) {
+      if (isCouponStillEligible(order.coupon, newItemsSubtotal)) {
         finalCouponDiscount = calculateCouponDiscountAmount(order.coupon, newItemsSubtotal);
       }
       // else: coupon no longer applies to the edited cart (e.g. below its
@@ -1046,13 +1004,21 @@ const editOrder = async (req, res) => {
     // distance-based components themselves don't need re-geocoding since
     // the delivery address is unchanged by this edit.
     const freeDeliveryThreshold = Number(storeSettingsForEdit?.freeDeliveryThreshold) || 0;
-    const isFreeDelivery = order.isFreeShipping || (freeDeliveryThreshold > 0 && newItemsSubtotal >= freeDeliveryThreshold);
+    const isFreeDelivery = qualifiesForFreeDelivery({
+      isFreeShipping: order.isFreeShipping,
+      freeDeliveryThreshold,
+      itemsSubtotal: newItemsSubtotal
+    });
     const baseDeliveryFee = Number(order.baseDeliveryFee) || 0;
     const distanceDeliveryFee = Number(order.distanceDeliveryFee) || 0;
-    const deliveryFee = isFreeDelivery ? 0 : Number((baseDeliveryFee + distanceDeliveryFee).toFixed(2));
+    const deliveryFee = isFreeDelivery ? 0 : roundMoney(baseDeliveryFee + distanceDeliveryFee);
 
     const finalPromotionDiscount = newTotalPromoSavings;
-    const finalTotalAmount = Math.max(0, Number((newItemsSubtotal - finalCouponDiscount + deliveryFee).toFixed(2)));
+    const finalTotalAmount = calculateOrderTotal({
+      itemsSubtotal: newItemsSubtotal,
+      couponDiscount: finalCouponDiscount,
+      deliveryFee
+    });
 
     // Perform database transaction
     try {
