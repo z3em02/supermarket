@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import { useAuth } from '../context/AuthContext';
 import { useStoreSettings } from '../context/StoreSettingsContext';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { LanguageSelector } from '../components/LanguageSelector';
@@ -15,7 +14,6 @@ import {
   CheckCircle2, 
   AlertTriangle, 
   XCircle, 
-  Eye, 
   X,
   ArrowRight,
   ArrowLeft,
@@ -28,19 +26,14 @@ import {
   ExternalLink,
   ShieldCheck,
   Truck,
-  Building2,
   Clock,
   Menu,
   ShoppingCart,
-  Plus,
-  Minus,
-  Trash2,
   User,
   LogIn,
   UserPlus,
   Gift,
   Sparkles,
-  Tag
 } from 'lucide-react';
 import { getApiUrl } from '../utils/api';
 import TrustindexWidget from '../components/TrustindexWidget';
@@ -49,7 +42,6 @@ import { CustomerCartDrawer } from '../components/CustomerCartDrawer';
 
 export const LandingPage = () => {
   const { t, direction, language } = useLanguage();
-  const { user } = useAuth();
   const { customer, isAuthenticated: isCustomerLoggedIn } = useCustomerAuth();
   const { settings, getStoreName, reviews } = useStoreSettings();
 

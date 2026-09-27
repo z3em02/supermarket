@@ -23,7 +23,7 @@ const generateSku = () => `PRD-${Math.floor(100000 + Math.random() * 900000)}`;
 
 export const Products = () => {
   const { t, language } = useLanguage();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);

@@ -21,7 +21,6 @@ import {
   AlertCircle, 
   Banknote, 
   CreditCard, 
-  FileText, 
   Search, 
   Calendar,
   Layers,
@@ -29,18 +28,15 @@ import {
   Moon,
   Sun,
   Globe,
-  Building,
-  KeyRound,
   LogOut,
   UserCheck,
   Check,
   Hourglass,
-  XCircle
 } from 'lucide-react';
 import { formatDeliverySlot, todayIso, parseDeliverySlot } from '../utils/deliverySlot';
 
 export const DriverDeliveryView = () => {
-  const { language, setLanguage, direction, t } = useLanguage();
+  const { language, setLanguage, direction } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const { getStoreName } = useStoreSettings();
   const isAr = language === 'ar';
@@ -148,7 +144,7 @@ export const DriverDeliveryView = () => {
           setLoginError(isAr ? 'انتهت مهلة الطلب. يرجى المحاولة مرة أخرى' : 'Anfrage ist abgelaufen. Bitte erneut versuchen');
         }
         // 'pending' — keep polling
-      } catch (err) {
+      } catch {
         if (!cancelled) {
           setPendingPollToken(null);
           setLoginError(isAr ? 'خطأ في الاتصال أثناء انتظار الموافقة' : 'Verbindungsfehler beim Warten auf Freigabe');

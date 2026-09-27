@@ -9,8 +9,6 @@ import {
   Edit2,
   Trash2,
   CheckCircle2,
-  XCircle,
-  Clock,
   Search,
   Truck,
   Percent,
@@ -20,12 +18,10 @@ import {
   Check,
   Gift,
   Package,
-  Layers,
-  ShoppingBag
 } from 'lucide-react';
 
 export const Promotions = () => {
-  const { t, language, direction } = useLanguage();
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('coupons'); // 'coupons' or 'offers'
 
   // Data

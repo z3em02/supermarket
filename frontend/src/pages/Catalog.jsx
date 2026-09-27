@@ -10,9 +10,7 @@ import {
   Search, 
   Package, 
   Store, 
-  CheckCircle2, 
   AlertTriangle, 
-  XCircle, 
   Eye, 
   X,
   ArrowLeft,
@@ -20,7 +18,6 @@ import {
   Sparkles,
   SlidersHorizontal,
   RefreshCw,
-  RotateCcw,
   Phone,
   Mail,
   MapPin,
@@ -132,20 +129,6 @@ export const Catalog = () => {
         }
       });
   }, [products, selectedCategory, stockFilter, searchQuery, sortBy, language]);
-
-  const hasActiveFilters = Boolean(
-    searchQuery.trim() ||
-    selectedCategory !== 'all' ||
-    stockFilter !== 'all' ||
-    sortBy !== 'name-asc'
-  );
-
-  const resetFilters = () => {
-    setSearchQuery('');
-    setSelectedCategory('all');
-    setStockFilter('all');
-    setSortBy('name-asc');
-  };
 
   const getStockBadge = (stock) => {
     if (stock <= 0) {

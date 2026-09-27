@@ -29,7 +29,6 @@ import {
   Truck, 
   CheckCircle2, 
   XCircle, 
-  ChevronRight, 
   LogOut, 
   Save, 
   ShoppingBag,
@@ -49,7 +48,7 @@ import {
 
 export const CustomerAccount = () => {
   const { customer, loading: authLoading, logout, updateProfile, verifyEmail, verifyPhone, resendOtp, refreshProfile } = useCustomerAuth();
-  const { t, direction, language, setLanguage } = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const { getStoreName } = useStoreSettings();
   const navigate = useNavigate();
 
@@ -84,12 +83,6 @@ export const CustomerAccount = () => {
   const [showReportModal, setShowReportModal] = useState(false);
   const [respondingOrderId, setRespondingOrderId] = useState(null);
   const [actionFeedback, setActionFeedback] = useState({ message: '', isError: false });
-
-  const reportDeliveryFee = reportOrder
-    ? Math.max(0, Number(reportOrder.totalAmount) - (reportOrder.orderItems || []).reduce(
-        (sum, item) => sum + Number(item.subtotal ?? item.price * item.quantity), 0
-      ))
-    : 0;
 
   // Profile Form State
   const [profileForm, setProfileForm] = useState({
@@ -296,7 +289,7 @@ export const CustomerAccount = () => {
       setVerifyingType('email');
       try {
         await resendOtp('email');
-      } catch (err) {}
+      } catch {}
       return;
     }
 

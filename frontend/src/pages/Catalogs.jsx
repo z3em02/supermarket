@@ -11,12 +11,11 @@ import {
   Package, 
   X, 
   Check, 
-  AlertTriangle,
   FolderOpen
 } from 'lucide-react';
 
 export const Catalogs = () => {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');

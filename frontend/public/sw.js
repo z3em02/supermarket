@@ -5,7 +5,7 @@ self.addEventListener('push', (event) => {
   let data = {};
   try {
     data = event.data ? event.data.json() : {};
-  } catch (err) {
+  } catch {
     data = { title: 'Hajar Supermarkt', body: event.data ? event.data.text() : '' };
   }
 

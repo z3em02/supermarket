@@ -6,12 +6,10 @@ import { useLanguage } from '../context/LanguageContext';
 import { ADMIN_BASE } from '../config/adminPath';
 import { 
   Search, 
-  Check, 
   X, 
   Clock, 
   Truck, 
   Package, 
-  DollarSign, 
   User, 
   Calendar, 
   FileText, 
@@ -22,20 +20,16 @@ import {
   Layers,
   CheckCircle2,
   XCircle,
-  Building2,
   ChevronDown,
   SlidersHorizontal,
   MapPin,
-  ShieldCheck,
   Edit,
   AlertTriangle,
   Minus,
-  PlusCircle,
   RotateCcw,
   Phone,
   Mail,
   Tag,
-  Gift,
   Sparkles,
   Receipt
 } from 'lucide-react';
@@ -647,7 +641,6 @@ export const Orders = () => {
     const labelInvoice   = isAr ? 'فاتورة'            : 'Rechnung';
     const labelOrder     = isAr ? 'رقم الطلب'        : 'Bestellnummer';
     const labelDate      = isAr ? 'التاريخ'           : 'Datum';
-    const labelStatus    = isAr ? 'الحالة'            : 'Status';
     const labelNotes     = isAr ? 'ملاحظات'           : 'Hinweise';
     const labelAdminNote = isAr ? 'ملاحظة داخلية'    : 'Interne Notiz';
 
@@ -770,7 +763,6 @@ export const Orders = () => {
         .replace(/'/g, '&#039;');
     };
 
-    const labelQty       = isAr ? 'الكمية'            : 'Menge';
     const labelGross     = isAr ? 'المجموع الكلي'     : 'Gesamtbetrag';
     const labelSubtotalGross = isAr ? 'المجموع الفرعي' : 'Zwischensumme';
     const labelCoupon    = isAr ? 'كوبون الخصم'       : 'Gutschein';
@@ -859,11 +851,6 @@ export const Orders = () => {
 </html>`;
 
     return html;
-  };
-
-  const handleOpenPrintModal_orig = (order) => {
-    setPrintOrder(order);
-    setShowPrintModal(true);
   };
 
   const getStatusBadge = (status) => {
@@ -1697,7 +1684,6 @@ export const Orders = () => {
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1">{t('status')}</p>
                   {(() => {
                     const modalBadge = getStatusBadge(selectedOrder.status);
-                    const ModalStatusIcon = modalBadge.icon;
                     return (
                       <div
                       className={`appearance-none ps-6 pe-5 sm:ps-7 sm:pe-6 py-1 rounded-full text-xs font-bold border shadow-2xs outline-none transition capitalize truncate ${modalBadge.classes}`}

@@ -12,18 +12,13 @@ import {
   AlertCircle,
   AlertTriangle,
   ShieldCheck,
-  Lock,
   ArrowRight,
   ArrowLeft,
   ShoppingBag,
   ExternalLink,
-  Mail,
-  Store,
   Clock,
   Tag,
   Gift,
-  Check,
-  Percent,
   Sparkles,
   CalendarDays,
   Navigation
@@ -41,7 +36,6 @@ import {
   formatDeliverySlot,
   windowLabel,
   fetchActiveDeliveryWindows,
-  isWindowAvailableForDate,
   getAvailableWindowsForDate,
   getEarliestAvailableDate
 } from '../utils/deliverySlot';
@@ -55,7 +49,7 @@ export const CustomerCartDrawer = ({
   clearCart
 }) => {
   const { customer, isAuthenticated } = useCustomerAuth();
-  const { t, direction, language } = useLanguage();
+  const { language } = useLanguage();
   const { settings } = useStoreSettings();
   const navigate = useNavigate();
 
