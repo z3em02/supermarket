@@ -117,6 +117,9 @@ implements.
 - Numbered comments in the code like `// #28 fix: ...` in `server.js` reference
   entries in `COMPLETED_TODOS.md` / `SECURITY_TODO*.md` — check those files
   for the reasoning behind a given hardening measure before changing it.
+- `.claude/skills/` (repo root) holds a copy of Anthropic's Engineering plugin
+  skills (`code-review`, `debug`, `deploy-checklist`, `architecture`, etc.) —
+  see `.claude/skills/README.md` for the source and how to update them.
 - `backend/.claude/skills/` (also mirrored under `backend/.agents/skills/`)
   has Prisma Composer / Prisma Platform skills — only relevant if this repo
   is later moved onto Prisma's hosted platform; the current deployment is
