@@ -14,7 +14,7 @@ deliberately left out — this project doesn't use those tools.
 |---|---|
 | `code-review` | Security / performance / correctness review of a PR, diff or files |
 | `debug` | Structured reproduce → isolate → diagnose → fix session |
-| `deploy-checklist` | Pre-release checklist (pairs with `DEPLOYMENT_CHECKLIST.md`) |
+| `deploy-checklist` | Pre-release checklist (pairs with the deployment section of the root `README.md`) |
 | `architecture` | Architecture decision records (ADR) with trade-offs |
 | `system-design` | Designing a new component or service |
 | `tech-debt` | Finding and prioritising technical debt |
