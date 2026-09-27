@@ -9,6 +9,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { SectionPasscodeGate } from './components/SectionPasscodeGate';
 import { Layout } from './components/Layout';
 import { ADMIN_BASE } from './config/adminPath';
+import { useStoreSettings } from './context/StoreSettingsContext';
 
 // Public customer storefront pages (eager loaded for instant first paint)
 import { LandingPage } from './pages/LandingPage';
@@ -18,6 +19,17 @@ import { ResetPassword } from './pages/ResetPassword';
 import { Impressum } from './pages/Impressum';
 import { Datenschutz } from './pages/Datenschutz';
 import { AGB } from './pages/AGB';
+import { MaintenancePage } from './pages/MaintenancePage';
+
+// Swaps in the maintenance page instead of a customer-facing route's normal
+// content while StoreSettings.maintenanceMode is on. Only wraps storefront/
+// account routes — admin routes (so staff can turn it back off), the driver
+// portal (so in-flight deliveries can still be completed), and the legal
+// pages (Impressum must stay reachable by law) are never wrapped with this.
+const MaintenanceGate = ({ children }) => {
+  const { settings } = useStoreSettings();
+  return settings?.maintenanceMode ? <MaintenancePage /> : children;
+};
 
 // CustomerRegister and CustomerAccount both import Firebase Auth (phone
 // verification / push notifications) — lazy-loading them keeps that SDK out
@@ -58,20 +70,20 @@ function App() {
               <Router>
                 <Routes>
                   {/* Public Storefront & Catalog */}
-                  <Route path="/" element={<LandingPage />} />
-                  <Route path="/catalog" element={<LandingPage />} />
-                  <Route path="/shop" element={<LandingPage />} />
+                  <Route path="/" element={<MaintenanceGate><LandingPage /></MaintenanceGate>} />
+                  <Route path="/catalog" element={<MaintenanceGate><LandingPage /></MaintenanceGate>} />
+                  <Route path="/shop" element={<MaintenanceGate><LandingPage /></MaintenanceGate>} />
 
                   {/* Customer Home Delivery Portal */}
-                  <Route path="/login" element={<CustomerLogin />} />
-                  <Route path="/customer/login" element={<CustomerLogin />} />
-                  <Route path="/register" element={<Suspense fallback={<PageLoader />}><CustomerRegister /></Suspense>} />
-                  <Route path="/customer/register" element={<Suspense fallback={<PageLoader />}><CustomerRegister /></Suspense>} />
-                  <Route path="/account" element={<Suspense fallback={<PageLoader />}><CustomerAccount /></Suspense>} />
-                  <Route path="/customer/account" element={<Suspense fallback={<PageLoader />}><CustomerAccount /></Suspense>} />
+                  <Route path="/login" element={<MaintenanceGate><CustomerLogin /></MaintenanceGate>} />
+                  <Route path="/customer/login" element={<MaintenanceGate><CustomerLogin /></MaintenanceGate>} />
+                  <Route path="/register" element={<MaintenanceGate><Suspense fallback={<PageLoader />}><CustomerRegister /></Suspense></MaintenanceGate>} />
+                  <Route path="/customer/register" element={<MaintenanceGate><Suspense fallback={<PageLoader />}><CustomerRegister /></Suspense></MaintenanceGate>} />
+                  <Route path="/account" element={<MaintenanceGate><Suspense fallback={<PageLoader />}><CustomerAccount /></Suspense></MaintenanceGate>} />
+                  <Route path="/customer/account" element={<MaintenanceGate><Suspense fallback={<PageLoader />}><CustomerAccount /></Suspense></MaintenanceGate>} />
                   <Route path="/customer/orders" element={<Navigate to="/account" replace />} />
-                  <Route path="/forgot-password" element={<ForgotPassword />} />
-                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/forgot-password" element={<MaintenanceGate><ForgotPassword /></MaintenanceGate>} />
+                  <Route path="/reset-password" element={<MaintenanceGate><ResetPassword /></MaintenanceGate>} />
 
                   {/* Legal Pages (Austria compliance) */}
                   <Route path="/impressum" element={<Impressum />} />

@@ -234,6 +234,11 @@ model StoreSettings {
   // privilege boundary — there is only one Admin account). Never sent to the
   // frontend; only a verify endpoint compares against it.
   sectionPasscodeHash   String?
+  // When true, the public storefront shows a maintenance page and new
+  // orders are rejected server-side (not just hidden in the UI) — admin
+  // login/dashboard and the driver portal stay reachable so staff can
+  // finish deliveries already in progress and turn this back off.
+  maintenanceMode       Boolean  @default(false)
   updatedAt             DateTime @updatedAt
 }
 

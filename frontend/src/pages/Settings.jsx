@@ -54,6 +54,7 @@ export const Settings = () => {
     mapEmbedUrl: '',
     googleReviewsUrl: '',
     showGoogleReviews: true,
+    maintenanceMode: false,
     minOrderValue: '',
     deliveryFee: '',
     deliveryFeePerKm: '',
@@ -351,6 +352,7 @@ export const Settings = () => {
         mapEmbedUrl: settings.mapEmbedUrl || '',
         googleReviewsUrl: settings.googleReviewsUrl || '',
         showGoogleReviews: settings.showGoogleReviews !== false,
+        maintenanceMode: settings.maintenanceMode === true,
         minOrderValue: settings.minOrderValue ?? 0,
         deliveryFee: settings.deliveryFee ?? 2.0,
         deliveryFeePerKm: settings.deliveryFeePerKm ?? 0.10,
@@ -375,6 +377,32 @@ export const Settings = () => {
     if (field === 'logoUrl') {
       setLogoPreviewError(false);
     }
+  };
+
+  // Maintenance mode applies immediately on click via its own API call,
+  // rather than waiting for the general "Speichern" button — this is meant
+  // for genuine emergencies (closing the store right now), and shouldn't be
+  // blocked by an unrelated validation error elsewhere in this large form,
+  // or left in limbo if the admin toggles it then navigates away before
+  // saving everything else.
+  const [savingMaintenanceMode, setSavingMaintenanceMode] = useState(false);
+  const [maintenanceMessage, setMaintenanceMessage] = useState('');
+  const handleToggleMaintenanceMode = async () => {
+    const next = !formData.maintenanceMode;
+    setSavingMaintenanceMode(true);
+    setMaintenanceMessage('');
+    const res = await updateStoreSettings({ maintenanceMode: next });
+    if (res.success) {
+      setFormData((prev) => ({ ...prev, maintenanceMode: next }));
+      setMaintenanceMessage(
+        next
+          ? (language === 'ar' ? 'وضع الصيانة مفعّل — المتجر مغلق أمام العملاء' : 'Wartungsmodus aktiv — Shop ist für Kunden gesperrt')
+          : (language === 'ar' ? 'تم إلغاء وضع الصيانة — المتجر متاح مجدداً' : 'Wartungsmodus beendet — Shop ist wieder erreichbar')
+      );
+    } else {
+      setMaintenanceMessage(res.error || (language === 'ar' ? 'حدث خطأ' : 'Ein Fehler ist aufgetreten'));
+    }
+    setSavingMaintenanceMode(false);
   };
 
   const handleGeocodeStoreAddress = async () => {
@@ -420,6 +448,7 @@ export const Settings = () => {
         mapEmbedUrl: formData.mapEmbedUrl.trim() || null,
         googleReviewsUrl: formData.googleReviewsUrl.trim() || null,
         showGoogleReviews: formData.showGoogleReviews,
+        maintenanceMode: formData.maintenanceMode,
         minOrderValue: formData.minOrderValue !== '' ? parseFloat(formData.minOrderValue) : 0,
         deliveryFee: formData.deliveryFee !== '' ? parseFloat(formData.deliveryFee) : 0,
         deliveryFeePerKm: formData.deliveryFeePerKm !== '' ? parseFloat(formData.deliveryFeePerKm) : 0,
@@ -602,6 +631,68 @@ export const Settings = () => {
         {/* ============================================================== */}
         {activeTab === 'general' && (
           <div className="space-y-6 animate-in fade-in duration-200">
+            {/* Maintenance Mode — deliberately its own prominent, alert-styled
+                card at the top of this tab (not buried alongside routine
+                fields) since flipping it takes the whole storefront offline
+                for customers. Applies immediately, independent of the
+                "Speichern" button below. */}
+            <div className={`rounded-2xl sm:rounded-3xl border p-4 sm:p-6 shadow-xs transition-colors ${
+              formData.maintenanceMode
+                ? 'bg-rose-50 dark:bg-rose-950/30 border-rose-300 dark:border-rose-800'
+                : 'bg-white dark:bg-gray-900 border-slate-200/80 dark:border-gray-850'
+            }`}>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+                <div className="flex items-center gap-3">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                    formData.maintenanceMode
+                      ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'
+                      : 'bg-slate-100 dark:bg-gray-800 text-slate-500 dark:text-gray-400'
+                  }`}>
+                    <AlertCircle className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                      {language === 'ar' ? 'وضع الصيانة' : 'Wartungsmodus'}
+                    </h2>
+                    <p className="text-[11px] sm:text-xs text-slate-500 dark:text-gray-400 max-w-md">
+                      {language === 'ar'
+                        ? 'عند التفعيل، يرى العملاء صفحة صيانة ولا يمكن تقديم طلبات جديدة. لوحة التحكم للمشرفين وواجهة السائق تبقى تعمل.'
+                        : 'Wenn aktiv, sehen Kunden eine Wartungsseite und können keine neuen Bestellungen aufgeben. Admin-Dashboard und Fahrerportal bleiben erreichbar.'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 shrink-0 self-start sm:self-auto">
+                  <span className={`text-xs font-bold ${formData.maintenanceMode ? 'text-rose-700 dark:text-rose-400' : 'text-slate-500 dark:text-gray-400'}`}>
+                    {formData.maintenanceMode
+                      ? (language === 'ar' ? 'مفعّل' : 'Aktiv')
+                      : (language === 'ar' ? 'غير مفعّل' : 'Inaktiv')}
+                  </span>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={formData.maintenanceMode}
+                    disabled={savingMaintenanceMode}
+                    onClick={handleToggleMaintenanceMode}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none touch-manipulation disabled:opacity-50 ${
+                      formData.maintenanceMode ? 'bg-rose-600' : 'bg-slate-300 dark:bg-gray-700'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out ${
+                        formData.maintenanceMode ? (direction === 'rtl' ? '-translate-x-5' : 'translate-x-5') : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+              {maintenanceMessage && (
+                <p className={`mt-3 text-xs font-semibold ${formData.maintenanceMode ? 'text-rose-700 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                  {maintenanceMessage}
+                </p>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {/* Store Name & Language */}
               <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-gray-850 p-5 sm:p-6 shadow-xs space-y-4">

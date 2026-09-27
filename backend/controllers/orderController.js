@@ -169,6 +169,24 @@ const getOrderById = async (req, res) => {
 const createOrder = async (req, res) => {
   try {
     const { notes } = req.body;
+
+    // Maintenance mode blocks new customer-initiated orders server-side, not
+    // just via the frontend UI — a direct API call must be rejected too.
+    // Admin-placed orders (e.g. a phone order taken manually) still go
+    // through, matching "admin stays fully functional during maintenance".
+    if (!req.admin) {
+      const storeSettings = await prisma.storeSettings.findUnique({
+        where: { id: 'default' },
+        select: { maintenanceMode: true }
+      });
+      if (storeSettings?.maintenanceMode) {
+        return res.status(503).json({
+          error: 'Der Shop ist aktuell wegen Wartungsarbeiten nicht erreichbar. Bitte versuchen Sie es später erneut. / The store is temporarily down for maintenance. Please try again later.',
+          maintenanceMode: true
+        });
+      }
+    }
+
     let customerId;
     // #4 & #16 fix: regular customers strictly use their own JWT customerId (IDOR prevention).
     // Admins can place orders for existing customers, but customerId must be valid and existence is verified.
