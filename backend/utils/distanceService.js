@@ -16,6 +16,8 @@
  * 5. In-Memory LRU Caching: 1-hour cache for both coordinates and driving routes for lightning-fast checkout.
  */
 
+const { roundMoney } = require('./money');
+
 // Default store coordinates: Koppreitergasse 8, 1120 Wien
 const DEFAULT_STORE_LAT = 48.1746605;
 const DEFAULT_STORE_LNG = 16.3272662;
@@ -399,8 +401,8 @@ async function calculateDeliveryDistance(destinationAddress, storeSettings = {})
     routingEngine = 'postal_centroid_haversine';
   }
 
-  const distanceFee = Math.round(distanceKm * perKmRate * 100) / 100;
-  const totalDeliveryFee = Math.round((baseFee + distanceFee) * 100) / 100;
+  const distanceFee = roundMoney(distanceKm * perKmRate);
+  const totalDeliveryFee = roundMoney(baseFee + distanceFee);
   const isWithinMaxDistance = maxDistanceKm <= 0 || distanceKm <= maxDistanceKm;
 
   return {

@@ -1,7 +1,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert');
+const { roundMoney } = require('../utils/money');
 const {
-  roundMoney,
   parseQuantity,
   buildOrderLine,
   summarizeOrderLines,
@@ -14,9 +14,19 @@ const {
 
 const product = (id, price, extra = {}) => ({ id, name: `Product ${id}`, b2bPrice: price, stock: 100, ...extra });
 
-test('roundMoney rounds to cents', () => {
+test('roundMoney rounds to cents, half-up, without binary float errors', () => {
   assert.strictEqual(roundMoney(0.1 + 0.2), 0.3);
   assert.strictEqual(roundMoney(19.999), 20);
+  // 2.005 * 3 is 6.014999... in binary floating point; toFixed(2) gives 6.01
+  assert.strictEqual(roundMoney(2.005 * 3), 6.02);
+  assert.strictEqual(roundMoney(1.005), 1.01);
+  assert.strictEqual(roundMoney(-1.005), -1.01);
+  assert.strictEqual(roundMoney('4.5'), 4.5);
+  assert.strictEqual(roundMoney(NaN), 0);
+});
+
+test('buildOrderLine rounds line subtotals half-up', () => {
+  assert.strictEqual(buildOrderLine(product('a', 2.005), 3).subtotal, 6.02);
 });
 
 test('parseQuantity accepts only positive integers', () => {

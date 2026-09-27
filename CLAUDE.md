@@ -92,6 +92,13 @@ that pattern when adding new admin write endpoints.
 
 ### Database (`backend/prisma/schema.prisma`)
 
+Money columns (prices, discounts, fees, totals, `Accounting.amount`) are
+`Decimal @db.Decimal(10, 2)`. `lib/prisma.js` extends the client so every
+query result has those converted back to plain JS numbers — controllers and
+the frontend never see `Prisma.Decimal`. Round any money arithmetic with
+`roundMoney` from `utils/money.js`, not `toFixed(2)` (which rounds 6.015 down).
+Non-money floats (km, coordinates, percentages, rating) stay `Float`.
+
 Key models: `Admin`, `Customer`, `Product`, `Category`, `Order`/`OrderItem`,
 `Accounting`, `StoreSettings`, `Coupon`/`CouponUsage`, `Promotion`,
 `DeliveryWindow`, `DriverLoginRequest`/`DriverSession`, `PushSubscription`,

@@ -5,8 +5,7 @@
  * and the logic can be unit-tested without Prisma (see tests/).
  */
 const { calculatePromotionForItem } = require('./pricingService');
-
-const roundMoney = (value) => Number(Number(value).toFixed(2));
+const { roundMoney } = require('./money');
 
 // A positive integer quantity, or null for anything that shouldn't become an
 // order line ("0", "0.5", "abc", negative numbers, missing values).

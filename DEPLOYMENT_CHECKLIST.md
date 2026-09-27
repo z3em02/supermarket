@@ -61,6 +61,31 @@ npx prisma db push
 
 This project uses `prisma db push`, not `prisma migrate` — there's no migrations directory to keep in sync.
 
+#### One-time: money columns Float → Decimal (existing databases only)
+
+All euro amounts (prices, discounts, fees, order totals, accounting) are now
+`DECIMAL(10,2)` instead of `double precision`. On a database created before
+this change, `npx prisma db push` stops with "data loss" warnings, because
+each value gets rounded to whole cents. That rounding is the point of the
+change; nothing is dropped (Prisma runs `ALTER COLUMN ... SET DATA TYPE
+DECIMAL(10,2)` in place). To apply it:
+
+```bash
+# 1. Back up first
+pg_dump "$DIRECT_URL" > backup-before-decimal.sql
+# 2. Stop the app so no orders are written mid-migration
+pm2 stop all
+# 3. Apply
+cd backend && npx prisma db push --accept-data-loss
+# 4. Deploy the new code and start again
+pm2 start ../deployment/ecosystem.config.js
+```
+
+Only run `--accept-data-loss` for this migration, after reading the warnings
+it prints: every line should say "cast from `DoublePrecision` to
+`Decimal(10,2)`". Anything else (a dropped column or table) means the schema
+and database are out of sync; stop and investigate.
+
 ---
 
 ## 4. Environment variables
