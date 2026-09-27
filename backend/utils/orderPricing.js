@@ -1,8 +1,8 @@
 /**
  * orderPricing.js
- * Pure (DB-free) order math shared by createOrder and editOrder in
- * controllers/orderController.js, so both paths price an order the same way
- * and the logic can be unit-tested without Prisma (see tests/).
+ * Pure (DB-free) order math shared by createOrder (orderController.js) and
+ * editOrder (orderModificationController.js), so both paths price an order
+ * the same way and the logic can be unit-tested without Prisma (see tests/).
  */
 const { calculatePromotionForItem } = require('./pricingService');
 const { roundMoney } = require('./money');
@@ -80,7 +80,6 @@ const isCouponStillEligible = (coupon, itemsSubtotal, now = new Date()) => {
 };
 
 module.exports = {
-  roundMoney,
   parseQuantity,
   buildOrderLine,
   summarizeOrderLines,

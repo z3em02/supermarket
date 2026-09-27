@@ -60,7 +60,10 @@ with locked-down headers, then a global `/api` rate limiter, then routes.
 
 Each feature is `routes/<name>.js` → `controllers/<name>Controller.js`,
 using Prisma directly in controllers (no repository/service layer, except
-where noted below). Shared logic lives in `utils/` and `lib/`:
+where noted below). Orders are the exception to one-controller-per-route:
+`routes/orders.js` uses `orderController.js` (read/create), `orderStatusController.js`
+(status changes, driver assignment) and `orderModificationController.js`
+(admin edits + customer accept/decline), with shared helpers in `orderShared.js`. Shared logic lives in `utils/` and `lib/`:
 
 - `lib/prisma.js` — the shared Prisma client singleton.
 - `lib/config.js`, `lib/auditLog.js` — config loading and audit-log writes (see `AuditLog` model / `/api/audit-log`).

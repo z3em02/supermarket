@@ -2,17 +2,15 @@ const express = require('express');
 const { authMiddleware, driverOrAdminAuthMiddleware } = require('../middleware/auth');
 const { anyAuthMiddleware } = require('../middleware/anyAuth');
 const { customerAuthMiddleware } = require('../middleware/customerAuth');
-const { 
-  getOrders, 
-  getOrderById, 
-  createOrder, 
-  getCustomerOrders, 
-  updateOrderStatus,
-  assignOrderDriver,
-  deleteOrder,
-  editOrder,
-  customerRespondToModification
+const {
+  getOrders,
+  getOrderById,
+  createOrder,
+  getCustomerOrders,
+  deleteOrder
 } = require('../controllers/orderController');
+const { updateOrderStatus, assignOrderDriver } = require('../controllers/orderStatusController');
+const { editOrder, customerRespondToModification } = require('../controllers/orderModificationController');
 
 const router = express.Router();
 
