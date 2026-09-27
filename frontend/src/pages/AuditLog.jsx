@@ -8,7 +8,6 @@ import {
   Download,
   RefreshCw,
   Search,
-  Filter,
   ShieldCheck,
   ShoppingBag,
   Package,
@@ -20,7 +19,6 @@ import {
   UserX,
   FileEdit,
   Clock,
-  UserCheck,
   ChevronDown
 } from 'lucide-react';
 

@@ -6,9 +6,7 @@ import { ThemeToggle } from '../components/ThemeToggle';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { 
   Building2, 
-  MapPin, 
   Phone, 
-  Mail, 
   ShieldCheck, 
   ArrowLeft, 
   ArrowRight,

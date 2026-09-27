@@ -2,6 +2,7 @@ const prisma = require('../lib/prisma');
 const { calculatePromotionForItem, validateAndCalculateCoupon } = require('../utils/pricingService');
 const { logAudit } = require('../lib/auditLog');
 const { parseValidDate } = require('../utils/validation');
+const { roundMoney } = require('../utils/money');
 
 // Sanitize coupon code: trim, uppercase, alphanumeric with underscores/hyphens
 const sanitizeCode = (code) => {
@@ -100,8 +101,8 @@ const createCoupon = async (req, res) => {
         discountValue: numValue,
         freeShipping: Boolean(freeShipping),
         requiredProductIds: requiredProductIds ? requiredProductIds.trim() : null,
-        minOrderValue: minOrderValue ? Math.max(0, Number(minOrderValue)) : 0,
-        maxDiscountAmount: maxDiscountAmount ? Math.max(0, Number(maxDiscountAmount)) : null,
+        minOrderValue: Math.max(0, Number(minOrderValue) || 0),
+        maxDiscountAmount: maxDiscountAmount ? Math.max(0, Number(maxDiscountAmount) || 0) : null,
         usageLimit: usageLimit ? Math.max(1, parseInt(usageLimit, 10)) : null,
         usageLimitPerCustomer: usageLimitPerCustomer ? Math.max(1, parseInt(usageLimitPerCustomer, 10)) : 1,
         startDate: parsedStartDate,
@@ -180,7 +181,7 @@ const updateCoupon = async (req, res) => {
     if (freeShipping !== undefined) dataToUpdate.freeShipping = Boolean(freeShipping);
     if (requiredProductIds !== undefined) dataToUpdate.requiredProductIds = requiredProductIds ? requiredProductIds.trim() : null;
     if (minOrderValue !== undefined) dataToUpdate.minOrderValue = Math.max(0, Number(minOrderValue) || 0);
-    if (maxDiscountAmount !== undefined) dataToUpdate.maxDiscountAmount = maxDiscountAmount ? Math.max(0, Number(maxDiscountAmount)) : null;
+    if (maxDiscountAmount !== undefined) dataToUpdate.maxDiscountAmount = maxDiscountAmount ? Math.max(0, Number(maxDiscountAmount) || 0) : null;
     if (usageLimit !== undefined) dataToUpdate.usageLimit = usageLimit ? Math.max(1, parseInt(usageLimit, 10)) : null;
     if (usageLimitPerCustomer !== undefined) dataToUpdate.usageLimitPerCustomer = usageLimitPerCustomer ? Math.max(1, parseInt(usageLimitPerCustomer, 10)) : 1;
 
@@ -304,7 +305,7 @@ const validateCoupon = async (req, res) => {
       totalPromoSavings += itemResult.appliedSavings;
     }
 
-    calculatedSubtotal = Number(calculatedSubtotal.toFixed(2));
+    calculatedSubtotal = roundMoney(calculatedSubtotal);
 
     const result = validateAndCalculateCoupon(
       coupon,
@@ -324,8 +325,8 @@ const validateCoupon = async (req, res) => {
       discountAmount: result.discountAmount,
       isFreeShipping: result.isFreeShipping,
       itemsSubtotal: calculatedSubtotal,
-      totalPromoSavings: Number(totalPromoSavings.toFixed(2)),
-      finalItemsTotal: Number(Math.max(0, calculatedSubtotal - result.discountAmount).toFixed(2))
+      totalPromoSavings: roundMoney(totalPromoSavings),
+      finalItemsTotal: roundMoney(Math.max(0, calculatedSubtotal - result.discountAmount))
     });
   } catch (error) {
     console.error('Validate coupon error:', error);

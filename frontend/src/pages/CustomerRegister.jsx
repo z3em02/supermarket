@@ -16,11 +16,7 @@ import {
   UserPlus, 
   Mail, 
   Phone, 
-  Lock, 
-  User, 
   MapPin, 
-  Home, 
-  Building, 
   CheckCircle2, 
   AlertCircle, 
   ArrowRight, 
@@ -32,7 +28,7 @@ import {
 
 export const CustomerRegister = () => {
   const { register, verifyEmail, verifyPhone, resendOtp } = useCustomerAuth();
-  const { t, direction, language } = useLanguage();
+  const { language } = useLanguage();
   const { getStoreName } = useStoreSettings();
   const navigate = useNavigate();
 
@@ -68,7 +64,6 @@ export const CustomerRegister = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
-  const [resendCooldown, setResendCooldown] = useState(0);
 
   const PHONE_RECAPTCHA_CONTAINER_ID = 'firebase-phone-recaptcha-container-register';
 
@@ -107,7 +102,7 @@ export const CustomerRegister = () => {
     try {
       setLoading(true);
       setError('');
-      const res = await register({
+      await register({
         ...formData,
         preferredLanguage: language
       });

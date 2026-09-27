@@ -54,7 +54,8 @@ cd backend
 npm install
 npx prisma db push      # sync the database schema (this project doesn't use `prisma migrate`)
 npm run prisma:seed     # optional: creates a default admin + sample categories/products
-npm run dev              # starts the API on http://localhost:5000
+npm run dev              # starts the API on http://localhost:5000 (restarts on file changes)
+npm test                 # backend unit tests (Node's built-in test runner)
 
 # Frontend (in a second terminal)
 cd frontend

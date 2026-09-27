@@ -111,7 +111,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const apiUrl = getApiUrl();
       await adminAxios.post(`${apiUrl}/api/auth/logout`, {});
-    } catch (err) {
+    } catch {
       // Ignore — the admin is logged out locally either way.
     }
   };

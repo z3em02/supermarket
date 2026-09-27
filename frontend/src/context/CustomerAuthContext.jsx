@@ -32,7 +32,7 @@ export const CustomerAuthProvider = ({ children }) => {
       setCustomer(res.data);
       localStorage.setItem('customer_user', JSON.stringify(res.data));
       return res.data;
-    } catch (err) {
+    } catch {
       // No valid session cookie (never logged in, expired, or revoked) —
       // this is the expected/common case on first load, not a real error.
       setCustomer(null);

@@ -7,12 +7,8 @@ import { LanguageSelector } from '../components/LanguageSelector';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { 
   LogIn, 
-  Phone, 
-  Mail, 
-  Lock, 
   ArrowRight, 
   ArrowLeft, 
-  CheckCircle2, 
   AlertCircle,
   Truck,
   UserPlus
@@ -20,7 +16,7 @@ import {
 
 export const CustomerLogin = () => {
   const { login } = useCustomerAuth();
-  const { t, direction, language } = useLanguage();
+  const { language } = useLanguage();
   const { getStoreName } = useStoreSettings();
   const navigate = useNavigate();
 

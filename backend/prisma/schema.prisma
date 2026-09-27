@@ -62,7 +62,7 @@ model Product {
   descriptionDe String?
   descriptionAr String?
   sku           String      @unique
-  b2bPrice      Float
+  b2bPrice      Decimal     @db.Decimal(10, 2)
   stock         Int         @default(0)
   imageUrl      String?
   categoryId    String?
@@ -138,19 +138,19 @@ model Order {
   deliverySlot        String?
   paymentMethod       String      @default("cash_on_delivery")
   status              String      @default("pending")
-  itemsSubtotal       Float       @default(0)
+  itemsSubtotal       Decimal     @default(0) @db.Decimal(10, 2)
   couponId            String?
   coupon              Coupon?     @relation(fields: [couponId], references: [id], onDelete: SetNull)
   couponCode          String?
-  couponDiscount      Float       @default(0)
-  promotionDiscount   Float       @default(0)
+  couponDiscount      Decimal     @default(0) @db.Decimal(10, 2)
+  promotionDiscount   Decimal     @default(0) @db.Decimal(10, 2)
   isFreeShipping      Boolean     @default(false)
-  deliveryFee         Float       @default(0)
+  deliveryFee         Decimal     @default(0) @db.Decimal(10, 2)
   deliveryDistanceKm  Float?
-  baseDeliveryFee     Float?
-  distanceDeliveryFee Float?
-  totalAmount         Float
-  originalTotalAmount Float?
+  baseDeliveryFee     Decimal?    @db.Decimal(10, 2)
+  distanceDeliveryFee Decimal?    @db.Decimal(10, 2)
+  totalAmount         Decimal     @db.Decimal(10, 2)
+  originalTotalAmount Decimal?    @db.Decimal(10, 2)
   modificationReason  String?
   notes               String?
   adminNotes          String?
@@ -172,17 +172,17 @@ model Order {
 }
 
 model OrderItem {
-  id             String  @id @default(uuid())
+  id             String   @id @default(uuid())
   orderId        String
-  order          Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId      String
-  product        Product @relation(fields: [productId], references: [id])
+  product        Product  @relation(fields: [productId], references: [id])
   quantity       Int
-  price          Float
-  originalPrice  Float?
-  discountAmount Float   @default(0)
+  price          Decimal  @db.Decimal(10, 2)
+  originalPrice  Decimal? @db.Decimal(10, 2)
+  discountAmount Decimal  @default(0) @db.Decimal(10, 2)
   promotionType  String?
-  subtotal       Float
+  subtotal       Decimal  @db.Decimal(10, 2)
 
   @@index([orderId])
   @@index([productId])
@@ -193,7 +193,7 @@ model Accounting {
   orderId         String   @unique
   order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   type            String   @default("sale")
-  amount          Float
+  amount          Decimal  @db.Decimal(10, 2)
   status          String   @default("completed")
   transactionDate DateTime @default(now())
   createdAt       DateTime @default(now())
@@ -221,10 +221,10 @@ model StoreSettings {
   googleApiKey          String?
   trustindexWidgetCode  String?
   showGoogleReviews     Boolean  @default(true)
-  minOrderValue         Float    @default(0)
-  deliveryFee           Float    @default(2.0)
+  minOrderValue         Decimal  @default(0) @db.Decimal(10, 2)
+  deliveryFee           Decimal  @default(2.0) @db.Decimal(10, 2)
   deliveryFeePerKm      Float    @default(0.10)
-  freeDeliveryThreshold Float    @default(0)
+  freeDeliveryThreshold Decimal  @default(0) @db.Decimal(10, 2)
   storeLatitude         Float?   @default(48.1746605)
   storeLongitude        Float?   @default(16.3272662)
   maxDeliveryDistanceKm Float?   @default(0)
@@ -353,11 +353,11 @@ model Coupon {
   code                  String        @unique
   description           String?
   discountType          String // "PERCENTAGE", "FIXED", "COMBO"
-  discountValue         Float // e.g. 10 for 10% or 5 for €5
+  discountValue         Decimal       @db.Decimal(10, 2) // e.g. 10 for 10% or 5 for €5
   freeShipping          Boolean       @default(false)
   requiredProductIds    String? // comma-separated product IDs required for bundle combo
-  minOrderValue         Float         @default(0)
-  maxDiscountAmount     Float? // optional cap for percentage discounts
+  minOrderValue         Decimal       @default(0) @db.Decimal(10, 2)
+  maxDiscountAmount     Decimal?      @db.Decimal(10, 2) // optional cap for percentage discounts
   startDate             DateTime?
   endDate               DateTime?
   usageLimit            Int? // total max uses across all users, null = unlimited
@@ -394,7 +394,7 @@ model Promotion {
   titleAr          String?
   type             String // "PRODUCT_DISCOUNT", "BUY_X_GET_Y"
   discountPercent  Float? // e.g. 20 for 20% off
-  promotionalPrice Float? // e.g. 2.99
+  promotionalPrice Decimal?  @db.Decimal(10, 2) // e.g. 2.99
   buyQuantity      Int?      @default(2) // for 2+1: buy 2
   getYQuantity     Int?      @default(1) // for 2+1: get 1 free
   badgeTextDe      String? // e.g. "2+1 Gratis", "Angebot -20%"

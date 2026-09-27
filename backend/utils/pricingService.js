@@ -17,6 +17,8 @@
  * @param {Object|null} activePromotion - Active Promotion record for this product, if any
  * @returns {Object} Calculated line item details
  */
+const { roundMoney } = require('./money');
+
 function calculatePromotionForItem(product, quantity, activePromotion = null) {
   const qty = parseInt(quantity, 10) || 0;
   const basePrice = Number(product.b2bPrice) || 0;
@@ -37,7 +39,7 @@ function calculatePromotionForItem(product, quantity, activePromotion = null) {
 
   // If no valid active promotion, standard subtotal
   if (!activePromotion || !activePromotion.isActive) {
-    const subtotal = Number((basePrice * qty).toFixed(2));
+    const subtotal = roundMoney(basePrice * qty);
     return {
       price: basePrice,
       originalPrice: null,
@@ -54,7 +56,7 @@ function calculatePromotionForItem(product, quantity, activePromotion = null) {
   // Check promotion dates if present
   const now = new Date();
   if (activePromotion.startDate && new Date(activePromotion.startDate) > now) {
-    const subtotal = Number((basePrice * qty).toFixed(2));
+    const subtotal = roundMoney(basePrice * qty);
     return {
       price: basePrice,
       originalPrice: null,
@@ -66,7 +68,7 @@ function calculatePromotionForItem(product, quantity, activePromotion = null) {
     };
   }
   if (activePromotion.endDate && new Date(activePromotion.endDate) < now) {
-    const subtotal = Number((basePrice * qty).toFixed(2));
+    const subtotal = roundMoney(basePrice * qty);
     return {
       price: basePrice,
       originalPrice: null,
@@ -90,10 +92,10 @@ function calculatePromotionForItem(product, quantity, activePromotion = null) {
       effectiveUnitPrice = Math.max(0, basePrice - discountPerUnit);
     }
 
-    const roundedEffectivePrice = Number(effectiveUnitPrice.toFixed(2));
-    const subtotal = Number((roundedEffectivePrice * qty).toFixed(2));
-    const regularSubtotal = Number((basePrice * qty).toFixed(2));
-    const discountAmount = Math.max(0, Number((regularSubtotal - subtotal).toFixed(2)));
+    const roundedEffectivePrice = roundMoney(effectiveUnitPrice);
+    const subtotal = roundMoney(roundedEffectivePrice * qty);
+    const regularSubtotal = roundMoney(basePrice * qty);
+    const discountAmount = Math.max(0, roundMoney(regularSubtotal - subtotal));
 
     return {
       price: roundedEffectivePrice,
@@ -119,9 +121,9 @@ function calculatePromotionForItem(product, quantity, activePromotion = null) {
     const freeItems = completeSets * getYQty;
     const paidItems = Math.max(0, qty - freeItems);
 
-    const subtotal = Number((paidItems * basePrice).toFixed(2));
-    const regularSubtotal = Number((qty * basePrice).toFixed(2));
-    const discountAmount = Math.max(0, Number((regularSubtotal - subtotal).toFixed(2)));
+    const subtotal = roundMoney(paidItems * basePrice);
+    const regularSubtotal = roundMoney(qty * basePrice);
+    const discountAmount = Math.max(0, roundMoney(regularSubtotal - subtotal));
 
     return {
       price: basePrice,
@@ -139,7 +141,7 @@ function calculatePromotionForItem(product, quantity, activePromotion = null) {
   }
 
   // Fallback
-  const subtotal = Number((basePrice * qty).toFixed(2));
+  const subtotal = roundMoney(basePrice * qty);
   return {
     price: basePrice,
     originalPrice: null,
@@ -191,7 +193,7 @@ function calculateCouponDiscountAmount(coupon, itemsSubtotal) {
     }
   }
 
-  return Math.max(0, Number(discountAmount.toFixed(2)));
+  return Math.max(0, roundMoney(discountAmount));
 }
 
 /**
