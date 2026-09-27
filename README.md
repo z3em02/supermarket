@@ -34,7 +34,8 @@ cp frontend/.env.example frontend/.env
 | --- | --- |
 | `NODE_ENV` | `development` or `production`. In production, dev-only helpers (on-screen OTP codes, verbose OTP logging) are disabled. |
 | `PORT` | Port the Express server listens on (default `5000`). |
-| `DATABASE_URL` | PostgreSQL connection string. |
+| `DATABASE_URL` | PostgreSQL connection string. **On Supabase**: use the pooled ("Transaction" mode, port 6543) connection string with `?pgbouncer=true` appended — this app runs PM2 in cluster mode (see `deployment/ecosystem.config.js`), so several Node processes each open their own Prisma connection pool, and the pooler avoids exhausting Supabase's direct-connection limit. |
+| `DIRECT_URL` | Only needed alongside a pooled `DATABASE_URL` (e.g. Supabase): the direct connection (port 5432, no pgbouncer), used solely for `npx prisma db push` schema changes. Leave unset otherwise. |
 | `JWT_SECRET` | Random secret, **at least 32 characters** (`openssl rand -base64 48`). The server refuses to start without one. |
 | `FRONTEND_URL` | Public URL of the deployed frontend. Used for CORS and for links inside emails (order status, password reset) — must be the real domain in production, not `localhost`. |
 | `EMAIL_HOST` / `EMAIL_PORT` / `EMAIL_USER` / `EMAIL_PASSWORD` / `EMAIL_FROM` | SMTP credentials for transactional email (OTPs, order confirmations/status updates, password reset). If left as placeholder values, emails are skipped and logged to the console instead of failing the request. |

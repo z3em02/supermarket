@@ -3,8 +3,18 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  // DATABASE_URL: Supabase's pooled connection (Supavisor/PgBouncer, port
+  // 6543, with ?pgbouncer=true) — used for normal app queries. This app
+  // runs PM2 in cluster mode (instances: 'max', see
+  // deployment/ecosystem.config.js), i.e. several Node processes each with
+  // their own connection pool; going through the pooler avoids exhausting
+  // Supabase's direct-connection limit.
+  // DIRECT_URL: Supabase's direct connection (port 5432, no pgbouncer) —
+  // used only for schema changes (`prisma db push`). The transaction-mode
+  // pooler doesn't support the operations `db push` needs.
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Admin {
