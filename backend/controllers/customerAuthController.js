@@ -203,20 +203,24 @@ const verifyEmail = async (req, res) => {
       return res.status(400).json({ error: 'Der Verifizierungscode ist abgelaufen. Bitte fordern Sie einen neuen an / Verification code has expired. Please request a new one.' });
     }
 
-    if (customer.otpAttempts >= 5) {
+    // Count this attempt before comparing, in one conditional UPDATE — parallel
+    // guesses can't all read "fewer than 5 so far" and slip past the limit.
+    const reserved = await prisma.customer.updateMany({
+      where: { id: customer.id, otpAttempts: { lt: 5 } },
+      data: { otpAttempts: { increment: 1 } }
+    });
+    if (reserved.count === 0) {
       return res.status(429).json({ error: 'Zu viele fehlerhafte Versuche. Bitte fordern Sie einen neuen Code an / Too many incorrect attempts. Please request a new code.' });
     }
 
-    if (!secureCompare(customer.emailOtp, code.trim())) {
-      const attempts = customer.otpAttempts + 1;
-      const lockedOut = attempts >= 5;
-      await prisma.customer.update({
-        where: { id: customer.id },
-        data: {
-          otpAttempts: attempts,
-          ...(lockedOut ? { emailOtp: null, emailOtpExpiry: null } : {})
-        }
-      });
+    if (!secureCompare(customer.emailOtp, String(code).trim())) {
+      const lockedOut = customer.otpAttempts + 1 >= 5;
+      if (lockedOut) {
+        await prisma.customer.update({
+          where: { id: customer.id },
+          data: { emailOtp: null, emailOtpExpiry: null }
+        });
+      }
       return res.status(lockedOut ? 429 : 400).json({
         error: lockedOut
           ? 'Zu viele fehlerhafte Versuche. Bitte fordern Sie einen neuen Code an / Too many incorrect attempts. Please request a new code.'
