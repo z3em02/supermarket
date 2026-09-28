@@ -297,6 +297,9 @@ const updateSettings = async (req, res) => {
       data.businessPurposeAr = cleanString(businessPurposeAr);
     }
 
+    // Same fields as the public GET — never sectionPasscodeHash (a 4–8 digit
+    // PIN's bcrypt hash is quick to brute-force offline) or the Google API
+    // key, which the frontend would otherwise keep in its app-wide settings.
     const updated = await prisma.storeSettings.upsert({
       where: { id: 'default' },
       create: {
@@ -304,7 +307,8 @@ const updateSettings = async (req, res) => {
         ...DEFAULT_SETTINGS,
         ...data
       },
-      update: data
+      update: data,
+      select: PUBLIC_SETTINGS_SELECT
     });
 
     logAudit(req.admin?.email, 'UPDATE_SETTINGS', 'Geschäftseinstellungen aktualisiert (Name, Logo, Mindestbestellwert oder Lieferparameter)');
