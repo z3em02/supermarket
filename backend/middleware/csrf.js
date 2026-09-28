@@ -26,6 +26,15 @@ const clearCsrfCookie = (res) => {
   res.clearCookie(CSRF_COOKIE, { path: '/' });
 };
 
+// The admin, customer and driver sessions all share this one CSRF cookie, so
+// a logout only clears it when the browser holds no other session — logging
+// out of the shop must not break the admin's writes in the same browser.
+const SESSION_COOKIES = ['token', 'customer_token', 'driver_token'];
+const clearCsrfCookieUnlessOtherSession = (req, res, endingSessionCookie) => {
+  const otherSessionActive = SESSION_COOKIES.some((name) => name !== endingSessionCookie && req.cookies?.[name]);
+  if (!otherSessionActive) clearCsrfCookie(res);
+};
+
 // Only relevant when this request's authentication came from a cookie, not
 // a Bearer header — header-based auth is already immune to CSRF (a
 // cross-site page can't attach a custom Authorization header to a request
@@ -47,4 +56,4 @@ const requireCsrfForCookieAuth = (req, res, usedCookieAuth) => {
   return true;
 };
 
-module.exports = { generateCsrfToken, setCsrfCookie, clearCsrfCookie, requireCsrfForCookieAuth, CSRF_COOKIE, CSRF_HEADER };
+module.exports = { generateCsrfToken, setCsrfCookie, clearCsrfCookie, clearCsrfCookieUnlessOtherSession, requireCsrfForCookieAuth, CSRF_COOKIE, CSRF_HEADER };

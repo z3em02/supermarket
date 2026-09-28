@@ -7,7 +7,7 @@ const { scrapeGoogleReviews, isPrivateOrLocalHost } = require('../utils/googleSc
 const { downloadAndCacheLogo, deleteCachedLogo } = require('../utils/imageProxy');
 const { issueSectionUnlockToken, invalidateSectionPasscodeCache } = require('../middleware/sectionUnlock');
 const { logAudit } = require('../lib/auditLog');
-const { generateCsrfToken, setCsrfCookie, clearCsrfCookie, requireCsrfForCookieAuth } = require('../middleware/csrf');
+const { generateCsrfToken, setCsrfCookie, clearCsrfCookieUnlessOtherSession, requireCsrfForCookieAuth } = require('../middleware/csrf');
 
 const DRIVER_SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
@@ -1031,7 +1031,7 @@ const driverLogout = async (req, res) => {
     sameSite: 'lax',
     path: '/'
   });
-  clearCsrfCookie(res);
+  clearCsrfCookieUnlessOtherSession(req, res, 'driver_token');
   res.json({ message: 'Logged out successfully' });
 };
 
