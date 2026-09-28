@@ -31,6 +31,7 @@ npm install
 npm run dev                # Vite dev server on :5173
 npm run build               # production build -> frontend/dist
 npm run lint                # oxlint
+npm test                    # frontend unit tests (`node --test "tests/**/*.test.js"`)
 npm run preview
 
 # Both at once from repo root
@@ -40,10 +41,20 @@ npm run preview
 Backend tests use Node's built-in `node:test` runner (no jest/mocha). They
 cover the DB-free logic only: order pricing (`utils/orderPricing.js`),
 promotions/coupons, validation, PII crypto, delivery slots and delivery-fee
-calculation (network stubbed so it uses the postal-code centroids). Put pure
-logic in `utils/` rather than inline in controllers so it can be tested this
-way. `.github/workflows/ci.yml` runs backend tests plus frontend lint + build
-on every PR and push to `main`.
+calculation (network stubbed so it uses the postal-code centroids), the
+CSRF and section-PIN middleware (`sectionUnlock.test.js` swaps `lib/prisma`
+for a fake via `require.cache`). `tests/api.test.js` starts the real
+`server.js` as a child process with dummy secrets and an unreachable
+`DATABASE_URL` (real `.env` values blanked) and checks everything decided
+before the database: routing, body limits, auth/CSRF rejections, logout
+cookies, CORS. Put pure logic in `utils/` rather than inline in controllers
+so it can be tested this way.
+
+Frontend tests (`frontend/tests/`) also use `node:test` and import plain
+`.js` modules directly (note parsing, masking, dates, DE/AR translation key
+parity) — only modules without JSX or `import.meta.env`.
+`.github/workflows/ci.yml` runs backend tests plus frontend lint, tests and
+build on every PR and push to `main`.
 
 Env setup: `cp backend/.env.example backend/.env` and `cp frontend/.env.example frontend/.env`,
 then fill in `DATABASE_URL`, `JWT_SECRET` (min 32 chars — server refuses to start otherwise),
