@@ -1,44 +1,25 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import axios from '../utils/adminAxios';
 import { getApiUrl } from '../utils/api';
 import { useLanguage } from '../context/LanguageContext';
-import { useTheme } from '../context/ThemeContext';
-import { useStoreSettings } from '../context/StoreSettingsContext';
 import { useAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
-import { ADMIN_BASE } from '../config/adminPath';
-import { 
-  Truck, 
-  MapPin, 
-  Phone, 
-  Clock, 
-  CheckCircle2, 
-  Package, 
-  Navigation, 
-  ChevronDown, 
-  ChevronUp, 
-  RefreshCw, 
-  AlertCircle, 
-  Banknote, 
-  CreditCard, 
-  Search, 
+import {
+  Truck,
+  Clock,
+  CheckCircle2,
+  Search,
   Calendar,
   Layers,
-  ArrowLeft,
-  Moon,
-  Sun,
-  Globe,
-  LogOut,
-  UserCheck,
-  Check,
-  Hourglass,
+  Check
 } from 'lucide-react';
-import { formatDeliverySlot, todayIso, parseDeliverySlot } from '../utils/deliverySlot';
+import { todayIso, parseDeliverySlot } from '../utils/deliverySlot';
+import { DriverConfirmModal } from './driver/DriverConfirmModal';
+import { DriverOrderCard } from './driver/DriverOrderCard';
+import { DriverLoginScreen } from './driver/DriverLoginScreen';
+import { DriverHeader } from './driver/DriverHeader';
 
 export const DriverDeliveryView = () => {
-  const { language, setLanguage, direction } = useLanguage();
-  const { theme, toggleTheme } = useTheme();
-  const { getStoreName } = useStoreSettings();
+  const { language, direction } = useLanguage();
   const isAr = language === 'ar';
 
   const { user: adminUser } = useAuth();
@@ -66,7 +47,6 @@ export const DriverDeliveryView = () => {
   // pending request — this holds the pollToken while we wait for an admin
   // to approve/reject it from the dashboard.
   const [pendingPollToken, setPendingPollToken] = useState(null);
-
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -376,163 +356,33 @@ export const DriverDeliveryView = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-gray-950 px-4" dir={direction}>
-        <div className="w-full max-w-sm bg-white dark:bg-gray-900 rounded-3xl border border-slate-200/80 dark:border-gray-800 shadow-xl p-6 sm:p-8 space-y-5">
-          <div className="text-center space-y-2">
-            <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-amber-500 to-emerald-600 flex items-center justify-center text-white shadow-md">
-              <Truck className="w-7 h-7" />
-            </div>
-            <h1 className="text-lg font-black text-slate-900 dark:text-white">
-              {isAr ? 'دخول السائق' : 'Fahrer-Login'}
-            </h1>
-            <p className="text-xs text-slate-500 dark:text-gray-400">
-              {getStoreName(language) || 'Supermarkt'}
-            </p>
-          </div>
-
-          {pendingPollToken ? (
-            <div className="text-center space-y-4 py-4">
-              <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center animate-pulse">
-                <Hourglass className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-slate-800 dark:text-white">
-                  {isAr ? 'بانتظار موافقة المشرف...' : 'Warte auf Freigabe durch den Administrator...'}
-                </p>
-                <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
-                  {isAr ? 'سيظهر طلبك في لوحة التحكم الخاصة بالمشرف' : 'Deine Anfrage erscheint im Admin-Dashboard'}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => { setPendingPollToken(null); setLoginError(''); }}
-                className="text-xs font-bold text-slate-500 hover:text-slate-700 dark:text-gray-400 dark:hover:text-gray-200 underline cursor-pointer"
-              >
-                {isAr ? 'إلغاء' : 'Abbrechen'}
-              </button>
-            </div>
-          ) : (
-            <form onSubmit={handleDriverLogin} className="space-y-4">
-              {loginError && (
-                <div className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span>{loginError}</span>
-                </div>
-              )}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
-                  {isAr ? 'اسم السائق' : 'Fahrername'}
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={inputDriverName}
-                  onChange={(e) => setInputDriverName(e.target.value)}
-                  placeholder={isAr ? 'مثال: أحمد' : 'z.B. Ahmed'}
-                  className="w-full px-3.5 py-3 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm transition"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
-                  {isAr ? 'رمزك الشخصي (PIN)' : 'Dein persönlicher PIN'}
-                </label>
-                <input
-                  type="password"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength={8}
-                  value={inputPasscode}
-                  onChange={(e) => setInputPasscode(e.target.value.replace(/\D/g, ''))}
-                  placeholder="••••"
-                  className="w-full px-3.5 py-3 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm transition font-mono tracking-widest"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={loggingIn}
-                className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-sm shadow-lg shadow-emerald-600/25 transition flex items-center justify-center gap-2 cursor-pointer"
-              >
-                {loggingIn ? (isAr ? 'جارٍ الإرسال...' : 'Wird gesendet...') : (isAr ? 'طلب تسجيل الدخول' : 'Login anfragen')}
-              </button>
-            </form>
-          )}
-        </div>
-      </div>
+      <DriverLoginScreen
+        handleDriverLogin={handleDriverLogin}
+        inputDriverName={inputDriverName}
+        inputPasscode={inputPasscode}
+        isAr={isAr}
+        loggingIn={loggingIn}
+        loginError={loginError}
+        pendingPollToken={pendingPollToken}
+        setInputDriverName={setInputDriverName}
+        setInputPasscode={setInputPasscode}
+        setLoginError={setLoginError}
+        setPendingPollToken={setPendingPollToken}
+      />
     );
   }
 
   return (
     <div className={`min-h-screen bg-slate-100 dark:bg-gray-950 text-slate-900 dark:text-gray-100 pb-16 font-sans transition-colors duration-200`} dir={direction}>
       {/* Sticky Mobile Driver Header */}
-      <header className="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-gray-800 shadow-xs px-4 py-3 sm:px-6">
-        <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 min-w-0">
-            {adminUser && (
-              <Link
-                to={`${ADMIN_BASE}/orders`}
-                className="p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:text-gray-400 dark:hover:text-white bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 transition"
-                title={isAr ? 'العودة لإدارة الطلبات' : 'Zurück zur Bestellübersicht'}
-              >
-                <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
-              </Link>
-            )}
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-emerald-600 flex items-center justify-center text-white shadow-md shadow-amber-500/20 shrink-0">
-              <Truck className="w-5 h-5" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <h1 className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white truncate">
-                  {isAr ? 'واجهة التوصيل والسائق' : 'Fahrer- & Lieferansicht'}
-                </h1>
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 uppercase">
-                  {isAr ? 'سائق' : 'Driver'}
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 dark:text-gray-400 truncate">
-                {getStoreName(language) || 'Supermarkt'} · {activeDisplayName}
-              </p>
-            </div>
-          </div>
-
-          {/* Quick controls: Language, Darkmode, Refresh */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <button
-              onClick={() => fetchOrders(true)}
-              disabled={refreshing}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-slate-600 dark:text-gray-300 transition"
-              title={isAr ? 'تحديث الطلبات' : 'Aktualisieren'}
-            >
-              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-emerald-600' : ''}`} />
-            </button>
-
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-slate-600 dark:text-gray-300 transition"
-              title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
-            >
-              {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
-            </button>
-
-            <button
-              onClick={() => setLanguage(language === 'de' ? 'ar' : 'de')}
-              className="flex items-center gap-1 px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-xs font-bold text-slate-700 dark:text-gray-200 transition"
-            >
-              <Globe className="w-3.5 h-3.5" />
-              <span>{language === 'de' ? 'العربية' : 'DE'}</span>
-            </button>
-
-            {driverUser && !adminUser && (
-              <button
-                onClick={handleDriverLogout}
-                className="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-950/60 text-rose-600 dark:text-rose-400 transition"
-                title={isAr ? 'تسجيل الخروج' : 'Abmelden'}
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-        </div>
-      </header>
+      <DriverHeader
+        activeDisplayName={activeDisplayName}
+        driverUser={driverUser}
+        fetchOrders={fetchOrders}
+        handleDriverLogout={handleDriverLogout}
+        isAr={isAr}
+        refreshing={refreshing}
+      />
 
       {/* Main Container */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 pt-4 space-y-4">
@@ -663,254 +513,24 @@ export const DriverDeliveryView = () => {
           <div className="space-y-4">
             {filteredOrders.map((order, index) => {
               const badge = getStatusBadge(order.status);
-              const isOutForDelivery = ['out_for_delivery', 'shipped'].includes((order.status || '').toLowerCase());
-              const isDelivered = (order.status || '').toLowerCase() === 'delivered';
               const itemsExpanded = !!expandedItems[order.id];
               const isUpdating = updatingId === order.id;
 
-              // Parse customer delivery address & contact details
-              const customerName = order.customerName || order.customer?.name || (isAr ? 'عميل' : 'Kunde');
-              const customerPhone = order.customerPhone || order.customer?.phone;
-              const deliveryAddress = order.deliveryAddress || order.customer?.address || '';
-              const deliveryNotes = order.deliveryNotes || order.notes;
-              const slotFormatted = order.deliverySlot ? formatDeliverySlot(order.deliverySlot, isAr) : null;
-              const totalAmount = typeof order.totalAmount === 'number' ? order.totalAmount.toFixed(2) : '0.00';
-              const isCash = order.paymentMethod === 'cash_on_delivery' || !order.paymentMethod;
-
               return (
-                <article 
+                <DriverOrderCard
                   key={order.id}
-                  className={`bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border transition-all duration-200 overflow-hidden shadow-xs hover:shadow-md ${
-                    isOutForDelivery
-                      ? 'border-amber-400/80 dark:border-amber-500/60 ring-2 ring-amber-400/20'
-                      : isDelivered
-                      ? 'border-slate-200/80 dark:border-gray-800 opacity-80'
-                      : 'border-slate-200/90 dark:border-gray-800'
-                  }`}
-                >
-                  {/* Top card banner */}
-                  <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-gray-800 flex flex-wrap items-center justify-between gap-3 bg-slate-50/50 dark:bg-gray-900/50">
-                    <div className="flex items-center gap-2.5">
-                      <span className="w-8 h-8 rounded-xl bg-slate-200 dark:bg-gray-800 text-slate-700 dark:text-gray-300 font-black text-xs flex items-center justify-center">
-                        #{index + 1}
-                      </span>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white">
-                            #{order.id.slice(0, 8).toUpperCase()}
-                          </span>
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold border ${badge.bg}`}>
-                            {badge.label}
-                          </span>
-                        </div>
-                        {slotFormatted && (
-                          <div className="flex items-center gap-1.5 text-xs font-bold text-amber-700 dark:text-amber-400 mt-0.5">
-                            <Clock className="w-3.5 h-3.5 shrink-0" />
-                            <span>{slotFormatted}</span>
-                          </div>
-                        )}
-                        {order.assignedDriverName && (
-                          <div className={`flex items-center gap-1.5 text-xs font-bold mt-0.5 ${
-                            order.assignedDriverName === activeDisplayName
-                              ? 'text-emerald-700 dark:text-emerald-400'
-                              : 'text-slate-400 dark:text-gray-500'
-                          }`}>
-                            <UserCheck className="w-3.5 h-3.5 shrink-0" />
-                            <span>
-                              {order.assignedDriverName === activeDisplayName
-                                ? (isAr ? 'مُعيَّن لك' : 'Dir zugewiesen')
-                                : (isAr ? `مُعيَّن لـ ${order.assignedDriverName}` : `Zugewiesen an ${order.assignedDriverName}`)}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Price & Cash Badge */}
-                    <div className="flex items-center gap-2">
-                      <div className={`px-3 py-1.5 rounded-xl border flex items-center gap-2 ${
-                        isCash 
-                          ? 'bg-amber-50 border-amber-200 text-amber-900 dark:bg-amber-950/70 dark:border-amber-800 dark:text-amber-200' 
-                          : 'bg-emerald-50 border-emerald-200 text-emerald-900 dark:bg-emerald-950/70 dark:border-emerald-800 dark:text-emerald-200'
-                      }`}>
-                        {isCash ? <Banknote className="w-4 h-4 text-amber-600 dark:text-amber-400" /> : <CreditCard className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
-                        <div className="text-right rtl:text-left">
-                          <div className="text-xs font-medium leading-none">
-                            {isCash 
-                              ? (isAr ? 'الدفع نقداً عند الاستلام' : 'Barzahlung bei Erhalt') 
-                              : (isAr ? 'مدفوع إلكترونياً' : 'Bereits bezahlt')}
-                          </div>
-                          <div className="text-sm font-black mt-0.5">
-                            €{totalAmount}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Body: Recipient & Location */}
-                  <div className="p-4 sm:p-5 space-y-4">
-                    {/* Customer Name & Direct Call */}
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                          {isAr ? 'المستلم' : 'Empfänger'}
-                        </div>
-                        <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white truncate">
-                          {customerName}
-                        </h2>
-                      </div>
-
-                      {customerPhone ? (
-                        <a
-                          href={`tel:${customerPhone}`}
-                          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-sm transition active:scale-95 shrink-0"
-                          title={isAr ? 'اتصال بالعميل' : 'Kunde anrufen'}
-                        >
-                          <Phone className="w-4 h-4" />
-                          <span>{isAr ? 'اتصال' : 'Anrufen'}</span>
-                        </a>
-                      ) : (
-                        <span className="text-xs text-slate-400 dark:text-gray-500 italic">
-                          {isAr ? 'بدون رقم هاتف' : 'Keine Telefonnummer'}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Address with One-Tap Maps Button */}
-                    <div className="bg-slate-50 dark:bg-gray-800/60 rounded-2xl p-3.5 border border-slate-200/70 dark:border-gray-750 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="flex items-start gap-2.5 min-w-0">
-                        <MapPin className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
-                        <div className="min-w-0">
-                          <p className="text-sm font-bold text-slate-900 dark:text-white leading-snug">
-                            {deliveryAddress || (isAr ? 'العنوان غير محدد' : 'Keine Adresse hinterlegt')}
-                          </p>
-                          {order.customer?.floorApartment && (
-                            <p className="text-xs font-semibold text-slate-600 dark:text-gray-300 mt-0.5">
-                              {isAr ? `الطابق / الشقة: ${order.customer.floorApartment}` : `Stock / Tür: ${order.customer.floorApartment}`}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      {deliveryAddress && (
-                        <button
-                          type="button"
-                          onClick={() => openMaps(deliveryAddress)}
-                          className="flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-xs transition active:scale-95 shrink-0"
-                        >
-                          <Navigation className="w-4 h-4" />
-                          <span>{isAr ? 'فتح في خرائط جوجل' : 'In Google Maps öffnen'}</span>
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Delivery Notes for Driver */}
-                    {deliveryNotes && (
-                      <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-900/60 rounded-2xl p-3 flex items-start gap-2.5">
-                        <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                        <div>
-                          <span className="text-xs font-bold text-amber-800 dark:text-amber-300 block">
-                            {isAr ? 'ملاحظة خاصة للتوصيل:' : 'Wichtiger Lieferhinweis:'}
-                          </span>
-                          <p className="text-xs text-amber-900 dark:text-amber-200 font-medium whitespace-pre-line mt-0.5">
-                            {deliveryNotes}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Collapsible Order Items Checklist */}
-                    <div className="pt-1">
-                      <button
-                        type="button"
-                        onClick={() => toggleExpandItems(order.id)}
-                        className="w-full flex items-center justify-between py-2 text-xs font-bold text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition"
-                      >
-                        <span className="flex items-center gap-1.5">
-                          <Package className="w-4 h-4 text-slate-400" />
-                          <span>
-                            {isAr 
-                              ? `محتويات الطلب (${order.orderItems?.length || 0} صنف)` 
-                              : `Warenliste (${order.orderItems?.length || 0} Artikel)`}
-                          </span>
-                        </span>
-                        {itemsExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                      </button>
-
-                      {itemsExpanded && (
-                        <div className="mt-2 divide-y divide-slate-100 dark:divide-gray-800 rounded-xl bg-slate-50/70 dark:bg-gray-800/40 p-2 border border-slate-200/60 dark:border-gray-800">
-                          {order.orderItems && order.orderItems.length > 0 ? (
-                            order.orderItems.map((item, idx) => (
-                              <div key={item.id || idx} className="py-1.5 px-2 flex items-center justify-between text-xs">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-extrabold text-emerald-600 dark:text-emerald-400">
-                                    {item.quantity}x
-                                  </span>
-                                  <span className="font-semibold text-slate-800 dark:text-gray-200">
-                                    {isAr && item.product?.nameAr ? item.product.nameAr : (item.product?.name || item.productName || item.product?.sku || 'Artikel')}
-                                  </span>
-                                </div>
-                                <span className="font-bold text-slate-600 dark:text-gray-400">
-                                  €{((item.price || 0) * (item.quantity || 1)).toFixed(2)}
-                                </span>
-                              </div>
-                            ))
-                          ) : (
-                            <p className="text-xs text-slate-400 italic p-2">
-                              {isAr ? 'لا توجد تفاصيل للمنتجات' : 'Keine Artikeldetails hinterlegt'}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Actions Footer */}
-                  <div className="p-4 sm:p-5 bg-slate-50 dark:bg-gray-900/80 border-t border-slate-100 dark:border-gray-800 flex flex-wrap items-center justify-between gap-3">
-                    <div className="text-xs text-slate-500 dark:text-gray-400">
-                      {isAr 
-                        ? `تاريخ الطلب: ${new Date(order.createdAt).toLocaleDateString('ar-EG')}` 
-                        : `Bestellt am: ${new Date(order.createdAt).toLocaleDateString('de-AT')}`}
-                    </div>
-
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                      {!isOutForDelivery && !isDelivered && (
-                        <button
-                          type="button"
-                          disabled={isUpdating}
-                          onClick={() => setConfirmModal({ order, action: 'start' })}
-                          className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs sm:text-sm shadow-sm transition active:scale-95 disabled:opacity-50"
-                        >
-                          <Truck className="w-4 h-4" />
-                          <span>{isAr ? 'بدء التوصيل / في الطريق' : 'Fahrt starten (Unterwegs)'}</span>
-                        </button>
-                      )}
-
-                      {!isDelivered && (
-                        <button
-                          type="button"
-                          disabled={isUpdating}
-                          onClick={() => {
-                            setDeliveredCashCollected(isCash);
-                            setConfirmModal({ order, action: 'deliver' });
-                          }}
-                          className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-600/20 transition active:scale-95 disabled:opacity-50"
-                        >
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span>{isAr ? 'تم التسليم بنجاح' : 'Erfolgreich zugestellt'}</span>
-                        </button>
-                      )}
-
-                      {isDelivered && (
-                        <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800">
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span>{isAr ? 'مكتمل ومسلّم' : 'Abgeschlossen & Übergeben'}</span>
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </article>
+                  activeDisplayName={activeDisplayName}
+                  badge={badge}
+                  index={index}
+                  isAr={isAr}
+                  isUpdating={isUpdating}
+                  itemsExpanded={itemsExpanded}
+                  openMaps={openMaps}
+                  order={order}
+                  setConfirmModal={setConfirmModal}
+                  setDeliveredCashCollected={setDeliveredCashCollected}
+                  toggleExpandItems={toggleExpandItems}
+                />
               );
             })}
             </div>
@@ -919,114 +539,17 @@ export const DriverDeliveryView = () => {
 
         {/* Confirmation Modal for Driver Actions */}
         {confirmModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-            <div className="bg-white dark:bg-gray-900 rounded-3xl max-w-md w-full p-6 border border-slate-200 dark:border-gray-800 shadow-2xl space-y-4">
-              <div className="flex items-center gap-3">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
-                  confirmModal.action === 'deliver' 
-                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' 
-                    : 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
-                }`}>
-                  {confirmModal.action === 'deliver' ? <CheckCircle2 className="w-6 h-6" /> : <Truck className="w-6 h-6" />}
-                </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
-                    {confirmModal.action === 'deliver' 
-                      ? (isAr ? 'تأكيد تسليم الطلب' : 'Zustellung bestätigen') 
-                      : (isAr ? 'بدء جولة التوصيل' : 'Lieferfahrt starten')}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-gray-400">
-                    #{confirmModal.order.id.slice(0, 8).toUpperCase()} - {confirmModal.order.customerName || (isAr ? 'العميل' : 'Kunde')}
-                  </p>
-                </div>
-              </div>
-
-              {confirmModal.action === 'deliver' ? (
-                <div className="space-y-3 pt-2">
-                  <p className="text-sm text-slate-700 dark:text-gray-300">
-                    {isAr 
-                      ? 'هل تم تسليم جميع الأكياس والمنتجات للعميل بنجاح؟' 
-                      : 'Wurden alle Artikel und Liefertaschen vollständig an den Kunden übergeben?'}
-                  </p>
-
-                  {/* Cash collection checkbox for Cash On Delivery orders */}
-                  {(confirmModal.order.paymentMethod === 'cash_on_delivery' || !confirmModal.order.paymentMethod) && (
-                    <label className="flex items-center gap-3 p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={deliveredCashCollected}
-                        onChange={(e) => setDeliveredCashCollected(e.target.checked)}
-                        className="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500"
-                      />
-                      <div className="text-xs">
-                        <span className="font-extrabold text-amber-900 dark:text-amber-200 block">
-                          {isAr 
-                            ? `تم استلام المبلغ نقداً (€${(confirmModal.order.totalAmount || 0).toFixed(2)})` 
-                            : `Barbetrag (€${(confirmModal.order.totalAmount || 0).toFixed(2)}) erfolgreich kassiert`}
-                        </span>
-                        <span className="text-amber-700 dark:text-amber-400">
-                          {isAr ? 'يرجى التأكد من عد المبلغ قبل المغادرة' : 'Bitte Geld vor der Abfahrt nachzählen'}
-                        </span>
-                      </div>
-                    </label>
-                  )}
-
-                  {/* Optional short driver note */}
-                  <div>
-                    <label className="block text-xs font-bold text-slate-600 dark:text-gray-400 mb-1">
-                      {isAr ? 'ملاحظة تسليم إضافية (اختياري)' : 'Zusätzliche Fahrernotiz (optional)'}
-                    </label>
-                    <input
-                      type="text"
-                      value={driverNote}
-                      onChange={(e) => setDriverNote(e.target.value)}
-                      placeholder={isAr ? 'مثال: تم التسليم للجار / أمام الباب' : 'z.B. Bei Nachbar abgegeben / vor Tür'}
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-800 text-slate-900 dark:text-gray-100"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <p className="text-sm text-slate-700 dark:text-gray-300 pt-2">
-                  {isAr 
-                    ? 'سيتم تحديث حالة الطلب إلى "في الطريق" وإرسال إشعار فوري للعميل برقم سيارتك أو باقتراب الوصول.'
-                    : 'Der Status wechselt auf „Auf dem Weg“ und der Kunde erhält eine Push-Benachrichtigung über die bevorstehende Ankunft.'}
-                </p>
-              )}
-
-              <div className="flex items-center justify-end gap-2.5 pt-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setConfirmModal(null);
-                    setDriverNote('');
-                  }}
-                  className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-gray-700 text-slate-700 dark:text-gray-300 font-bold text-xs sm:text-sm hover:bg-slate-100 dark:hover:bg-gray-800 transition"
-                >
-                  {isAr ? 'إلغاء' : 'Abbrechen'}
-                </button>
-                <button
-                  type="button"
-                  disabled={updatingId === confirmModal.order.id}
-                  onClick={() => {
-                    if (confirmModal.action === 'deliver') {
-                      handleUpdateStatus(confirmModal.order, 'delivered', deliveredCashCollected, driverNote);
-                    } else {
-                      handleUpdateStatus(confirmModal.order, 'out_for_delivery', true, driverNote);
-                    }
-                  }}
-                  className={`px-5 py-2.5 rounded-xl text-white font-bold text-xs sm:text-sm shadow-md transition ${
-                    confirmModal.action === 'deliver' 
-                      ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20' 
-                      : 'bg-amber-600 hover:bg-amber-700 shadow-amber-600/20'
-                  }`}
-                >
-                  {confirmModal.action === 'deliver' 
-                    ? (isAr ? 'تأكيد التسليم' : 'Zustellung bestätigen') 
-                    : (isAr ? 'انطلاق الآن' : 'Jetzt starten')}
-                </button>
-              </div>
-            </div>
-          </div>
+          <DriverConfirmModal
+            confirmModal={confirmModal}
+            deliveredCashCollected={deliveredCashCollected}
+            driverNote={driverNote}
+            handleUpdateStatus={handleUpdateStatus}
+            isAr={isAr}
+            setConfirmModal={setConfirmModal}
+            setDeliveredCashCollected={setDeliveredCashCollected}
+            setDriverNote={setDriverNote}
+            updatingId={updatingId}
+          />
         )}
       </div>
     );

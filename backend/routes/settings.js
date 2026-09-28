@@ -2,16 +2,15 @@ const express = require('express');
 const { authMiddleware } = require('../middleware/auth');
 const { sectionUnlockMiddleware } = require('../middleware/sectionUnlock');
 const { createRateLimiter } = require('../middleware/rateLimiter');
+const { getSettings, updateSettings } = require('../controllers/settingsController');
 const {
-  getSettings,
-  updateSettings,
   getGoogleReviews,
   createGoogleReview,
   deleteGoogleReview,
-  syncGoogleReviews,
-  getPasscodeStatus,
-  setPasscode,
-  verifyPasscode,
+  syncGoogleReviews
+} = require('../controllers/googleReviewController');
+const { getPasscodeStatus, setPasscode, verifyPasscode } = require('../controllers/sectionPasscodeController');
+const {
   listDrivers,
   createDriver,
   updateDriver,
@@ -25,7 +24,7 @@ const {
   rejectDriverLoginRequest,
   listActiveDriverSessions,
   logoutDriverSession
-} = require('../controllers/settingsController');
+} = require('../controllers/driverController');
 
 const router = express.Router();
 

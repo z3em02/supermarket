@@ -63,7 +63,11 @@ using Prisma directly in controllers (no repository/service layer, except
 where noted below). Orders are the exception to one-controller-per-route:
 `routes/orders.js` uses `orderController.js` (read/create), `orderStatusController.js`
 (status changes, driver assignment) and `orderModificationController.js`
-(admin edits + customer accept/decline), with shared helpers in `orderShared.js`. Shared logic lives in `utils/` and `lib/`:
+(admin edits + customer accept/decline), with shared helpers in `orderShared.js`.
+Likewise `routes/settings.js` uses `settingsController.js` (store settings),
+`googleReviewController.js`, `sectionPasscodeController.js` and
+`driverController.js` (driver accounts + the driver login/approval flow), with
+the StoreSettings defaults in `settingsShared.js`. Shared logic lives in `utils/` and `lib/`:
 
 - `lib/prisma.js` — the shared Prisma client singleton.
 - `lib/config.js`, `lib/auditLog.js` — config loading and audit-log writes (see `AuditLog` model / `/api/audit-log`).
@@ -71,7 +75,7 @@ where noted below). Orders are the exception to one-controller-per-route:
 - `utils/orderPricing.js` — pure order math shared by `createOrder` and `editOrder` (line items, subtotals, postal-code allow-list, free delivery, totals). Change pricing here, not in the controller.
 - `utils/deliverySlot.js` — delivery window/slot logic (fee model: README §5); `utils/distanceService.js` does distance-based delivery fee/eligibility, backed by `routes/deliveryDistance.js` and `routes/deliveryWindows.js`.
 - `utils/piiCrypto.js` — field-level encryption for customer/order PII (policy: README §6 "Personal data & GDPR"); `scripts/encryptCustomerPii.js` and `scripts/encryptOrderSnapshotPii.js` are one-off migration scripts for encrypting existing rows.
-- `utils/emailService.js` — Nodemailer wrapper for OTPs, order status emails, password reset. If SMTP env vars are left as placeholders, emails are skipped and logged to console instead of failing the request.
+- `utils/emailService.js` — Nodemailer wrapper for OTPs, order status emails, password reset; it re-exports `utils/email/` (`core.js`: transport, HTML layout, helpers; `orderEmails.js`; `accountEmails.js`). If SMTP env vars are left as placeholders, emails are skipped and logged to console instead of failing the request.
 - `utils/pushService.js` — Web Push via the `web-push` library with VAPID keys (`routes/push.js`, `PushSubscription` model).
 - `utils/firebaseAdmin.js` — verifies Firebase ID tokens for phone-number OTP verification (not used for push).
 - `utils/googleScraper.js` — feeds the `GoogleReview` model (shown via `TrustindexWidget` on the frontend).
@@ -79,7 +83,7 @@ where noted below). Orders are the exception to one-controller-per-route:
 
 **Two separate auth systems**, each with its own middleware and JWT cookie:
 - Admin/staff: `middleware/auth.js` + `controllers/authController.js` (`routes/auth.js`).
-- Customers: `middleware/customerAuth.js` + `controllers/customerAuthController.js`, mounted at **three** route prefixes (`/api/customer`, `/api/customer-auth`, `/api/customers` — all the same router, kept for backward compatibility).
+- Customers: `middleware/customerAuth.js` + `controllers/customerAuthController.js` (register, OTP verification, login), `customerProfileController.js`, `customerAdminController.js` (Kunden page) and `passwordResetController.js`, all on `routes/customerAuth.js`, mounted at **three** route prefixes (`/api/customer`, `/api/customer-auth`, `/api/customers` — all the same router, kept for backward compatibility).
 - `middleware/anyAuth.js` accepts either token type where an endpoint is shared.
 - `middleware/csrf.js` — CSRF protection for cookie-based auth.
 - `middleware/sectionUnlock.js` — passcode-gated sections (see `SectionPasscodeGate.jsx` on the frontend).
@@ -113,8 +117,8 @@ to keep in sync).
 
 Single Vite React app serving both the public storefront and the admin
 dashboard (no separate admin build). Structure:
-- `pages/` — route-level components (storefront: `LandingPage`, `Catalog(s)`; customer: `CustomerLogin/Register/Account`; admin: `Dashboard`, `Products`, `Orders`, `Customers`, `Accounting`, `Settings`, `Promotions`, `AuditLog`; driver: `DriverDeliveryView`).
-- `context/` — `AuthContext` (admin) and `CustomerAuthContext` (customer) are separate, mirroring the backend's two auth systems; also `LanguageContext` (DE/AR), `ThemeContext`, `StoreSettingsContext`.
+- `pages/` — route-level components (storefront: `LandingPage`, `Catalog(s)`; customer: `CustomerLogin/Register/Account`; admin: `Dashboard`, `Products`, `Orders`, `Customers`, `Accounting`, `Settings`, `Promotions`, `AuditLog`; driver: `DriverDeliveryView`). A large page keeps its parts in a lowercase folder of the same name (`pages/orders/`, `pages/settings/`, `pages/landing/`, `pages/account/`, `pages/promotions/`, `pages/driver/`, `pages/customers/`, `pages/products/`): components and hooks used only by that page. The page file holds the state and handlers; hooks like `useDriverAccounts` hold state that must survive tab switches, so they're called in the page, not in the tab.
+- `context/` — `AuthContext` (admin) and `CustomerAuthContext` (customer) are separate, mirroring the backend's two auth systems; also `LanguageContext` (DE/AR, strings in `context/translations/`), `ThemeContext`, `StoreSettingsContext`.
 - `utils/adminAxios.js` vs `utils/customerAxios.js` — separate axios instances per auth system (cookie-based, with CSRF handling via `utils/csrf.js`).
 - `config/adminPath.js` — the admin login is served at an obscured path (`ADMIN_BASE`, currently `/console-eb68a2f3/...`) rather than `/admin`; change this constant before deploying a fork. This is not real secrecy on its own — see the comment in that file.
 - `components/ProtectedRoute.jsx` — route guarding based on the relevant auth context.
