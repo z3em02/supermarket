@@ -253,6 +253,13 @@ const updatePromotion = async (req, res) => {
 
     if (isActive !== undefined) updateData.isActive = Boolean(isActive);
 
+    const validTypes = ['PRODUCT_DISCOUNT', 'BUY_X_GET_Y'];
+    if (type !== undefined && !validTypes.includes(type)) {
+      return res.status(400).json({ error: `Ungültiger Angebotstyp. Erlaubt: ${validTypes.join(', ')}` });
+    }
+    const typeChanged = type !== undefined && type !== existing.type;
+    if (typeChanged) updateData.type = type;
+
     const currentType = type || existing.type;
     if (currentType === 'PRODUCT_DISCOUNT') {
       if (promotionalPrice !== undefined) {
@@ -275,9 +282,23 @@ const updatePromotion = async (req, res) => {
         updateData.discountPercent = pct;
         updateData.promotionalPrice = null;
       }
+      if (typeChanged) {
+        updateData.buyQuantity = null;
+        updateData.getYQuantity = null;
+      }
+      // A discount offer needs a price or a percentage — refuse an edit
+      // (including a switch from 2+1) that would leave it with neither.
+      // Only checked when the request touches pricing, so e.g. the list's
+      // active/inactive toggle can still switch off an older broken offer.
+      const finalPrice = 'promotionalPrice' in updateData ? updateData.promotionalPrice : existing.promotionalPrice;
+      const finalPercent = 'discountPercent' in updateData ? updateData.discountPercent : existing.discountPercent;
+      const touchesPricing = typeChanged || promotionalPrice !== undefined || discountPercent !== undefined;
+      if (touchesPricing && finalPrice == null && finalPercent == null) {
+        return res.status(400).json({ error: 'Bitte geben Sie entweder einen Aktionspreis oder einen Rabatt in % an.' });
+      }
     } else if (currentType === 'BUY_X_GET_Y') {
-      if (buyQuantity !== undefined) updateData.buyQuantity = Math.max(1, parseInt(buyQuantity, 10) || 2);
-      if (getYQuantity !== undefined) updateData.getYQuantity = Math.max(1, parseInt(getYQuantity, 10) || 1);
+      if (buyQuantity !== undefined || typeChanged) updateData.buyQuantity = Math.max(1, parseInt(buyQuantity, 10) || 2);
+      if (getYQuantity !== undefined || typeChanged) updateData.getYQuantity = Math.max(1, parseInt(getYQuantity, 10) || 1);
       updateData.discountPercent = null;
       updateData.promotionalPrice = null;
     }
