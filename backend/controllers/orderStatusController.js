@@ -259,7 +259,10 @@ const updateOrderStatus = async (req, res) => {
             customerName,
             updatedOrder,
             normalizedStatus,
-            finalNotes,
+            // No store message here: order.notes is the customer's own note
+            // (shown as "Kundennotiz" in the admin UI), and the email would
+            // present it back to them as "Hinweis der Filiale".
+            null,
             customerLang
           );
         }
