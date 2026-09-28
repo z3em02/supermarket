@@ -236,31 +236,33 @@ export const DriverDeliveryView = () => {
     setUpdatingId(order.id);
     try {
       const apiUrl = getApiUrl();
-      let updatedAdminNotes = order.adminNotes ? `${order.adminNotes}\n` : '';
+      // Only the new line is sent — the backend appends it to the order's
+      // current notes, so nothing an admin added meanwhile gets overwritten.
+      let driverNote = '';
       const nowStr = new Date().toLocaleString(isAr ? 'ar-EG' : 'de-AT');
-      
+
       if (targetStatus === 'out_for_delivery') {
-        updatedAdminNotes += isAr
+        driverNote = isAr
           ? `[السائق انطلق للتوصيل في: ${nowStr}]`
           : `[Fahrer ist unterwegs seit: ${nowStr}]`;
       } else if (targetStatus === 'delivered') {
         const cashNote = order.paymentMethod === 'cash_on_delivery'
-          ? (cashCollected 
+          ? (cashCollected
               ? (isAr ? `(تم استلام المبلغ نقداً: €${order.totalAmount?.toFixed(2)})` : `(Barbetrag von €${order.totalAmount?.toFixed(2)} kassiert)`)
               : (isAr ? '(لم يتم استلام المبلغ نقداً)' : '(Kein Barbetrag kassiert)'))
           : '';
-        updatedAdminNotes += isAr
+        driverNote = isAr
           ? `[تم التسليم بنجاح في: ${nowStr} ${cashNote}]`
           : `[Erfolgreich zugestellt am: ${nowStr} ${cashNote}]`;
       }
 
       if (customNote.trim()) {
-        updatedAdminNotes += ` - ${customNote.trim()}`;
+        driverNote += ` - ${customNote.trim()}`;
       }
 
       await axios.put(`${apiUrl}/api/orders/${order.id}/status`, {
         status: targetStatus,
-        adminNotes: updatedAdminNotes.trim()
+        driverNote: driverNote.trim() || undefined
       });
 
       // Refresh orders

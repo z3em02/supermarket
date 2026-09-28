@@ -39,7 +39,7 @@ const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ error: 'Order not found' });
     }
 
-    if (deliverySlot !== undefined && deliverySlot !== null && !(await isValidDeliverySlot(deliverySlot, { allowPastHoursForToday: true }))) {
+    if (!req.driver && deliverySlot !== undefined && deliverySlot !== null && !(await isValidDeliverySlot(deliverySlot, { allowPastHoursForToday: true }))) {
       return res.status(400).json({ error: 'Invalid delivery slot' });
     }
 
@@ -59,18 +59,36 @@ const updateOrderStatus = async (req, res) => {
 
     // Drivers reach this route via driverOrAdminAuthMiddleware to update
     // delivery progress — not to decline/cancel orders or revert them back
-    // to earlier stages, which stays admin-only.
+    // to earlier stages, which stays admin-only. The order also has to be in
+    // delivery already: a driver must not skip a pending customer approval,
+    // or turn a declined order back into an active one (which would deduct
+    // its stock again and reopen its accounting record).
     const DRIVER_ALLOWED_STATUSES = ['out_for_delivery', 'shipped', 'delivered'];
-    if (req.driver && status !== undefined && !DRIVER_ALLOWED_STATUSES.includes(normalizedStatus)) {
-      return res.status(403).json({ error: 'Drivers can only mark orders as out for delivery or delivered' });
+    const DRIVER_SOURCE_STATUSES = ['accepted', 'preparing', 'shipped', 'out_for_delivery'];
+    if (req.driver) {
+      if (status === undefined || !DRIVER_ALLOWED_STATUSES.includes(normalizedStatus)) {
+        return res.status(403).json({ error: 'Drivers can only mark orders as out for delivery or delivered' });
+      }
+      if (!DRIVER_SOURCE_STATUSES.includes(order.status)) {
+        return res.status(409).json({ error: `Diese Bestellung kann im aktuellen Status nicht vom Fahrer geändert werden / This order can't be updated by a driver in its current status (${order.status}).` });
+      }
     }
 
-    const finalNotes = notes !== undefined ? notes : order.notes;
-    const finalAdminNotes = adminNotes !== undefined ? adminNotes : order.adminNotes;
+    // Drivers only report progress — the customer-facing note, the admin's
+    // internal notes and the delivery slot stay admin-only. The delivery
+    // view's remark (timestamp, cash collected, free text — sent by a driver,
+    // or an admin using that view) is appended to the notes read just above,
+    // so it can't overwrite anything written in the meantime.
+    const finalNotes = !req.driver && notes !== undefined ? notes : order.notes;
+    let finalAdminNotes = !req.driver && adminNotes !== undefined ? adminNotes : order.adminNotes;
+    const driverNote = typeof req.body.driverNote === 'string' ? req.body.driverNote.trim().slice(0, 500) : '';
+    if (driverNote) {
+      finalAdminNotes = finalAdminNotes ? `${finalAdminNotes}\n${driverNote}` : driverNote;
+    }
     // Admin can directly overwrite the customer's requested delivery slot
     // (e.g. after a phone call) — no separate customer approval needed, unlike
     // item modifications.
-    const finalDeliverySlot = deliverySlot !== undefined ? deliverySlot : order.deliverySlot;
+    const finalDeliverySlot = !req.driver && deliverySlot !== undefined ? deliverySlot : order.deliverySlot;
 
     const wasStockDeducted = !DECLINED_STATUSES.includes(order.status);
     const shouldStockBeDeducted = !DECLINED_STATUSES.includes(normalizedStatus);
