@@ -180,6 +180,7 @@ export const Orders = () => {
   };
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [customers, setCustomers] = useState([]);
+  const [customersLocked, setCustomersLocked] = useState(false);
   const [products, setProducts] = useState([]);
 
   // Status Change / Admin Note modal
@@ -215,10 +216,16 @@ export const Orders = () => {
     try {
       const apiUrl = getApiUrl();
       const [customersRes, productsRes] = await Promise.all([
-        axios.get(`${apiUrl}/api/customer-auth/customers`).catch(() => ({ data: [] })),
+        // The customer list sits behind the Kunden section PIN; when it's
+        // locked the create form explains that instead of an empty dropdown.
+        axios.get(`${apiUrl}/api/customer-auth/customers`).catch((err) => ({
+          data: [],
+          locked: err.response?.data?.code === 'SECTION_LOCKED'
+        })),
         axios.get(`${apiUrl}/api/products`)
       ]);
       setCustomers(customersRes.data);
+      setCustomersLocked(Boolean(customersRes.locked));
       setProducts(productsRes.data);
     } catch (error) {
       console.error('Error fetching form data:', error);
@@ -2024,6 +2031,13 @@ export const Orders = () => {
                     </option>
                   ))}
                 </select>
+                {customersLocked && (
+                  <p className="mt-1.5 text-xs text-amber-700 dark:text-amber-400">
+                    {language === 'ar'
+                      ? 'قائمة العملاء محمية برمز الدخول. افتح قسم العملاء وأدخل الرمز أولاً.'
+                      : 'Die Kundenliste ist PIN-geschützt. Öffnen Sie zuerst den Bereich „Kunden“ und geben Sie den PIN ein.'}
+                  </p>
+                )}
               </div>
 
               {/* Delivery Address & Phone Fields */}

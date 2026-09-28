@@ -302,18 +302,25 @@ const createOrder = async (req, res) => {
     const totalAmount = calculateOrderTotal({ itemsSubtotal, couponDiscount, deliveryFee: chargedDeliveryFee });
 
     const activeWindowsCount = await prisma.deliveryWindow.count({ where: { isActive: true } });
+    // An admin taking a phone order may leave the window empty and set it
+    // later from the order's details (the status route), and — like that
+    // route — may pick a window that has already started today.
+    const slotOptions = { allowPastHoursForToday: Boolean(req.admin) };
     let deliverySlot = null;
     if (activeWindowsCount > 0) {
       if (!req.body.deliverySlot) {
-        return res.status(400).json({ error: 'Please select a delivery time window' });
+        if (!req.admin) {
+          return res.status(400).json({ error: 'Please select a delivery time window' });
+        }
+      } else {
+        const valid = await isValidDeliverySlot(req.body.deliverySlot, slotOptions);
+        if (!valid) {
+          return res.status(400).json({ error: 'Selected delivery time window is invalid or already closed' });
+        }
+        deliverySlot = req.body.deliverySlot;
       }
-      const valid = await isValidDeliverySlot(req.body.deliverySlot);
-      if (!valid) {
-        return res.status(400).json({ error: 'Selected delivery time window is invalid or already closed' });
-      }
-      deliverySlot = req.body.deliverySlot;
     } else if (req.body.deliverySlot) {
-      const valid = await isValidDeliverySlot(req.body.deliverySlot);
+      const valid = await isValidDeliverySlot(req.body.deliverySlot, slotOptions);
       deliverySlot = valid ? req.body.deliverySlot : null;
     }
 
