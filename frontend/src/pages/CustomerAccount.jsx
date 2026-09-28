@@ -211,7 +211,8 @@ export const CustomerAccount = () => {
     try {
       setReorderingOrderId(order.id);
       const apiUrl = getApiUrl();
-      const catalogRes = await customerAxios.get(`${apiUrl}/api/products`);
+      // The public catalog route — /api/products itself is admin-only.
+      const catalogRes = await customerAxios.get(`${apiUrl}/api/products/catalog`);
       const availableProducts = Array.isArray(catalogRes.data) ? catalogRes.data : [];
       const productMap = new Map(availableProducts.map(p => [p.id, p]));
 

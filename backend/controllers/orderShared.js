@@ -83,7 +83,7 @@ const couponError = (message) => {
 // Reported as a 409 so stock/coupon rollback logic downstream never runs
 // twice for the same transition.
 const concurrentUpdateError = () => {
-  const err = new Error('This order was just updated by another request. Please refresh and try again.');
+  const err = new Error('Diese Bestellung wurde gerade geändert. Bitte laden Sie die Seite neu und versuchen Sie es erneut. / This order was just updated by another request. Please refresh and try again.');
   err.isConcurrentUpdateError = true;
   return err;
 };

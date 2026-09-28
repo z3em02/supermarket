@@ -44,7 +44,9 @@ app.use(cors({
     }
     return callback(null, false);
   },
-  credentials: true
+  credentials: true,
+  // Read by the Orders page for its incremental polling cursor (see getOrders)
+  exposedHeaders: ['X-Server-Time']
 }));
 
 const cookieParser = require('cookie-parser');
@@ -111,15 +113,31 @@ app.use('/api', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
+  // Client errors raised before any route runs — malformed JSON, a body over
+  // the 100kb limit, an unsupported charset — come from body-parser with a
+  // 4xx status and expose=true; answer with that status, not a 500.
+  const status = err.status || err.statusCode;
+  if (err.expose && status >= 400 && status < 500) {
+    return res.status(status).json({ error: status === 413 ? 'Request body too large' : 'Invalid request body' });
+  }
   console.error('Unhandled server error:', err.message || err);
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// Start server. In production HOST=127.0.0.1 (deployment/ecosystem.config.js)
+// keeps the API reachable only through nginx: with trust proxy on, a backend
+// port reachable from outside would believe a client-supplied
+// X-Forwarded-For and let every request pick a fresh rate-limit identity.
+const HOST = process.env.HOST;
+const onListening = () => {
+  console.log(`Server running on ${HOST || 'all interfaces'}, port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+};
+if (HOST) {
+  app.listen(PORT, HOST, onListening);
+} else {
+  app.listen(PORT, onListening);
+}
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {

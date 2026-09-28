@@ -7,7 +7,7 @@ const { scrapeGoogleReviews, isPrivateOrLocalHost } = require('../utils/googleSc
 const { downloadAndCacheLogo, deleteCachedLogo } = require('../utils/imageProxy');
 const { issueSectionUnlockToken, invalidateSectionPasscodeCache } = require('../middleware/sectionUnlock');
 const { logAudit } = require('../lib/auditLog');
-const { generateCsrfToken, setCsrfCookie, clearCsrfCookie, requireCsrfForCookieAuth } = require('../middleware/csrf');
+const { generateCsrfToken, setCsrfCookie, clearCsrfCookieUnlessOtherSession, requireCsrfForCookieAuth } = require('../middleware/csrf');
 
 const DRIVER_SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
@@ -297,6 +297,9 @@ const updateSettings = async (req, res) => {
       data.businessPurposeAr = cleanString(businessPurposeAr);
     }
 
+    // Same fields as the public GET — never sectionPasscodeHash (a 4–8 digit
+    // PIN's bcrypt hash is quick to brute-force offline) or the Google API
+    // key, which the frontend would otherwise keep in its app-wide settings.
     const updated = await prisma.storeSettings.upsert({
       where: { id: 'default' },
       create: {
@@ -304,7 +307,8 @@ const updateSettings = async (req, res) => {
         ...DEFAULT_SETTINGS,
         ...data
       },
-      update: data
+      update: data,
+      select: PUBLIC_SETTINGS_SELECT
     });
 
     logAudit(req.admin?.email, 'UPDATE_SETTINGS', 'Geschäftseinstellungen aktualisiert (Name, Logo, Mindestbestellwert oder Lieferparameter)');
@@ -355,11 +359,15 @@ const createGoogleReview = async (req, res) => {
 const deleteGoogleReview = async (req, res) => {
   try {
     const { id } = req.params;
-    await prisma.googleReview.delete({
+    const deleted = await prisma.googleReview.delete({
       where: { id }
     });
+    logAudit(req.admin?.email, 'DELETE_GOOGLE_REVIEW', `Google-Bewertung von "${deleted.authorName}" (${deleted.rating}★) gelöscht`);
     res.json({ message: 'Review deleted successfully' });
   } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Review not found' });
+    }
     console.error('Delete google review error:', error);
     res.status(500).json({ error: 'Failed to delete review' });
   }
@@ -460,6 +468,11 @@ const syncGoogleReviews = async (req, res) => {
       orderBy: { createdAt: 'desc' }
     });
 
+    logAudit(
+      req.admin?.email,
+      'SYNC_GOOGLE_REVIEWS',
+      `Google-Bewertungen synchronisiert (${allReviews.length} Rezensionen gespeichert)`
+    );
     res.json({
       message: `Erfolgreich von Google synchronisiert: ${scraped.rating ? scraped.rating.toFixed(1) + ' ★' : ''} (${scraped.reviewCount || 0} Bewertungen, ${scraped.reviews.length} Rezensionen geladen).`,
       synced: true,
@@ -543,7 +556,7 @@ const setPasscode = async (req, res) => {
     });
     invalidateSectionPasscodeCache();
     logAudit(req.admin?.email, 'SET_SECTION_PASSCODE', 'Section passcode updated');
-    res.json({ message: 'Passcode set', isSet: true, unlockToken: issueSectionUnlockToken(req.admin.id) });
+    res.json({ message: 'Passcode set', isSet: true, unlockToken: issueSectionUnlockToken(req.admin.id, hash) });
   } catch (error) {
     console.error('Set passcode error:', error);
     res.status(500).json({ error: 'Failed to set passcode' });
@@ -567,7 +580,7 @@ const verifyPasscode = async (req, res) => {
     res.json({
       valid,
       isSet: true,
-      unlockToken: valid ? issueSectionUnlockToken(req.admin.id) : undefined
+      unlockToken: valid ? issueSectionUnlockToken(req.admin.id, settings.sectionPasscodeHash) : undefined
     });
   } catch (error) {
     console.error('Verify passcode error:', error);
@@ -1027,7 +1040,7 @@ const driverLogout = async (req, res) => {
     sameSite: 'lax',
     path: '/'
   });
-  clearCsrfCookie(res);
+  clearCsrfCookieUnlessOtherSession(req, res, 'driver_token');
   res.json({ message: 'Logged out successfully' });
 };
 

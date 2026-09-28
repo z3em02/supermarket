@@ -128,6 +128,27 @@ const ACTION_DEFINITIONS = {
     icon: AlertTriangle,
     color: 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800'
   },
+  CREATE_CATEGORY: {
+    de: 'Kategorie angelegt',
+    ar: 'تمت إضافة فئة جديدة',
+    category: 'catalog',
+    icon: Layers,
+    color: 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800'
+  },
+  UPDATE_CATEGORY: {
+    de: 'Kategorie bearbeitet',
+    ar: 'تم تعديل الفئة',
+    category: 'catalog',
+    icon: FileEdit,
+    color: 'text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800'
+  },
+  DELETE_CATEGORY: {
+    de: 'Kategorie gelöscht',
+    ar: 'تم حذف الفئة',
+    category: 'catalog',
+    icon: AlertTriangle,
+    color: 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800'
+  },
 
   // Coupons & Promotions
   CREATE_COUPON: {
@@ -187,6 +208,41 @@ const ACTION_DEFINITIONS = {
     category: 'settings',
     icon: FileEdit,
     color: 'text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800'
+  },
+  CREATE_DELIVERY_WINDOW: {
+    de: 'Lieferfenster angelegt',
+    ar: 'تمت إضافة فترة توصيل',
+    category: 'settings',
+    icon: Clock,
+    color: 'text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800'
+  },
+  UPDATE_DELIVERY_WINDOW: {
+    de: 'Lieferfenster bearbeitet',
+    ar: 'تم تعديل فترة التوصيل',
+    category: 'settings',
+    icon: Clock,
+    color: 'text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800'
+  },
+  DELETE_DELIVERY_WINDOW: {
+    de: 'Lieferfenster gelöscht',
+    ar: 'تم حذف فترة التوصيل',
+    category: 'settings',
+    icon: Clock,
+    color: 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800'
+  },
+  SYNC_GOOGLE_REVIEWS: {
+    de: 'Google-Bewertungen synchronisiert',
+    ar: 'تمت مزامنة تقييمات Google',
+    category: 'settings',
+    icon: RefreshCw,
+    color: 'text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800'
+  },
+  DELETE_GOOGLE_REVIEW: {
+    de: 'Google-Bewertung gelöscht',
+    ar: 'تم حذف تقييم Google',
+    category: 'settings',
+    icon: AlertTriangle,
+    color: 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800'
   }
 };
 

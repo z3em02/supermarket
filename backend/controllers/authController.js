@@ -10,6 +10,10 @@ const { secureCompare } = require('../utils/validation');
 
 const PENDING_2FA_SCOPE = 'admin-2fa-pending';
 const SESSION_TTL = '24h'; // #22 fix: limit admin JWT lifetime to 24h (previously 30d)
+const OTP_TTL_MS = 10 * 60 * 1000;
+// Per login (password step), not per code — resending a code doesn't reset it.
+const MAX_2FA_ATTEMPTS = 5;
+const TOO_MANY_2FA_ATTEMPTS = 'Zu viele fehlerhafte Versuche. Bitte melden Sie sich erneut an / Too many incorrect attempts. Please sign in again.';
 
 const generateOTP = () => crypto.randomInt(100000, 1000000).toString();
 
@@ -46,7 +50,7 @@ const login = async (req, res) => {
       where: { id: admin.id },
       data: {
         twoFactorOtp: code,
-        twoFactorOtpExpiry: new Date(Date.now() + 10 * 60 * 1000),
+        twoFactorOtpExpiry: new Date(Date.now() + OTP_TTL_MS),
         twoFactorAttempts: 0
       }
     });
@@ -84,15 +88,17 @@ const verify2FA = async (req, res) => {
       return res.status(401).json({ error: 'Login session expired, please sign in again' });
     }
 
-    if (admin.twoFactorAttempts >= 5) {
-      return res.status(429).json({ error: 'Zu viele fehlerhafte Versuche. Bitte fordern Sie einen neuen Code an / Too many incorrect attempts. Please request a new code.' });
+    // Count this attempt before comparing, in one conditional UPDATE — parallel
+    // guesses can't all read "fewer than 5 so far" and slip past the limit.
+    const reserved = await prisma.admin.updateMany({
+      where: { id: admin.id, twoFactorAttempts: { lt: MAX_2FA_ATTEMPTS } },
+      data: { twoFactorAttempts: { increment: 1 } }
+    });
+    if (reserved.count === 0) {
+      return res.status(429).json({ error: TOO_MANY_2FA_ATTEMPTS });
     }
 
     if (!secureCompare(admin.twoFactorOtp, String(code).trim())) {
-      await prisma.admin.update({
-        where: { id: admin.id },
-        data: { twoFactorAttempts: admin.twoFactorAttempts + 1 }
-      });
       return res.status(400).json({ error: 'Invalid code' });
     }
 
@@ -157,13 +163,22 @@ const resend2FA = async (req, res) => {
       return res.status(401).json({ error: 'Login session expired, please sign in again' });
     }
 
+    // A new code keeps the failed-attempt count — otherwise resending would
+    // turn the 5-guess limit into 5 guesses per email, without end.
+    if (admin.twoFactorAttempts >= MAX_2FA_ATTEMPTS) {
+      return res.status(429).json({ error: TOO_MANY_2FA_ATTEMPTS });
+    }
+    // At most one new code (= one email to the admin) per minute
+    if (admin.twoFactorOtpExpiry && admin.twoFactorOtpExpiry.getTime() - Date.now() > OTP_TTL_MS - 60 * 1000) {
+      return res.status(429).json({ error: 'Bitte warten Sie 60 Sekunden, bevor Sie einen neuen Code anfordern / Please wait 60 seconds before requesting a new code.' });
+    }
+
     const code = generateOTP();
     await prisma.admin.update({
       where: { id: admin.id },
       data: {
         twoFactorOtp: code,
-        twoFactorOtpExpiry: new Date(Date.now() + 10 * 60 * 1000),
-        twoFactorAttempts: 0
+        twoFactorOtpExpiry: new Date(Date.now() + OTP_TTL_MS)
       }
     });
 

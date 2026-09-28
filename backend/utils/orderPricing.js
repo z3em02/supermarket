@@ -14,6 +14,22 @@ const parseQuantity = (raw) => {
   return Number.isInteger(qty) && qty > 0 ? qty : null;
 };
 
+// One entry per product, quantities summed, in first-seen order; lines that
+// can't become an order line (no product, quantity 0/invalid) are dropped.
+// Everything downstream assumes one line per product: the stock check, 2+1
+// promotions (3 + 3 of a product is two free items, 3 + 3 lines priced
+// separately would be too), and editOrder's per-product stock deltas.
+const mergeOrderItems = (items) => {
+  const merged = new Map();
+  for (const item of Array.isArray(items) ? items : []) {
+    const qty = parseQuantity(item?.quantity);
+    if (!item?.productId || qty === null) continue;
+    const productId = String(item.productId);
+    merged.set(productId, (merged.get(productId) || 0) + qty);
+  }
+  return Array.from(merged, ([productId, quantity]) => ({ productId, quantity }));
+};
+
 // Prices one order line from the authoritative DB product (never a
 // client-supplied price) plus its active promotion, if any.
 const buildOrderLine = (product, quantity, promotion) => {
@@ -81,6 +97,7 @@ const isCouponStillEligible = (coupon, itemsSubtotal, now = new Date()) => {
 
 module.exports = {
   parseQuantity,
+  mergeOrderItems,
   buildOrderLine,
   summarizeOrderLines,
   parseAllowedPostalCodes,

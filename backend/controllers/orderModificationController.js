@@ -3,10 +3,12 @@ const { sendOrderStatusEmail, sendOrderModificationEmail } = require('../utils/e
 const { CUSTOMER_PUBLIC_SELECT } = require('../utils/serialize');
 const { sendPushToCustomer } = require('../utils/pushService');
 const { logAudit } = require('../lib/auditLog');
-const { calculateCouponDiscountAmount } = require('../utils/pricingService');
+const { calculateCouponDiscountAmount, selectApplicablePromotions } = require('../utils/pricingService');
+const { calculateDeliveryDistance } = require('../utils/distanceService');
+const { decrypt } = require('../utils/piiCrypto');
 const { roundMoney } = require('../utils/money');
 const {
-  parseQuantity,
+  mergeOrderItems,
   buildOrderLine,
   summarizeOrderLines,
   isFreeDelivery: qualifiesForFreeDelivery,
@@ -55,18 +57,31 @@ const editOrder = async (req, res) => {
       return res.status(400).json({ error: 'Cannot edit an order that is already delivered' });
     }
 
-    const wasStockDeducted = !DECLINED_STATUSES.includes(order.status);
-
-    // Map existing items by productId
-    const oldItemsMap = new Map();
-    for (const it of order.orderItems) {
-      oldItemsMap.set(it.productId, it);
+    // A declined/cancelled order has already had its stock and coupon usage
+    // given back. Editing it would put it back into the active flow (status
+    // pending_customer_approval) without taking either again — reactivate it
+    // through the status route first, which does re-deduct stock.
+    if (DECLINED_STATUSES.includes(order.status)) {
+      return res.status(400).json({
+        error: 'Stornierte oder abgelehnte Bestellungen können nicht bearbeitet werden. / Declined or cancelled orders cannot be edited.'
+      });
     }
+
+    // Current quantity per product — summed, since orders placed before
+    // duplicate lines were merged can hold one product on several lines.
+    const oldQuantities = new Map();
+    const oldNames = new Map();
+    for (const it of order.orderItems) {
+      oldQuantities.set(it.productId, (oldQuantities.get(it.productId) || 0) + it.quantity);
+      oldNames.set(it.productId, it.product?.name);
+    }
+
+    const editedItems = mergeOrderItems(items);
 
     // Fetch active promotions for the edited product set, same as createOrder,
     // so line-item pricing/discounts are recalculated fresh rather than
     // reusing stale values computed for the pre-edit item list.
-    const editedProductIds = items.map((it) => it.productId).filter(Boolean);
+    const editedProductIds = editedItems.map((it) => it.productId);
     const [editedProducts, activePromotions] = await Promise.all([
       prisma.product.findMany({ where: { id: { in: editedProductIds } } }),
       prisma.promotion.findMany({
@@ -74,22 +89,17 @@ const editOrder = async (req, res) => {
       })
     ]);
     const productMap = new Map(editedProducts.map((p) => [p.id, p]));
-    const promoMap = new Map(activePromotions.map((pr) => [pr.productId, pr]));
+    const promoMap = selectApplicablePromotions(activePromotions);
 
     // Validate incoming items against the latest product details
     const newItemsToCreate = [];
     const stockAdjustments = []; // { productId, delta, productName }
 
-    for (const it of items) {
-      const qty = parseQuantity(it.quantity);
-      if (!it.productId || qty === null) {
-        continue;
-      }
-
-      const product = productMap.get(it.productId);
+    for (const { productId, quantity: qty } of editedItems) {
+      const product = productMap.get(productId);
 
       if (!product) {
-        return res.status(404).json({ error: `Product ${it.productId} not found` });
+        return res.status(404).json({ error: `Product ${productId} not found` });
       }
 
       // #6 fix: strictly use authoritative database catalog price (product.b2bPrice)
@@ -99,14 +109,12 @@ const editOrder = async (req, res) => {
         return res.status(400).json({ error: `Product "${product.name}" has an invalid catalog price (${product.b2bPrice})` });
       }
 
-      newItemsToCreate.push(buildOrderLine(product, qty, promoMap.get(it.productId)));
+      newItemsToCreate.push(buildOrderLine(product, qty, promoMap.get(productId)));
 
-      if (wasStockDeducted) {
-        const oldItem = oldItemsMap.get(it.productId);
-        const oldQty = oldItem ? oldItem.quantity : 0;
-        const delta = qty - oldQty; // e.g. 1 - 2 = -1 (return 1)
-        stockAdjustments.push({ productId: it.productId, delta, productName: product.name });
-      }
+      // Stock for the current items is already deducted (declined orders were
+      // rejected above), so only the difference is applied.
+      const delta = qty - (oldQuantities.get(productId) || 0); // e.g. 1 - 2 = -1 (return 1)
+      stockAdjustments.push({ productId, delta, productName: product.name });
     }
 
     if (newItemsToCreate.length === 0) {
@@ -118,13 +126,11 @@ const editOrder = async (req, res) => {
       promotionDiscount: newTotalPromoSavings
     } = summarizeOrderLines(newItemsToCreate);
 
-    // Check for removed items if stock was deducted (return all oldQty to stock)
-    if (wasStockDeducted) {
-      const newProductIds = new Set(newItemsToCreate.map(it => it.productId));
-      for (const [prodId, oldItem] of oldItemsMap.entries()) {
-        if (!newProductIds.has(prodId)) {
-          stockAdjustments.push({ productId: prodId, delta: -oldItem.quantity, productName: oldItem.product?.name });
-        }
+    // Items removed entirely by the edit go back to stock
+    const newProductIds = new Set(newItemsToCreate.map(it => it.productId));
+    for (const [prodId, oldQty] of oldQuantities.entries()) {
+      if (!newProductIds.has(prodId)) {
+        stockAdjustments.push({ productId: prodId, delta: -oldQty, productName: oldNames.get(prodId) });
       }
     }
 
@@ -162,15 +168,25 @@ const editOrder = async (req, res) => {
     // original distance-based fee are preserved, but the free-delivery
     // *threshold* comparison is redone since the subtotal changed. The
     // distance-based components themselves don't need re-geocoding since
-    // the delivery address is unchanged by this edit.
+    // the delivery address is unchanged by this edit. order.isFreeShipping
+    // is the coupon's free-shipping perk only; the threshold result is never
+    // stored in it, so a later edit re-checks the threshold from scratch.
     const freeDeliveryThreshold = Number(storeSettingsForEdit?.freeDeliveryThreshold) || 0;
     const isFreeDelivery = qualifiesForFreeDelivery({
       isFreeShipping: order.isFreeShipping,
       freeDeliveryThreshold,
       itemsSubtotal: newItemsSubtotal
     });
-    const baseDeliveryFee = Number(order.baseDeliveryFee) || 0;
-    const distanceDeliveryFee = Number(order.distanceDeliveryFee) || 0;
+    let baseDeliveryFee = Number(order.baseDeliveryFee) || 0;
+    let distanceDeliveryFee = Number(order.distanceDeliveryFee) || 0;
+    // Orders created before the fee components were always stored have them
+    // zeroed if delivery was free at the time — when this edit makes delivery
+    // chargeable, work the fee out again from the (unchanged) address.
+    if (!isFreeDelivery && baseDeliveryFee + distanceDeliveryFee === 0) {
+      const recalculated = await calculateDeliveryDistance(decrypt(order.deliveryAddress), storeSettingsForEdit || {});
+      baseDeliveryFee = recalculated.baseFee;
+      distanceDeliveryFee = recalculated.distanceFee;
+    }
     const deliveryFee = isFreeDelivery ? 0 : roundMoney(baseDeliveryFee + distanceDeliveryFee);
 
     const finalPromotionDiscount = newTotalPromoSavings;
@@ -183,17 +199,38 @@ const editOrder = async (req, res) => {
     // Perform database transaction
     try {
       await prisma.$transaction(async (tx) => {
+        // Written first and guarded on the exact version of the order read
+        // above: the stock deltas are relative to those items, so if anything
+        // changed the order in the meantime (the customer declining a previous
+        // modification, a status change, another edit from a stale page) this
+        // edit aborts instead of silently overwriting it.
+        const guarded = await tx.order.updateMany({
+          where: { id, status: order.status, updatedAt: order.updatedAt },
+          data: {
+            itemsSubtotal: newItemsSubtotal,
+            couponDiscount: finalCouponDiscount,
+            promotionDiscount: finalPromotionDiscount,
+            deliveryFee,
+            baseDeliveryFee,
+            distanceDeliveryFee,
+            totalAmount: finalTotalAmount,
+            originalTotalAmount: originalTotal,
+            modificationReason: reason,
+            status: 'pending_customer_approval',
+            adminNotes: adminNotes !== undefined ? adminNotes : order.adminNotes
+          }
+        });
+        if (guarded.count === 0) throw concurrentUpdateError();
+
         // #25 fix: Apply stock adjustments inside transaction atomically
-        if (wasStockDeducted) {
-          for (const adj of stockAdjustments) {
-            if (adj.delta > 0) {
-              await decrementStockOrThrow(tx, adj.productId, adj.delta, adj.productName);
-            } else if (adj.delta < 0) {
-              await tx.product.update({
-                where: { id: adj.productId },
-                data: { stock: { increment: Math.abs(adj.delta) } }
-              });
-            }
+        for (const adj of stockAdjustments) {
+          if (adj.delta > 0) {
+            await decrementStockOrThrow(tx, adj.productId, adj.delta, adj.productName);
+          } else if (adj.delta < 0) {
+            await tx.product.update({
+              where: { id: adj.productId },
+              data: { stock: { increment: Math.abs(adj.delta) } }
+            });
           }
         }
 
@@ -215,23 +252,6 @@ const editOrder = async (req, res) => {
           }))
         });
 
-        // Update Order with recalculated subtotal, discounts and delivery fee
-        await tx.order.update({
-          where: { id },
-          data: {
-            itemsSubtotal: newItemsSubtotal,
-            couponDiscount: finalCouponDiscount,
-            promotionDiscount: finalPromotionDiscount,
-            deliveryFee,
-            isFreeShipping: isFreeDelivery,
-            totalAmount: finalTotalAmount,
-            originalTotalAmount: originalTotal,
-            modificationReason: reason,
-            status: 'pending_customer_approval',
-            adminNotes: adminNotes !== undefined ? adminNotes : order.adminNotes
-          }
-        });
-
         // Update Accounting record
         if (order.accounting) {
           await tx.accounting.update({
@@ -246,6 +266,9 @@ const editOrder = async (req, res) => {
     } catch (error) {
       if (error.isStockError) {
         return res.status(400).json({ error: error.message });
+      }
+      if (error.isConcurrentUpdateError) {
+        return res.status(409).json({ error: error.message });
       }
       throw error;
     }
@@ -341,30 +364,41 @@ const customerRespondToModification = async (req, res) => {
       // Customer accepted the modification. Stock for the (already-modified) order
       // items was deducted at order creation and adjusted by editOrder's deltas,
       // so accepting only needs to flip the status — no further stock change.
-      await prisma.$transaction(async (tx) => {
-        const dateStr = new Date().toLocaleString(customerLang === 'ar' ? 'ar-EG' : 'de-DE');
-        const noteText = customerLang === 'ar'
-          ? `[وافق العميل على التعديل بتاريخ ${dateStr}]`
-          : `[Kunde hat Änderung akzeptiert am ${dateStr}]`;
-        const updatedAdminNotes = order.adminNotes
-          ? `${order.adminNotes}\n${noteText}`
-          : noteText;
+      try {
+        await prisma.$transaction(async (tx) => {
+          const dateStr = new Date().toLocaleString(customerLang === 'ar' ? 'ar-EG' : 'de-DE');
+          const noteText = customerLang === 'ar'
+            ? `[وافق العميل على التعديل بتاريخ ${dateStr}]`
+            : `[Kunde hat Änderung akzeptiert am ${dateStr}]`;
+          const updatedAdminNotes = order.adminNotes
+            ? `${order.adminNotes}\n${noteText}`
+            : noteText;
 
-        await tx.order.update({
-          where: { id },
-          data: {
-            status: 'accepted',
-            adminNotes: updatedAdminNotes
+          // Same guard as the decline path below: if the admin cancelled or
+          // re-edited the order in the meantime, accepting must not bring
+          // back a version of it the customer never saw.
+          const guarded = await tx.order.updateMany({
+            where: { id, status: 'pending_customer_approval', updatedAt: order.updatedAt },
+            data: {
+              status: 'accepted',
+              adminNotes: updatedAdminNotes
+            }
+          });
+          if (guarded.count === 0) throw concurrentUpdateError();
+
+          if (order.accounting) {
+            await tx.accounting.update({
+              where: { orderId: id },
+              data: { status: 'completed' }
+            });
           }
         });
-
-        if (order.accounting) {
-          await tx.accounting.update({
-            where: { orderId: id },
-            data: { status: 'completed' }
-          });
+      } catch (error) {
+        if (error.isConcurrentUpdateError) {
+          return res.status(409).json({ error: error.message });
         }
-      });
+        throw error;
+      }
 
       const updatedOrder = withDecryptedCustomer(await prisma.order.findUnique({
         where: { id },
@@ -406,9 +440,11 @@ const customerRespondToModification = async (req, res) => {
           // #9 fix: guard on the pending_customer_approval status this
           // request observed — a double-click/retry that lands after a first
           // request already declined the order must not restore stock/coupon
-          // usage a second time.
+          // usage a second time. updatedAt also catches an admin re-editing
+          // the items meanwhile: the stock given back below is for the items
+          // read above.
           const guarded = await tx.order.updateMany({
-            where: { id, status: 'pending_customer_approval' },
+            where: { id, status: 'pending_customer_approval', updatedAt: order.updatedAt },
             data: {
               status: 'declined',
               adminNotes: declineAdminNotes

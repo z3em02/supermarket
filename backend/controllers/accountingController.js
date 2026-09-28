@@ -2,7 +2,27 @@ const prisma = require('../lib/prisma');
 const { CUSTOMER_PUBLIC_SELECT } = require('../utils/serialize');
 const { logAudit } = require('../lib/auditLog');
 const { decryptCustomerPII, decrypt } = require('../utils/piiCrypto');
-const { parseValidDate } = require('../utils/validation');
+const { parseStartDate, parseEndDate } = require('../utils/validation');
+
+// createdAt filter for the Accounting page's date range. A plain date covers
+// that whole day in store time, so the end date's own orders are included.
+const createdAtRange = (startDate, endDate) => {
+  const createdAt = {};
+  if (startDate) {
+    const start = parseStartDate(startDate);
+    if (!start) return { error: 'Invalid startDate format' };
+    createdAt.gte = start;
+  }
+  if (endDate) {
+    const end = parseEndDate(endDate);
+    if (!end) return { error: 'Invalid endDate format' };
+    createdAt.lte = end;
+  }
+  if (createdAt.gte && createdAt.lte && createdAt.gte > createdAt.lte) {
+    return { error: 'startDate cannot be after endDate' };
+  }
+  return { filter: Object.keys(createdAt).length ? { createdAt } : {} };
+};
 
 // Orders carry their own encrypted customer* snapshot columns (see
 // GDPR_DATA_POLICY.md), plus the joined `customer` relation which also
@@ -21,22 +41,9 @@ const getAccountingSummary = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
 
-    const dateFilter = {};
-    if (startDate || endDate) {
-      if (startDate) {
-        const start = parseValidDate(startDate);
-        if (!start) return res.status(400).json({ error: 'Invalid startDate format' });
-        dateFilter.createdAt = { ...dateFilter.createdAt, gte: start };
-      }
-      if (endDate) {
-        const end = parseValidDate(endDate);
-        if (!end) return res.status(400).json({ error: 'Invalid endDate format' });
-        dateFilter.createdAt = { ...dateFilter.createdAt, lte: end };
-      }
-      if (dateFilter.createdAt?.gte && dateFilter.createdAt?.lte && dateFilter.createdAt.gte > dateFilter.createdAt.lte) {
-        return res.status(400).json({ error: 'startDate cannot be after endDate' });
-      }
-    }
+    const range = createdAtRange(startDate, endDate);
+    if (range.error) return res.status(400).json({ error: range.error });
+    const dateFilter = range.filter;
 
     // Valid non-declined orders
     const validOrders = (await prisma.order.findMany({
@@ -187,23 +194,10 @@ const exportAccountingData = async (req, res) => {
     const { startDate, endDate, format = 'csv' } = req.query;
     logAudit(req.admin?.email, 'EXPORT_ACCOUNTING', `format=${format}${startDate ? ` range=${startDate}..${endDate}` : ''}`);
 
-    const dateFilter = {};
     // #14 fix: validate date strings
-    if (startDate || endDate) {
-      if (startDate) {
-        const start = parseValidDate(startDate);
-        if (!start) return res.status(400).json({ error: 'Invalid startDate format' });
-        dateFilter.createdAt = { ...dateFilter.createdAt, gte: start };
-      }
-      if (endDate) {
-        const end = parseValidDate(endDate);
-        if (!end) return res.status(400).json({ error: 'Invalid endDate format' });
-        dateFilter.createdAt = { ...dateFilter.createdAt, lte: end };
-      }
-      if (dateFilter.createdAt?.gte && dateFilter.createdAt?.lte && dateFilter.createdAt.gte > dateFilter.createdAt.lte) {
-        return res.status(400).json({ error: 'startDate cannot be after endDate' });
-      }
-    }
+    const range = createdAtRange(startDate, endDate);
+    if (range.error) return res.status(400).json({ error: range.error });
+    const dateFilter = range.filter;
 
     const orders = (await prisma.order.findMany({
       where: {

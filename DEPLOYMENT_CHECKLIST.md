@@ -95,6 +95,8 @@ and database are out of sync; stop and investigate.
 ```env
 NODE_ENV=production
 PORT=5000
+# Listen on localhost only, so nginx is the only way in (also set in ecosystem.config.js)
+HOST=127.0.0.1
 TRUST_PROXY=true
 
 # Database — see section 3
@@ -120,7 +122,8 @@ EMAIL_FROM=
 # Optional — phone verification via Firebase Admin (see section 5)
 FIREBASE_SERVICE_ACCOUNT_PATH=
 
-# Optional — distributed rate limiting across multiple instances/servers
+# Recommended — PM2 runs one process per CPU core; without Redis each process
+# counts rate limits separately (limits multiplied by the worker count)
 REDIS_URL=
 
 # Optional — controls the admin account `npm run prisma:seed` creates.

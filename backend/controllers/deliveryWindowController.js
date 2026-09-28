@@ -1,6 +1,8 @@
 const prisma = require('../lib/prisma');
+const { logAudit } = require('../lib/auditLog');
 
 const isValidHour = (h) => Number.isInteger(h) && h >= 0 && h <= 24;
+const describeWindow = (w) => `${w.startHour}:00–${w.endHour}:00 (Aktiv: ${w.isActive})`;
 
 /**
  * List all delivery windows (Admin) — includes inactive ones so they can be re-enabled.
@@ -63,6 +65,7 @@ const createDeliveryWindow = async (req, res) => {
         sortOrder: order
       }
     });
+    logAudit(req.admin?.email, 'CREATE_DELIVERY_WINDOW', `Lieferfenster erstellt: ${describeWindow(window)}`);
     res.status(201).json(window);
   } catch (error) {
     if (error.code === 'P2002') {
@@ -113,6 +116,11 @@ const updateDeliveryWindow = async (req, res) => {
     }
 
     const window = await prisma.deliveryWindow.update({ where: { id }, data });
+    logAudit(
+      req.admin?.email,
+      'UPDATE_DELIVERY_WINDOW',
+      `Lieferfenster bearbeitet: ${describeWindow(existing)} → ${describeWindow(window)}`
+    );
     res.json(window);
   } catch (error) {
     if (error.code === 'P2002') {
@@ -129,7 +137,8 @@ const updateDeliveryWindow = async (req, res) => {
 const deleteDeliveryWindow = async (req, res) => {
   try {
     const { id } = req.params;
-    await prisma.deliveryWindow.delete({ where: { id } });
+    const deleted = await prisma.deliveryWindow.delete({ where: { id } });
+    logAudit(req.admin?.email, 'DELETE_DELIVERY_WINDOW', `Lieferfenster gelöscht: ${describeWindow(deleted)}`);
     res.json({ message: 'Delivery window deleted' });
   } catch (error) {
     if (error.code === 'P2025') {

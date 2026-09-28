@@ -1,7 +1,9 @@
 const prisma = require('../lib/prisma');
-const { calculatePromotionForItem, validateAndCalculateCoupon } = require('../utils/pricingService');
+const { validateAndCalculateCoupon, selectApplicablePromotions } = require('../utils/pricingService');
+const { mergeOrderItems, buildOrderLine, summarizeOrderLines } = require('../utils/orderPricing');
 const { logAudit } = require('../lib/auditLog');
-const { parseValidDate } = require('../utils/validation');
+// A plain date from the admin form covers that whole day in store time.
+const { parseStartDate, parseEndDate } = require('../utils/validation');
 const { roundMoney } = require('../utils/money');
 
 // Sanitize coupon code: trim, uppercase, alphanumeric with underscores/hyphens
@@ -81,12 +83,12 @@ const createCoupon = async (req, res) => {
 
     let parsedStartDate = null;
     if (startDate) {
-      parsedStartDate = parseValidDate(startDate);
+      parsedStartDate = parseStartDate(startDate);
       if (!parsedStartDate) return res.status(400).json({ error: 'Invalid startDate format' });
     }
     let parsedEndDate = null;
     if (endDate) {
-      parsedEndDate = parseValidDate(endDate);
+      parsedEndDate = parseEndDate(endDate);
       if (!parsedEndDate) return res.status(400).json({ error: 'Invalid endDate format' });
     }
     if (parsedStartDate && parsedEndDate && parsedStartDate > parsedEndDate) {
@@ -189,7 +191,7 @@ const updateCoupon = async (req, res) => {
     let newEndDate = existing.endDate;
     if (startDate !== undefined) {
       if (startDate) {
-        newStartDate = parseValidDate(startDate);
+        newStartDate = parseStartDate(startDate);
         if (!newStartDate) return res.status(400).json({ error: 'Invalid startDate format' });
       } else {
         newStartDate = null;
@@ -198,7 +200,7 @@ const updateCoupon = async (req, res) => {
     }
     if (endDate !== undefined) {
       if (endDate) {
-        newEndDate = parseValidDate(endDate);
+        newEndDate = parseEndDate(endDate);
         if (!newEndDate) return res.status(400).json({ error: 'Invalid endDate format' });
       } else {
         newEndDate = null;
@@ -279,7 +281,9 @@ const validateCoupon = async (req, res) => {
     }
 
     // Fetch products and active promotions to recalculate actual subtotal
-    const productIds = rawItems.map(i => i.productId).filter(Boolean);
+    // Same line merging createOrder applies
+    const mergedItems = mergeOrderItems(rawItems);
+    const productIds = mergedItems.map(i => i.productId);
     const [products, promotions] = await Promise.all([
       prisma.product.findMany({ where: { id: { in: productIds } } }),
       prisma.promotion.findMany({
@@ -291,25 +295,22 @@ const validateCoupon = async (req, res) => {
     ]);
 
     const productMap = new Map(products.map(p => [p.id, p]));
-    const promoMap = new Map(promotions.map(pr => [pr.productId, pr]));
+    const promoMap = selectApplicablePromotions(promotions);
 
-    let calculatedSubtotal = 0;
-    let totalPromoSavings = 0;
-
-    for (const item of rawItems) {
-      const prod = productMap.get(item.productId);
-      if (!prod) continue;
-      const promo = promoMap.get(item.productId);
-      const itemResult = calculatePromotionForItem(prod, item.quantity, promo);
-      calculatedSubtotal += itemResult.subtotal;
-      totalPromoSavings += itemResult.appliedSavings;
+    // Price only the lines createOrder would actually accept (known product,
+    // positive quantity), with the same helpers it uses, so the preview and
+    // the real order can't disagree.
+    const lines = [];
+    for (const { productId, quantity } of mergedItems) {
+      const product = productMap.get(productId);
+      if (!product) continue;
+      lines.push(buildOrderLine(product, quantity, promoMap.get(productId)));
     }
-
-    calculatedSubtotal = roundMoney(calculatedSubtotal);
+    const { itemsSubtotal: calculatedSubtotal, promotionDiscount: totalPromoSavings } = summarizeOrderLines(lines);
 
     const result = validateAndCalculateCoupon(
       coupon,
-      rawItems,
+      lines,
       calculatedSubtotal,
       customerId,
       customerUsageCount

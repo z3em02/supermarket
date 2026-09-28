@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import axios from '../utils/adminAxios';
 import { getApiUrl } from '../utils/api';
@@ -35,7 +35,16 @@ import {
 } from 'lucide-react';
 import { todayIso, maxDeliveryDateIso, buildDeliverySlot, parseDeliverySlot, formatDeliverySlot, windowLabel, fetchActiveDeliveryWindows } from '../utils/deliverySlot';
 import { printHtmlInHiddenIframe } from '../utils/printDocument';
+import { isOrderStopped } from '../utils/orderStatus';
 import { buildA4ReceiptHtml, buildThermalReceiptHtml } from '../utils/adminOrderReceipt';
+
+// Replaces/adds the received orders by id, newest first (see fetchOrders).
+const mergeOrdersById = (current, received) => {
+  if (received.length === 0) return current;
+  const byId = new Map(current.map((o) => [o.id, o]));
+  for (const o of received) byId.set(o.id, o);
+  return [...byId.values()].sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0));
+};
 
 export const parseOrderNotes = (adminNotes, language) => {
   if (!adminNotes) return { customNotes: '', customerResponse: null };
@@ -179,6 +188,7 @@ export const Orders = () => {
   };
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [customers, setCustomers] = useState([]);
+  const [customersLocked, setCustomersLocked] = useState(false);
   const [products, setProducts] = useState([]);
 
   // Status Change / Admin Note modal
@@ -214,21 +224,38 @@ export const Orders = () => {
     try {
       const apiUrl = getApiUrl();
       const [customersRes, productsRes] = await Promise.all([
-        axios.get(`${apiUrl}/api/customer-auth/customers`).catch(() => ({ data: [] })),
+        // The customer list sits behind the Kunden section PIN; when it's
+        // locked the create form explains that instead of an empty dropdown.
+        axios.get(`${apiUrl}/api/customer-auth/customers`).catch((err) => ({
+          data: [],
+          locked: err.response?.data?.code === 'SECTION_LOCKED'
+        })),
         axios.get(`${apiUrl}/api/products`)
       ]);
       setCustomers(customersRes.data);
+      setCustomersLocked(Boolean(customersRes.locked));
       setProducts(productsRes.data);
     } catch (error) {
       console.error('Error fetching form data:', error);
     }
   };
 
+  // After the first full load, every refresh (the 20 s poll below and the
+  // refetch after each change made on this page) only asks for orders
+  // updated since the previous fetch — by the server's clock, minus a
+  // minute of overlap so an update whose transaction committed a moment
+  // late isn't skipped — and merges them into the list by id.
+  const syncCursorRef = useRef(null);
   const fetchOrders = async () => {
     try {
       const apiUrl = getApiUrl();
-      const response = await axios.get(`${apiUrl}/api/orders`);
-      setOrders(response.data);
+      const cursor = syncCursorRef.current;
+      const params = cursor ? { updatedSince: new Date(new Date(cursor).getTime() - 60 * 1000).toISOString() } : undefined;
+      const response = await axios.get(`${apiUrl}/api/orders`, { params });
+      const received = response.data;
+      // Without the header (an older backend) fall back to a full reload each time.
+      syncCursorRef.current = response.headers['x-server-time'] || null;
+      setOrders((prev) => (cursor ? mergeOrdersById(prev, received) : received));
     } catch (error) {
       console.error('Error fetching orders:', error);
     } finally {
@@ -1110,7 +1137,7 @@ export const Orders = () => {
                     <Printer className="w-3.5 h-3.5" />
                   </button>
 
-                  {currentStatus !== 'delivered' && currentStatus !== 'declined' && currentStatus !== 'cancelled' && (
+                  {currentStatus !== 'delivered' && !isOrderStopped(currentStatus) && (
                     <button
                       onClick={() => handleOpenEditModal(order)}
                       className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800/80 transition cursor-pointer touch-manipulation"
@@ -1733,7 +1760,7 @@ export const Orders = () => {
                     <SlidersHorizontal className="w-4 h-4" />
                     <span>{t('changeStatus')} & {t('adminNotes')}</span>
                   </button>
-                  {selectedOrder.status !== 'delivered' && selectedOrder.status !== 'declined' && selectedOrder.status !== 'cancelled' && (
+                  {selectedOrder.status?.toLowerCase() !== 'delivered' && !isOrderStopped(selectedOrder.status) && (
                     <button
                       type="button"
                       onClick={() => {
@@ -2023,6 +2050,13 @@ export const Orders = () => {
                     </option>
                   ))}
                 </select>
+                {customersLocked && (
+                  <p className="mt-1.5 text-xs text-amber-700 dark:text-amber-400">
+                    {language === 'ar'
+                      ? 'قائمة العملاء محمية برمز الدخول. افتح قسم العملاء وأدخل الرمز أولاً.'
+                      : 'Die Kundenliste ist PIN-geschützt. Öffnen Sie zuerst den Bereich „Kunden“ und geben Sie den PIN ein.'}
+                  </p>
+                )}
               </div>
 
               {/* Delivery Address & Phone Fields */}

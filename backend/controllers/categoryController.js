@@ -1,4 +1,5 @@
 const prisma = require('../lib/prisma');
+const { logAudit } = require('../lib/auditLog');
 
 const getCategories = async (req, res) => {
   try {
@@ -67,6 +68,7 @@ const createCategory = async (req, res) => {
       }
     });
 
+    logAudit(req.admin?.email, 'CREATE_CATEGORY', `Kategorie erstellt: ${category.nameDe}`);
     res.status(201).json(category);
   } catch (error) {
     console.error('Create category error:', error);
@@ -94,6 +96,7 @@ const updateCategory = async (req, res) => {
       }
     });
 
+    logAudit(req.admin?.email, 'UPDATE_CATEGORY', `Kategorie bearbeitet: ${category.nameDe}`);
     res.json(category);
   } catch (error) {
     if (error.code === 'P2025') {
@@ -114,10 +117,11 @@ const deleteCategory = async (req, res) => {
       data: { categoryId: null }
     });
 
-    await prisma.category.delete({
+    const deleted = await prisma.category.delete({
       where: { id }
     });
 
+    logAudit(req.admin?.email, 'DELETE_CATEGORY', `Kategorie gelöscht: ${deleted.nameDe}`);
     res.json({ message: 'Category deleted successfully' });
   } catch (error) {
     if (error.code === 'P2025') {

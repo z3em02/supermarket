@@ -1,6 +1,8 @@
 const prisma = require('../lib/prisma');
 const { logAudit } = require('../lib/auditLog');
-const { parseValidDate } = require('../utils/validation');
+// A plain date from the admin form covers that whole day in store time.
+const { parseStartDate, parseEndDate } = require('../utils/validation');
+const { selectApplicablePromotions } = require('../utils/pricingService');
 
 // GET /api/promotions - Admin: list all promotions
 const getPromotions = async (req, res) => {
@@ -59,7 +61,8 @@ const getActivePromotions = async (req, res) => {
       }
     });
 
-    res.json(promotions);
+    // One promotion per product — the same one checkout will apply.
+    res.json(Array.from(selectApplicablePromotions(promotions, now).values()));
   } catch (error) {
     console.error('Get active promotions error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -150,12 +153,12 @@ const createPromotion = async (req, res) => {
 
     let parsedStartDate = null;
     if (startDate) {
-      parsedStartDate = parseValidDate(startDate);
+      parsedStartDate = parseStartDate(startDate);
       if (!parsedStartDate) return res.status(400).json({ error: 'Invalid startDate format' });
     }
     let parsedEndDate = null;
     if (endDate) {
-      parsedEndDate = parseValidDate(endDate);
+      parsedEndDate = parseEndDate(endDate);
       if (!parsedEndDate) return res.status(400).json({ error: 'Invalid endDate format' });
     }
     if (parsedStartDate && parsedEndDate && parsedStartDate > parsedEndDate) {
@@ -229,7 +232,7 @@ const updatePromotion = async (req, res) => {
     let newEndDate = existing.endDate;
     if (startDate !== undefined) {
       if (startDate) {
-        newStartDate = parseValidDate(startDate);
+        newStartDate = parseStartDate(startDate);
         if (!newStartDate) return res.status(400).json({ error: 'Invalid startDate format' });
       } else {
         newStartDate = null;
@@ -238,7 +241,7 @@ const updatePromotion = async (req, res) => {
     }
     if (endDate !== undefined) {
       if (endDate) {
-        newEndDate = parseValidDate(endDate);
+        newEndDate = parseEndDate(endDate);
         if (!newEndDate) return res.status(400).json({ error: 'Invalid endDate format' });
       } else {
         newEndDate = null;
@@ -250,6 +253,13 @@ const updatePromotion = async (req, res) => {
     }
 
     if (isActive !== undefined) updateData.isActive = Boolean(isActive);
+
+    const validTypes = ['PRODUCT_DISCOUNT', 'BUY_X_GET_Y'];
+    if (type !== undefined && !validTypes.includes(type)) {
+      return res.status(400).json({ error: `Ungültiger Angebotstyp. Erlaubt: ${validTypes.join(', ')}` });
+    }
+    const typeChanged = type !== undefined && type !== existing.type;
+    if (typeChanged) updateData.type = type;
 
     const currentType = type || existing.type;
     if (currentType === 'PRODUCT_DISCOUNT') {
@@ -273,9 +283,23 @@ const updatePromotion = async (req, res) => {
         updateData.discountPercent = pct;
         updateData.promotionalPrice = null;
       }
+      if (typeChanged) {
+        updateData.buyQuantity = null;
+        updateData.getYQuantity = null;
+      }
+      // A discount offer needs a price or a percentage — refuse an edit
+      // (including a switch from 2+1) that would leave it with neither.
+      // Only checked when the request touches pricing, so e.g. the list's
+      // active/inactive toggle can still switch off an older broken offer.
+      const finalPrice = 'promotionalPrice' in updateData ? updateData.promotionalPrice : existing.promotionalPrice;
+      const finalPercent = 'discountPercent' in updateData ? updateData.discountPercent : existing.discountPercent;
+      const touchesPricing = typeChanged || promotionalPrice !== undefined || discountPercent !== undefined;
+      if (touchesPricing && finalPrice == null && finalPercent == null) {
+        return res.status(400).json({ error: 'Bitte geben Sie entweder einen Aktionspreis oder einen Rabatt in % an.' });
+      }
     } else if (currentType === 'BUY_X_GET_Y') {
-      if (buyQuantity !== undefined) updateData.buyQuantity = Math.max(1, parseInt(buyQuantity, 10) || 2);
-      if (getYQuantity !== undefined) updateData.getYQuantity = Math.max(1, parseInt(getYQuantity, 10) || 1);
+      if (buyQuantity !== undefined || typeChanged) updateData.buyQuantity = Math.max(1, parseInt(buyQuantity, 10) || 2);
+      if (getYQuantity !== undefined || typeChanged) updateData.getYQuantity = Math.max(1, parseInt(getYQuantity, 10) || 1);
       updateData.discountPercent = null;
       updateData.promotionalPrice = null;
     }

@@ -1,12 +1,22 @@
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { SECTION_UNLOCK_SECRET } = require('../lib/config');
 const prisma = require('../lib/prisma');
 
 const SECTION_UNLOCK_SCOPE = 'section-unlock';
 const SECTION_UNLOCK_TTL = '8h';
+// Short, because invalidateSectionPasscodeCache() only reaches the PM2 worker
+// that handled the PIN change — every other worker picks it up on expiry.
+const PASSCODE_CACHE_MS = 5 * 1000;
 
 let cachedPasscodeHash = undefined;
 let cacheExpiry = 0;
+
+// Ties an unlock token to the PIN it was issued for: changing the PIN changes
+// the stored hash, so every token issued for the old one stops working. (A
+// SHA-256 prefix of the bcrypt hash — no use for guessing the PIN.)
+const passcodeVersion = (passcodeHash) =>
+  crypto.createHash('sha256').update(String(passcodeHash)).digest('hex').slice(0, 16);
 
 const getSectionPasscodeHash = async () => {
   const now = Date.now();
@@ -18,7 +28,7 @@ const getSectionPasscodeHash = async () => {
     select: { sectionPasscodeHash: true }
   });
   cachedPasscodeHash = settings?.sectionPasscodeHash || null;
-  cacheExpiry = now + 60 * 1000;
+  cacheExpiry = now + PASSCODE_CACHE_MS;
   return cachedPasscodeHash;
 };
 
@@ -49,7 +59,11 @@ const sectionUnlockMiddleware = async (req, res, next) => {
     // so section-unlock tokens cannot be crafted from a leaked admin JWT and
     // admin JWTs cannot be confused for section-unlock tokens.
     const decoded = jwt.verify(token, SECTION_UNLOCK_SECRET);
-    if (decoded.scope !== SECTION_UNLOCK_SCOPE || decoded.adminId !== req.admin?.id) {
+    if (
+      decoded.scope !== SECTION_UNLOCK_SCOPE ||
+      decoded.adminId !== req.admin?.id ||
+      decoded.pv !== passcodeVersion(passcodeHash)
+    ) {
       throw new Error('Invalid section-unlock token');
     }
 
@@ -59,7 +73,11 @@ const sectionUnlockMiddleware = async (req, res, next) => {
   }
 };
 
-const issueSectionUnlockToken = (adminId) =>
-  jwt.sign({ adminId, scope: SECTION_UNLOCK_SCOPE }, SECTION_UNLOCK_SECRET, { expiresIn: SECTION_UNLOCK_TTL });
+const issueSectionUnlockToken = (adminId, passcodeHash) =>
+  jwt.sign(
+    { adminId, scope: SECTION_UNLOCK_SCOPE, pv: passcodeVersion(passcodeHash) },
+    SECTION_UNLOCK_SECRET,
+    { expiresIn: SECTION_UNLOCK_TTL }
+  );
 
 module.exports = { sectionUnlockMiddleware, issueSectionUnlockToken, invalidateSectionPasscodeCache };
