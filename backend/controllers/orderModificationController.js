@@ -55,7 +55,15 @@ const editOrder = async (req, res) => {
       return res.status(400).json({ error: 'Cannot edit an order that is already delivered' });
     }
 
-    const wasStockDeducted = !DECLINED_STATUSES.includes(order.status);
+    // A declined/cancelled order has already had its stock and coupon usage
+    // given back. Editing it would put it back into the active flow (status
+    // pending_customer_approval) without taking either again — reactivate it
+    // through the status route first, which does re-deduct stock.
+    if (DECLINED_STATUSES.includes(order.status)) {
+      return res.status(400).json({
+        error: 'Stornierte oder abgelehnte Bestellungen können nicht bearbeitet werden. / Declined or cancelled orders cannot be edited.'
+      });
+    }
 
     // Map existing items by productId
     const oldItemsMap = new Map();
@@ -101,12 +109,12 @@ const editOrder = async (req, res) => {
 
       newItemsToCreate.push(buildOrderLine(product, qty, promoMap.get(it.productId)));
 
-      if (wasStockDeducted) {
-        const oldItem = oldItemsMap.get(it.productId);
-        const oldQty = oldItem ? oldItem.quantity : 0;
-        const delta = qty - oldQty; // e.g. 1 - 2 = -1 (return 1)
-        stockAdjustments.push({ productId: it.productId, delta, productName: product.name });
-      }
+      // Stock for the current items is already deducted (declined orders were
+      // rejected above), so only the difference is applied.
+      const oldItem = oldItemsMap.get(it.productId);
+      const oldQty = oldItem ? oldItem.quantity : 0;
+      const delta = qty - oldQty; // e.g. 1 - 2 = -1 (return 1)
+      stockAdjustments.push({ productId: it.productId, delta, productName: product.name });
     }
 
     if (newItemsToCreate.length === 0) {
@@ -118,13 +126,11 @@ const editOrder = async (req, res) => {
       promotionDiscount: newTotalPromoSavings
     } = summarizeOrderLines(newItemsToCreate);
 
-    // Check for removed items if stock was deducted (return all oldQty to stock)
-    if (wasStockDeducted) {
-      const newProductIds = new Set(newItemsToCreate.map(it => it.productId));
-      for (const [prodId, oldItem] of oldItemsMap.entries()) {
-        if (!newProductIds.has(prodId)) {
-          stockAdjustments.push({ productId: prodId, delta: -oldItem.quantity, productName: oldItem.product?.name });
-        }
+    // Items removed entirely by the edit go back to stock
+    const newProductIds = new Set(newItemsToCreate.map(it => it.productId));
+    for (const [prodId, oldItem] of oldItemsMap.entries()) {
+      if (!newProductIds.has(prodId)) {
+        stockAdjustments.push({ productId: prodId, delta: -oldItem.quantity, productName: oldItem.product?.name });
       }
     }
 
@@ -183,17 +189,37 @@ const editOrder = async (req, res) => {
     // Perform database transaction
     try {
       await prisma.$transaction(async (tx) => {
+        // Written first and guarded on the exact version of the order read
+        // above: the stock deltas are relative to those items, so if anything
+        // changed the order in the meantime (the customer declining a previous
+        // modification, a status change, another edit from a stale page) this
+        // edit aborts instead of silently overwriting it.
+        const guarded = await tx.order.updateMany({
+          where: { id, status: order.status, updatedAt: order.updatedAt },
+          data: {
+            itemsSubtotal: newItemsSubtotal,
+            couponDiscount: finalCouponDiscount,
+            promotionDiscount: finalPromotionDiscount,
+            deliveryFee,
+            isFreeShipping: isFreeDelivery,
+            totalAmount: finalTotalAmount,
+            originalTotalAmount: originalTotal,
+            modificationReason: reason,
+            status: 'pending_customer_approval',
+            adminNotes: adminNotes !== undefined ? adminNotes : order.adminNotes
+          }
+        });
+        if (guarded.count === 0) throw concurrentUpdateError();
+
         // #25 fix: Apply stock adjustments inside transaction atomically
-        if (wasStockDeducted) {
-          for (const adj of stockAdjustments) {
-            if (adj.delta > 0) {
-              await decrementStockOrThrow(tx, adj.productId, adj.delta, adj.productName);
-            } else if (adj.delta < 0) {
-              await tx.product.update({
-                where: { id: adj.productId },
-                data: { stock: { increment: Math.abs(adj.delta) } }
-              });
-            }
+        for (const adj of stockAdjustments) {
+          if (adj.delta > 0) {
+            await decrementStockOrThrow(tx, adj.productId, adj.delta, adj.productName);
+          } else if (adj.delta < 0) {
+            await tx.product.update({
+              where: { id: adj.productId },
+              data: { stock: { increment: Math.abs(adj.delta) } }
+            });
           }
         }
 
@@ -215,23 +241,6 @@ const editOrder = async (req, res) => {
           }))
         });
 
-        // Update Order with recalculated subtotal, discounts and delivery fee
-        await tx.order.update({
-          where: { id },
-          data: {
-            itemsSubtotal: newItemsSubtotal,
-            couponDiscount: finalCouponDiscount,
-            promotionDiscount: finalPromotionDiscount,
-            deliveryFee,
-            isFreeShipping: isFreeDelivery,
-            totalAmount: finalTotalAmount,
-            originalTotalAmount: originalTotal,
-            modificationReason: reason,
-            status: 'pending_customer_approval',
-            adminNotes: adminNotes !== undefined ? adminNotes : order.adminNotes
-          }
-        });
-
         // Update Accounting record
         if (order.accounting) {
           await tx.accounting.update({
@@ -246,6 +255,9 @@ const editOrder = async (req, res) => {
     } catch (error) {
       if (error.isStockError) {
         return res.status(400).json({ error: error.message });
+      }
+      if (error.isConcurrentUpdateError) {
+        return res.status(409).json({ error: error.message });
       }
       throw error;
     }

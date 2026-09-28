@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { todayIso, maxDeliveryDateIso, buildDeliverySlot, parseDeliverySlot, formatDeliverySlot, windowLabel, fetchActiveDeliveryWindows } from '../utils/deliverySlot';
 import { printHtmlInHiddenIframe } from '../utils/printDocument';
+import { isOrderStopped } from '../utils/orderStatus';
 import { buildA4ReceiptHtml, buildThermalReceiptHtml } from '../utils/adminOrderReceipt';
 
 export const parseOrderNotes = (adminNotes, language) => {
@@ -1110,7 +1111,7 @@ export const Orders = () => {
                     <Printer className="w-3.5 h-3.5" />
                   </button>
 
-                  {currentStatus !== 'delivered' && currentStatus !== 'declined' && currentStatus !== 'cancelled' && (
+                  {currentStatus !== 'delivered' && !isOrderStopped(currentStatus) && (
                     <button
                       onClick={() => handleOpenEditModal(order)}
                       className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800/80 transition cursor-pointer touch-manipulation"
@@ -1733,7 +1734,7 @@ export const Orders = () => {
                     <SlidersHorizontal className="w-4 h-4" />
                     <span>{t('changeStatus')} & {t('adminNotes')}</span>
                   </button>
-                  {selectedOrder.status !== 'delivered' && selectedOrder.status !== 'declined' && selectedOrder.status !== 'cancelled' && (
+                  {selectedOrder.status?.toLowerCase() !== 'delivered' && !isOrderStopped(selectedOrder.status) && (
                     <button
                       type="button"
                       onClick={() => {
