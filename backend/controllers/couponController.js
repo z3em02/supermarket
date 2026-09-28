@@ -1,5 +1,6 @@
 const prisma = require('../lib/prisma');
-const { calculatePromotionForItem, validateAndCalculateCoupon } = require('../utils/pricingService');
+const { validateAndCalculateCoupon } = require('../utils/pricingService');
+const { parseQuantity, buildOrderLine, summarizeOrderLines } = require('../utils/orderPricing');
 const { logAudit } = require('../lib/auditLog');
 const { parseValidDate } = require('../utils/validation');
 const { roundMoney } = require('../utils/money');
@@ -293,23 +294,21 @@ const validateCoupon = async (req, res) => {
     const productMap = new Map(products.map(p => [p.id, p]));
     const promoMap = new Map(promotions.map(pr => [pr.productId, pr]));
 
-    let calculatedSubtotal = 0;
-    let totalPromoSavings = 0;
-
+    // Price only the lines createOrder would actually accept (known product,
+    // positive quantity), with the same helpers it uses, so the preview and
+    // the real order can't disagree.
+    const lines = [];
     for (const item of rawItems) {
-      const prod = productMap.get(item.productId);
-      if (!prod) continue;
-      const promo = promoMap.get(item.productId);
-      const itemResult = calculatePromotionForItem(prod, item.quantity, promo);
-      calculatedSubtotal += itemResult.subtotal;
-      totalPromoSavings += itemResult.appliedSavings;
+      const product = productMap.get(item.productId);
+      const qty = parseQuantity(item.quantity);
+      if (!product || qty === null) continue;
+      lines.push(buildOrderLine(product, qty, promoMap.get(item.productId)));
     }
-
-    calculatedSubtotal = roundMoney(calculatedSubtotal);
+    const { itemsSubtotal: calculatedSubtotal, promotionDiscount: totalPromoSavings } = summarizeOrderLines(lines);
 
     const result = validateAndCalculateCoupon(
       coupon,
-      rawItems,
+      lines,
       calculatedSubtotal,
       customerId,
       customerUsageCount

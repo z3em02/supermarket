@@ -270,9 +270,12 @@ const createOrder = async (req, res) => {
         where: { couponId: couponRecord.id, customerId: customer.id }
       });
 
+      // Validated lines, not rawItems: a line skipped above (e.g. quantity 0)
+      // isn't part of the order and must not satisfy a combo coupon's
+      // required-products condition.
       const couponEval = validateAndCalculateCoupon(
         couponRecord,
-        rawItems,
+        orderItemsWithDetails,
         itemsSubtotal,
         customer.id,
         userUsageCount

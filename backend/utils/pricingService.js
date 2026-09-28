@@ -256,7 +256,13 @@ function validateAndCalculateCoupon(coupon, cartItems = [], itemsSubtotal = 0, c
       .filter(Boolean);
 
     if (requiredList.length > 0) {
-      const cartProductIds = new Set(cartItems.map(item => item.productId));
+      // Only lines that will actually be ordered count — a { quantity: 0 }
+      // line must not satisfy the bundle requirement on its own.
+      const cartProductIds = new Set(
+        cartItems
+          .filter(item => parseInt(item.quantity, 10) > 0)
+          .map(item => item.productId)
+      );
       const missing = requiredList.filter(id => !cartProductIds.has(id));
       if (missing.length > 0) {
         return {
