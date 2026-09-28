@@ -113,6 +113,13 @@ app.use('/api', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
+  // Client errors raised before any route runs — malformed JSON, a body over
+  // the 100kb limit, an unsupported charset — come from body-parser with a
+  // 4xx status and expose=true; answer with that status, not a 500.
+  const status = err.status || err.statusCode;
+  if (err.expose && status >= 400 && status < 500) {
+    return res.status(status).json({ error: status === 413 ? 'Request body too large' : 'Invalid request body' });
+  }
   console.error('Unhandled server error:', err.message || err);
   res.status(500).json({ error: 'Internal server error' });
 });
