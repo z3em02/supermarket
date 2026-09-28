@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import axios from '../utils/adminAxios';
 import { getApiUrl } from '../utils/api';
+import { toDateInputValue } from '../utils/dates';
 import { useLanguage } from '../context/LanguageContext';
 import {
   Tag,
@@ -141,8 +142,8 @@ export const Promotions = () => {
       maxDiscountAmount: coup.maxDiscountAmount || '',
       usageLimit: coup.usageLimit || '',
       usageLimitPerCustomer: coup.usageLimitPerCustomer || 1,
-      startDate: coup.startDate ? coup.startDate.split('T')[0] : '',
-      endDate: coup.endDate ? coup.endDate.split('T')[0] : '',
+      startDate: toDateInputValue(coup.startDate),
+      endDate: toDateInputValue(coup.endDate),
       isActive: coup.isActive
     });
     setCouponError('');
@@ -167,8 +168,10 @@ export const Promotions = () => {
         maxDiscountAmount: couponForm.maxDiscountAmount ? Number(couponForm.maxDiscountAmount) : null,
         usageLimit: couponForm.usageLimit ? parseInt(couponForm.usageLimit, 10) : null,
         usageLimitPerCustomer: couponForm.usageLimitPerCustomer ? parseInt(couponForm.usageLimitPerCustomer, 10) : 1,
-        startDate: couponForm.startDate ? new Date(couponForm.startDate).toISOString() : null,
-        endDate: couponForm.endDate ? new Date(couponForm.endDate).toISOString() : null,
+        // Sent as the picked calendar day; the backend makes it cover the
+        // whole day in store time (start 00:00, end 23:59:59).
+        startDate: couponForm.startDate || null,
+        endDate: couponForm.endDate || null,
         isActive: Boolean(couponForm.isActive)
       };
 
@@ -246,8 +249,8 @@ export const Promotions = () => {
       getYQuantity: off.getYQuantity || 1,
       badgeTextDe: off.badgeTextDe || '',
       badgeTextAr: off.badgeTextAr || '',
-      startDate: off.startDate ? off.startDate.split('T')[0] : '',
-      endDate: off.endDate ? off.endDate.split('T')[0] : '',
+      startDate: toDateInputValue(off.startDate),
+      endDate: toDateInputValue(off.endDate),
       isActive: off.isActive
     });
     setOfferError('');
@@ -273,8 +276,8 @@ export const Promotions = () => {
         getYQuantity: offerForm.getYQuantity ? parseInt(offerForm.getYQuantity, 10) : 1,
         badgeTextDe: offerForm.badgeTextDe.trim() || undefined,
         badgeTextAr: offerForm.badgeTextAr.trim() || undefined,
-        startDate: offerForm.startDate ? new Date(offerForm.startDate).toISOString() : null,
-        endDate: offerForm.endDate ? new Date(offerForm.endDate).toISOString() : null,
+        startDate: offerForm.startDate || null,
+        endDate: offerForm.endDate || null,
         isActive: Boolean(offerForm.isActive)
       };
 

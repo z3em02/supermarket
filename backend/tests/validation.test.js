@@ -7,7 +7,9 @@ const {
   normalizeAustrianPhone,
   isStrongPassword,
   secureCompare,
-  parseValidDate
+  parseValidDate,
+  parseStartDate,
+  parseEndDate
 } = require('../utils/validation');
 
 test('normalizeAustrianPhone converts local and 0043 formats to E.164', () => {
@@ -59,4 +61,24 @@ test('parseValidDate returns null for invalid input', () => {
   assert.ok(parseValidDate('2026-09-25') instanceof Date);
   assert.strictEqual(parseValidDate('not a date'), null);
   assert.strictEqual(parseValidDate(''), null);
+});
+
+test('parseStartDate / parseEndDate cover the whole calendar day in store time (Europe/Vienna)', () => {
+  const iso = (d) => d && d.toISOString();
+  // summer (UTC+2) and winter (UTC+1)
+  assert.strictEqual(iso(parseStartDate('2026-09-30')), '2026-09-29T22:00:00.000Z');
+  assert.strictEqual(iso(parseEndDate('2026-09-30')), '2026-09-30T21:59:59.999Z');
+  assert.strictEqual(iso(parseStartDate('2026-12-01')), '2026-11-30T23:00:00.000Z');
+  assert.strictEqual(iso(parseEndDate('2026-12-01')), '2026-12-01T22:59:59.999Z');
+  // DST switch days: 23 and 25 hours long
+  assert.strictEqual(iso(parseStartDate('2026-03-29')), '2026-03-28T23:00:00.000Z');
+  assert.strictEqual(iso(parseEndDate('2026-03-29')), '2026-03-29T21:59:59.999Z');
+  assert.strictEqual(iso(parseStartDate('2026-10-25')), '2026-10-24T22:00:00.000Z');
+  assert.strictEqual(iso(parseEndDate('2026-10-25')), '2026-10-25T22:59:59.999Z');
+  // full timestamps pass through; invalid input is rejected
+  assert.strictEqual(iso(parseEndDate('2026-09-30T12:00:00.000Z')), '2026-09-30T12:00:00.000Z');
+  for (const bad of ['2026-02-31', 'not-a-date', '', null, undefined]) {
+    assert.strictEqual(parseStartDate(bad), null, `start ${JSON.stringify(bad)}`);
+    assert.strictEqual(parseEndDate(bad), null, `end ${JSON.stringify(bad)}`);
+  }
 });

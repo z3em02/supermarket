@@ -42,6 +42,54 @@ const parseValidDate = (str) => {
   return isNaN(d.getTime()) ? null : d;
 };
 
+// A calendar date picked in the admin UI ("2026-09-30") means that day in the
+// store's timezone. new Date('2026-09-30') is UTC midnight instead — 01:00 or
+// 02:00 in Vienna — which cut the last day off accounting ranges and ended
+// coupons/offers early on the day the admin chose as their last one.
+const STORE_TIMEZONE = 'Europe/Vienna';
+const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+// How far `timeZone` is ahead of UTC at the instant `date`, in ms.
+const timeZoneOffsetMs = (date, timeZone) => {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-US', {
+      timeZone, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit'
+    }).formatToParts(date).map((p) => [p.type, p.value])
+  );
+  const wallClockAsUtc = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);
+  return wallClockAsUtc - Math.floor(date.getTime() / 1000) * 1000;
+};
+
+// 00:00 store time on the calendar day given as UTC-midnight milliseconds.
+const storeMidnight = (utcMidnightMs) => {
+  let result = utcMidnightMs - timeZoneOffsetMs(new Date(utcMidnightMs), STORE_TIMEZONE);
+  // Re-check with the offset in force at the result itself (DST edge).
+  const offsetThere = timeZoneOffsetMs(new Date(result), STORE_TIMEZONE);
+  result = utcMidnightMs - offsetThere;
+  return new Date(result);
+};
+
+// Parses the start or end of a date range / validity period. A plain
+// calendar date covers the whole day in store time: as a 'start' it is 00:00
+// that day, as an 'end' 23:59:59.999. Full timestamps are taken as given.
+// Returns null for anything invalid (including impossible days like 02-31).
+const parseDateBoundary = (str, boundary) => {
+  if (!str) return null;
+  const value = String(str).trim();
+  const m = DATE_ONLY.exec(value);
+  if (!m) return parseValidDate(value);
+  const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const utcMidnight = Date.UTC(y, mo - 1, d);
+  const check = new Date(utcMidnight);
+  if (check.getUTCFullYear() !== y || check.getUTCMonth() !== mo - 1 || check.getUTCDate() !== d) return null;
+  if (boundary === 'start') return storeMidnight(utcMidnight);
+  return new Date(storeMidnight(Date.UTC(y, mo - 1, d + 1)).getTime() - 1);
+};
+
+const parseStartDate = (str) => parseDateBoundary(str, 'start');
+const parseEndDate = (str) => parseDateBoundary(str, 'end');
+
 // Strong password: 8+ chars, at least one uppercase, one lowercase, one
 // digit and one special character.
 const STRONG_PASSWORD_HINT = 'Password must be at least 8 characters and include an uppercase letter, a lowercase letter, a number and a special character.';
@@ -61,5 +109,7 @@ module.exports = {
   isStrongPassword,
   STRONG_PASSWORD_HINT,
   secureCompare,
-  parseValidDate
+  parseValidDate,
+  parseStartDate,
+  parseEndDate
 };

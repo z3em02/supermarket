@@ -2,7 +2,8 @@ const prisma = require('../lib/prisma');
 const { validateAndCalculateCoupon, selectApplicablePromotions } = require('../utils/pricingService');
 const { parseQuantity, buildOrderLine, summarizeOrderLines } = require('../utils/orderPricing');
 const { logAudit } = require('../lib/auditLog');
-const { parseValidDate } = require('../utils/validation');
+// A plain date from the admin form covers that whole day in store time.
+const { parseStartDate, parseEndDate } = require('../utils/validation');
 const { roundMoney } = require('../utils/money');
 
 // Sanitize coupon code: trim, uppercase, alphanumeric with underscores/hyphens
@@ -82,12 +83,12 @@ const createCoupon = async (req, res) => {
 
     let parsedStartDate = null;
     if (startDate) {
-      parsedStartDate = parseValidDate(startDate);
+      parsedStartDate = parseStartDate(startDate);
       if (!parsedStartDate) return res.status(400).json({ error: 'Invalid startDate format' });
     }
     let parsedEndDate = null;
     if (endDate) {
-      parsedEndDate = parseValidDate(endDate);
+      parsedEndDate = parseEndDate(endDate);
       if (!parsedEndDate) return res.status(400).json({ error: 'Invalid endDate format' });
     }
     if (parsedStartDate && parsedEndDate && parsedStartDate > parsedEndDate) {
@@ -190,7 +191,7 @@ const updateCoupon = async (req, res) => {
     let newEndDate = existing.endDate;
     if (startDate !== undefined) {
       if (startDate) {
-        newStartDate = parseValidDate(startDate);
+        newStartDate = parseStartDate(startDate);
         if (!newStartDate) return res.status(400).json({ error: 'Invalid startDate format' });
       } else {
         newStartDate = null;
@@ -199,7 +200,7 @@ const updateCoupon = async (req, res) => {
     }
     if (endDate !== undefined) {
       if (endDate) {
-        newEndDate = parseValidDate(endDate);
+        newEndDate = parseEndDate(endDate);
         if (!newEndDate) return res.status(400).json({ error: 'Invalid endDate format' });
       } else {
         newEndDate = null;
