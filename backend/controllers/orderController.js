@@ -6,7 +6,7 @@ const { sendPushToCustomer } = require('../utils/pushService');
 const { logAudit } = require('../lib/auditLog');
 const { validateAndCalculateCoupon, selectApplicablePromotions } = require('../utils/pricingService');
 const {
-  parseQuantity,
+  mergeOrderItems,
   buildOrderLine,
   summarizeOrderLines,
   parseAllowedPostalCodes,
@@ -208,8 +208,11 @@ const createOrder = async (req, res) => {
       ? String(req.body.couponCode).trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '')
       : null;
 
+    // One line per product (quantities of repeated lines summed)
+    const items = mergeOrderItems(rawItems);
+
     // Fetch product details and active promotions
-    const productIds = rawItems.map(i => i.productId).filter(Boolean);
+    const productIds = items.map(i => i.productId);
     const [dbProducts, activePromotions] = await Promise.all([
       prisma.product.findMany({ where: { id: { in: productIds } } }),
       prisma.promotion.findMany({
@@ -225,15 +228,10 @@ const createOrder = async (req, res) => {
 
     const orderItemsWithDetails = [];
 
-    for (const item of rawItems) {
-      const qty = parseQuantity(item.quantity);
-      if (!item.productId || qty === null) {
-        continue;
-      }
-
-      const product = productMap.get(item.productId);
+    for (const { productId, quantity: qty } of items) {
+      const product = productMap.get(productId);
       if (!product) {
-        return res.status(404).json({ error: `Product with id ${item.productId} not found` });
+        return res.status(404).json({ error: `Product with id ${productId} not found` });
       }
 
       if (product.stock < qty) {
@@ -242,7 +240,7 @@ const createOrder = async (req, res) => {
         });
       }
 
-      orderItemsWithDetails.push(buildOrderLine(product, qty, promoMap.get(item.productId)));
+      orderItemsWithDetails.push(buildOrderLine(product, qty, promoMap.get(productId)));
     }
 
     if (orderItemsWithDetails.length === 0) {

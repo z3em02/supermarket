@@ -8,7 +8,7 @@ const { calculateDeliveryDistance } = require('../utils/distanceService');
 const { decrypt } = require('../utils/piiCrypto');
 const { roundMoney } = require('../utils/money');
 const {
-  parseQuantity,
+  mergeOrderItems,
   buildOrderLine,
   summarizeOrderLines,
   isFreeDelivery: qualifiesForFreeDelivery,
@@ -67,16 +67,21 @@ const editOrder = async (req, res) => {
       });
     }
 
-    // Map existing items by productId
-    const oldItemsMap = new Map();
+    // Current quantity per product — summed, since orders placed before
+    // duplicate lines were merged can hold one product on several lines.
+    const oldQuantities = new Map();
+    const oldNames = new Map();
     for (const it of order.orderItems) {
-      oldItemsMap.set(it.productId, it);
+      oldQuantities.set(it.productId, (oldQuantities.get(it.productId) || 0) + it.quantity);
+      oldNames.set(it.productId, it.product?.name);
     }
+
+    const editedItems = mergeOrderItems(items);
 
     // Fetch active promotions for the edited product set, same as createOrder,
     // so line-item pricing/discounts are recalculated fresh rather than
     // reusing stale values computed for the pre-edit item list.
-    const editedProductIds = items.map((it) => it.productId).filter(Boolean);
+    const editedProductIds = editedItems.map((it) => it.productId);
     const [editedProducts, activePromotions] = await Promise.all([
       prisma.product.findMany({ where: { id: { in: editedProductIds } } }),
       prisma.promotion.findMany({
@@ -90,16 +95,11 @@ const editOrder = async (req, res) => {
     const newItemsToCreate = [];
     const stockAdjustments = []; // { productId, delta, productName }
 
-    for (const it of items) {
-      const qty = parseQuantity(it.quantity);
-      if (!it.productId || qty === null) {
-        continue;
-      }
-
-      const product = productMap.get(it.productId);
+    for (const { productId, quantity: qty } of editedItems) {
+      const product = productMap.get(productId);
 
       if (!product) {
-        return res.status(404).json({ error: `Product ${it.productId} not found` });
+        return res.status(404).json({ error: `Product ${productId} not found` });
       }
 
       // #6 fix: strictly use authoritative database catalog price (product.b2bPrice)
@@ -109,14 +109,12 @@ const editOrder = async (req, res) => {
         return res.status(400).json({ error: `Product "${product.name}" has an invalid catalog price (${product.b2bPrice})` });
       }
 
-      newItemsToCreate.push(buildOrderLine(product, qty, promoMap.get(it.productId)));
+      newItemsToCreate.push(buildOrderLine(product, qty, promoMap.get(productId)));
 
       // Stock for the current items is already deducted (declined orders were
       // rejected above), so only the difference is applied.
-      const oldItem = oldItemsMap.get(it.productId);
-      const oldQty = oldItem ? oldItem.quantity : 0;
-      const delta = qty - oldQty; // e.g. 1 - 2 = -1 (return 1)
-      stockAdjustments.push({ productId: it.productId, delta, productName: product.name });
+      const delta = qty - (oldQuantities.get(productId) || 0); // e.g. 1 - 2 = -1 (return 1)
+      stockAdjustments.push({ productId, delta, productName: product.name });
     }
 
     if (newItemsToCreate.length === 0) {
@@ -130,9 +128,9 @@ const editOrder = async (req, res) => {
 
     // Items removed entirely by the edit go back to stock
     const newProductIds = new Set(newItemsToCreate.map(it => it.productId));
-    for (const [prodId, oldItem] of oldItemsMap.entries()) {
+    for (const [prodId, oldQty] of oldQuantities.entries()) {
       if (!newProductIds.has(prodId)) {
-        stockAdjustments.push({ productId: prodId, delta: -oldItem.quantity, productName: oldItem.product?.name });
+        stockAdjustments.push({ productId: prodId, delta: -oldQty, productName: oldNames.get(prodId) });
       }
     }
 

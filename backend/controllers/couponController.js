@@ -1,6 +1,6 @@
 const prisma = require('../lib/prisma');
 const { validateAndCalculateCoupon, selectApplicablePromotions } = require('../utils/pricingService');
-const { parseQuantity, buildOrderLine, summarizeOrderLines } = require('../utils/orderPricing');
+const { mergeOrderItems, buildOrderLine, summarizeOrderLines } = require('../utils/orderPricing');
 const { logAudit } = require('../lib/auditLog');
 // A plain date from the admin form covers that whole day in store time.
 const { parseStartDate, parseEndDate } = require('../utils/validation');
@@ -281,7 +281,9 @@ const validateCoupon = async (req, res) => {
     }
 
     // Fetch products and active promotions to recalculate actual subtotal
-    const productIds = rawItems.map(i => i.productId).filter(Boolean);
+    // Same line merging createOrder applies
+    const mergedItems = mergeOrderItems(rawItems);
+    const productIds = mergedItems.map(i => i.productId);
     const [products, promotions] = await Promise.all([
       prisma.product.findMany({ where: { id: { in: productIds } } }),
       prisma.promotion.findMany({
@@ -299,11 +301,10 @@ const validateCoupon = async (req, res) => {
     // positive quantity), with the same helpers it uses, so the preview and
     // the real order can't disagree.
     const lines = [];
-    for (const item of rawItems) {
-      const product = productMap.get(item.productId);
-      const qty = parseQuantity(item.quantity);
-      if (!product || qty === null) continue;
-      lines.push(buildOrderLine(product, qty, promoMap.get(item.productId)));
+    for (const { productId, quantity } of mergedItems) {
+      const product = productMap.get(productId);
+      if (!product) continue;
+      lines.push(buildOrderLine(product, quantity, promoMap.get(productId)));
     }
     const { itemsSubtotal: calculatedSubtotal, promotionDiscount: totalPromoSavings } = summarizeOrderLines(lines);
 

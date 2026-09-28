@@ -3,6 +3,7 @@ const assert = require('node:assert');
 const { roundMoney } = require('../utils/money');
 const {
   parseQuantity,
+  mergeOrderItems,
   buildOrderLine,
   summarizeOrderLines,
   parseAllowedPostalCodes,
@@ -107,4 +108,24 @@ test('isCouponStillEligible checks active flag, dates and minimum order value', 
   assert.strictEqual(isCouponStillEligible({ ...base, startDate: '2026-07-01' }, 25, now), false);
   assert.strictEqual(isCouponStillEligible({ ...base, endDate: '2026-06-01' }, 25, now), false);
   assert.strictEqual(isCouponStillEligible(null, 25, now), false);
+});
+
+test('mergeOrderItems sums repeated products into one line and drops invalid lines', () => {
+  assert.deepStrictEqual(
+    mergeOrderItems([
+      { productId: 'a', quantity: 1 },
+      { productId: 'b', quantity: '2' },
+      { productId: 'a', quantity: 2 },
+      { productId: 'c', quantity: 0 },
+      { quantity: 5 },
+      null
+    ]),
+    [{ productId: 'a', quantity: 3 }, { productId: 'b', quantity: 2 }]
+  );
+  assert.deepStrictEqual(mergeOrderItems(undefined), []);
+
+  // 2+1 on six items is two free ones, whether they arrive as one line or two
+  const twoPlusOne = { type: 'BUY_X_GET_Y', buyQuantity: 2, getYQuantity: 1, isActive: true };
+  const [merged] = mergeOrderItems([{ productId: 'a', quantity: 3 }, { productId: 'a', quantity: 3 }]);
+  assert.strictEqual(buildOrderLine(product('a', 1), merged.quantity, twoPlusOne).subtotal, 4);
 });
