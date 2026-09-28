@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const customerAuthController = require('../controllers/customerAuthController');
+const customerProfileController = require('../controllers/customerProfileController');
+const customerAdminController = require('../controllers/customerAdminController');
+const passwordResetController = require('../controllers/passwordResetController');
 const { customerAuthMiddleware } = require('../middleware/customerAuth');
 const { authMiddleware } = require('../middleware/auth');
 const { authLimiter } = require('../middleware/rateLimiter');
@@ -53,16 +56,16 @@ router.post('/logout', async (req, res) => {
   clearCsrfCookieUnlessOtherSession(req, res, 'customer_token');
   res.json({ message: 'Logged out successfully' });
 });
-router.post('/request-password-reset', authLimiter, customerAuthController.requestPasswordReset);
-router.post('/reset-password', authLimiter, customerAuthController.resetPassword);
+router.post('/request-password-reset', authLimiter, passwordResetController.requestPasswordReset);
+router.post('/reset-password', authLimiter, passwordResetController.resetPassword);
 
 // Protected customer profile endpoints
-router.get('/profile', customerAuthMiddleware, customerAuthController.getProfile);
-router.put('/profile', customerAuthMiddleware, customerAuthController.updateProfile);
+router.get('/profile', customerAuthMiddleware, customerProfileController.getProfile);
+router.put('/profile', customerAuthMiddleware, customerProfileController.updateProfile);
 
 // Admin customer management endpoint (Kunden — behind the section PIN)
-router.get('/customers', authMiddleware, sectionUnlockMiddleware, customerAuthController.listCustomers);
-router.get('/customers/count', authMiddleware, sectionUnlockMiddleware, customerAuthController.countCustomers);
-router.delete('/customers/:id', authMiddleware, sectionUnlockMiddleware, customerAuthController.deleteCustomer);
+router.get('/customers', authMiddleware, sectionUnlockMiddleware, customerAdminController.listCustomers);
+router.get('/customers/count', authMiddleware, sectionUnlockMiddleware, customerAdminController.countCustomers);
+router.delete('/customers/:id', authMiddleware, sectionUnlockMiddleware, customerAdminController.deleteCustomer);
 
 module.exports = router;
