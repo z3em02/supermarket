@@ -62,6 +62,7 @@ router.put('/profile', customerAuthMiddleware, customerAuthController.updateProf
 
 // Admin customer management endpoint (Kunden — behind the section PIN)
 router.get('/customers', authMiddleware, sectionUnlockMiddleware, customerAuthController.listCustomers);
+router.get('/customers/count', authMiddleware, sectionUnlockMiddleware, customerAuthController.countCustomers);
 router.delete('/customers/:id', authMiddleware, sectionUnlockMiddleware, customerAuthController.deleteCustomer);
 
 module.exports = router;

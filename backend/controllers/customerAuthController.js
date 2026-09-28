@@ -744,6 +744,19 @@ const listCustomers = async (req, res) => {
 };
 
 /**
+ * Count customers (Admin) — for the Dashboard card, which previously
+ * downloaded every customer with their full order history just to count them.
+ */
+const countCustomers = async (req, res) => {
+  try {
+    res.json({ total: await prisma.customer.count() });
+  } catch (error) {
+    console.error('Count customers error:', error);
+    res.status(500).json({ error: 'Failed to count customers' });
+  }
+};
+
+/**
  * Delete a customer (Admin)
  */
 const deleteCustomer = async (req, res) => {
@@ -856,6 +869,7 @@ module.exports = {
   getProfile,
   updateProfile,
   listCustomers,
+  countCustomers,
   deleteCustomer,
   requestPasswordReset,
   resetPassword

@@ -117,10 +117,11 @@ export const Dashboard = () => {
       // instead of failing the whole dashboard when it isn't unlocked.
       // adminAxios interceptor attaches both Authorization and X-Section-Unlock automatically.
       const LOCKED = { locked: true };
+      // Counts only — the full customer and order lists aren't needed here.
       const [customersRes, productsRes, ordersRes, accountingRes] = await Promise.all([
-        axios.get(`${apiUrl}/api/customer-auth/customers`).catch(() => LOCKED),
+        axios.get(`${apiUrl}/api/customer-auth/customers/count`).catch(() => LOCKED),
         axios.get(`${apiUrl}/api/products`),
-        axios.get(`${apiUrl}/api/orders`),
+        axios.get(`${apiUrl}/api/orders/summary`),
         axios.get(`${apiUrl}/api/accounting/summary`).catch(() => LOCKED)
       ]);
 
@@ -129,9 +130,9 @@ export const Dashboard = () => {
       setLowStockCount(allProducts.filter(p => Number(p.stock) <= 15).length);
 
       setStats({
-        totalCustomers: customersRes.locked ? null : customersRes.data.length,
+        totalCustomers: customersRes.locked ? null : customersRes.data.total,
         totalProducts: allProducts.length,
-        totalOrders: ordersRes.data.length,
+        totalOrders: ordersRes.data.total,
         totalRevenue: accountingRes.locked ? null : (accountingRes.data.summary?.totalRevenue || 0),
         pendingOrders: accountingRes.locked ? null : (accountingRes.data.summary?.pendingOrders || 0)
       });

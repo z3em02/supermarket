@@ -44,7 +44,9 @@ app.use(cors({
     }
     return callback(null, false);
   },
-  credentials: true
+  credentials: true,
+  // Read by the Orders page for its incremental polling cursor (see getOrders)
+  exposedHeaders: ['X-Server-Time']
 }));
 
 const cookieParser = require('cookie-parser');

@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import axios from '../utils/adminAxios';
 import { getApiUrl } from '../utils/api';
@@ -37,6 +37,14 @@ import { todayIso, maxDeliveryDateIso, buildDeliverySlot, parseDeliverySlot, for
 import { printHtmlInHiddenIframe } from '../utils/printDocument';
 import { isOrderStopped } from '../utils/orderStatus';
 import { buildA4ReceiptHtml, buildThermalReceiptHtml } from '../utils/adminOrderReceipt';
+
+// Replaces/adds the received orders by id, newest first (see fetchOrders).
+const mergeOrdersById = (current, received) => {
+  if (received.length === 0) return current;
+  const byId = new Map(current.map((o) => [o.id, o]));
+  for (const o of received) byId.set(o.id, o);
+  return [...byId.values()].sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0));
+};
 
 export const parseOrderNotes = (adminNotes, language) => {
   if (!adminNotes) return { customNotes: '', customerResponse: null };
@@ -232,11 +240,22 @@ export const Orders = () => {
     }
   };
 
+  // After the first full load, every refresh (the 20 s poll below and the
+  // refetch after each change made on this page) only asks for orders
+  // updated since the previous fetch — by the server's clock, minus a
+  // minute of overlap so an update whose transaction committed a moment
+  // late isn't skipped — and merges them into the list by id.
+  const syncCursorRef = useRef(null);
   const fetchOrders = async () => {
     try {
       const apiUrl = getApiUrl();
-      const response = await axios.get(`${apiUrl}/api/orders`);
-      setOrders(response.data);
+      const cursor = syncCursorRef.current;
+      const params = cursor ? { updatedSince: new Date(new Date(cursor).getTime() - 60 * 1000).toISOString() } : undefined;
+      const response = await axios.get(`${apiUrl}/api/orders`, { params });
+      const received = response.data;
+      // Without the header (an older backend) fall back to a full reload each time.
+      syncCursorRef.current = response.headers['x-server-time'] || null;
+      setOrders((prev) => (cursor ? mergeOrdersById(prev, received) : received));
     } catch (error) {
       console.error('Error fetching orders:', error);
     } finally {

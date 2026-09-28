@@ -16,18 +16,47 @@ const {
 } = require('../utils/orderPricing');
 const { isValidDeliverySlot } = require('../utils/deliverySlot');
 const { calculateDeliveryDistance } = require('../utils/distanceService');
+const { parseValidDate } = require('../utils/validation');
 const {
   withDecryptedCustomer,
   withDecryptedCustomers,
+  DECLINED_STATUSES,
   decrementStockOrThrow,
   couponError
 } = require('./orderShared');
 
+// How far back a driver's "delivered" tab reaches — enough for the current
+// week's deliveries, without every past customer's address accumulating in
+// a list the driver app re-downloads every few seconds.
+const DRIVER_DELIVERED_HISTORY_DAYS = 7;
+
 const getOrders = async (req, res) => {
   try {
-    // A driver only sees orders an admin has actually assigned to them —
-    // not the whole book (financial detail, other drivers' customers, etc).
-    const where = req.driver ? { assignedDriverName: req.driver.name } : {};
+    let where = {};
+    if (req.driver) {
+      // A driver only sees orders an admin has actually assigned to them —
+      // not the whole book (financial detail, other drivers' customers, etc) —
+      // and of those only open ones plus recent deliveries.
+      where = {
+        assignedDriverName: req.driver.name,
+        status: { notIn: DECLINED_STATUSES },
+        OR: [
+          { status: { not: 'delivered' } },
+          { updatedAt: { gte: new Date(Date.now() - DRIVER_DELIVERED_HISTORY_DAYS * 24 * 60 * 60 * 1000) } }
+        ]
+      };
+    } else if (req.query.updatedSince) {
+      // The Orders page polls with this after its first full load, so each
+      // poll only transfers (and decrypts) orders that actually changed.
+      const since = parseValidDate(req.query.updatedSince);
+      if (!since) return res.status(400).json({ error: 'Invalid updatedSince' });
+      where = { updatedAt: { gte: since } };
+    }
+    // The client's next updatedSince cursor comes from this server clock,
+    // taken before the query, rather than from the newest updatedAt it
+    // received — one stray future timestamp (clock skew, a manual DB edit)
+    // would otherwise push the cursor ahead and hide real updates.
+    res.set('X-Server-Time', new Date().toISOString());
 
     const orders = await prisma.order.findMany({
       where,
@@ -37,9 +66,7 @@ const getOrders = async (req, res) => {
           include: {
             product: true
           }
-        },
-        accounting: true,
-        coupon: true
+        }
       },
       orderBy: {
         createdAt: 'desc'
@@ -49,6 +76,20 @@ const getOrders = async (req, res) => {
     res.json(withDecryptedCustomers(orders));
   } catch (error) {
     console.error('Get orders error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// GET /api/orders/summary - Admin: order counts for the Dashboard, without
+// downloading every order to count them.
+const getOrderSummary = async (req, res) => {
+  try {
+    const groups = await prisma.order.groupBy({ by: ['status'], _count: { _all: true } });
+    const byStatus = Object.fromEntries(groups.map((g) => [g.status, g._count._all]));
+    const total = groups.reduce((sum, g) => sum + g._count._all, 0);
+    res.json({ total, byStatus });
+  } catch (error) {
+    console.error('Get order summary error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -517,6 +558,7 @@ const getCustomerOrders = async (req, res) => {
 
 module.exports = {
   getOrders,
+  getOrderSummary,
   getOrderById,
   createOrder,
   deleteOrder,
