@@ -4,6 +4,8 @@ const { CUSTOMER_PUBLIC_SELECT } = require('../utils/serialize');
 const { sendPushToCustomer } = require('../utils/pushService');
 const { logAudit } = require('../lib/auditLog');
 const { calculateCouponDiscountAmount, selectApplicablePromotions } = require('../utils/pricingService');
+const { calculateDeliveryDistance } = require('../utils/distanceService');
+const { decrypt } = require('../utils/piiCrypto');
 const { roundMoney } = require('../utils/money');
 const {
   parseQuantity,
@@ -168,15 +170,25 @@ const editOrder = async (req, res) => {
     // original distance-based fee are preserved, but the free-delivery
     // *threshold* comparison is redone since the subtotal changed. The
     // distance-based components themselves don't need re-geocoding since
-    // the delivery address is unchanged by this edit.
+    // the delivery address is unchanged by this edit. order.isFreeShipping
+    // is the coupon's free-shipping perk only; the threshold result is never
+    // stored in it, so a later edit re-checks the threshold from scratch.
     const freeDeliveryThreshold = Number(storeSettingsForEdit?.freeDeliveryThreshold) || 0;
     const isFreeDelivery = qualifiesForFreeDelivery({
       isFreeShipping: order.isFreeShipping,
       freeDeliveryThreshold,
       itemsSubtotal: newItemsSubtotal
     });
-    const baseDeliveryFee = Number(order.baseDeliveryFee) || 0;
-    const distanceDeliveryFee = Number(order.distanceDeliveryFee) || 0;
+    let baseDeliveryFee = Number(order.baseDeliveryFee) || 0;
+    let distanceDeliveryFee = Number(order.distanceDeliveryFee) || 0;
+    // Orders created before the fee components were always stored have them
+    // zeroed if delivery was free at the time — when this edit makes delivery
+    // chargeable, work the fee out again from the (unchanged) address.
+    if (!isFreeDelivery && baseDeliveryFee + distanceDeliveryFee === 0) {
+      const recalculated = await calculateDeliveryDistance(decrypt(order.deliveryAddress), storeSettingsForEdit || {});
+      baseDeliveryFee = recalculated.baseFee;
+      distanceDeliveryFee = recalculated.distanceFee;
+    }
     const deliveryFee = isFreeDelivery ? 0 : roundMoney(baseDeliveryFee + distanceDeliveryFee);
 
     const finalPromotionDiscount = newTotalPromoSavings;
@@ -201,7 +213,8 @@ const editOrder = async (req, res) => {
             couponDiscount: finalCouponDiscount,
             promotionDiscount: finalPromotionDiscount,
             deliveryFee,
-            isFreeShipping: isFreeDelivery,
+            baseDeliveryFee,
+            distanceDeliveryFee,
             totalAmount: finalTotalAmount,
             originalTotalAmount: originalTotal,
             modificationReason: reason,

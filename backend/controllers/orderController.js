@@ -293,8 +293,11 @@ const createOrder = async (req, res) => {
     const isFreeDelivery = qualifiesForFreeDelivery({ isFreeShipping, freeDeliveryThreshold, itemsSubtotal });
     const chargedDeliveryFee = isFreeDelivery ? 0 : distanceResult.totalDeliveryFee;
     const deliveryDistanceKm = distanceResult.distanceKm;
-    const baseDeliveryFee = isFreeDelivery ? 0 : distanceResult.baseFee;
-    const distanceDeliveryFee = isFreeDelivery ? 0 : distanceResult.distanceFee;
+    // Stored even when delivery ends up free: if an admin edit later drops
+    // the order below the free-delivery threshold, editOrder needs the real
+    // components to charge the fee. `deliveryFee` above is what's charged.
+    const baseDeliveryFee = distanceResult.baseFee;
+    const distanceDeliveryFee = distanceResult.distanceFee;
 
     const totalAmount = calculateOrderTotal({ itemsSubtotal, couponDiscount, deliveryFee: chargedDeliveryFee });
 
