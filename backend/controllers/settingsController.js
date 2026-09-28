@@ -547,7 +547,7 @@ const setPasscode = async (req, res) => {
     });
     invalidateSectionPasscodeCache();
     logAudit(req.admin?.email, 'SET_SECTION_PASSCODE', 'Section passcode updated');
-    res.json({ message: 'Passcode set', isSet: true, unlockToken: issueSectionUnlockToken(req.admin.id) });
+    res.json({ message: 'Passcode set', isSet: true, unlockToken: issueSectionUnlockToken(req.admin.id, hash) });
   } catch (error) {
     console.error('Set passcode error:', error);
     res.status(500).json({ error: 'Failed to set passcode' });
@@ -571,7 +571,7 @@ const verifyPasscode = async (req, res) => {
     res.json({
       valid,
       isSet: true,
-      unlockToken: valid ? issueSectionUnlockToken(req.admin.id) : undefined
+      unlockToken: valid ? issueSectionUnlockToken(req.admin.id, settings.sectionPasscodeHash) : undefined
     });
   } catch (error) {
     console.error('Verify passcode error:', error);
