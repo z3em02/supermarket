@@ -359,11 +359,15 @@ const createGoogleReview = async (req, res) => {
 const deleteGoogleReview = async (req, res) => {
   try {
     const { id } = req.params;
-    await prisma.googleReview.delete({
+    const deleted = await prisma.googleReview.delete({
       where: { id }
     });
+    logAudit(req.admin?.email, 'DELETE_GOOGLE_REVIEW', `Google-Bewertung von "${deleted.authorName}" (${deleted.rating}★) gelöscht`);
     res.json({ message: 'Review deleted successfully' });
   } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ error: 'Review not found' });
+    }
     console.error('Delete google review error:', error);
     res.status(500).json({ error: 'Failed to delete review' });
   }
@@ -464,6 +468,11 @@ const syncGoogleReviews = async (req, res) => {
       orderBy: { createdAt: 'desc' }
     });
 
+    logAudit(
+      req.admin?.email,
+      'SYNC_GOOGLE_REVIEWS',
+      `Google-Bewertungen synchronisiert (${allReviews.length} Rezensionen gespeichert)`
+    );
     res.json({
       message: `Erfolgreich von Google synchronisiert: ${scraped.rating ? scraped.rating.toFixed(1) + ' ★' : ''} (${scraped.reviewCount || 0} Bewertungen, ${scraped.reviews.length} Rezensionen geladen).`,
       synced: true,
