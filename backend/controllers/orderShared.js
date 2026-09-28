@@ -6,7 +6,7 @@ const { sendPushToCustomer } = require('../utils/pushService');
 // Orders carry their own encrypted customer* snapshot columns (a copy taken
 // at creation time, kept separate from the Customer row so invoices stay
 // readable even after the customer account is deleted — see
-// GDPR_DATA_POLICY.md), plus the joined `customer` relation which also
+// README.md "Personal data & GDPR"), plus the joined `customer` relation which also
 // holds encrypted fields. Decrypt both before any response or email send
 // touches them.
 const withDecryptedCustomer = (order) => {

@@ -69,8 +69,8 @@ where noted below). Orders are the exception to one-controller-per-route:
 - `lib/config.js`, `lib/auditLog.js` — config loading and audit-log writes (see `AuditLog` model / `/api/audit-log`).
 - `utils/pricingService.js` — promotion & coupon price calculation (`calculatePromotionForItem`, `validateAndCalculateCoupon`).
 - `utils/orderPricing.js` — pure order math shared by `createOrder` and `editOrder` (line items, subtotals, postal-code allow-list, free delivery, totals). Change pricing here, not in the controller.
-- `utils/deliverySlot.js` / `DISTANCE_BASED_DELIVERY.md` — delivery window/slot logic; `utils/distanceService.js` does distance-based delivery fee/eligibility, backed by `routes/deliveryDistance.js` and `routes/deliveryWindows.js`.
-- `utils/piiCrypto.js` — field-level encryption for customer/order PII (see `GDPR_DATA_POLICY.md`); `scripts/encryptCustomerPii.js` and `scripts/encryptOrderSnapshotPii.js` are one-off migration scripts for encrypting existing rows.
+- `utils/deliverySlot.js` — delivery window/slot logic (fee model: README §5); `utils/distanceService.js` does distance-based delivery fee/eligibility, backed by `routes/deliveryDistance.js` and `routes/deliveryWindows.js`.
+- `utils/piiCrypto.js` — field-level encryption for customer/order PII (policy: README §6 "Personal data & GDPR"); `scripts/encryptCustomerPii.js` and `scripts/encryptOrderSnapshotPii.js` are one-off migration scripts for encrypting existing rows.
 - `utils/emailService.js` — Nodemailer wrapper for OTPs, order status emails, password reset. If SMTP env vars are left as placeholders, emails are skipped and logged to console instead of failing the request.
 - `utils/pushService.js` — Web Push via the `web-push` library with VAPID keys (`routes/push.js`, `PushSubscription` model).
 - `utils/firebaseAdmin.js` — verifies Firebase ID tokens for phone-number OTP verification (not used for push).
@@ -86,7 +86,7 @@ where noted below). Orders are the exception to one-controller-per-route:
 - `middleware/rateLimiter.js` — Redis-backed rate limiting; `apiLimiter` is applied globally, stricter limiters are used on auth endpoints.
 
 Driver delivery flow uses its own models (`DriverLoginRequest`, `DriverSession`)
-separate from admin/customer auth — see `SECURITY_TODO_DRIVER_FEATURE.md` and
+separate from admin/customer auth — see README §7 "Driver feature review" and
 `pages/DriverDeliveryView.jsx`.
 
 Admin routes generally require `middleware/auth.js`; nearly every mutating
@@ -125,15 +125,16 @@ dashboard (no separate admin build). Structure:
 `deployment/ecosystem.config.js` (PM2, cluster mode, `instances: 'max'`, port 5000)
 and `deployment/nginx.conf` (serves `frontend/dist`, proxies `/api/*` to the
 backend, rate-limits auth endpoints). Backend has no build step. See
-`DEPLOYMENT_SECURITY.md` for hardening notes and `GDPR_DATA_POLICY.md` for
-the PII/data-retention policy that the `piiCrypto`/`encrypt*Pii.js` code
+README §4 for the deployment steps and hardening, and README §6 for the
+PII/data-retention policy that the `piiCrypto`/`encrypt*Pii.js` code
 implements.
 
 ## Notes
 
 - Numbered comments in the code like `// #28 fix: ...` in `server.js` reference
-  entries in `COMPLETED_TODOS.md` / `SECURITY_TODO*.md` — check those files
-  for the reasoning behind a given hardening measure before changing it.
+  entries in README §7 "Fix log" — check there for the reasoning behind a
+  given hardening measure before changing it. `README.md` is the project's
+  only documentation file — add new docs there as a section, not as a new `.md`.
 - `.claude/skills/` (repo root) holds a copy of Anthropic's Engineering plugin
   skills (`code-review`, `debug`, `deploy-checklist`, `architecture`, etc.) —
   see `.claude/skills/README.md` for the source and how to update them.

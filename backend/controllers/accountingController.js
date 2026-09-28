@@ -25,7 +25,7 @@ const createdAtRange = (startDate, endDate) => {
 };
 
 // Orders carry their own encrypted customer* snapshot columns (see
-// GDPR_DATA_POLICY.md), plus the joined `customer` relation which also
+// README.md "Personal data & GDPR"), plus the joined `customer` relation which also
 // holds encrypted fields — decrypt both before any of it is read.
 const withDecryptedOrder = (ord) => ({
   ...ord,
