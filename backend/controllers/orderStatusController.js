@@ -90,6 +90,7 @@ const updateOrderStatus = async (req, res) => {
     // item modifications.
     const finalDeliverySlot = !req.driver && deliverySlot !== undefined ? deliverySlot : order.deliverySlot;
 
+    const statusChanged = normalizedStatus !== order.status;
     const wasStockDeducted = !DECLINED_STATUSES.includes(order.status);
     const shouldStockBeDeducted = !DECLINED_STATUSES.includes(normalizedStatus);
 
@@ -230,21 +231,26 @@ const updateOrderStatus = async (req, res) => {
       const customerName = updatedOrder?.customerName || updatedOrder?.customer?.name || 'Customer';
       const customerLang = updatedOrder?.customer?.preferredLanguage || 'de';
 
-      // Only email on the "accepted" transition — other status changes
-      // (preparing, out_for_delivery, delivered, ...) are surfaced via the
-      // in-app tracking timeline and push notification instead, to avoid
-      // flooding the customer's inbox with one email per status click.
-      if (customerEmail && normalizedStatus === 'accepted') {
-        await sendOrderStatusEmail(
-          customerEmail,
-          customerName,
-          updatedOrder,
-          normalizedStatus,
-          finalNotes,
-          customerLang
-        );
+      // Only notify on an actual status change — this route also saves admin
+      // notes, delivery-slot changes and driver remarks with the status left
+      // as it is, and none of those should re-send "order accepted".
+      if (statusChanged) {
+        // Only email on the "accepted" transition — other status changes
+        // (preparing, out_for_delivery, delivered, ...) are surfaced via the
+        // in-app tracking timeline and push notification instead, to avoid
+        // flooding the customer's inbox with one email per status click.
+        if (customerEmail && normalizedStatus === 'accepted') {
+          await sendOrderStatusEmail(
+            customerEmail,
+            customerName,
+            updatedOrder,
+            normalizedStatus,
+            finalNotes,
+            customerLang
+          );
+        }
+        pushOrderStatusUpdate(updatedOrder, normalizedStatus, customerLang);
       }
-      pushOrderStatusUpdate(updatedOrder, normalizedStatus, customerLang);
     } catch (emailError) {
       console.error('Failed to send email notification:', emailError.message || emailError);
     }
