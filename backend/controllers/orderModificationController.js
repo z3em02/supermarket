@@ -366,30 +366,41 @@ const customerRespondToModification = async (req, res) => {
       // Customer accepted the modification. Stock for the (already-modified) order
       // items was deducted at order creation and adjusted by editOrder's deltas,
       // so accepting only needs to flip the status — no further stock change.
-      await prisma.$transaction(async (tx) => {
-        const dateStr = new Date().toLocaleString(customerLang === 'ar' ? 'ar-EG' : 'de-DE');
-        const noteText = customerLang === 'ar'
-          ? `[وافق العميل على التعديل بتاريخ ${dateStr}]`
-          : `[Kunde hat Änderung akzeptiert am ${dateStr}]`;
-        const updatedAdminNotes = order.adminNotes
-          ? `${order.adminNotes}\n${noteText}`
-          : noteText;
+      try {
+        await prisma.$transaction(async (tx) => {
+          const dateStr = new Date().toLocaleString(customerLang === 'ar' ? 'ar-EG' : 'de-DE');
+          const noteText = customerLang === 'ar'
+            ? `[وافق العميل على التعديل بتاريخ ${dateStr}]`
+            : `[Kunde hat Änderung akzeptiert am ${dateStr}]`;
+          const updatedAdminNotes = order.adminNotes
+            ? `${order.adminNotes}\n${noteText}`
+            : noteText;
 
-        await tx.order.update({
-          where: { id },
-          data: {
-            status: 'accepted',
-            adminNotes: updatedAdminNotes
+          // Same guard as the decline path below: if the admin cancelled or
+          // re-edited the order in the meantime, accepting must not bring
+          // back a version of it the customer never saw.
+          const guarded = await tx.order.updateMany({
+            where: { id, status: 'pending_customer_approval', updatedAt: order.updatedAt },
+            data: {
+              status: 'accepted',
+              adminNotes: updatedAdminNotes
+            }
+          });
+          if (guarded.count === 0) throw concurrentUpdateError();
+
+          if (order.accounting) {
+            await tx.accounting.update({
+              where: { orderId: id },
+              data: { status: 'completed' }
+            });
           }
         });
-
-        if (order.accounting) {
-          await tx.accounting.update({
-            where: { orderId: id },
-            data: { status: 'completed' }
-          });
+      } catch (error) {
+        if (error.isConcurrentUpdateError) {
+          return res.status(409).json({ error: error.message });
         }
-      });
+        throw error;
+      }
 
       const updatedOrder = withDecryptedCustomer(await prisma.order.findUnique({
         where: { id },
@@ -431,9 +442,11 @@ const customerRespondToModification = async (req, res) => {
           // #9 fix: guard on the pending_customer_approval status this
           // request observed — a double-click/retry that lands after a first
           // request already declined the order must not restore stock/coupon
-          // usage a second time.
+          // usage a second time. updatedAt also catches an admin re-editing
+          // the items meanwhile: the stock given back below is for the items
+          // read above.
           const guarded = await tx.order.updateMany({
-            where: { id, status: 'pending_customer_approval' },
+            where: { id, status: 'pending_customer_approval', updatedAt: order.updatedAt },
             data: {
               status: 'declined',
               adminNotes: declineAdminNotes

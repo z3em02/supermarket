@@ -94,6 +94,14 @@ const updateOrderStatus = async (req, res) => {
     const wasStockDeducted = !DECLINED_STATUSES.includes(order.status);
     const shouldStockBeDeducted = !DECLINED_STATUSES.includes(normalizedStatus);
 
+    // Every write below only applies to the exact version of the order read
+    // above: the stock/coupon handling depends on the status this request
+    // observed, and a driver's remark is appended to the notes it read. If a
+    // concurrent request changed the order in between (double-click, an admin
+    // declining while the driver marks it delivered, ...) this one aborts
+    // with a 409 instead of silently overwriting that change.
+    const unchangedSinceRead = { id, status: order.status, updatedAt: order.updatedAt };
+
     if (!wasStockDeducted && shouldStockBeDeducted) {
       // Transitioning out of a declined/cancelled state back into an active one
       // (e.g. an admin un-declining an order): re-deduct stock atomically.
@@ -103,7 +111,7 @@ const updateOrderStatus = async (req, res) => {
           // observed — if a concurrent request already moved the order off
           // that status, abort before touching stock at all (double-submit guard).
           const guarded = await tx.order.updateMany({
-            where: { id, status: order.status },
+            where: unchangedSinceRead,
             data: {
               status: normalizedStatus,
               notes: finalNotes,
@@ -152,7 +160,7 @@ const updateOrderStatus = async (req, res) => {
           // before restoring any stock/coupon usage if another request
           // already transitioned this order off the status we observed.
           const guarded = await tx.order.updateMany({
-            where: { id, status: order.status },
+            where: unchangedSinceRead,
             data: {
               status: normalizedStatus,
               notes: finalNotes,
@@ -200,9 +208,12 @@ const updateOrderStatus = async (req, res) => {
         throw error;
       }
     } else {
-      // Stock state does not change (e.g. accepted -> preparing, declined -> rejected, or notes update only)
-      await prisma.order.update({
-        where: { id },
+      // Stock state does not change (e.g. accepted -> preparing, declined -> rejected, or notes update only).
+      // Guarded like the branches above — a plain update here could e.g.
+      // overwrite a decline that landed a moment earlier (leaving an active
+      // order whose stock was already given back).
+      const guarded = await prisma.order.updateMany({
+        where: unchangedSinceRead,
         data: {
           status: normalizedStatus,
           notes: finalNotes,
@@ -210,6 +221,9 @@ const updateOrderStatus = async (req, res) => {
           deliverySlot: finalDeliverySlot
         }
       });
+      if (guarded.count === 0) {
+        return res.status(409).json({ error: concurrentUpdateError().message });
+      }
     }
 
     const updatedOrder = withDecryptedCustomer(await prisma.order.findUnique({
