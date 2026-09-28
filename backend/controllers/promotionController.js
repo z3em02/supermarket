@@ -1,6 +1,7 @@
 const prisma = require('../lib/prisma');
 const { logAudit } = require('../lib/auditLog');
 const { parseValidDate } = require('../utils/validation');
+const { selectApplicablePromotions } = require('../utils/pricingService');
 
 // GET /api/promotions - Admin: list all promotions
 const getPromotions = async (req, res) => {
@@ -59,7 +60,8 @@ const getActivePromotions = async (req, res) => {
       }
     });
 
-    res.json(promotions);
+    // One promotion per product — the same one checkout will apply.
+    res.json(Array.from(selectApplicablePromotions(promotions, now).values()));
   } catch (error) {
     console.error('Get active promotions error:', error);
     res.status(500).json({ error: 'Internal server error' });

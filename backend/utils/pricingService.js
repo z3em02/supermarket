@@ -154,6 +154,33 @@ function calculatePromotionForItem(product, quantity, activePromotion = null) {
 }
 
 /**
+ * Picks the single promotion that applies to each product right now: active,
+ * inside its date window, and — when several qualify (e.g. a new offer
+ * created while an older open-ended one is still running) — the most recently
+ * created one. Checkout, order edits, the coupon preview and the storefront's
+ * /api/promotions/active all use this, so the price a customer is shown is
+ * the price they're charged.
+ *
+ * @param {Array} promotions - Promotion records (any mix of products/states)
+ * @param {Date} now
+ * @returns {Map<string, Object>} productId -> applicable promotion
+ */
+function selectApplicablePromotions(promotions = [], now = new Date()) {
+  const byProduct = new Map();
+  for (const promo of promotions) {
+    if (!promo || !promo.isActive) continue;
+    if (promo.startDate && new Date(promo.startDate) > now) continue;
+    if (promo.endDate && new Date(promo.endDate) < now) continue;
+    const current = byProduct.get(promo.productId);
+    const newer = !current
+      || new Date(promo.createdAt) > new Date(current.createdAt)
+      || (new Date(promo.createdAt).getTime() === new Date(current.createdAt).getTime() && promo.id > current.id);
+    if (newer) byProduct.set(promo.productId, promo);
+  }
+  return byProduct;
+}
+
+/**
  * Pure discount-amount math for a coupon against a given subtotal — shared
  * by validateAndCalculateCoupon (new orders) and editOrder's re-validation
  * of an already-applied coupon against a recalculated subtotal, so the two
@@ -294,6 +321,7 @@ function validateAndCalculateCoupon(coupon, cartItems = [], itemsSubtotal = 0, c
 
 module.exports = {
   calculatePromotionForItem,
+  selectApplicablePromotions,
   validateAndCalculateCoupon,
   calculateCouponDiscountAmount
 };

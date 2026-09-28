@@ -4,7 +4,7 @@ const { CUSTOMER_PUBLIC_SELECT } = require('../utils/serialize');
 const { decryptCustomerPII, encrypt } = require('../utils/piiCrypto');
 const { sendPushToCustomer } = require('../utils/pushService');
 const { logAudit } = require('../lib/auditLog');
-const { validateAndCalculateCoupon } = require('../utils/pricingService');
+const { validateAndCalculateCoupon, selectApplicablePromotions } = require('../utils/pricingService');
 const {
   parseQuantity,
   buildOrderLine,
@@ -180,7 +180,7 @@ const createOrder = async (req, res) => {
     ]);
 
     const productMap = new Map(dbProducts.map(p => [p.id, p]));
-    const promoMap = new Map(activePromotions.map(pr => [pr.productId, pr]));
+    const promoMap = selectApplicablePromotions(activePromotions);
 
     const orderItemsWithDetails = [];
 

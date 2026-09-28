@@ -3,7 +3,7 @@ const { sendOrderStatusEmail, sendOrderModificationEmail } = require('../utils/e
 const { CUSTOMER_PUBLIC_SELECT } = require('../utils/serialize');
 const { sendPushToCustomer } = require('../utils/pushService');
 const { logAudit } = require('../lib/auditLog');
-const { calculateCouponDiscountAmount } = require('../utils/pricingService');
+const { calculateCouponDiscountAmount, selectApplicablePromotions } = require('../utils/pricingService');
 const { roundMoney } = require('../utils/money');
 const {
   parseQuantity,
@@ -82,7 +82,7 @@ const editOrder = async (req, res) => {
       })
     ]);
     const productMap = new Map(editedProducts.map((p) => [p.id, p]));
-    const promoMap = new Map(activePromotions.map((pr) => [pr.productId, pr]));
+    const promoMap = selectApplicablePromotions(activePromotions);
 
     // Validate incoming items against the latest product details
     const newItemsToCreate = [];

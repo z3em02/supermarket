@@ -1,5 +1,5 @@
 const prisma = require('../lib/prisma');
-const { validateAndCalculateCoupon } = require('../utils/pricingService');
+const { validateAndCalculateCoupon, selectApplicablePromotions } = require('../utils/pricingService');
 const { parseQuantity, buildOrderLine, summarizeOrderLines } = require('../utils/orderPricing');
 const { logAudit } = require('../lib/auditLog');
 const { parseValidDate } = require('../utils/validation');
@@ -292,7 +292,7 @@ const validateCoupon = async (req, res) => {
     ]);
 
     const productMap = new Map(products.map(p => [p.id, p]));
-    const promoMap = new Map(promotions.map(pr => [pr.productId, pr]));
+    const promoMap = selectApplicablePromotions(promotions);
 
     // Price only the lines createOrder would actually accept (known product,
     // positive quantity), with the same helpers it uses, so the preview and
