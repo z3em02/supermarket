@@ -22,6 +22,16 @@ if (process.env.REDIS_URL) {
   }
 }
 
+// PM2 runs one process per CPU core (ecosystem.config.js, instances: 'max'),
+// and the in-memory fallback counts per process — without Redis every limit
+// below is effectively multiplied by the number of workers.
+if (!process.env.REDIS_URL && process.env.NODE_ENV === 'production') {
+  console.warn(
+    'WARNING: REDIS_URL is not set — rate limits are counted separately in each worker process, ' +
+    'so each limit is multiplied by the number of PM2 workers. Set REDIS_URL to share the counters.'
+  );
+}
+
 /**
  * Creates a rate limiter supporting both Redis and in-memory fallback.
  */

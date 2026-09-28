@@ -115,11 +115,20 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// Start server. In production HOST=127.0.0.1 (deployment/ecosystem.config.js)
+// keeps the API reachable only through nginx: with trust proxy on, a backend
+// port reachable from outside would believe a client-supplied
+// X-Forwarded-For and let every request pick a fresh rate-limit identity.
+const HOST = process.env.HOST;
+const onListening = () => {
+  console.log(`Server running on ${HOST || 'all interfaces'}, port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+};
+if (HOST) {
+  app.listen(PORT, HOST, onListening);
+} else {
+  app.listen(PORT, onListening);
+}
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {

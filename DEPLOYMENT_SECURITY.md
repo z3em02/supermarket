@@ -100,8 +100,10 @@ When deploying to production, set:
 ```env
 NODE_ENV=production
 PORT=5000
+HOST=127.0.0.1
 FRONTEND_URL=https://yourdomain.com
 TRUST_PROXY=true
+REDIS_URL=redis://localhost:6379
 DATABASE_URL=postgresql://user:password@localhost:5432/supermarket
 JWT_SECRET=<64-char-random-hex>
 SECTION_UNLOCK_SECRET=<64-char-random-hex-different-from-jwt>
@@ -115,4 +117,6 @@ ENCRYPTION_KEY=<64-char-random-hex>
 
 ## 4. Multi-Instance Rate Limiting (Redis) (Audit Finding #9)
 
-If you scale the backend across multiple Node processes or multiple servers behind a load balancer, install `ioredis` and `rate-limiter-flexible` and configure `REDIS_URL=redis://localhost:6379`. For a single Node process or PM2 cluster with sticky sessions, the built-in sliding window rate limiter is already fully functional.
+The backend's rate limiter keeps its counters in Redis when `REDIS_URL` is set (`ioredis` is already a dependency), and otherwise in each process's memory. The default deployment runs PM2 in cluster mode with one process per CPU core (`instances: 'max'`), and PM2 does not pin a client to one worker — so without Redis every limit is multiplied by the number of workers (the server logs a warning at startup). Set `REDIS_URL=redis://localhost:6379` in production.
+
+The `limit_req` zones in `deployment/nginx.conf` are the real per-IP limit on the login, registration, one-time-code, 2FA and PIN endpoints, in front of all workers. They only help if nginx is the only way in: keep `HOST=127.0.0.1` (set in `deployment/ecosystem.config.js`) so port 5000 isn't reachable from outside — with `trust proxy` enabled, a directly reachable backend would trust a client-supplied `X-Forwarded-For` header.
