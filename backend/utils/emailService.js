@@ -15,6 +15,15 @@ const escapeHtml = (value) => {
     .replace(/'/g, '&#039;');
 };
 
+// Emails are read outside the site, so every link and image needs an absolute
+// URL on the public site. FRONTEND_URL may list several origins for CORS
+// (server.js splits it on commas); the first one is the canonical site.
+const publicOrigin = () =>
+  (process.env.FRONTEND_URL || 'http://localhost:5173').split(',')[0].trim().replace(/\/+$/, '');
+
+// e.g. the cached logo "/api/uploads/logo-….png" -> "https://shop.example/api/uploads/logo-….png"
+const absoluteUrl = (url) => (typeof url === 'string' && url.startsWith('/') ? `${publicOrigin()}${url}` : url);
+
 const isEmailConfigured = () =>
   Boolean(
     process.env.EMAIL_USER &&
@@ -106,7 +115,7 @@ const emailWrapper = ({ lang = 'de', title, subtitle, contentHtml, settings }) =
 
   const logoHtml = settings?.logoUrl ? `
     <div style="text-align: center; margin-bottom: 14px;">
-      <img src="${settings.logoUrl}" alt="${localizedStoreName}" style="max-height: 48px; max-width: 180px; object-fit: contain; background: #ffffff; padding: 6px 12px; border-radius: 12px; display: inline-block;" />
+      <img src="${absoluteUrl(settings.logoUrl)}" alt="${localizedStoreName}" style="max-height: 48px; max-width: 180px; object-fit: contain; background: #ffffff; padding: 6px 12px; border-radius: 12px; display: inline-block;" />
     </div>
   ` : `
     <div class="logo-badge" style="display: inline-block; background: rgba(255, 255, 255, 0.18); border-radius: 10px; padding: 6px 14px; font-size: 12px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 12px;">${localizedStoreName}</div>
@@ -262,8 +271,7 @@ const sendOrderStatusEmail = async (customerEmail, customerName, orderDetails, s
     const isAr = lang === 'ar';
     const storeName = (isAr ? settings.storeNameAr : settings.storeNameDe) || settings.storeName || 'Hajar Supermarkt';
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    const portalUrl = `${frontendUrl}/account`;
+    const portalUrl = `${publicOrigin()}/account`;
 
     const statusMap = {
       pending:                   { de: 'Eingegangen (Wartet auf Prüfung)', ar: 'تم استلام الطلب (قيد المراجعة)' },
@@ -604,8 +612,7 @@ const sendPasswordResetEmail = async (customerEmail, customerName, resetToken, l
     const isAr = lang === 'ar';
     const storeName = (isAr ? settings.storeNameAr : settings.storeNameDe) || settings.storeName || 'Hajar Supermarkt';
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
+    const resetUrl = `${publicOrigin()}/reset-password?token=${resetToken}`;
 
     const title = isAr ? 'إعادة تعيين كلمة المرور' : 'Passwort zurücksetzen';
     const subtitle = isAr ? 'طلب إعادة تعيين كلمة المرور' : 'Anfrage zum Zurücksetzen des Passworts';
@@ -842,5 +849,7 @@ module.exports = {
   sendCustomerVerificationEmail,
   sendCustomerOrderConfirmationEmail,
   sendPasswordResetEmail,
-  sendAdminLoginOtpEmail
+  sendAdminLoginOtpEmail,
+  publicOrigin,
+  absoluteUrl
 };
