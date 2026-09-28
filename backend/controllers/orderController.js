@@ -483,18 +483,16 @@ const createOrder = async (req, res) => {
 
     const decryptedOrder = withDecryptedCustomer(order);
 
-    // Send confirmation email to customer
+    // Confirmation email in the background: the order is already committed,
+    // and a slow SMTP server must not hold the response — a client that
+    // times out and retries would otherwise place the same order twice.
     if (customer.email) {
-      try {
-        await sendCustomerOrderConfirmationEmail(
-          customer.email,
-          customer.name,
-          decryptedOrder,
-          customer.preferredLanguage || 'de'
-        );
-      } catch (err) {
-        console.error('Customer confirmation email failed:', err.message);
-      }
+      sendCustomerOrderConfirmationEmail(
+        customer.email,
+        customer.name,
+        decryptedOrder,
+        customer.preferredLanguage || 'de'
+      ).catch((err) => console.error('Customer confirmation email failed:', err.message));
     }
 
     const isAr = customer.preferredLanguage === 'ar';
