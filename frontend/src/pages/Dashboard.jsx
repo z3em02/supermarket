@@ -207,7 +207,7 @@ export const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-primary-600 to-promo-700 dark:from-gray-900 dark:via-primary-950/40 dark:to-gray-900 dark:border dark:border-primary-900/30 text-white rounded-2xl p-5 sm:p-8 shadow-lg shadow-primary-500/10 dark:shadow-none">
         <div>
@@ -226,7 +226,7 @@ export const Dashboard = () => {
 
       {/* Drivers — always visible (not just when there's something pending)
           so this is discoverable even before any driver has ever logged in. */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-850 shadow-xs overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-850 shadow-sm overflow-hidden">
         <div className="flex items-center gap-2.5 px-4 sm:px-5 py-3 bg-slate-50 dark:bg-gray-950/50 border-b border-slate-100 dark:border-gray-850">
           <Truck className="w-4 h-4 text-slate-500 dark:text-gray-400 shrink-0" />
           <h3 className="font-bold text-slate-800 dark:text-white text-xs sm:text-sm">
@@ -240,7 +240,7 @@ export const Dashboard = () => {
             <p className="px-4 sm:px-5 pt-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-warning-700 dark:text-warning-400">
               {language === 'ar' ? 'بانتظار الموافقة' : 'Warten auf Freigabe'}
             </p>
-            <p className="px-4 sm:px-5 pb-2 text-[11px] text-slate-400 dark:text-gray-500">
+            <p className="px-4 sm:px-5 pb-2 text-[11px] text-slate-500 dark:text-slate-400">
               {language === 'ar'
                 ? 'الاسم يُدخله السائق بنفسه ولا يُثبت هويته — تحقق منه (مثلاً بالاتصال) قبل القبول.'
                 : 'Der Name wird vom Fahrer selbst eingegeben und beweist keine Identität — bei Unsicherheit vor dem Zulassen kurz anrufen.'}
@@ -254,7 +254,7 @@ export const Dashboard = () => {
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-bold text-slate-800 dark:text-white truncate">{reqItem.driverName}</p>
-                      <p className="text-[11px] text-slate-400 dark:text-gray-500">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
                         {new Date(reqItem.createdAt).toLocaleTimeString(language === 'ar' ? 'ar-DE' : 'de-DE')}
                         {reqItem.ipAddress && <span className="font-mono"> · {reqItem.ipAddress}</span>}
                       </p>
@@ -292,7 +292,7 @@ export const Dashboard = () => {
             {language === 'ar' ? 'مسجلون حالياً' : 'Aktuell angemeldet'}
           </p>
           {activeDrivers.length === 0 ? (
-            <p className="px-4 sm:px-5 pb-4 text-xs text-slate-400 dark:text-gray-500">
+            <p className="px-4 sm:px-5 pb-4 text-xs text-slate-500 dark:text-slate-400">
               {language === 'ar'
                 ? 'لا يوجد سائق مسجل الدخول حالياً. يمكن للسائقين تسجيل الدخول عبر /driver باستخدام رمز السائق من الإعدادات.'
                 : 'Kein Fahrer aktuell angemeldet. Fahrer können sich über /driver mit dem Fahrer-PIN aus den Einstellungen anmelden.'}
@@ -307,7 +307,7 @@ export const Dashboard = () => {
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-bold text-slate-800 dark:text-white truncate">{session.driverName}</p>
-                      <p className="text-[11px] text-slate-400 dark:text-gray-500">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
                         {language === 'ar' ? 'مسجل منذ' : 'Angemeldet seit'}{' '}
                         {new Date(session.createdAt).toLocaleTimeString(language === 'ar' ? 'ar-DE' : 'de-DE')}
                       </p>
@@ -342,7 +342,7 @@ export const Dashboard = () => {
 
       {/* Proactive Low-Stock Admin Alert Banner */}
       {lowStockCount > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-warning-500/10 via-warning-500/5 to-transparent border border-warning-300 dark:border-warning-700/60 rounded-2xl p-4 sm:p-5 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-warning-500/10 via-warning-500/5 to-transparent border border-warning-300 dark:border-warning-700/60 rounded-2xl p-4 sm:p-5 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-warning-100 dark:bg-warning-950/80 text-warning-700 dark:text-warning-400 shrink-0">
               <AlertTriangle className="w-5 h-5" />
@@ -378,35 +378,36 @@ export const Dashboard = () => {
           return (
             <div 
               key={stat.title} 
-              className={`bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-5 border ${stat.borderColor} shadow-xs hover:shadow-md dark:hover:border-gray-700 transition-all duration-200`}
+              className={`bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-5 border ${stat.borderColor} shadow-sm hover:shadow-md dark:hover:border-gray-700 transition-all duration-200`}
             >
-              <div className="flex items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">
-                    {stat.title}
-                  </p>
-                  {stat.locked ? (
-                    <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-400 dark:text-gray-500 mt-1.5">
-                      <Lock className="w-3.5 h-3.5" />
-                      <span>{language === 'ar' ? 'مقفل' : 'Gesperrt'}</span>
-                    </p>
-                  ) : (
-                    <p className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-1 truncate">
-                      {stat.value}
-                    </p>
-                  )}
-                </div>
-                <div className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl ${stat.color} shrink-0`}>
-                  <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+              {/* Label + icon on one row, value on its own full-width row, so
+                  long labels (DE "Gesamte Bestellungen") and amounts never
+                  collide with the icon or get cut off. */}
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 leading-snug min-w-0 break-words hyphens-auto">
+                  {stat.title}
+                </p>
+                <div className={`p-2 rounded-xl ${stat.color} shrink-0`}>
+                  <Icon className="w-5 h-5" aria-hidden="true" />
                 </div>
               </div>
+              {stat.locked ? (
+                <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 dark:text-slate-400 mt-2">
+                  <Lock className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span>{language === 'ar' ? 'مقفل' : 'Gesperrt'}</span>
+                </p>
+              ) : (
+                <p className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-2 tabular-nums break-words">
+                  {stat.value}
+                </p>
+              )}
             </div>
           );
         })}
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-xs">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm">
         <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white mb-3 sm:mb-4">
           {t('quickActions')}
         </h2>
@@ -423,7 +424,7 @@ export const Dashboard = () => {
                 {t('publicCatalog') || 'View Online Shop'}
               </span>
             </div>
-            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-primary-600 rtl:rotate-180 transition" />
+            <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-primary-600 rtl:rotate-180 transition" />
           </button>
 
           <button
@@ -438,7 +439,7 @@ export const Dashboard = () => {
                 {t('catalogs')}
               </span>
             </div>
-            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-promo-600 rtl:rotate-180 transition" />
+            <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-promo-600 rtl:rotate-180 transition" />
           </button>
 
           <button
@@ -453,7 +454,7 @@ export const Dashboard = () => {
                 {t('addNewProduct')}
               </span>
             </div>
-            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-success-600 rtl:rotate-180 transition" />
+            <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-success-600 rtl:rotate-180 transition" />
           </button>
 
           <button
@@ -468,7 +469,7 @@ export const Dashboard = () => {
                 {t('viewOrders')}
               </span>
             </div>
-            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-promo-600 rtl:rotate-180 transition" />
+            <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-promo-600 rtl:rotate-180 transition" />
           </button>
 
           <button
@@ -483,13 +484,13 @@ export const Dashboard = () => {
                 {language === 'ar' ? 'واجهة التوصيل للسائق' : 'Fahrer-Lieferansicht'}
               </span>
             </div>
-            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-warning-600 rtl:rotate-180 transition" />
+            <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-warning-600 rtl:rotate-180 transition" />
           </button>
         </div>
       </div>
 
       {/* Getting Started Guide */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-slate-200/80 dark:border-gray-850 shadow-xs">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm">
         <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
           {t('gettingStarted')}
         </h2>

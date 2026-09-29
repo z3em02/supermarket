@@ -340,11 +340,11 @@ export const Promotions = () => {
   const twoPlusOneOffersCount = promotions.filter(p => p.type === 'BUY_X_GET_Y').length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
+          <h1 className="text-heading-xl flex items-center gap-2.5">
             <Sparkles className="w-7 h-7 text-warning-500" />
             {t('promotions')}
           </h1>
@@ -415,13 +415,13 @@ export const Promotions = () => {
 
         {/* Search */}
         <div className="relative w-full sm:w-64">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
           <input
             type="text"
             placeholder={activeTab === 'coupons' ? 'Gutscheincode suchen...' : 'Produkt suchen...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-primary-500 text-slate-900 dark:text-white"
+            className="w-full pl-9 pr-4 py-2 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-slate-900 dark:text-white"
           />
         </div>
       </div>

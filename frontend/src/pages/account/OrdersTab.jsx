@@ -42,8 +42,8 @@ export const OrdersTab = ({
     <div className="space-y-4">
       {/* Push Notification Opt-in Banner */}
       {pushStatus === 'not-subscribed' && (
-        <div className="p-4 rounded-2xl bg-primary-50 dark:bg-primary-950/50 border border-primary-200 dark:border-primary-900/50 flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-2.5 text-primary-800 dark:text-primary-200 text-xs sm:text-sm">
+        <div className="p-4 rounded-2xl bg-brand-50 dark:bg-brand-950/50 border border-brand-200 dark:border-brand-900/50 flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2.5 text-brand-800 dark:text-brand-200 text-xs sm:text-sm">
             <Bell className="w-4 h-4 shrink-0" />
             <span>{isAr ? 'فعّل الإشعارات لتصلك تحديثات حالة طلبك فور حدوثها' : 'Aktivieren Sie Benachrichtigungen, um Bestellstatus-Updates sofort zu erhalten'}</span>
           </div>
@@ -51,7 +51,7 @@ export const OrdersTab = ({
             type="button"
             onClick={handleEnablePush}
             disabled={enablingPush}
-            className="px-3.5 py-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold shrink-0 cursor-pointer disabled:opacity-50 touch-manipulation"
+            className="px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shrink-0 cursor-pointer disabled:opacity-50 touch-manipulation"
           >
             {enablingPush ? '...' : (isAr ? 'تفعيل' : 'Aktivieren')}
           </button>
@@ -92,19 +92,19 @@ export const OrdersTab = ({
       )}
 
       {loadingOrders ? (
-        <div className="py-12 text-center text-slate-400">
+        <div className="py-12 text-center text-slate-500">
           <div className="w-8 h-8 mx-auto border-2 border-brand-500 border-t-transparent rounded-full animate-spin mb-2" />
           <p className="text-xs">{isAr ? 'جارٍ تحميل الطلبات...' : 'Bestellungen werden geladen...'}</p>
         </div>
       ) : orders.length === 0 ? (
-        <div className="bg-white dark:bg-gray-900 rounded-3xl border border-slate-200/80 dark:border-gray-800 p-12 text-center">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 p-12 text-center">
           <div className="w-16 h-16 mx-auto rounded-2xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-200 mb-4">
             <ShoppingBag className="w-8 h-8 opacity-75" />
           </div>
           <h3 className="font-bold text-slate-900 dark:text-white text-lg">
             {isAr ? 'لا توجد طلبات سابقة حتى الآن' : 'Noch keine Bestellungen aufgegeben'}
           </h3>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-gray-400 mt-1 max-w-sm mx-auto">
+          <p className="text-body-muted mt-1 max-w-sm mx-auto">
             {isAr 
               ? 'تصفح قائمة المنتجات واطلب التوصيل إلى باب منزلك مع الدفع نقداً أو بالبطاقة عند الاستلام.' 
               : 'Stöbern Sie durch unsere Produkte und bestellen Sie bequem nach Hause.'}
@@ -124,7 +124,7 @@ export const OrdersTab = ({
           return (
             <div
               key={order.id}
-              className={`bg-white dark:bg-gray-900 rounded-3xl border p-5 sm:p-6 shadow-sm transition hover:shadow-md ${isPendingApproval ? 'border-warning-400 dark:border-warning-700 ring-2 ring-warning-400/20' : 'border-slate-200/80 dark:border-gray-800'}`}
+              className={`bg-white dark:bg-gray-900 rounded-2xl border p-5 sm:p-6 shadow-sm transition hover:shadow-md ${isPendingApproval ? 'border-warning-400 dark:border-warning-700 ring-2 ring-warning-400/20' : 'border-slate-200/80 dark:border-gray-800'}`}
             >
               {/* Pending Approval Customer Alert Banner */}
               {isPendingApproval && (
@@ -196,7 +196,7 @@ export const OrdersTab = ({
                     <div className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white flex items-center gap-2 truncate">
                       <span>{isAr ? 'طلب رقم' : 'Bestellung'} #{order.id.slice(0, 8).toUpperCase()}</span>
                     </div>
-                    <div className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5 truncate">
+                    <div className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5 truncate">
                       <Calendar className="w-3.5 h-3.5 shrink-0" />
                       <span className="truncate">{new Date(order.createdAt).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'de-DE', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
@@ -218,7 +218,7 @@ export const OrdersTab = ({
                   )}
                   {getStatusBadge(order.status)}
                   <div className="text-end">
-                    <div className="text-xs text-slate-400">{isAr ? 'الإجمالي' : 'Gesamt'}</div>
+                    <div className="text-xs text-slate-500">{isAr ? 'الإجمالي' : 'Gesamt'}</div>
                     <div className="font-extrabold text-base sm:text-lg text-brand-600 dark:text-brand-400 font-mono">
                       €{Number(order.totalAmount).toFixed(2)}
                     </div>
@@ -234,12 +234,12 @@ export const OrdersTab = ({
               {/* Delivery Details Snapshot */}
               <div className="py-3 text-xs text-slate-600 dark:text-gray-300 grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 dark:bg-gray-950 p-3 rounded-2xl my-3">
                 <div>
-                  <strong className="block text-slate-400 text-[11px] uppercase tracking-wider">{isAr ? 'عنوان التوصيل' : 'Lieferadresse'}</strong>
+                  <strong className="block text-slate-500 text-[11px] uppercase tracking-wider">{isAr ? 'عنوان التوصيل' : 'Lieferadresse'}</strong>
                   <span className="font-medium break-words">{order.deliveryAddress || 'Adresse'}</span>
                 </div>
                 {order.deliverySlot && formatDeliverySlot(order.deliverySlot, isAr) && (
                   <div>
-                    <strong className="block text-slate-400 text-[11px] uppercase tracking-wider flex items-center gap-1">
+                    <strong className="block text-slate-500 text-[11px] uppercase tracking-wider flex items-center gap-1">
                       <Clock className="w-3 h-3 text-brand-600 dark:text-brand-400" />
                       <span>{isAr ? 'موعد التوصيل' : 'Liefer-Zeitfenster'}</span>
                     </strong>
@@ -250,7 +250,7 @@ export const OrdersTab = ({
                 )}
                 {order.deliveryDistanceKm != null && Number(order.deliveryDistanceKm) > 0 && (
                   <div>
-                    <strong className="block text-slate-400 text-[11px] uppercase tracking-wider flex items-center gap-1">
+                    <strong className="block text-slate-500 text-[11px] uppercase tracking-wider flex items-center gap-1">
                       <Navigation className="w-3 h-3 text-brand-600 dark:text-brand-400" />
                       <span>{isAr ? 'المسافة والتوصيل' : 'Distanz & Lieferung'}</span>
                     </strong>
@@ -260,14 +260,14 @@ export const OrdersTab = ({
                   </div>
                 )}
                 <div>
-                  <strong className="block text-slate-400 text-[11px] uppercase tracking-wider">{isAr ? 'طريقة الدفع' : 'Zahlung'}</strong>
+                  <strong className="block text-slate-500 text-[11px] uppercase tracking-wider">{isAr ? 'طريقة الدفع' : 'Zahlung'}</strong>
                   <span className="font-semibold text-brand-600 dark:text-brand-400">
                     {isAr ? 'الدفع عند الاستلام (نقداً أو بالبطاقة)' : 'Barzahlung / Kartenzahlung an der Haustür'}
                   </span>
                 </div>
                 {order.deliveryNotes && (
                   <div className="sm:col-span-2">
-                    <strong className="block text-slate-400 text-[11px] uppercase tracking-wider">{isAr ? 'ملاحظة السائق' : 'Lieferhinweis'}</strong>
+                    <strong className="block text-slate-500 text-[11px] uppercase tracking-wider">{isAr ? 'ملاحظة السائق' : 'Lieferhinweis'}</strong>
                     <span className="italic break-words">{order.deliveryNotes}</span>
                   </div>
                 )}
@@ -275,7 +275,7 @@ export const OrdersTab = ({
 
               {/* Ordered Items List */}
               <div className="space-y-2 pt-1">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                   {isAr ? 'المنتجات المطلوبة:' : 'Bestellte Artikel:'}
                 </span>
                 <div className="divide-y divide-slate-100 dark:divide-gray-800">
@@ -321,7 +321,7 @@ export const OrdersTab = ({
                   </button>
                 </div>
 
-                <span className="text-[11px] text-slate-400 text-center sm:text-end">
+                <span className="text-[11px] text-slate-500 text-center sm:text-end">
                   {order.orderItems?.length || 0} {isAr ? 'منتجات' : 'Positionen'}
                 </span>
               </div>

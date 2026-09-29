@@ -9,7 +9,7 @@ export const WelcomeHeader = ({
   const { customer } = useCustomerAuth();
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-gray-800 p-4 sm:p-6 md:p-8 shadow-sm mb-6 flex flex-col md:flex-row md:items-center justify-between gap-5 sm:gap-6">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl border border-slate-200/80 dark:border-gray-800 p-4 sm:p-6 md:p-8 shadow-sm mb-6 flex flex-col md:flex-row md:items-center justify-between gap-5 sm:gap-6">
       <div className="flex items-center gap-3 sm:gap-4 min-w-0">
         <div className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 rounded-2xl bg-brand-600 text-white flex items-center justify-center font-black text-xl sm:text-2xl shadow-lg shadow-brand-600/20">
           {customer?.name?.charAt(0)?.toUpperCase() || 'C'}

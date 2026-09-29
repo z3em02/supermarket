@@ -330,7 +330,7 @@ export const AuditLog = () => {
   }, [entries]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-800 via-slate-900 to-promo-950 text-white rounded-2xl p-5 sm:p-8 shadow-lg border border-slate-700/60 dark:border-gray-800">
         <div>
@@ -362,8 +362,8 @@ export const AuditLog = () => {
 
       {/* KPI Stats Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-slate-200/80 dark:border-gray-800 shadow-2xs">
-          <p className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-slate-200/80 dark:border-gray-800 shadow-sm">
+          <p className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">
             {isAr ? 'إجمالي السجلات' : 'Protokolleinträge'}
           </p>
           <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1">
@@ -371,8 +371,8 @@ export const AuditLog = () => {
           </p>
         </div>
 
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-slate-200/80 dark:border-gray-800 shadow-2xs">
-          <p className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-slate-200/80 dark:border-gray-800 shadow-sm">
+          <p className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">
             {isAr ? 'عمليات اليوم' : 'Aktionen heute'}
           </p>
           <p className="text-xl sm:text-2xl font-black text-success-600 dark:text-success-400 mt-1">
@@ -380,8 +380,8 @@ export const AuditLog = () => {
           </p>
         </div>
 
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-slate-200/80 dark:border-gray-800 shadow-2xs">
-          <p className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-slate-200/80 dark:border-gray-800 shadow-sm">
+          <p className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">
             {isAr ? 'جلسات تسجيل الدخول' : 'Admin-Anmeldungen'}
           </p>
           <p className="text-xl sm:text-2xl font-black text-primary-600 dark:text-primary-400 mt-1">
@@ -389,8 +389,8 @@ export const AuditLog = () => {
           </p>
         </div>
 
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-slate-200/80 dark:border-gray-800 shadow-2xs">
-          <p className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-slate-200/80 dark:border-gray-800 shadow-sm">
+          <p className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">
             {isAr ? 'تعديلات البيانات' : 'Datenänderungen'}
           </p>
           <p className="text-xl sm:text-2xl font-black text-promo-600 dark:text-promo-400 mt-1">
@@ -400,11 +400,11 @@ export const AuditLog = () => {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-gray-800 shadow-2xs space-y-3.5">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-gray-800 shadow-sm space-y-3.5">
         <div className="flex flex-col sm:flex-row gap-3">
           {/* Search Input */}
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-slate-400 absolute start-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-4 h-4 text-slate-500 absolute start-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={searchTerm}
@@ -427,7 +427,7 @@ export const AuditLog = () => {
                 </option>
               ))}
             </select>
-            <ChevronDown className="w-4 h-4 text-slate-400 absolute end-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <ChevronDown className="w-4 h-4 text-slate-500 absolute end-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
         </div>
 
@@ -442,7 +442,7 @@ export const AuditLog = () => {
                 onClick={() => setSelectedCategory(cat.id)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer touch-manipulation ${
                   isSelected
-                    ? 'bg-promo-600 text-white shadow-2xs'
+                    ? 'bg-promo-600 text-white shadow-sm'
                     : 'bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-750 text-slate-600 dark:text-gray-300'
                 }`}
               >
@@ -454,7 +454,7 @@ export const AuditLog = () => {
       </div>
 
       {/* Audit Log Entries List */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-2xs overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-4"><SkeletonList variant="table" count={8} columns={4} /></div>
         ) : error ? (
@@ -516,7 +516,7 @@ export const AuditLog = () => {
                         </p>
                       )}
 
-                      <div className="flex items-center gap-2 text-[11px] text-slate-400 dark:text-gray-500">
+                      <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
                         <span className="font-semibold text-slate-700 dark:text-slate-300">
                           {entry.adminEmail}
                         </span>
@@ -529,10 +529,10 @@ export const AuditLog = () => {
                   {/* Timestamp Desktop */}
                   <div className="hidden sm:flex flex-col items-end shrink-0 text-end">
                     <span className="text-xs font-bold text-slate-700 dark:text-gray-300 flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 text-slate-400" />
+                      <Clock className="w-3.5 h-3.5 text-slate-500" />
                       {formattedTime}
                     </span>
-                    <span className="text-[11px] text-slate-400 dark:text-gray-500">
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400">
                       {formattedDate}
                     </span>
                   </div>

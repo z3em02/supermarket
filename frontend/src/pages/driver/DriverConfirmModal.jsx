@@ -11,8 +11,8 @@ export const DriverConfirmModal = ({
   setDriverNote,
   updatingId
 }) => (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-      <div className="bg-white dark:bg-gray-900 rounded-3xl max-w-md w-full p-6 border border-slate-200 dark:border-gray-800 shadow-2xl space-y-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-md w-full p-6 border border-slate-200 dark:border-gray-800 shadow-2xl space-y-4">
         <div className="flex items-center gap-3">
           <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
             confirmModal.action === 'deliver' 

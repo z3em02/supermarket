@@ -20,7 +20,7 @@ export const CouponModal = ({
   const { t } = useLanguage();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
       <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 dark:border-gray-800 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-gray-800">
           <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -29,7 +29,7 @@ export const CouponModal = ({
           </h2>
           <button
             onClick={() => setShowCouponModal(false)}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg leading-none"
+            className="text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 text-lg leading-none"
           >
             &times;
           </button>

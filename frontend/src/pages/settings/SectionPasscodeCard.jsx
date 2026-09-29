@@ -25,7 +25,7 @@ export const SectionPasscodeCard = ({
   } = sectionPasscode;
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-gray-850 p-4 sm:p-8 shadow-sm space-y-5">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl border border-slate-200/80 dark:border-gray-850 p-4 sm:p-8 shadow-sm space-y-5">
       <div className="flex items-center gap-2.5 sm:gap-3 pb-4 border-b border-slate-100 dark:border-gray-800">
         <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-danger-50 dark:bg-danger-950/50 text-danger-600 dark:text-danger-400 flex items-center justify-center shrink-0">
           <Lock className="w-4 sm:w-5 h-4 sm:h-5" />
@@ -50,10 +50,10 @@ export const SectionPasscodeCard = ({
       )}
 
       {passcodeIsSet === null ? (
-        <p className="text-xs text-slate-400">{language === 'ar' ? 'جارٍ التحميل...' : 'Wird geladen...'}</p>
+        <p className="text-xs text-slate-500">{language === 'ar' ? 'جارٍ التحميل...' : 'Wird geladen...'}</p>
       ) : !showPasscodeForm ? (
         <div className="flex items-center justify-between gap-3">
-          <span className={`text-xs font-bold ${passcodeIsSet ? 'text-success-600 dark:text-success-400' : 'text-slate-400 dark:text-gray-500'}`}>
+          <span className={`text-xs font-bold ${passcodeIsSet ? 'text-success-600 dark:text-success-400' : 'text-slate-500 dark:text-slate-400'}`}>
             {passcodeIsSet
               ? (language === 'ar' ? 'الرمز مفعّل حالياً' : 'PIN ist aktiv')
               : (language === 'ar' ? 'لا يوجد رمز حالياً' : 'Kein PIN eingerichtet')}

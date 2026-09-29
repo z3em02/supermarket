@@ -41,7 +41,7 @@ export const DriverOrderCard = ({
 
   return (
     <article 
-      className={`bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border transition-all duration-200 overflow-hidden shadow-xs hover:shadow-md ${
+      className={`bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl border transition-all duration-200 overflow-hidden shadow-sm hover:shadow-md ${
         isOutForDelivery
           ? 'border-warning-400/80 dark:border-warning-500/60 ring-2 ring-warning-400/20'
           : isDelivered
@@ -74,7 +74,7 @@ export const DriverOrderCard = ({
               <div className={`flex items-center gap-1.5 text-xs font-bold mt-0.5 ${
                 order.assignedDriverName === activeDisplayName
                   ? 'text-success-700 dark:text-success-400'
-                  : 'text-slate-400 dark:text-gray-500'
+                  : 'text-slate-500 dark:text-slate-400'
               }`}>
                 <UserCheck className="w-3.5 h-3.5 shrink-0" />
                 <span>
@@ -114,7 +114,7 @@ export const DriverOrderCard = ({
         {/* Customer Name & Direct Call */}
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
               {isAr ? 'المستلم' : 'Empfänger'}
             </div>
             <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white truncate">
@@ -132,7 +132,7 @@ export const DriverOrderCard = ({
               <span>{isAr ? 'اتصال' : 'Anrufen'}</span>
             </a>
           ) : (
-            <span className="text-xs text-slate-400 dark:text-gray-500 italic">
+            <span className="text-xs text-slate-500 dark:text-slate-400 italic">
               {isAr ? 'بدون رقم هاتف' : 'Keine Telefonnummer'}
             </span>
           )}
@@ -158,7 +158,7 @@ export const DriverOrderCard = ({
             <button
               type="button"
               onClick={() => openMaps(deliveryAddress)}
-              className="flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-bold text-xs sm:text-sm shadow-xs transition active:scale-95 shrink-0"
+              className="flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-bold text-xs sm:text-sm shadow-sm transition active:scale-95 shrink-0"
             >
               <Navigation className="w-4 h-4" />
               <span>{isAr ? 'فتح في خرائط جوجل' : 'In Google Maps öffnen'}</span>
@@ -189,7 +189,7 @@ export const DriverOrderCard = ({
             className="w-full flex items-center justify-between py-2 text-xs font-bold text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition"
           >
             <span className="flex items-center gap-1.5">
-              <Package className="w-4 h-4 text-slate-400" />
+              <Package className="w-4 h-4 text-slate-500" />
               <span>
                 {isAr 
                   ? `محتويات الطلب (${order.orderItems?.length || 0} صنف)` 
@@ -218,7 +218,7 @@ export const DriverOrderCard = ({
                   </div>
                 ))
               ) : (
-                <p className="text-xs text-slate-400 italic p-2">
+                <p className="text-xs text-slate-500 italic p-2">
                   {isAr ? 'لا توجد تفاصيل للمنتجات' : 'Keine Artikeldetails hinterlegt'}
                 </p>
               )}

@@ -1,4 +1,5 @@
 import colors from 'tailwindcss/colors';
+import defaultTheme from 'tailwindcss/defaultTheme';
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -8,6 +9,9 @@ export default {
   ],
   darkMode: 'class',
   theme: {
+    // `xs` (large phones) is used across the UI; listed first so the
+    // min-width rules cascade in order (xs < sm < md ...).
+    screens: { xs: '480px', ...defaultTheme.screens },
     extend: {
       keyframes: {
         'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },

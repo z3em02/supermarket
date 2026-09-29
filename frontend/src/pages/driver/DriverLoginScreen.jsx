@@ -20,7 +20,7 @@ export const DriverLoginScreen = ({
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-gray-950 px-4" dir={direction}>
-      <div className="w-full max-w-sm bg-white dark:bg-gray-900 rounded-3xl border border-slate-200/80 dark:border-gray-800 shadow-xl p-6 sm:p-8 space-y-5">
+      <div className="w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-lg p-6 sm:p-8 space-y-5">
         <div className="text-center space-y-2">
           <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-warning-500 to-success-600 flex items-center justify-center text-white shadow-md">
             <Truck className="w-7 h-7" />

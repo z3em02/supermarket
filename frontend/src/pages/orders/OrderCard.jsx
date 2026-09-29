@@ -46,7 +46,7 @@ export const OrderCard = ({
 
   return (
     <div 
-      className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/90 dark:border-gray-800 shadow-2xs hover:shadow-md transition-all overflow-hidden"
+      className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/90 dark:border-gray-800 shadow-sm hover:shadow-md transition-all overflow-hidden"
     >
       {/* ── 1. Compact Header Bar: Status + ID + Timestamp + Total Price ── */}
       <div className="flex flex-wrap items-center justify-between gap-2.5 px-4 sm:px-5 py-3 bg-slate-50/80 dark:bg-gray-950/50 border-b border-slate-100 dark:border-gray-850">
@@ -63,8 +63,8 @@ export const OrderCard = ({
           </span>
 
           {/* Date & Time */}
-          <span className="text-slate-400 dark:text-gray-500 text-xs flex items-center gap-1">
-            <Calendar className="w-3 h-3 text-slate-400" />
+          <span className="text-slate-500 dark:text-slate-400 text-xs flex items-center gap-1">
+            <Calendar className="w-3 h-3 text-slate-500" />
             {new Date(order.createdAt).toLocaleDateString(language === 'ar' ? 'ar-DE' : 'de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}
             <span className="text-slate-300 dark:text-gray-700">&bull;</span>
             {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -124,7 +124,7 @@ export const OrderCard = ({
                   href={`tel:${order.customerPhone || order.customer?.phone}`}
                   className="font-mono text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 font-bold inline-flex items-center gap-1"
                 >
-                  <Phone className="w-3 h-3 text-slate-400" />
+                  <Phone className="w-3 h-3 text-slate-500" />
                   <span>{order.customerPhone || order.customer?.phone}</span>
                 </a>
               )}
@@ -181,7 +181,7 @@ export const OrderCard = ({
             {/* Customer note */}
             {order.notes && (
               <div className="flex items-start gap-1.5 p-2 rounded-lg bg-slate-50 dark:bg-gray-950/50 border border-slate-200/60 dark:border-gray-800 text-[11px] text-slate-600 dark:text-slate-400">
-                <FileText className="w-3 h-3 text-slate-400 shrink-0 mt-0.5" />
+                <FileText className="w-3 h-3 text-slate-500 shrink-0 mt-0.5" />
                 <span className="italic truncate">
                   <strong className="not-italic text-slate-700 dark:text-slate-300">
                     {language === 'ar' ? 'ملاحظة العميل:' : 'Kundennotiz:'}
@@ -235,7 +235,7 @@ export const OrderCard = ({
 
           {/* Expanded item details */}
           {isExpanded && (
-            <div className="mt-2.5 bg-slate-50 dark:bg-gray-950/60 rounded-xl border border-slate-200/70 dark:border-gray-800 overflow-hidden divide-y divide-slate-100 dark:divide-gray-800/80 animate-in fade-in duration-150">
+            <div className="mt-2.5 bg-slate-50 dark:bg-gray-950/60 rounded-xl border border-slate-200/70 dark:border-gray-800 overflow-hidden divide-y divide-slate-100 dark:divide-gray-800/80 animate-fade-in">
               {(order.orderItems || []).map((item, idx) => {
                 const itemName = (language === 'ar' ? item.product?.nameAr : item.product?.nameDe) || item.product?.name || item.productId;
                 const subtotal = Number(item.subtotal || item.price * item.quantity);
@@ -250,7 +250,7 @@ export const OrderCard = ({
                       <span className="font-medium text-slate-800 dark:text-slate-200 truncate">{itemName}</span>
                     </div>
                     <div className="flex items-center gap-3 shrink-0 font-mono">
-                      <span className="text-[11px] text-slate-400">€{unitPrice.toFixed(2)}/Stk.</span>
+                      <span className="text-[11px] text-slate-500">€{unitPrice.toFixed(2)}/Stk.</span>
                       <span className="font-bold text-slate-900 dark:text-white">€{subtotal.toFixed(2)}</span>
                     </div>
                   </div>
@@ -305,7 +305,7 @@ export const OrderCard = ({
             {currentStatus === 'pending' && (
               <>
                 <button onClick={() => { setAcceptModalOrder(order); setAcceptModalDriver(order.assignedDriverName || ''); }} disabled={updating}
-                  className="px-3 py-1.5 bg-success-600 hover:bg-success-700 text-white rounded-lg font-bold text-xs transition shadow-2xs cursor-pointer touch-manipulation">
+                  className="px-3 py-1.5 bg-success-600 hover:bg-success-700 text-white rounded-lg font-bold text-xs transition shadow-sm cursor-pointer touch-manipulation">
                   {t('accept')}
                 </button>
                 <button onClick={() => openStatusModal(order, 'declined')} disabled={updating}
@@ -316,21 +316,21 @@ export const OrderCard = ({
             )}
             {currentStatus === 'accepted' && (
               <button onClick={() => handleQuickStatusChange(order.id, 'preparing')} disabled={updating}
-                className="inline-flex items-center gap-1 px-3 py-1.5 bg-promo-600 hover:bg-promo-700 text-white rounded-lg font-bold text-xs transition shadow-2xs cursor-pointer touch-manipulation">
+                className="inline-flex items-center gap-1 px-3 py-1.5 bg-promo-600 hover:bg-promo-700 text-white rounded-lg font-bold text-xs transition shadow-sm cursor-pointer touch-manipulation">
                 <Clock className="w-3 h-3" />
                 <span>{t('preparing')}</span>
               </button>
             )}
             {currentStatus === 'preparing' && (
               <button onClick={() => handleQuickStatusChange(order.id, 'shipped')} disabled={updating}
-                className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-bold text-xs transition shadow-2xs cursor-pointer touch-manipulation">
+                className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-bold text-xs transition shadow-sm cursor-pointer touch-manipulation">
                 <Truck className="w-3 h-3" />
                 <span>{t('markShipped')}</span>
               </button>
             )}
             {currentStatus === 'shipped' && (
               <button onClick={() => handleQuickStatusChange(order.id, 'delivered')} disabled={updating}
-                className="inline-flex items-center gap-1 px-3 py-1.5 bg-success-600 hover:bg-success-700 text-white rounded-lg font-bold text-xs transition shadow-2xs cursor-pointer touch-manipulation">
+                className="inline-flex items-center gap-1 px-3 py-1.5 bg-success-600 hover:bg-success-700 text-white rounded-lg font-bold text-xs transition shadow-sm cursor-pointer touch-manipulation">
                 <CheckCircle2 className="w-3 h-3" />
                 <span>{t('markDelivered')}</span>
               </button>

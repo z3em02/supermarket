@@ -148,7 +148,7 @@ export const Customers = () => {
 
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
+    <div className="space-y-4 sm:space-y-6 animate-fade-in">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div>
@@ -157,10 +157,10 @@ export const Customers = () => {
               <Users className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+              <h1 className="text-heading-xl">
                 {language === 'ar' ? 'إدارة العملاء' : 'Kundenverwaltung'}
               </h1>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-gray-400">
+              <p className="text-body-muted">
                 {language === 'ar' 
                   ? 'قائمة العملاء المسجلين، التحقق من الهاتف والبريد، وعناوين التوصيل المنزلي' 
                   : 'Registrierte Privatkunden, Verifizierungsstatus & Lieferadressen für Hauszustellung'}

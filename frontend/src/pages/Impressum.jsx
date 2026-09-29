@@ -36,7 +36,7 @@ export const Impressum = () => {
     <div className={`min-h-screen bg-slate-50 dark:bg-gray-950 text-slate-900 dark:text-gray-100 transition-colors duration-200 font-sans ${direction === 'rtl' ? 'rtl' : 'ltr'}`}>
       
       {/* Top Header */}
-      <header className="sticky top-0 z-40 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-gray-800 shadow-2xs">
+      <header className="sticky top-0 z-40 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-gray-800 shadow-sm">
         <div className="max-w-5xl mx-auto px-3 xs:px-4 sm:px-6 lg:px-8 h-14 sm:h-20 flex items-center justify-between gap-2 sm:gap-4">
           <Link to="/" className="flex items-center gap-2 sm:gap-3 group min-w-0">
             {settings?.logoUrl ? (
@@ -46,7 +46,7 @@ export const Impressum = () => {
                 className="w-8 h-8 sm:w-10 sm:h-10 object-contain rounded-xl bg-slate-50 dark:bg-gray-850 p-1 border border-slate-200 dark:border-gray-750 shrink-0"
               />
             ) : (
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-primary-600 flex items-center justify-center text-white shadow-md shrink-0">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-brand-600 flex items-center justify-center text-white shadow-md shrink-0">
                 <Store className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
             )}
@@ -54,7 +54,7 @@ export const Impressum = () => {
               <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white block leading-tight truncate max-w-[120px] xs:max-w-[180px] sm:max-w-none">
                 {storeName}
               </span>
-              <span className="text-[10px] sm:text-[11px] text-primary-600 dark:text-primary-400 font-semibold block truncate">
+              <span className="text-[10px] sm:text-[11px] text-brand-600 dark:text-brand-400 font-semibold block truncate">
                 {language === 'ar' ? 'سوبرماركت وتوصيل منزلي' : 'Supermarkt & Lieferservice'}
               </span>
             </div>
@@ -79,14 +79,14 @@ export const Impressum = () => {
         
         {/* Title */}
         <div className="text-center space-y-2.5 sm:space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-50 dark:bg-primary-950/60 border border-primary-200/60 dark:border-primary-800 text-primary-700 dark:text-primary-400 text-[11px] sm:text-xs font-bold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 dark:bg-brand-950/60 border border-brand-200/60 dark:border-brand-800 text-brand-700 dark:text-brand-400 text-[11px] sm:text-xs font-bold uppercase tracking-wider">
             <Scale className="w-3.5 h-3.5 shrink-0" />
             <span>{language === 'ar' ? 'الإشعار القانوني وحقوق النشر (النمسا)' : 'Rechtliche Hinweise & Impressum (Österreich)'}</span>
           </div>
           <h1 className="text-2xl xs:text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
             {t('impressum')}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-body-muted max-w-2xl mx-auto leading-relaxed">
             {language === 'ar' 
               ? 'معلومات قانونية وفقاً لقانون التجارة الإلكترونية النمساوي (§ 5 ECG) وقانون الشركات وقانون الإعلام'
               : 'Informationspflicht laut § 5 E-Commerce Gesetz (ECG), § 14 Unternehmensgesetzbuch (UGB) und § 25 Mediengesetz (MedienG)'}
@@ -98,9 +98,9 @@ export const Impressum = () => {
           <div className="space-y-6 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
             
             {/* Box 1: Store & Operator */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-4">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm space-y-4">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                <Building2 className="w-5 h-5 text-brand-600 dark:text-brand-400" />
                 <span>بيانات صاحب النشاط والمسؤول عن النشر</span>
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
@@ -148,7 +148,7 @@ export const Impressum = () => {
             </div>
 
             {/* Box 2: Contact Details */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-4">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm space-y-4">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <Phone className="w-5 h-5 text-brand-600 dark:text-brand-400" />
                 <span>بيانات التواصل المباشر</span>
@@ -156,17 +156,17 @@ export const Impressum = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
                 <div>
                   <span className="block font-bold text-slate-900 dark:text-white mb-0.5">الهاتف:</span>
-                  <a href={`tel:${phone}`} className="text-primary-600 hover:underline">{phone}</a>
+                  <a href={`tel:${phone}`} className="text-brand-600 hover:underline">{phone}</a>
                 </div>
                 <div>
                   <span className="block font-bold text-slate-900 dark:text-white mb-0.5">البريد الإلكتروني:</span>
-                  <a href={`mailto:${email}`} className="text-primary-600 hover:underline">{email}</a>
+                  <a href={`mailto:${email}`} className="text-brand-600 hover:underline">{email}</a>
                 </div>
               </div>
             </div>
 
             {/* Box 3: Chamber & Authority */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-promo-600 dark:text-promo-400" />
                 <span>الغرفة التجارية والهيئة الرقابية المختصة</span>
@@ -174,12 +174,12 @@ export const Impressum = () => {
               <ul className="space-y-2 list-disc list-inside text-xs sm:text-sm">
                 <li><strong>عضوية الغرفة التجارية:</strong> الغرفة الاقتصادية لفيينا (Wirtschaftskammer Wien - WKO) - شعبة تجارة الأغذية.</li>
                 <li><strong>الهيئة الرقابية والتنظيمية:</strong> دائرة بلدية الحي الثاني عشر بفيينا (Magistratisches Bezirksamt für den 12. Bezirk).</li>
-                <li><strong>القوانين المهنية المعمول بها:</strong> نظام التجارة النمساوي (Gewerbeordnung 1994 - GewO) وقانون التجارة الإلكترونية (ECG)، متاح عبر بوابة القوانين الاتحادية (<a href="https://www.ris.bka.gv.at" target="_blank" rel="noopener noreferrer" className="text-primary-600 underline">www.ris.bka.gv.at</a>).</li>
+                <li><strong>القوانين المهنية المعمول بها:</strong> نظام التجارة النمساوي (Gewerbeordnung 1994 - GewO) وقانون التجارة الإلكترونية (ECG)، متاح عبر بوابة القوانين الاتحادية (<a href="https://www.ris.bka.gv.at" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">www.ris.bka.gv.at</a>).</li>
               </ul>
             </div>
 
             {/* Box 4: Copyright */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <Copyright className="w-5 h-5 text-warning-600 dark:text-warning-400" />
                 <span>حقوق الطبع والنشر والملكية الفكرية (Copyright)</span>
@@ -193,7 +193,7 @@ export const Impressum = () => {
             </div>
 
             {/* Box 5: Liability Disclaimer */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <FileText className="w-5 h-5 text-danger-600 dark:text-danger-400" />
                 <span>إخلاء المسؤولية عن المحتوى والروابط الخارجية</span>
@@ -209,9 +209,9 @@ export const Impressum = () => {
           <div className="space-y-6 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
             
             {/* Box 1: Diensteanbieter */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-4">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm space-y-4">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                <Building2 className="w-5 h-5 text-brand-600 dark:text-brand-400" />
                 <span>Diensteanbieter & Medieninhaber</span>
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
@@ -259,7 +259,7 @@ export const Impressum = () => {
             </div>
 
             {/* Box 2: Kontakt */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-4">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm space-y-4">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <Phone className="w-5 h-5 text-brand-600 dark:text-brand-400" />
                 <span>Kontaktdaten</span>
@@ -267,17 +267,17 @@ export const Impressum = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
                 <div>
                   <span className="block font-bold text-slate-900 dark:text-white mb-0.5">Telefon:</span>
-                  <a href={`tel:${phone}`} className="text-primary-600 hover:underline">{phone}</a>
+                  <a href={`tel:${phone}`} className="text-brand-600 hover:underline">{phone}</a>
                 </div>
                 <div>
                   <span className="block font-bold text-slate-900 dark:text-white mb-0.5">E-Mail:</span>
-                  <a href={`mailto:${email}`} className="text-primary-600 hover:underline">{email}</a>
+                  <a href={`mailto:${email}`} className="text-brand-600 hover:underline">{email}</a>
                 </div>
               </div>
             </div>
 
             {/* Box 3: Kammer & Behörde */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-promo-600 dark:text-promo-400" />
                 <span>Kammerzugehörigkeit & Gewerbebehörde</span>
@@ -285,12 +285,12 @@ export const Impressum = () => {
               <ul className="space-y-2 list-disc list-inside text-xs sm:text-sm">
                 <li><strong>Kammerzugehörigkeit:</strong> Wirtschaftskammer Wien (WKO), Sparte Handel.</li>
                 <li><strong>Zuständige Aufsichtsbehörde / Gewerbebehörde:</strong> Magistratisches Bezirksamt für den 12. Bezirk (Wien).</li>
-                <li><strong>Anwendbare Rechtsvorschriften:</strong> Österreichische Gewerbeordnung (GewO 1994), E-Commerce-Gesetz (ECG), abrufbar im Rechtsinformationssystem des Bundes (<a href="https://www.ris.bka.gv.at" target="_blank" rel="noopener noreferrer" className="text-primary-600 underline">www.ris.bka.gv.at</a>).</li>
+                <li><strong>Anwendbare Rechtsvorschriften:</strong> Österreichische Gewerbeordnung (GewO 1994), E-Commerce-Gesetz (ECG), abrufbar im Rechtsinformationssystem des Bundes (<a href="https://www.ris.bka.gv.at" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">www.ris.bka.gv.at</a>).</li>
               </ul>
             </div>
 
             {/* Box 4: Urheberrecht (Copyright) */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <Copyright className="w-5 h-5 text-warning-600 dark:text-warning-400" />
                 <span>Urheberrechtshinweis (Copyright)</span>
@@ -304,7 +304,7 @@ export const Impressum = () => {
             </div>
 
             {/* Box 5: Haftung für Inhalte & Links */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <FileText className="w-5 h-5 text-danger-600 dark:text-danger-400" />
                 <span>Haftung für Inhalte und externe Links</span>
@@ -318,13 +318,13 @@ export const Impressum = () => {
             </div>
 
             {/* Box 6: Streitbeilegung */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Scale className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                <Scale className="w-5 h-5 text-brand-600 dark:text-brand-400" />
                 <span>EU-Streitschlichtung</span>
               </h2>
               <p>
-                Verbraucher haben die Möglichkeit, Beschwerden an die Online-Streitbeilegungsplattform der EU zu richten: <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener noreferrer" className="text-primary-600 underline">https://ec.europa.eu/consumers/odr</a>. Sie können Ihre Beschwerde auch direkt bei uns unter der oben angegebenen E-Mail-Adresse einreichen.
+                Verbraucher haben die Möglichkeit, Beschwerden an die Online-Streitbeilegungsplattform der EU zu richten: <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">https://ec.europa.eu/consumers/odr</a>. Sie können Ihre Beschwerde auch direkt bei uns unter der oben angegebenen E-Mail-Adresse einreichen.
               </p>
             </div>
 
@@ -338,9 +338,9 @@ export const Impressum = () => {
         <div className="max-w-4xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <span>© {new Date().getFullYear()} {storeName}. {language === 'ar' ? 'جميع الحقوق محفوظة.' : 'Alle Rechte vorbehalten.'}</span>
           <div className="flex items-center gap-4">
-            <Link to="/datenschutz" className="hover:text-primary-600 underline underline-offset-2">{t('datenschutz')}</Link>
-            <Link to="/agb" className="hover:text-primary-600 underline underline-offset-2">{t('agb')}</Link>
-            <Link to="/" className="hover:text-primary-600">{t('backToHome')}</Link>
+            <Link to="/datenschutz" className="hover:text-brand-600 underline underline-offset-2">{t('datenschutz')}</Link>
+            <Link to="/agb" className="hover:text-brand-600 underline underline-offset-2">{t('agb')}</Link>
+            <Link to="/" className="hover:text-brand-600">{t('backToHome')}</Link>
           </div>
         </div>
       </footer>

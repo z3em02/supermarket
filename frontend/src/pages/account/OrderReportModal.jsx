@@ -15,8 +15,8 @@ export const OrderReportModal = ({
   const { language } = useLanguage();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/70 backdrop-blur-xs overflow-y-auto">
-      <div className="relative w-full max-w-2xl max-h-[90dvh] overflow-y-auto bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-gray-800 p-4 sm:p-6 md:p-8 my-auto text-slate-900 dark:text-gray-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/70 backdrop-blur-sm overflow-y-auto">
+      <div className="relative w-full max-w-2xl max-h-[90dvh] overflow-y-auto bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl shadow-2xl border border-slate-200 dark:border-gray-800 p-4 sm:p-6 md:p-8 my-auto text-slate-900 dark:text-gray-100">
         {/* Modal Top Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 dark:border-gray-800 mb-4 sm:mb-6 gap-3">
           <div className="flex items-center gap-3 min-w-0">
@@ -27,7 +27,7 @@ export const OrderReportModal = ({
               <h3 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white truncate">
                 {isAr ? 'تقرير الطلب الرسمي وإيصال التوصيل' : 'Offizieller Bestellbericht & Lieferschein'}
               </h3>
-              <p className="text-xs text-slate-400 font-mono truncate">
+              <p className="text-xs text-slate-500 font-mono truncate">
                 #{reportOrder.id.slice(0, 8).toUpperCase()} &bull; {getStoreName()}
               </p>
             </div>
@@ -45,7 +45,7 @@ export const OrderReportModal = ({
             <button
               type="button"
               onClick={() => setShowReportModal(false)}
-              className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-gray-800 transition cursor-pointer touch-manipulation"
+              className="p-2 text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-gray-800 transition cursor-pointer touch-manipulation"
             >
               <X className="w-5 h-5" />
             </button>
@@ -57,12 +57,12 @@ export const OrderReportModal = ({
           {/* Meta details grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-gray-950 border border-slate-200/80 dark:border-gray-800">
             <div>
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
                 {isAr ? 'بيانات المستلم والتوصيل:' : 'Empfänger & Adresse:'}
               </span>
               <p className="font-bold text-slate-900 dark:text-white break-words">{reportOrder.customerName || reportOrder.customer?.name || customer?.name}</p>
               <p className="text-slate-600 dark:text-gray-300 font-mono mt-0.5 flex items-center gap-1.5">
-                <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                <Phone className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                 <span>{reportOrder.customerPhone || customer?.phone}</span>
               </p>
               <p className="text-slate-600 dark:text-gray-300 mt-1 break-words">{reportOrder.deliveryAddress || 'Adresse'}</p>
@@ -72,7 +72,7 @@ export const OrderReportModal = ({
             </div>
 
             <div>
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
                 {isAr ? 'تفاصيل الطلب والحالة:' : 'Bestellstatus & Details:'}
               </span>
               <div className="mb-2">{getStatusBadge(reportOrder.status)}</div>
@@ -109,7 +109,7 @@ export const OrderReportModal = ({
                       <td className="p-2.5 sm:p-3 font-medium text-slate-800 dark:text-gray-200">
                         <div className="break-words max-w-[150px] sm:max-w-none">{prodName}</div>
                         {item.product?.sku && (
-                          <span className="text-[10px] text-slate-400 font-mono block">Art.-Nr. {item.product.sku}</span>
+                          <span className="text-[10px] text-slate-500 font-mono block">Art.-Nr. {item.product.sku}</span>
                         )}
                       </td>
                       <td className="p-2.5 sm:p-3 text-center font-bold text-slate-900 dark:text-white whitespace-nowrap">{item.quantity}x</td>
@@ -156,7 +156,7 @@ export const OrderReportModal = ({
                   <td colSpan="3" className="p-2.5 sm:p-3 text-end font-medium text-slate-500">
                     {isAr ? 'رسوم التوصيل للمنزل' : 'Lieferkosten (Haustür)'}
                     {reportOrder.deliveryDistanceKm != null && Number(reportOrder.deliveryDistanceKm) > 0 && (
-                      <span className="text-[10px] text-slate-400 block font-normal">
+                      <span className="text-[10px] text-slate-500 block font-normal">
                         (~{reportOrder.deliveryDistanceKm} km {isAr ? 'من المتجر' : 'vom Supermarkt'})
                       </span>
                     )}:
@@ -177,7 +177,7 @@ export const OrderReportModal = ({
             </table>
           </div>
 
-          <p className="text-[11px] text-slate-400 text-center leading-relaxed">
+          <p className="text-[11px] text-slate-500 text-center leading-relaxed">
             {isAr 
               ? 'هذا التقرير هو إيصال رسمي لتأكيد تفاصيل طلبك والتسليم عند باب منزلك مع الدفع عند الاستلام.' 
               : 'Dieser Bestellbericht dient als offizieller Beleg für Ihre Bestellung und den Lieferumfang an Ihrer Haustür.'}

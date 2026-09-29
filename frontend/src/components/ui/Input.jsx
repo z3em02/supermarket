@@ -24,7 +24,7 @@ export const Input = ({ label, hint, error, id, icon: Icon, className = '', ...p
   <Field label={label} hint={hint} error={error} id={id}>
     {(a11y) => (
       <div className="relative">
-        {Icon && <Icon className="w-4 h-4 absolute top-1/2 -translate-y-1/2 start-3.5 text-slate-400 pointer-events-none" aria-hidden="true" />}
+        {Icon && <Icon className="w-4 h-4 absolute top-1/2 -translate-y-1/2 start-3.5 text-slate-500 pointer-events-none" aria-hidden="true" />}
         <input {...a11y} {...props} className={`${FIELD_CLASSES} ${Icon ? 'ps-10' : ''} ${error ? 'border-danger-400 dark:border-danger-700' : ''} ${className}`} />
       </div>
     )}

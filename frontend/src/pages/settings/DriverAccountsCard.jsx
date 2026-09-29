@@ -30,7 +30,7 @@ export const DriverAccountsCard = ({
   } = driverAccounts;
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-gray-850 p-4 sm:p-8 shadow-sm space-y-5">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl border border-slate-200/80 dark:border-gray-850 p-4 sm:p-8 shadow-sm space-y-5">
       <div className="flex items-center gap-2.5 sm:gap-3 pb-4 border-b border-slate-100 dark:border-gray-800">
         <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-warning-50 dark:bg-warning-950/50 text-warning-600 dark:text-warning-400 flex items-center justify-center shrink-0">
           <Truck className="w-4 sm:w-5 h-4 sm:h-5" />
@@ -96,7 +96,7 @@ export const DriverAccountsCard = ({
           type="button"
           disabled={creatingDriver}
           onClick={handleCreateDriver}
-          className="px-4 py-2 rounded-xl bg-warning-600 hover:bg-warning-700 disabled:opacity-50 text-white text-xs font-bold cursor-pointer transition shadow-xs flex items-center gap-1.5"
+          className="px-4 py-2 rounded-xl bg-warning-600 hover:bg-warning-700 disabled:opacity-50 text-white text-xs font-bold cursor-pointer transition shadow-sm flex items-center gap-1.5"
         >
           <Plus className="w-3.5 h-3.5" />
           {creatingDriver ? '...' : (language === 'ar' ? 'إضافة سائق' : 'Fahrer hinzufügen')}
@@ -105,9 +105,9 @@ export const DriverAccountsCard = ({
 
       {/* Driver list */}
       {driversLoading ? (
-        <p className="text-xs text-slate-400">{language === 'ar' ? 'جارٍ التحميل...' : 'Wird geladen...'}</p>
+        <p className="text-xs text-slate-500">{language === 'ar' ? 'جارٍ التحميل...' : 'Wird geladen...'}</p>
       ) : drivers.length === 0 ? (
-        <p className="text-xs text-slate-400">{language === 'ar' ? 'لا يوجد سائقون بعد.' : 'Noch keine Fahrer angelegt.'}</p>
+        <p className="text-xs text-slate-500">{language === 'ar' ? 'لا يوجد سائقون بعد.' : 'Noch keine Fahrer angelegt.'}</p>
       ) : (
         <div className="divide-y divide-slate-100 dark:divide-gray-800 rounded-xl border border-slate-200/70 dark:border-gray-800 overflow-hidden">
           {drivers.map((driver) => (

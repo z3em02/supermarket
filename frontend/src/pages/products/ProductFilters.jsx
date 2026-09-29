@@ -40,7 +40,7 @@ export const ProductFilters = ({
         >
           <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           <span>{t('lowStockFilter')}</span>
-          <span className="px-1.5 py-0.2 rounded-full text-xs font-bold bg-white/20 dark:bg-warning-900/40">
+          <span className="px-1.5 py-px rounded-full text-xs font-bold bg-white/20 dark:bg-warning-900/40">
             {lowStockProductsCount}
           </span>
         </button>
@@ -49,7 +49,7 @@ export const ProductFilters = ({
       {/* Search & Category Dropdown */}
       <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
         <div className="relative flex-1">
-          <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 sm:w-5 sm:h-5" />
+          <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4 sm:w-5 sm:h-5" />
           <input
             type="text"
             placeholder={`${t('searchProducts')} (DE / AR / SKU)...`}
@@ -60,7 +60,7 @@ export const ProductFilters = ({
           {searchTerm && (
             <button
               onClick={() => setSearchTerm('')}
-              className="absolute end-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 touch-manipulation cursor-pointer"
+              className="absolute end-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 touch-manipulation cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>

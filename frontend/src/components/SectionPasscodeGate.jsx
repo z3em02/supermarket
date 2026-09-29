@@ -95,14 +95,14 @@ export const SectionPasscodeGate = ({ children }) => {
   if (status === 'loading') {
     return (
       <div className="min-h-[50vh] flex items-center justify-center">
-        <div className="w-8 h-8 border-3 border-primary-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-[3px] border-primary-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-4">
-      <div className="w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-xl p-6 space-y-5">
+      <div className="w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-lg p-6 space-y-5">
         <div className="text-center space-y-2">
           <div className="w-12 h-12 mx-auto rounded-2xl bg-primary-50 dark:bg-primary-950/60 text-primary-600 dark:text-primary-400 flex items-center justify-center border border-primary-200 dark:border-primary-900/40">
             <Lock className="w-6 h-6" />

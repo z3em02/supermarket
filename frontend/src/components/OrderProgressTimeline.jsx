@@ -39,12 +39,12 @@ export const OrderProgressTimeline = ({ status, language }) => {
                 className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors ${
                   done
                     ? 'bg-brand-600 border-brand-600 text-white'
-                    : 'bg-slate-50 dark:bg-gray-950 border-slate-200 dark:border-gray-800 text-slate-300 dark:text-gray-600'
+                    : 'bg-slate-50 dark:bg-gray-950 border-slate-200 dark:border-gray-800 text-slate-300 dark:text-slate-400'
                 }`}
               >
                 {done && i < currentIndex ? <Check className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
               </div>
-              <span className={`text-[10px] font-semibold text-center leading-tight max-w-[60px] ${done ? 'text-brand-700 dark:text-brand-400' : 'text-slate-400 dark:text-gray-500'}`}>
+              <span className={`text-[10px] font-semibold text-center leading-tight max-w-[60px] ${done ? 'text-brand-700 dark:text-brand-400' : 'text-slate-500 dark:text-slate-400'}`}>
                 {isAr ? meta.ar : meta.de}
               </span>
             </div>

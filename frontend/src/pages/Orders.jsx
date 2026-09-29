@@ -204,17 +204,17 @@ export const Orders = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+          <h1 className="text-heading-xl">
             {t('orders')}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1">
+          <p className="text-body-muted mt-0.5 sm:mt-1">
             {t('manageTrack')}
           </p>
         </div>
         <div className="w-full sm:w-auto flex items-center gap-2">
           <Link
             to={`${ADMIN_BASE}/driver`}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 py-2 sm:py-2.5 bg-warning-500 hover:bg-warning-600 text-white font-medium text-xs sm:text-sm rounded-xl shadow-xs transition touch-manipulation cursor-pointer"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 py-2 sm:py-2.5 bg-warning-500 hover:bg-warning-600 text-white font-medium text-xs sm:text-sm rounded-xl shadow-sm transition touch-manipulation cursor-pointer"
           >
             <Truck className="w-4 h-4 sm:w-5 sm:h-5" />
             <span>{language === 'ar' ? 'واجهة التوصيل للسائق' : 'Fahreransicht'}</span>
@@ -235,7 +235,7 @@ export const Orders = () => {
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
         <div className="relative flex-1">
-          <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 sm:w-5 sm:h-5" />
+          <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4 sm:w-5 sm:h-5" />
           <input
             type="text"
             placeholder={t('searchOrders')}
@@ -327,14 +327,14 @@ export const Orders = () => {
 
       {/* Printable Invoice / Packing Slip Modal */}
       {showPrintModal && printOrder && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 animate-fade-in">
           <PrintOrderModal printOrder={printOrder} printReceipt={printReceipt} setShowPrintModal={setShowPrintModal} />
         </div>
       )}
 
       {/* Create Order Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 animate-fade-in">
           <CreateOrderModal
             customers={customers}
             customersLocked={customersLocked}

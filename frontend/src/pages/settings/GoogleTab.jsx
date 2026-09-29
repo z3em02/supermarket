@@ -22,9 +22,9 @@ export const GoogleTab = ({
   const { settings, reviews, reviewsLoading } = useStoreSettings();
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
+    <div className="space-y-6 animate-fade-in">
       {/* Google Integration & Scraper Settings */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-gray-850 p-5 sm:p-7 shadow-xs space-y-5">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl border border-slate-200/80 dark:border-gray-850 p-5 sm:p-7 shadow-sm space-y-5">
         <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100 dark:border-gray-800">
           <div className="w-9 h-9 rounded-xl bg-warning-50 dark:bg-warning-950/50 text-warning-600 dark:text-warning-400 flex items-center justify-center shrink-0">
             <Navigation className="w-4 h-4" />
@@ -111,7 +111,7 @@ export const GoogleTab = ({
                 <span className="text-lg font-black text-slate-900 dark:text-white">
                   {settings?.googleRating ? Number(settings.googleRating).toFixed(1) : '5.0'}
                 </span>
-                <span className="text-xs text-slate-400">•</span>
+                <span className="text-xs text-slate-500">•</span>
                 <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
                   {settings?.googleReviewCount || 0} {language === 'ar' ? 'تقييم' : 'Bewertungen'}
                 </span>
@@ -122,7 +122,7 @@ export const GoogleTab = ({
               type="button"
               onClick={handleSyncGoogle}
               disabled={syncing}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs text-white bg-success-600 hover:bg-success-700 active:bg-success-800 disabled:opacity-50 shadow-xs transition cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs text-white bg-success-600 hover:bg-success-700 active:bg-success-800 disabled:opacity-50 shadow-sm transition cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
               <span>{syncing ? (language === 'ar' ? 'جارٍ الجلب...' : 'Wird abgerufen...') : (language === 'ar' ? 'تحديث الآن' : 'Jetzt synchronisieren')}</span>
@@ -147,7 +147,7 @@ export const GoogleTab = ({
       </div>
 
       {/* Google Reviews Management */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-gray-850 p-5 sm:p-7 shadow-xs space-y-5">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl border border-slate-200/80 dark:border-gray-850 p-5 sm:p-7 shadow-sm space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-gray-800">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-warning-50 dark:bg-warning-950/50 text-warning-600 dark:text-warning-400 flex items-center justify-center shrink-0">
@@ -177,7 +177,7 @@ export const GoogleTab = ({
               }`}
             >
               <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out ${
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition duration-200 ease-in-out ${
                   formData.showGoogleReviews ? (direction === 'rtl' ? '-translate-x-5' : 'translate-x-5') : 'translate-x-0'
                 }`}
               />
@@ -186,12 +186,12 @@ export const GoogleTab = ({
         </div>
 
         {reviewsLoading ? (
-          <div className="py-8 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
+          <div className="py-8 text-center text-slate-500 text-xs flex items-center justify-center gap-2">
             <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
             <span>{t('loading')}</span>
           </div>
         ) : reviews.length === 0 ? (
-          <div className="py-8 text-center text-slate-400 text-xs bg-slate-50 dark:bg-gray-950 rounded-2xl border border-dashed border-slate-200 dark:border-gray-800 p-4">
+          <div className="py-8 text-center text-slate-500 text-xs bg-slate-50 dark:bg-gray-950 rounded-2xl border border-dashed border-slate-200 dark:border-gray-800 p-4">
             <p>{language === 'ar' ? 'لا توجد تقييمات حالياً.' : 'Keine Rezensionen vorhanden.'}</p>
           </div>
         ) : (
@@ -226,7 +226,7 @@ export const GoogleTab = ({
                           <h4 className="text-xs font-bold text-slate-900 dark:text-white leading-tight truncate">
                             {rev.authorName}
                           </h4>
-                          <span className="text-[10px] text-slate-400">
+                          <span className="text-[10px] text-slate-500">
                             {rev.relativeTime || 'Kürzlich'}
                           </span>
                         </div>

@@ -22,7 +22,7 @@ export const ProductListView = ({
           <div
             key={product.id}
             onClick={() => setSelectedProduct(product)}
-            className="group bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-850 p-3 sm:p-4 shadow-2xs hover:shadow-md hover:border-primary-500/40 dark:hover:border-primary-500/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer"
+            className="group bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-850 p-3 sm:p-4 shadow-sm hover:shadow-md hover:border-brand-500/40 dark:hover:border-brand-500/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer"
           >
             <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
               {/* Media Thumbnail */}
@@ -30,19 +30,21 @@ export const ProductListView = ({
                 {product.imageUrl ? (
                   <img
                     src={product.imageUrl}
+                    loading="lazy"
+                    decoding="async"
                     alt={localizedName}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                     onError={(e) => { e.target.style.display = 'none'; }}
                   />
                 ) : (
-                  <Package className="w-8 h-8 text-primary-600 dark:text-primary-400" />
+                  <Package className="w-8 h-8 text-brand-600 dark:text-brand-400" />
                 )}
               </div>
 
               {/* Content */}
               <div className="space-y-1 min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
                     {localizedName}
                   </h3>
                   {localizedCategory && (
@@ -54,7 +56,7 @@ export const ProductListView = ({
                   {getPromotionBadge(product.id)}
                 </div>
 
-                <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-gray-500 font-mono">
+                <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-mono">
                   <span>SKU: {product.sku}</span>
                 </div>
 
@@ -78,7 +80,7 @@ export const ProductListView = ({
                           <span className="text-lg sm:text-xl font-black text-danger-600 dark:text-danger-400">
                             €{priceInfo.promoPrice.toFixed(2)}
                           </span>
-                          <span className="line-through text-xs text-slate-400">
+                          <span className="line-through text-xs text-slate-500">
                             €{priceInfo.basePrice.toFixed(2)}
                           </span>
                         </div>

@@ -24,7 +24,7 @@ export const LanguageSelector = () => {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl hover:bg-slate-100/80 dark:hover:bg-gray-850 dark:hover:border-gray-700 shadow-2xs transition touch-manipulation cursor-pointer"
+        className="flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl hover:bg-slate-100/80 dark:hover:bg-gray-850 dark:hover:border-gray-700 shadow-sm transition touch-manipulation cursor-pointer"
         title={language === 'ar' ? 'تغيير اللغة' : 'Sprache ändern'}
         aria-label={language === 'ar' ? 'تغيير اللغة' : 'Sprache ändern'}
       >
@@ -36,8 +36,8 @@ export const LanguageSelector = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute end-0 mt-2 w-44 sm:w-48 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-2xl shadow-xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100">
-          <div className="px-3.5 py-2 text-[10px] sm:text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider border-b border-slate-100 dark:border-gray-800">
+        <div className="absolute end-0 mt-2 w-44 sm:w-48 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-2xl shadow-lg py-1.5 z-50 animate-fade-in">
+          <div className="px-3.5 py-2 text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-gray-800">
             Sprache / اللغة
           </div>
           {languages.map((l) => {

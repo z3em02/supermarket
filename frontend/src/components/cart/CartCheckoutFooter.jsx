@@ -49,14 +49,14 @@ export const CartCheckoutFooter = ({
           showCouponField ? (
             <form onSubmit={handleApplyCoupon} className="flex gap-2">
               <div className="relative flex-1">
-                <Tag className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Tag className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                 <input
                   autoFocus
                   type="text"
                   placeholder={isAr ? 'أدخل رمز الكوبون...' : 'Gutscheincode eingeben...'}
                   value={couponInput}
                   onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                  className="w-full pl-8 pr-3 py-2 text-xs font-mono font-bold uppercase bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white placeholder:normal-case placeholder:font-normal placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500"
+                  className="w-full pl-8 pr-3 py-2 text-xs font-mono font-bold uppercase bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white placeholder:normal-case placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
               <button
@@ -96,6 +96,7 @@ export const CartCheckoutFooter = ({
               onClick={handleRemoveCoupon}
               className="p-1 hover:bg-brand-100 dark:hover:bg-brand-900/50 rounded-lg text-brand-800 dark:text-brand-300 transition cursor-pointer shrink-0"
               title={isAr ? 'إزالة الكوبون' : 'Gutschein entfernen'}
+              aria-label={isAr ? 'إزالة الكوبون' : 'Gutschein entfernen'}
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -178,7 +179,7 @@ export const CartCheckoutFooter = ({
           <span className="font-semibold text-slate-700 dark:text-gray-300">{isAr ? 'رسوم التوصيل الإجمالية' : 'Liefergebühr gesamt'}</span>
           <span className="font-bold text-brand-600 dark:text-brand-400">
             {distanceLoading ? (
-              <span className="text-xs text-slate-400 animate-pulse">{isAr ? 'جارٍ الحساب...' : 'Berechne...'}</span>
+              <span className="text-xs text-slate-500 animate-pulse">{isAr ? 'جارٍ الحساب...' : 'Berechne...'}</span>
             ) : deliveryFee > 0 ? (
               `€${deliveryFee.toFixed(2)}`
             ) : isFreeDeliveryApplied ? (
@@ -199,7 +200,7 @@ export const CartCheckoutFooter = ({
           €{Number(totalAmount).toFixed(2)}
         </span>
       </div>
-      <p className="text-[10px] text-slate-400 dark:text-gray-500 text-end -mt-1.5">
+      <p className="text-[10px] text-slate-500 dark:text-slate-400 text-end -mt-1.5">
         {isAr ? 'شامل الضريبة، والدفع نقداً أو بالبطاقة عند الباب' : 'inkl. MwSt., Zahlung bar oder mit Karte beim Fahrer'}
       </p>
 
@@ -207,7 +208,7 @@ export const CartCheckoutFooter = ({
         type="button"
         onClick={handlePlaceOrder}
         disabled={submitting || (isAuthenticated && (!isVerified || belowMinOrder))}
-        className="w-full py-4 px-6 rounded-2xl bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-black text-sm shadow-xl shadow-brand-600/25 transition flex items-center justify-center gap-2 cursor-pointer"
+        className="w-full py-4 px-6 rounded-2xl bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-black text-sm shadow-lg shadow-brand-600/25 transition flex items-center justify-center gap-2 cursor-pointer"
       >
         {submitting ? (
           <span>{isAr ? 'جارٍ إرسال الطلب...' : 'Bestellung wird gesendet...'}</span>

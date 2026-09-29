@@ -22,7 +22,7 @@ export const ProfileTab = ({
   const { customer } = useCustomerAuth();
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-gray-800 p-4 sm:p-6 md:p-10 shadow-sm">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl border border-slate-200/80 dark:border-gray-800 p-4 sm:p-6 md:p-10 shadow-sm">
 
       <div className="mb-6">
         <h2 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
@@ -127,7 +127,7 @@ export const ProfileTab = ({
               <option value="de">🇩🇪 Deutsch (Standard)</option>
               <option value="ar">🇦🇪 العربية</option>
             </select>
-            <p className="text-[11px] text-slate-400 dark:text-gray-500 mt-1">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
               {isAr 
                 ? 'سيتم إرسال رسائل البريد الإلكتروني والإشعارات باللغة المحددة.' 
                 : 'Bestellbestätigungen, E-Mails & Benachrichtigungen werden in dieser Sprache gesendet.'}
@@ -148,7 +148,7 @@ export const ProfileTab = ({
               className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-500"
             />
             {profileForm.password && (
-              <p className="text-[11px] text-slate-400 dark:text-gray-500 mt-1">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                 {strongPasswordHint(isAr)}
               </p>
             )}

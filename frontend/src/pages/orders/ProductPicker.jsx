@@ -114,7 +114,7 @@ export const ProductPicker = ({
         <button
           type="button"
           onClick={() => setShowProductPicker((prev) => !prev)}
-          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary-50 hover:bg-primary-100 dark:bg-primary-950/50 dark:hover:bg-primary-900/60 text-primary-700 dark:text-primary-300 text-xs font-bold border border-primary-200 dark:border-primary-800/80 shadow-2xs transition shrink-0 cursor-pointer"
+          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary-50 hover:bg-primary-100 dark:bg-primary-950/50 dark:hover:bg-primary-900/60 text-primary-700 dark:text-primary-300 text-xs font-bold border border-primary-200 dark:border-primary-800/80 shadow-sm transition shrink-0 cursor-pointer"
         >
           <SlidersHorizontal className="w-3.5 h-3.5 text-primary-600 dark:text-primary-400" />
           <span>
@@ -162,12 +162,12 @@ export const ProductPicker = ({
 
       {/* Interactive UI Menu with Filter Options */}
       {showProductPicker && (
-        <div className="pt-2 border-t border-slate-200/80 dark:border-gray-800 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="pt-2 border-t border-slate-200/80 dark:border-gray-800 space-y-3 animate-fade-in">
           {/* Filters Row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
             {/* 1. Search filter */}
             <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 rtl:right-2.5 rtl:left-auto top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search className="w-3.5 h-3.5 absolute left-2.5 rtl:right-2.5 rtl:left-auto top-1/2 -translate-y-1/2 text-slate-500" />
               <input
                 type="text"
                 value={pickerSearch}
@@ -179,7 +179,7 @@ export const ProductPicker = ({
                 <button
                   type="button"
                   onClick={() => setPickerSearch('')}
-                  className="absolute right-2.5 rtl:left-2.5 rtl:right-auto top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                  className="absolute right-2.5 rtl:left-2.5 rtl:right-auto top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -262,7 +262,7 @@ export const ProductPicker = ({
           {/* Scrollable Products List */}
           <div className="max-h-64 overflow-y-auto space-y-2 pr-1 divide-y divide-slate-200/60 dark:divide-gray-800">
             {filteredPickerProducts.length === 0 ? (
-              <div className="text-center py-8 text-slate-400">
+              <div className="text-center py-8 text-slate-500">
                 <Package className="w-8 h-8 mx-auto mb-1 opacity-40" />
                 <p className="text-xs font-semibold">
                   {language === 'ar'
@@ -319,7 +319,7 @@ export const ProductPicker = ({
                           )}
                         </div>
                         {subName && subName !== prodName && (
-                          <p className="text-[10px] text-slate-400 truncate">{subName}</p>
+                          <p className="text-[10px] text-slate-500 truncate">{subName}</p>
                         )}
                         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                           <span className="font-extrabold text-xs text-slate-900 dark:text-white font-mono">
@@ -327,20 +327,20 @@ export const ProductPicker = ({
                           </span>
                           <span className="text-slate-300 dark:text-gray-700">&bull;</span>
                           {isOutOfStock ? (
-                            <span className="text-[10px] font-bold text-danger-600 dark:text-danger-400 bg-danger-50 dark:bg-danger-950/50 px-1.5 py-0.2 rounded">
+                            <span className="text-[10px] font-bold text-danger-600 dark:text-danger-400 bg-danger-50 dark:bg-danger-950/50 px-1.5 py-px rounded">
                               {isAr ? 'نفذت الكمية (0)' : 'Ausverkauft (0)'}
                             </span>
                           ) : (p.stock || 0) <= 5 ? (
-                            <span className="text-[10px] font-bold text-warning-600 dark:text-warning-400 bg-warning-50 dark:bg-warning-950/50 px-1.5 py-0.2 rounded">
+                            <span className="text-[10px] font-bold text-warning-600 dark:text-warning-400 bg-warning-50 dark:bg-warning-950/50 px-1.5 py-px rounded">
                               {isAr ? `متبقي ${p.stock} فقط` : `Nur noch ${p.stock} Stk.`}
                             </span>
                           ) : (
-                            <span className="text-[10px] font-bold text-success-600 dark:text-success-400 bg-success-50 dark:bg-success-950/50 px-1.5 py-0.2 rounded">
+                            <span className="text-[10px] font-bold text-success-600 dark:text-success-400 bg-success-50 dark:bg-success-950/50 px-1.5 py-px rounded">
                               {isAr ? `متوفر: ${p.stock}` : `Vorrätig: ${p.stock}`}
                             </span>
                           )}
                           {existingItem && (
-                            <span className="text-[10px] font-bold text-primary-700 dark:text-primary-300 bg-primary-100 dark:bg-primary-900/60 px-1.5 py-0.2 rounded">
+                            <span className="text-[10px] font-bold text-primary-700 dark:text-primary-300 bg-primary-100 dark:bg-primary-900/60 px-1.5 py-px rounded">
                               {isAr ? `بالطلب (${currentQtyInOrder}×)` : `Im Auftrag (${currentQtyInOrder}×)`}
                             </span>
                           )}
@@ -351,7 +351,7 @@ export const ProductPicker = ({
                     {/* Right: Actions */}
                     <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
                       {/* Stepper for quantity */}
-                      <div className="flex items-center border border-slate-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 overflow-hidden shadow-2xs">
+                      <div className="flex items-center border border-slate-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 overflow-hidden shadow-sm">
                         <button
                           type="button"
                           onClick={() =>
@@ -388,7 +388,7 @@ export const ProductPicker = ({
                           handleAddProductWithQty(p, chosenQty);
                           setPickerQuantities((prev) => ({ ...prev, [p.id]: 1 }));
                         }}
-                        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-xs cursor-pointer ${
+                        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm cursor-pointer ${
                           existingItem
                             ? 'bg-primary-600 hover:bg-primary-700 text-white'
                             : 'bg-success-600 hover:bg-success-700 text-white'

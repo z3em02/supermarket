@@ -14,7 +14,7 @@ export const AcceptOrderModal = ({
   const { language } = useLanguage();
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
       <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-md overflow-y-auto border border-slate-200 dark:border-gray-800 shadow-2xl space-y-5">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-gray-800">
           <div className="flex items-center gap-2">
@@ -25,14 +25,14 @@ export const AcceptOrderModal = ({
               <h3 className="text-base font-bold text-slate-900 dark:text-white">
                 {language === 'ar' ? 'قبول الطلب وتعيين السائق' : 'Bestellung annehmen & Fahrer zuweisen'}
               </h3>
-              <span className="text-xs text-slate-400 font-mono">
+              <span className="text-xs text-slate-500 font-mono">
                 Order #{acceptModalOrder.id.slice(0, 8)}
               </span>
             </div>
           </div>
           <button
             onClick={() => { setAcceptModalOrder(null); setAcceptModalDriver(''); }}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-gray-800"
+            className="p-1 rounded-lg text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-gray-800"
           >
             <X className="w-5 h-5" />
           </button>

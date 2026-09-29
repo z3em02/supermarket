@@ -11,7 +11,7 @@ export const Card = ({ as: Tag = 'div', padding = 'p-4 sm:p-6', className = '', 
 export const CardHeader = ({ title, description, action, icon: Icon }) => (
   <div className="flex items-start justify-between gap-3 mb-4">
     <div className="flex items-start gap-3 min-w-0">
-      {Icon && <Icon className="w-5 h-5 mt-0.5 text-slate-400 shrink-0" aria-hidden="true" />}
+      {Icon && <Icon className="w-5 h-5 mt-0.5 text-slate-500 shrink-0" aria-hidden="true" />}
       <div className="min-w-0">
         <h2 className="text-heading-md">{title}</h2>
         {description && <p className="text-body-muted mt-0.5">{description}</p>}

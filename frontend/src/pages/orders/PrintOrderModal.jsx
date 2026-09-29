@@ -28,7 +28,7 @@ export const PrintOrderModal = ({
           </div>
           <div>
             <h3 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">{t('printInvoice')}</h3>
-            <p className="text-[11px] text-slate-400 dark:text-gray-500 font-mono">INV-{printOrder.id.slice(0,8).toUpperCase()}</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">INV-{printOrder.id.slice(0,8).toUpperCase()}</p>
           </div>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2">
@@ -70,7 +70,7 @@ export const PrintOrderModal = ({
               <span className="font-black text-base sm:text-lg text-slate-900 dark:text-white tracking-tight">Supermarkt Lieferservice</span>
             </div>
             <p className="text-xs text-slate-500 dark:text-gray-400">Hauszustellung &amp; Frische Produkte</p>
-            <p className="text-xs text-slate-400 dark:text-gray-500 font-mono mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-1">
               {language === 'ar' ? 'فاتورة' : 'Rechnung'} Ref: INV-{printOrder.id.slice(0,8).toUpperCase()}
             </p>
           </div>
@@ -81,7 +81,7 @@ export const PrintOrderModal = ({
                 {b.label}
               </span>
             ); })()}
-            <p className="text-xs text-slate-400 dark:text-gray-500 mt-2">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
               {language === 'ar' ? 'التاريخ' : 'Datum'}: {new Date(printOrder.createdAt).toLocaleDateString(language === 'ar' ? 'ar-DE' : 'de-DE', {year:'numeric',month:'long',day:'numeric'})}
             </p>
           </div>
@@ -90,7 +90,7 @@ export const PrintOrderModal = ({
         {/* Billing + Delivery */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div className="bg-slate-50 dark:bg-gray-950/60 rounded-xl border border-slate-100 dark:border-gray-800 p-3.5 sm:p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-gray-500 mb-1.5 sm:mb-2">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5 sm:mb-2">
               {language === 'ar' ? 'بيانات العميل' : 'Kundeninformation'}
             </p>
             <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{printOrder.customer?.name || printOrder.customerName || '—'}</p>
@@ -98,7 +98,7 @@ export const PrintOrderModal = ({
             {(printOrder.customer?.phone || printOrder.customerPhone) && <p className="text-xs text-slate-500 dark:text-gray-400 font-mono">Tel: {printOrder.customer?.phone || printOrder.customerPhone}</p>}
           </div>
           <div className="bg-slate-50 dark:bg-gray-950/60 rounded-xl border border-slate-100 dark:border-gray-800 p-3.5 sm:p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-gray-500 mb-1.5 sm:mb-2">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5 sm:mb-2">
               {language === 'ar' ? 'عنوان التسليم' : 'Lieferadresse'}
             </p>
             <p className="text-xs text-slate-600 dark:text-gray-300 leading-relaxed break-words">
@@ -137,7 +137,7 @@ export const PrintOrderModal = ({
                 return (
                   <tr key={item.id} className={idx % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-slate-50/60 dark:bg-gray-950/40'}>
                     <td className="px-3 py-2.5 font-semibold text-slate-900 dark:text-white">{name}</td>
-                    <td className="px-3 py-2.5 text-center text-slate-400 dark:text-gray-500 font-mono">{item.product?.sku || '—'}</td>
+                    <td className="px-3 py-2.5 text-center text-slate-500 dark:text-slate-400 font-mono">{item.product?.sku || '—'}</td>
                     <td className="px-3 py-2.5 text-end text-slate-600 dark:text-gray-400 font-mono">€{unitPrice.toFixed(2)}</td>
                     <td className="px-3 py-2.5 text-center">
                       <span className="inline-flex items-center justify-center min-w-[28px] h-6 px-2 rounded-md bg-primary-100 dark:bg-primary-950/60 text-primary-700 dark:text-primary-300 text-[11px] font-black border border-primary-200/80 dark:border-primary-900/40">
@@ -180,7 +180,7 @@ export const PrintOrderModal = ({
                   <span className="font-mono">€{Number(printOrder.deliveryFee).toFixed(2)}</span>
                 </div>
                 {printOrder.deliveryDistanceKm != null && Number(printOrder.deliveryDistanceKm) > 0 && (
-                  <div className="text-[10px] text-slate-400 dark:text-slate-500">
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400">
                     <span>
                       {language === 'ar' ? `المسافة: ${printOrder.deliveryDistanceKm} كم` : `Distanz: ${printOrder.deliveryDistanceKm} km`}
                     </span>
@@ -215,7 +215,7 @@ export const PrintOrderModal = ({
         )}
 
         {/* Footer */}
-        <div className="pt-4 border-t border-slate-100 dark:border-gray-800 text-center text-[10px] text-slate-400 dark:text-gray-600">
+        <div className="pt-4 border-t border-slate-100 dark:border-gray-800 text-center text-[10px] text-slate-500 dark:text-slate-400">
           Supermarkt Lieferservice &bull; INV-{printOrder.id.slice(0,8).toUpperCase()} &bull; {new Date(printOrder.createdAt).toLocaleDateString()}
         </div>
       </div>

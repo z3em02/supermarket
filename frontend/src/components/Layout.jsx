@@ -154,7 +154,7 @@ export const Layout = () => {
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 lg:hidden transition-opacity"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-opacity"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -170,7 +170,7 @@ export const Layout = () => {
       </div>
 
       {/* Desktop Sticky Sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:shrink-0 lg:h-screen lg:sticky lg:top-0 border-r border-slate-200/80 dark:border-gray-850 rtl:border-r-0 rtl:border-l shadow-xs">
+      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:shrink-0 lg:h-screen lg:sticky lg:top-0 border-r border-slate-200/80 dark:border-gray-850 rtl:border-r-0 rtl:border-l shadow-sm">
         {navContent}
       </aside>
 

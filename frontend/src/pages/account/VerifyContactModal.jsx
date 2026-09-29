@@ -11,7 +11,7 @@ export const VerifyContactModal = ({
   verifyingLoading,
   verifyingType
 }) => (
-    <div className="mb-6 p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-warning-50 dark:bg-warning-950/60 border border-warning-300 dark:border-warning-800 shadow-sm">
+    <div className="mb-6 p-4 sm:p-6 rounded-2xl sm:rounded-2xl bg-warning-50 dark:bg-warning-950/60 border border-warning-300 dark:border-warning-800 shadow-sm">
       <div className="flex items-center justify-between mb-3 gap-2">
         <h3 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-warning-600 shrink-0" />
@@ -23,7 +23,7 @@ export const VerifyContactModal = ({
         </h3>
         <button
           onClick={handleCancelVerify}
-          className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer touch-manipulation"
+          className="text-xs text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer touch-manipulation"
         >
           {isAr ? 'إلغاء' : 'Abbrechen'}
         </button>

@@ -27,13 +27,13 @@ export const GeneralTab = ({
   const { language, direction, t } = useLanguage();
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
+    <div className="space-y-6 animate-fade-in">
       {/* Maintenance Mode — deliberately its own prominent, alert-styled
           card at the top of this tab (not buried alongside routine
           fields) since flipping it takes the whole storefront offline
           for customers. Applies immediately, independent of the
           "Speichern" button below. */}
-      <div className={`rounded-2xl sm:rounded-3xl border p-4 sm:p-6 shadow-xs transition-colors ${
+      <div className={`rounded-2xl sm:rounded-2xl border p-4 sm:p-6 shadow-sm transition-colors ${
         formData.maintenanceMode
           ? 'bg-danger-50 dark:bg-danger-950/30 border-danger-300 dark:border-danger-800'
           : 'bg-white dark:bg-gray-900 border-slate-200/80 dark:border-gray-850'
@@ -76,7 +76,7 @@ export const GeneralTab = ({
               }`}
             >
               <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out ${
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition duration-200 ease-in-out ${
                   formData.maintenanceMode ? (direction === 'rtl' ? '-translate-x-5' : 'translate-x-5') : 'translate-x-0'
                 }`}
               />
@@ -92,7 +92,7 @@ export const GeneralTab = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Store Name & Language */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-gray-850 p-5 sm:p-6 shadow-xs space-y-4">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl border border-slate-200/80 dark:border-gray-850 p-5 sm:p-6 shadow-sm space-y-4">
           <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100 dark:border-gray-800">
             <div className="w-8 h-8 rounded-lg bg-promo-50 dark:bg-promo-950/50 text-promo-600 dark:text-promo-400 flex items-center justify-center shrink-0">
               <Building2 className="w-4 h-4" />
@@ -119,7 +119,7 @@ export const GeneralTab = ({
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-gray-300 mb-1.5">
-                {t('storeNameDe')} <span className="text-[10px] font-normal text-slate-400">(Deutsch)</span>
+                {t('storeNameDe')} <span className="text-[10px] font-normal text-slate-500">(Deutsch)</span>
               </label>
               <input
                 type="text"
@@ -132,7 +132,7 @@ export const GeneralTab = ({
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-gray-300 mb-1.5">
-                {t('storeNameAr')} <span className="text-[10px] font-normal text-slate-400">(العربية)</span>
+                {t('storeNameAr')} <span className="text-[10px] font-normal text-slate-500">(العربية)</span>
               </label>
               <input
                 type="text"
@@ -147,7 +147,7 @@ export const GeneralTab = ({
         </div>
 
         {/* Logo & Branding */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-gray-850 p-5 sm:p-6 shadow-xs space-y-4">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl border border-slate-200/80 dark:border-gray-850 p-5 sm:p-6 shadow-sm space-y-4">
           <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100 dark:border-gray-800">
             <div className="w-8 h-8 rounded-lg bg-promo-50 dark:bg-promo-950/50 text-promo-600 dark:text-promo-400 flex items-center justify-center shrink-0">
               <ImageIcon className="w-4 h-4" />
@@ -169,7 +169,7 @@ export const GeneralTab = ({
                 placeholder={t('logoUrlPlaceholder')}
                 className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none transition"
               />
-              <p className="text-[11px] text-slate-400 dark:text-gray-500 mt-1">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                 Link zu Ihrem Logo (PNG, JPG, SVG oder WebP).
               </p>
             </div>
@@ -184,11 +184,11 @@ export const GeneralTab = ({
                     src={resolveImageUrl(formData.logoUrl)}
                     alt="Store Logo"
                     onError={() => setLogoPreviewError(true)}
-                    className="max-h-16 max-w-full object-contain drop-shadow-xs"
+                    className="max-h-16 max-w-full object-contain drop-shadow-sm"
                   />
                 ) : (
-                  <div className="text-center text-slate-400 flex flex-col items-center gap-1">
-                    <Store className="w-6 h-6 text-slate-300 dark:text-gray-600" />
+                  <div className="text-center text-slate-500 flex flex-col items-center gap-1">
+                    <Store className="w-6 h-6 text-slate-300 dark:text-slate-400" />
                     <span className="text-[11px]">{t('noLogoProvided')}</span>
                   </div>
                 )}
@@ -199,7 +199,7 @@ export const GeneralTab = ({
       </div>
 
       {/* Contact Details Card */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-gray-850 p-5 sm:p-6 shadow-xs space-y-4">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl border border-slate-200/80 dark:border-gray-850 p-5 sm:p-6 shadow-sm space-y-4">
         <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100 dark:border-gray-800">
           <div className="w-8 h-8 rounded-lg bg-success-50 dark:bg-success-950/50 text-success-600 dark:text-success-400 flex items-center justify-center shrink-0">
             <Phone className="w-4 h-4" />
@@ -215,7 +215,7 @@ export const GeneralTab = ({
               {t('phoneNumber')} *
             </label>
             <div className="relative">
-              <Phone className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              <Phone className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
               <input
                 type="tel"
                 value={formData.phone}
@@ -231,7 +231,7 @@ export const GeneralTab = ({
               {t('emailAddressContact')} *
             </label>
             <div className="relative">
-              <Mail className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              <Mail className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
               <input
                 type="email"
                 value={formData.email}
@@ -247,7 +247,7 @@ export const GeneralTab = ({
               {t('physicalAddress')}
             </label>
             <div className="relative">
-              <MapPin className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              <MapPin className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
               <input
                 type="text"
                 value={formData.address}
@@ -261,7 +261,7 @@ export const GeneralTab = ({
       </div>
 
       {/* Live Website Preview Banner */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-850 to-promo-950 text-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-md border border-slate-800 space-y-4">
+      <div className="bg-gradient-to-br from-slate-900 via-slate-850 to-promo-950 text-white rounded-2xl sm:rounded-2xl p-5 sm:p-6 shadow-md border border-slate-800 space-y-4">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-warning-400 shrink-0" />
@@ -283,7 +283,7 @@ export const GeneralTab = ({
                 className="w-9 h-9 object-contain rounded-xl bg-white p-1 shadow-sm shrink-0"
               />
             ) : (
-              <div className="w-9 h-9 rounded-xl bg-primary-600 flex items-center justify-center text-white shadow-xs shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-primary-600 flex items-center justify-center text-white shadow-sm shrink-0">
                 <Store className="w-4 h-4" />
               </div>
             )}

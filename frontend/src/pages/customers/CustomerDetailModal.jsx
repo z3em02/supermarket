@@ -9,22 +9,22 @@ export const CustomerDetailModal = ({
   const { language, t } = useLanguage();
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-3 sm:p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 animate-fade-in">
       <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-2xl max-h-[90dvh] overflow-y-auto border border-slate-200 dark:border-gray-800 shadow-2xl p-4 sm:p-6">
         <div className="flex items-center justify-between pb-3.5 sm:pb-4 border-b border-slate-100 dark:border-gray-800">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-success-600 to-info-600 flex items-center justify-center text-white font-bold text-xs sm:text-sm shadow-xs shrink-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-success-600 to-info-600 flex items-center justify-center text-white font-bold text-xs sm:text-sm shadow-sm shrink-0">
               {selectedCustomer.name?.slice(0, 2).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
               <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate">
                 {selectedCustomer.name}
               </h3>
-              <p className="text-[11px] sm:text-xs text-slate-400 truncate flex items-center gap-1.5 flex-wrap">
+              <p className="text-[11px] sm:text-xs text-slate-500 truncate flex items-center gap-1.5 flex-wrap">
                 <span>{selectedCustomer.email}</span>
                 <span>•</span>
                 <span className="inline-flex items-center gap-1">
-                  <Phone className="w-3 h-3 text-slate-400" />
+                  <Phone className="w-3 h-3 text-slate-500" />
                   <span>{selectedCustomer.phone}</span>
                 </span>
               </p>
@@ -32,7 +32,7 @@ export const CustomerDetailModal = ({
           </div>
           <button
             onClick={() => setSelectedCustomer(null)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-gray-800 transition cursor-pointer touch-manipulation"
+            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-gray-800 transition cursor-pointer touch-manipulation"
           >
             <X className="w-5 h-5" />
           </button>
@@ -64,7 +64,7 @@ export const CustomerDetailModal = ({
           </h4>
 
           {(!selectedCustomer.orders || selectedCustomer.orders.length === 0) ? (
-            <p className="text-xs text-slate-400 py-6 text-center">
+            <p className="text-xs text-slate-500 py-6 text-center">
               {language === 'ar' ? 'لا توجد طلبات مسجلة لهذا العميل حتى الآن' : 'Dieser Kunde hat noch keine Bestellungen getätigt.'}
             </p>
           ) : (
@@ -85,7 +85,7 @@ export const CustomerDetailModal = ({
                           {badge.label}
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-400 mt-1">
+                      <p className="text-[11px] text-slate-500 mt-1">
                         {new Date(ord.createdAt).toLocaleDateString()} um {new Date(ord.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
@@ -94,7 +94,7 @@ export const CustomerDetailModal = ({
                       <span className="font-black text-sm text-success-600 dark:text-success-400 font-mono">
                         €{Number(ord.totalAmount).toFixed(2)}
                       </span>
-                      <span className="block text-[10px] text-slate-400">
+                      <span className="block text-[10px] text-slate-500">
                         {ord.orderItems?.length || 0} {language === 'ar' ? 'عناصر' : 'Artikel'}
                       </span>
                     </div>

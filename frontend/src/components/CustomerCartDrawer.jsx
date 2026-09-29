@@ -376,7 +376,7 @@ export const CustomerCartDrawer = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/60 backdrop-blur-xs transition-opacity animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/60 backdrop-blur-sm transition-opacity animate-fadeIn">
       {/* Drawer Container */}
       <div 
         className="w-full sm:max-w-md md:max-w-lg bg-white dark:bg-gray-900 h-full shadow-2xl flex flex-col justify-between overflow-hidden border-s border-slate-200 dark:border-gray-800"
@@ -403,8 +403,9 @@ export const CustomerCartDrawer = ({
               <button
                 type="button"
                 onClick={clearCart}
-                className="p-1.5 sm:p-2 text-slate-400 hover:text-danger-600 dark:hover:text-danger-400 rounded-xl hover:bg-danger-50 dark:hover:bg-danger-950/40 transition cursor-pointer touch-manipulation"
+                className="inline-flex items-center justify-center min-w-11 min-h-11 p-1.5 sm:p-2 text-slate-500 hover:text-danger-600 dark:hover:text-danger-400 rounded-xl hover:bg-danger-50 dark:hover:bg-danger-950/40 transition cursor-pointer touch-manipulation"
                 title={isAr ? 'تفريغ السلة' : 'Warenkorb leeren'}
+                aria-label={isAr ? 'تفريغ السلة' : 'Warenkorb leeren'}
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -412,7 +413,8 @@ export const CustomerCartDrawer = ({
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-gray-800 transition cursor-pointer touch-manipulation"
+              className="inline-flex items-center justify-center min-w-11 min-h-11 p-1.5 sm:p-2 text-slate-500 hover:text-slate-700 dark:hover:text-white rounded-xl hover:bg-slate-100 dark:hover:bg-gray-800 transition cursor-pointer touch-manipulation"
+              aria-label={isAr ? 'إغلاق السلة' : 'Warenkorb schließen'}
             >
               <X className="w-5 h-5" />
             </button>

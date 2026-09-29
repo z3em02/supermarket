@@ -14,7 +14,7 @@ export const ProductCardGrid = ({
       {filteredProducts.map((product) => (
         <div 
           key={product.id} 
-          className="group bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-850 shadow-xs hover:shadow-lg dark:hover:border-gray-700 transition-all duration-300 flex flex-col justify-between overflow-hidden"
+          className="group bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-850 shadow-sm hover:shadow-lg dark:hover:border-gray-700 transition-all duration-300 flex flex-col justify-between overflow-hidden"
         >
           <div>
             {/* Product Media Area */}
@@ -31,14 +31,14 @@ export const ProductCardGrid = ({
                 />
               ) : null}
               <div className={`flex-col items-center justify-center gap-2 group-hover:scale-105 transition-transform duration-300 ${product.imageUrl ? 'hidden' : 'flex'}`}>
-                <div className="w-14 h-14 rounded-2xl bg-white dark:bg-gray-850 shadow-xs border border-slate-200/80 dark:border-gray-750 flex items-center justify-center text-primary-600 dark:text-primary-400 backdrop-blur">
+                <div className="w-14 h-14 rounded-2xl bg-white dark:bg-gray-850 shadow-sm border border-slate-200/80 dark:border-gray-750 flex items-center justify-center text-primary-600 dark:text-primary-400 backdrop-blur">
                   <Package className="w-7 h-7" />
                 </div>
               </div>
 
               {/* Category Pill */}
               {product.category && (
-                <span className="absolute top-3 start-3 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/95 dark:bg-gray-950/90 text-slate-800 dark:text-slate-200 shadow-xs backdrop-blur border border-slate-200/80 dark:border-gray-800 flex items-center gap-1.5">
+                <span className="absolute top-3 start-3 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/95 dark:bg-gray-950/90 text-slate-800 dark:text-slate-200 shadow-sm backdrop-blur border border-slate-200/80 dark:border-gray-800 flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary-500"></span>
                   {language === 'ar' ? product.category.nameAr : product.category.nameDe}
                 </span>
@@ -57,7 +57,7 @@ export const ProductCardGrid = ({
                   {(language === 'ar' ? product.nameAr : product.nameDe) || product.name}
                 </h3>
                 {/* Secondary language sub-line */}
-                <p className="text-xs text-slate-400 dark:text-slate-500 line-clamp-1" dir={language === 'ar' ? 'ltr' : 'rtl'}>
+                <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1" dir={language === 'ar' ? 'ltr' : 'rtl'}>
                   {language === 'ar' ? (product.nameDe || product.name) : product.nameAr}
                 </p>
               </div>
@@ -71,13 +71,13 @@ export const ProductCardGrid = ({
               {/* Price & Stock info */}
               <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-gray-850 text-xs">
                 <div>
-                  <span className="text-slate-400 dark:text-slate-500 text-[11px] block">{t('b2bPrice')}</span>
+                  <span className="text-slate-500 dark:text-slate-400 text-[11px] block">{t('b2bPrice')}</span>
                   <span className="text-base font-extrabold text-primary-600 dark:text-primary-400 font-mono">
                     €{Number(product.b2bPrice).toFixed(2)}
                   </span>
                 </div>
                 <div className="text-end">
-                  <span className="text-slate-400 dark:text-slate-500 text-[11px] block">{t('stock')}</span>
+                  <span className="text-slate-500 dark:text-slate-400 text-[11px] block">{t('stock')}</span>
                   <span className={`font-bold font-mono ${product.stock <= 15 ? 'text-warning-600 dark:text-warning-400' : 'text-slate-900 dark:text-white'}`}>
                     {product.stock} {t('units')}
                   </span>

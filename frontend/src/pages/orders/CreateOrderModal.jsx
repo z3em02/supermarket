@@ -20,7 +20,7 @@ export const CreateOrderModal = ({
         </h2>
         <button
           onClick={() => setShowCreateModal(false)}
-          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-gray-800 cursor-pointer touch-manipulation"
+          className="p-1.5 rounded-lg text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-gray-800 cursor-pointer touch-manipulation"
         >
           <X className="w-5 h-5" />
         </button>
@@ -154,7 +154,7 @@ export const CreateOrderModal = ({
                       const nextItems = orderForm.items.filter((_, i) => i !== index);
                       setOrderForm({ ...orderForm, items: nextItems });
                     }}
-                    className="p-2 text-slate-400 hover:text-danger-600 dark:hover:text-danger-400 rounded-lg hover:bg-slate-100 dark:hover:bg-gray-800 transition shrink-0 cursor-pointer touch-manipulation"
+                    className="p-2 text-slate-500 hover:text-danger-600 dark:hover:text-danger-400 rounded-lg hover:bg-slate-100 dark:hover:bg-gray-800 transition shrink-0 cursor-pointer touch-manipulation"
                     title={t('remove')}
                   >
                     <Trash2 className="w-4 h-4" />

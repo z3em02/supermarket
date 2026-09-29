@@ -12,7 +12,7 @@ export const RestockModal = ({
   const { t, language } = useLanguage();
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
       <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-sm border border-slate-200 dark:border-gray-800 shadow-2xl space-y-4">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-gray-800">
           <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -21,7 +21,7 @@ export const RestockModal = ({
           </h2>
           <button
             onClick={() => setRestockProduct(null)}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            className="p-1 rounded-lg text-slate-500 hover:text-slate-600 dark:hover:text-slate-200"
           >
             <X className="w-5 h-5" />
           </button>

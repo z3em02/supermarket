@@ -649,3 +649,52 @@ changes by audience (`admin`, `customer` — who is told what *they* need to do 
   inline-end side so it flips in Arabic), `EmptyState`, `Skeleton*` and `Pagination`.
 - **Loading**: list pages show `SkeletonList` placeholders shaped like the content, not a spinner.
 - **Empty lists**: `EmptyState` (icon + message + optional action).
+
+### Layout, type and accessibility rules
+
+- **Radius**: `rounded-xl` for controls (inputs, buttons, chips), `rounded-2xl` for cards,
+  drawers and dialogs. No `rounded-3xl`.
+- **Shadow**: `shadow-sm` resting cards, `shadow-md` hover, `shadow-lg` floating (toasts,
+  menus), `shadow-2xl` dialogs/drawers.
+- **Page shell**: the admin `Layout` sets max width (`max-w-7xl`) and gutters for every page;
+  pages don't add their own. Page roots use `space-y-4 sm:space-y-6`.
+- **Type scale** (`index.css`): `text-heading-xl` (page title), `text-heading-lg` (dialog/drawer
+  title), `text-heading-md` (card title), `text-body-muted`, `text-caption`. Table cells get
+  `tabular-nums` globally; use it on any other money/count.
+- **Tables**: long lists (Customers, Accounting, Promotions) scroll inside the card with a
+  sticky header and zebra rows; Customers and Accounting switch to cards below `md`.
+- **Contrast**: muted text is `text-slate-500` (light, 4.8:1 on white) and `dark:text-slate-400`
+  (7.6:1 on `gray-950`). `text-slate-400` / `dark:text-gray-500` fail WCAG AA for text — only
+  for decorative icons.
+- **Keyboard & motion**: a global `:focus-visible` ring; `prefers-reduced-motion` stops
+  pulsing/transitions (spinners keep turning). Icon-only buttons need an `aria-label`
+  (`IconButton` enforces it). Tap targets are at least 44px (`min-h-11`).
+- **Tailwind 3 only**: this project is on Tailwind 3.4. v4-only classes (`shadow-2xs`,
+  `shadow-xs`, `backdrop-blur-xs`, `outline-hidden`, `border-3`, `animate-in fade-in`) silently do
+  nothing — use `shadow-sm`, `backdrop-blur-sm`, `outline-none`, `border-[3px]`, `animate-fade-in`.
+  The `xs:` breakpoint (480px) is defined in `tailwind.config.js`.
+
+### Design roadmap
+
+Status of the design/UX plan (formerly `DESIGN_TODO.md`).
+
+**Done**
+- [x] P0 — semantic colour tokens; one primary per surface (brand on the storefront, primary in
+  admin); 11 accents collapsed to the token roles; one order-status style everywhere.
+- [x] P1 — order drawer (tabs, inline admin edits, separate confirmed item editing, list quick
+  actions kept, stale-edit 409 banner).
+- [x] P1 — toast + confirm system replaces every `alert()`/`window.confirm()`; shared primitives;
+  skeleton loaders and `EmptyState` on the list pages.
+- [x] P1 — one radius/shadow scale, consistent page shell and spacing rhythm, sticky zebra tables.
+- [x] P2 — type-scale tokens, `tabular-nums` on tables/totals, dark-mode contrast fix, focus ring,
+  reduced motion, labels on icon-only buttons, dark-mode walk-through of every admin page
+  (checked with screenshots, no horizontal overflow at 390px).
+- [x] P3 — storefront CTAs use the brand colour, product images have one 4:3 ratio and lazy-load,
+  category label moved off the image so it no longer collides with the stock badge.
+
+**Still open**
+- [ ] Migrate the remaining hand-rolled buttons/cards/inputs in older pages to `components/ui`
+  (new and refactored UI already uses them).
+- [ ] Promotions tables: card view on phones (they scroll horizontally today).
+- [ ] Full 44px tap-target audit of older pages (new components and the flagged icon buttons meet it).
+- [ ] Storefront trust signals: the reviews widget is empty until Google reviews are synced.

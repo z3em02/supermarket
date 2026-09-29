@@ -153,7 +153,7 @@ export const DeliveryDetailsForm = ({
               <span>{isAr ? 'الوقت' : 'Zeitfenster'}</span>
             </label>
             {deliveryWindows.length === 0 ? (
-              <p className="text-[11px] text-slate-400 dark:text-gray-500">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 {isAr ? 'لا توجد أوقات توصيل متاحة حالياً' : 'Derzeit keine Zeitfenster verfügbar'}
               </p>
             ) : getAvailableWindowsForDate(deliveryWindows, deliveryDate).length === 0 ? (
@@ -180,7 +180,7 @@ export const DeliveryDetailsForm = ({
                     onClick={() => setSelectedWindow(w)}
                     className={`px-3 py-2 rounded-lg border text-[11px] font-bold transition cursor-pointer touch-manipulation ${
                       selectedWindow?.id === w.id
-                        ? 'bg-brand-600 border-brand-600 text-white shadow-xs'
+                        ? 'bg-brand-600 border-brand-600 text-white shadow-sm'
                         : 'bg-white dark:bg-gray-900 border-slate-200 dark:border-gray-800 text-slate-600 dark:text-gray-300 hover:border-brand-400'
                     }`}
                   >

@@ -166,7 +166,7 @@ export const LandingPage = () => {
     if (promo.type === 'BUY_X_GET_Y') {
       const text = (language === 'ar' ? promo.badgeTextAr : promo.badgeTextDe) || `${promo.buyQuantity || 2}+${promo.getYQuantity || 1} Gratis`;
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-black bg-promo-600 text-white shadow-xs tracking-tight">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-black bg-promo-600 text-white shadow-sm tracking-tight">
           <Gift className="w-3 h-3" />
           {text}
         </span>
@@ -180,7 +180,7 @@ export const LandingPage = () => {
         else text = language === 'ar' ? 'عرض خاص' : 'Aktion';
       }
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-black bg-danger-600 text-white shadow-xs tracking-tight">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-black bg-danger-600 text-white shadow-sm tracking-tight">
           <Sparkles className="w-3 h-3" />
           {text}
         </span>

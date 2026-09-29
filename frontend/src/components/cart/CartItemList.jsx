@@ -23,14 +23,14 @@ export const CartItemList = ({
         return (
           <div 
             key={item.productId}
-            className="p-3.5 rounded-2xl border border-slate-200/80 dark:border-gray-800 bg-white dark:bg-gray-950/60 flex items-center justify-between gap-3 shadow-2xs"
+            className="p-3.5 rounded-2xl border border-slate-200/80 dark:border-gray-800 bg-white dark:bg-gray-950/60 flex items-center justify-between gap-3 shadow-sm"
           >
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-gray-900 border border-slate-200/60 dark:border-gray-800 flex items-center justify-center overflow-hidden shrink-0">
                 {item.imageUrl ? (
                   <img src={item.imageUrl} alt={localizedName} className="w-full h-full object-cover" />
                 ) : (
-                  <ShoppingCart className="w-5 h-5 text-slate-400" />
+                  <ShoppingCart className="w-5 h-5 text-slate-500" />
                 )}
               </div>
               <div className="min-w-0 space-y-0.5">
@@ -43,7 +43,7 @@ export const CartItemList = ({
                     €{Number(item.effectivePrice).toFixed(2)}
                   </span>
                   {item.effectivePrice < item.price && (
-                    <span className="line-through text-[10px] text-slate-400">
+                    <span className="line-through text-[10px] text-slate-500">
                       €{Number(item.price).toFixed(2)}
                     </span>
                   )}
@@ -96,7 +96,7 @@ export const CartItemList = ({
               <button
                 type="button"
                 onClick={() => removeFromCart(item.productId)}
-                className="min-w-10 min-h-10 flex items-center justify-center text-slate-400 hover:text-danger-600 rounded-lg hover:bg-danger-50 dark:hover:bg-danger-950/40 transition cursor-pointer touch-manipulation"
+                className="min-w-10 min-h-10 flex items-center justify-center text-slate-500 hover:text-danger-600 rounded-lg hover:bg-danger-50 dark:hover:bg-danger-950/40 transition cursor-pointer touch-manipulation"
                 aria-label={isAr ? 'حذف' : 'Entfernen'}
               >
                 <Trash2 className="w-4 h-4" />

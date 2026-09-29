@@ -40,7 +40,7 @@ export const AccountHeader = ({
         <ThemeToggle />
         <button
           onClick={() => { logout(); navigate('/customer/login'); }}
-          className="p-2 text-slate-400 hover:text-danger-600 dark:hover:text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-950/30 rounded-xl transition cursor-pointer touch-manipulation"
+          className="p-2 text-slate-500 hover:text-danger-600 dark:hover:text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-950/30 rounded-xl transition cursor-pointer touch-manipulation"
           title={isAr ? 'تسجيل الخروج' : 'Abmelden'}
         >
           <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />

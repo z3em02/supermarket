@@ -97,14 +97,14 @@ export const Accounting = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-heading-xl">
             {t('accountingDashboard')}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-gray-400 mt-1">
+          <p className="text-body-muted mt-1">
             {t('financialOverview')}
           </p>
         </div>
@@ -119,7 +119,7 @@ export const Accounting = () => {
 
       {/* Date Filter Bar */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white dark:bg-gray-900 p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-gray-850 shadow-sm">
-        <div className="flex items-center gap-2 text-slate-400 dark:text-gray-500">
+        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
           <Calendar className="w-4 sm:w-5 h-4 sm:h-5 text-primary-600 dark:text-primary-400 shrink-0" />
           <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-gray-300">
             {t('dateFilter')}:
@@ -132,7 +132,7 @@ export const Accounting = () => {
             onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
             className="px-3 py-2 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition"
           />
-          <span className="text-slate-400 dark:text-gray-500 text-xs sm:text-sm text-center">{t('to')}</span>
+          <span className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm text-center">{t('to')}</span>
           <input
             type="date"
             value={dateRange.end}
@@ -291,11 +291,11 @@ export const Accounting = () => {
                       <p className="font-semibold text-slate-900 dark:text-white text-xs sm:text-sm truncate">
                         {c.customerName || 'Kunde'}
                       </p>
-                      <p className="text-[11px] text-slate-400 dark:text-gray-500 flex items-center gap-1.5 flex-wrap mt-0.5">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 flex-wrap mt-0.5">
                         <span>{c.orderCount} {t('ordersCount') || 'Bestellungen'}</span>
                         {c.customerPhone && (
                           <span className="font-mono text-[10px] sm:text-[11px] text-slate-500 inline-flex items-center gap-1">
-                            <Phone className="w-3 h-3 text-slate-400" />
+                            <Phone className="w-3 h-3 text-slate-500" />
                             {c.customerPhone}
                           </span>
                         )}
@@ -308,7 +308,7 @@ export const Accounting = () => {
                 </div>
               ))}
               {(!data.customerSales || data.customerSales.length === 0) && (
-                <p className="text-xs sm:text-sm text-slate-400 dark:text-gray-500 py-6 text-center">{t('noTransactionsFound')}</p>
+                <p className="text-body-muted py-6 text-center">{t('noTransactionsFound')}</p>
               )}
             </div>
           </div>
@@ -336,7 +336,7 @@ export const Accounting = () => {
                 </span>
               </div>
 
-              <div className="flex items-center justify-between gap-2 text-[11px] text-slate-400">
+              <div className="flex items-center justify-between gap-2 text-[11px] text-slate-500">
                 <div className="flex items-center gap-1.5 font-mono">
                   <span>#{(tx.orderId || tx.id)?.slice(0, 8)}</span>
                   <span>&bull;</span>
@@ -350,32 +350,32 @@ export const Accounting = () => {
           ))}
 
           {(!data.recentTransactions || data.recentTransactions.length === 0) && (
-            <div className="py-8 text-center text-xs text-slate-400 dark:text-gray-500">
+            <div className="py-8 text-center text-xs text-slate-500 dark:text-slate-400">
               {t('noTransactionsFound')}
             </div>
           )}
         </div>
 
         {/* Desktop Transactions Table (>= md) */}
-        <div className="hidden md:block overflow-x-auto">
-          <table className="w-full text-sm text-left rtl:text-right">
-            <thead className="bg-slate-50/80 dark:bg-gray-850 text-xs uppercase text-slate-500 dark:text-gray-400 border-b border-slate-100 dark:border-gray-800">
+        <div className="hidden md:block overflow-auto max-h-[70vh]">
+          <table className="w-full text-sm text-start">
+            <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-gray-850 text-xs uppercase text-slate-500 dark:text-gray-400 border-b border-slate-100 dark:border-gray-800">
               <tr>
-                <th className="px-5 py-3.5">{t('date')}</th>
-                <th className="px-5 py-3.5">{t('orderId')}</th>
-                <th className="px-5 py-3.5">{t('customer')}</th>
-                <th className="px-5 py-3.5">{t('transactionType')}</th>
-                <th className="px-5 py-3.5 text-end">{t('amount')}</th>
-                <th className="px-5 py-3.5 text-center">{t('status')}</th>
+                <th scope="col" className="text-start px-5 py-3.5">{t('date')}</th>
+                <th scope="col" className="text-start px-5 py-3.5">{t('orderId')}</th>
+                <th scope="col" className="text-start px-5 py-3.5">{t('customer')}</th>
+                <th scope="col" className="text-start px-5 py-3.5">{t('transactionType')}</th>
+                <th scope="col" className="px-5 py-3.5 text-end">{t('amount')}</th>
+                <th scope="col" className="px-5 py-3.5 text-center">{t('status')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-gray-800">
               {(data.recentTransactions || []).map((tx) => (
-                <tr key={tx.id} className="hover:bg-slate-50/70 dark:hover:bg-gray-850/50 transition">
+                <tr key={tx.id} className="even:bg-slate-50/60 dark:even:bg-gray-950/40 hover:bg-slate-100/70 dark:hover:bg-gray-850/60 transition">
                   <td className="px-5 py-3.5 text-slate-600 dark:text-slate-300 whitespace-nowrap">
                     {new Date(tx.transactionDate || tx.createdAt).toLocaleDateString()}
                   </td>
-                  <td className="px-5 py-3.5 font-mono text-xs text-slate-400 dark:text-gray-500 whitespace-nowrap">
+                  <td className="px-5 py-3.5 font-mono text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
                     #{(tx.orderId || tx.id)?.slice(0, 8)}
                   </td>
                   <td className="px-5 py-3.5 font-medium text-slate-900 dark:text-white whitespace-nowrap">
@@ -396,7 +396,7 @@ export const Accounting = () => {
               ))}
               {(!data.recentTransactions || data.recentTransactions.length === 0) && (
                 <tr>
-                  <td colSpan="6" className="py-8 text-center text-slate-400 dark:text-gray-500">
+                  <td colSpan="6" className="py-8 text-center text-slate-500 dark:text-slate-400">
                     {t('noTransactionsFound')}
                   </td>
                 </tr>

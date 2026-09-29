@@ -101,7 +101,7 @@ export const Login = () => {
 
       {/* Main Login Card */}
       <div className="w-full max-w-md mx-auto my-6 sm:my-8 px-1">
-        <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl shadow-xl shadow-primary-500/5 dark:shadow-none border border-slate-200/80 dark:border-gray-850 p-5 sm:p-8 md:p-10 transition-colors duration-200">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl shadow-lg shadow-primary-500/5 dark:shadow-none border border-slate-200/80 dark:border-gray-850 p-5 sm:p-8 md:p-10 transition-colors duration-200">
           <div className="text-center mb-6 sm:mb-8">
             {settings?.logoUrl ? (
               <img
@@ -117,7 +117,7 @@ export const Login = () => {
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
               {pendingToken ? (isAr ? 'التحقق بخطوتين' : 'Zwei-Faktor-Anmeldung') : t('signIn')}
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-gray-400 mt-1.5 break-words">
+            <p className="text-body-muted mt-1.5 break-words">
               {pendingToken
                 ? (isAr ? `تم إرسال رمز إلى ${email}` : `Ein Code wurde an ${email} gesendet`)
                 : t('signInToManage')}
@@ -142,7 +142,7 @@ export const Login = () => {
                   {t('emailAddress')}
                 </label>
                 <div className="relative">
-                  <Mail className="absolute start-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 w-4 h-4 sm:w-5 sm:h-5" />
+                  <Mail className="absolute start-3.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 w-4 h-4 sm:w-5 sm:h-5" />
                   <input
                     type="email"
                     value={email}
@@ -159,7 +159,7 @@ export const Login = () => {
                   {t('password')}
                 </label>
                 <div className="relative">
-                  <Lock className="absolute start-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 w-4 h-4 sm:w-5 sm:h-5" />
+                  <Lock className="absolute start-3.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 w-4 h-4 sm:w-5 sm:h-5" />
                   <input
                     type="password"
                     value={password}
@@ -186,7 +186,7 @@ export const Login = () => {
                   {isAr ? 'رمز التحقق' : 'Anmeldecode'}
                 </label>
                 <div className="relative">
-                  <ShieldCheck className="absolute start-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500 w-4 h-4 sm:w-5 sm:h-5" />
+                  <ShieldCheck className="absolute start-3.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 w-4 h-4 sm:w-5 sm:h-5" />
                   <input
                     type="text"
                     inputMode="numeric"
@@ -245,7 +245,7 @@ export const Login = () => {
       </div>
 
       {/* Footer */}
-      <footer className="text-center text-xs text-slate-400 dark:text-gray-500 py-2">
+      <footer className="text-center text-xs text-slate-500 dark:text-slate-400 py-2">
         © {new Date().getFullYear()} {getStoreName(language)} &bull; Admin Portal
       </footer>
     </div>

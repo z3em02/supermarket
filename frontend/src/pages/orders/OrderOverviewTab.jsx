@@ -179,7 +179,7 @@ export const OrderOverviewTab = ({ order, stale, runWrite, setDirty, actions, re
         <div className="pt-4 border-t border-slate-100 dark:border-gray-800 space-y-3">
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-2 min-w-0">
-              <Clock className="w-4 h-4 text-slate-400 shrink-0" aria-hidden="true" />
+              <Clock className="w-4 h-4 text-slate-500 shrink-0" aria-hidden="true" />
               <div className="min-w-0">
                 <p className="text-caption">{isAr ? 'وقت التوصيل' : 'Lieferzeit'}</p>
                 <p className="text-sm font-bold text-slate-900 dark:text-white">

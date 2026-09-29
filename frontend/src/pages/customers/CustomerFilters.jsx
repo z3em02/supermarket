@@ -14,7 +14,7 @@ export const CustomerFilters = ({
   return (
     <div className="bg-white dark:bg-gray-900 p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-gray-850 shadow-sm flex flex-col md:flex-row items-stretch md:items-center gap-3">
       <div className="relative flex-1">
-        <Search className="w-4 h-4 absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        <Search className="w-4 h-4 absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
         <input
           type="text"
           value={searchTerm}
@@ -25,7 +25,7 @@ export const CustomerFilters = ({
         {searchTerm && (
           <button
             onClick={() => setSearchTerm('')}
-            className="absolute right-3 rtl:right-auto rtl:left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
+            className="absolute right-3 rtl:right-auto rtl:left-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
           </button>

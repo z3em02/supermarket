@@ -368,7 +368,7 @@ export const DriverDeliveryView = () => {
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
           <button
             onClick={() => setActiveTab('active')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap transition-all shadow-xs ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap transition-all shadow-sm ${
               activeTab === 'active'
                 ? 'bg-success-600 text-white shadow-success-600/20'
                 : 'bg-white dark:bg-gray-900 text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-800 border border-slate-200 dark:border-gray-800'
@@ -385,7 +385,7 @@ export const DriverDeliveryView = () => {
 
           <button
             onClick={() => setActiveTab('on_route')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap transition-all shadow-xs ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap transition-all shadow-sm ${
               activeTab === 'on_route'
                 ? 'bg-warning-600 text-white shadow-warning-600/20'
                 : 'bg-white dark:bg-gray-900 text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-800 border border-slate-200 dark:border-gray-800'
@@ -402,7 +402,7 @@ export const DriverDeliveryView = () => {
 
           <button
             onClick={() => setActiveTab('delivered')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap transition-all shadow-xs ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap transition-all shadow-sm ${
               activeTab === 'delivered'
                 ? 'bg-primary-600 text-white shadow-primary-600/20'
                 : 'bg-white dark:bg-gray-900 text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-800 border border-slate-200 dark:border-gray-800'
@@ -419,7 +419,7 @@ export const DriverDeliveryView = () => {
 
           <button
             onClick={() => setActiveTab('all')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap transition-all shadow-xs ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap transition-all shadow-sm ${
               activeTab === 'all'
                 ? 'bg-slate-800 dark:bg-gray-700 text-white'
                 : 'bg-white dark:bg-gray-900 text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-800 border border-slate-200 dark:border-gray-800'
@@ -431,9 +431,9 @@ export const DriverDeliveryView = () => {
         </div>
 
         {/* Filter Toolbar: Search & Today only toggle */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-3 sm:p-4 border border-slate-200/80 dark:border-gray-800 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-3 sm:p-4 border border-slate-200/80 dark:border-gray-800 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute top-1/2 -translate-y-1/2 start-3 text-slate-400" />
+            <Search className="w-4 h-4 absolute top-1/2 -translate-y-1/2 start-3 text-slate-500" />
             <input
               type="text"
               value={searchQuery}
@@ -444,7 +444,7 @@ export const DriverDeliveryView = () => {
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute top-1/2 -translate-y-1/2 end-3 text-slate-400 hover:text-slate-600 dark:hover:text-gray-200 text-xs font-bold"
+                className="absolute top-1/2 -translate-y-1/2 end-3 text-slate-500 hover:text-slate-600 dark:hover:text-gray-200 text-xs font-bold"
               >
                 ✕
               </button>
@@ -468,20 +468,20 @@ export const DriverDeliveryView = () => {
         {/* Orders List */}
         {loading ? (
           <div className="py-16 flex flex-col items-center justify-center gap-3">
-            <div className="w-10 h-10 border-3 border-success-600 border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-[3px] border-success-600 border-t-transparent rounded-full animate-spin" />
             <p className="text-sm font-semibold text-slate-500 dark:text-gray-400">
               {isAr ? 'جاري تحميل جولة التوصيل...' : 'Lade Lieferaufträge...'}
             </p>
           </div>
         ) : filteredOrders.length === 0 ? (
-          <div className="bg-white dark:bg-gray-900 rounded-3xl p-10 text-center border border-slate-200/80 dark:border-gray-800 shadow-xs space-y-3">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-10 text-center border border-slate-200/80 dark:border-gray-800 shadow-sm space-y-3">
             <div className="w-14 h-14 mx-auto rounded-2xl bg-success-50 dark:bg-success-950/50 flex items-center justify-center text-success-600 dark:text-success-400">
               <CheckCircle2 className="w-8 h-8" />
             </div>
             <h3 className="text-base font-bold text-slate-800 dark:text-white">
               {isAr ? 'لا توجد طلبات توصيل هنا حالياً' : 'Keine Lieferungen in diesem Bereich'}
             </h3>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-gray-400 max-w-sm mx-auto">
+            <p className="text-body-muted max-w-sm mx-auto">
               {isAr 
                 ? 'جميع الطلبات المسندة إما تم تسليمها أو لا توجد نتائج مطابقة لبحثك الحالي.'
                 : 'Alle Aufträge sind bereits erledigt oder entsprechen nicht dem gewählten Filter.'}

@@ -286,7 +286,7 @@ export const Settings = () => {
   ];
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-12">
+    <div className="space-y-4 sm:space-y-6 pb-12">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 dark:border-gray-800 pb-5">
         <div>
@@ -294,11 +294,11 @@ export const Settings = () => {
             <div className="w-10 h-10 rounded-xl bg-primary-600/10 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 flex items-center justify-center font-bold shrink-0">
               <Store className="w-5 h-5" />
             </div>
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+            <h1 className="text-heading-xl">
               {t('storeSettings')}
             </h1>
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-gray-400">
+          <p className="text-body-muted">
             {t('storeSettingsDesc')}
           </p>
         </div>
@@ -320,21 +320,21 @@ export const Settings = () => {
 
       {/* Notifications */}
       {successMessage && (
-        <div className="flex items-center gap-2.5 p-3.5 rounded-2xl bg-success-50 dark:bg-success-950/50 border border-success-200/80 dark:border-success-900/60 text-success-800 dark:text-success-200 shadow-xs animate-in fade-in duration-200 text-xs sm:text-sm">
+        <div className="flex items-center gap-2.5 p-3.5 rounded-2xl bg-success-50 dark:bg-success-950/50 border border-success-200/80 dark:border-success-900/60 text-success-800 dark:text-success-200 shadow-sm animate-fade-in text-xs sm:text-sm">
           <CheckCircle2 className="w-4 h-4 text-success-600 dark:text-success-400 shrink-0" />
           <span className="font-semibold">{successMessage}</span>
         </div>
       )}
 
       {errorMessage && (
-        <div className="flex items-center gap-2.5 p-3.5 rounded-2xl bg-danger-50 dark:bg-danger-950/50 border border-danger-200/80 dark:border-danger-900/60 text-danger-800 dark:text-danger-200 shadow-xs animate-in fade-in duration-200 text-xs sm:text-sm">
+        <div className="flex items-center gap-2.5 p-3.5 rounded-2xl bg-danger-50 dark:bg-danger-950/50 border border-danger-200/80 dark:border-danger-900/60 text-danger-800 dark:text-danger-200 shadow-sm animate-fade-in text-xs sm:text-sm">
           <AlertCircle className="w-4 h-4 text-danger-600 dark:text-danger-400 shrink-0" />
           <span className="font-semibold">{errorMessage}</span>
         </div>
       )}
 
       {/* Clean Category Tabs */}
-      <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-gray-800/70 rounded-2xl overflow-x-auto border border-slate-200/80 dark:border-gray-700/80 shadow-xs">
+      <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-gray-800/70 rounded-2xl overflow-x-auto border border-slate-200/80 dark:border-gray-700/80 shadow-sm">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;

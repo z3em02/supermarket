@@ -33,9 +33,9 @@ export const DeliveryTab = ({
   } = deliveryWindowSettings;
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
+    <div className="space-y-6 animate-fade-in">
       {/* Delivery Rules Card */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-gray-850 p-5 sm:p-7 shadow-xs space-y-5">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl border border-slate-200/80 dark:border-gray-850 p-5 sm:p-7 shadow-sm space-y-5">
         <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100 dark:border-gray-800">
           <div className="w-9 h-9 rounded-xl bg-success-50 dark:bg-success-950/50 text-success-600 dark:text-success-400 flex items-center justify-center shrink-0">
             <Truck className="w-4 h-4" />
@@ -93,7 +93,7 @@ export const DeliveryTab = ({
               placeholder="0.10"
               className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-success-500/30 focus:border-success-500 focus:outline-none transition"
             />
-            <p className="text-[11px] text-slate-400 dark:text-gray-500 mt-1">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
               {t('deliveryFeePerKmHint')}
             </p>
           </div>
@@ -112,7 +112,7 @@ export const DeliveryTab = ({
               onChange={(e) => handleChange('freeDeliveryThreshold', e.target.value)}
               className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-success-500/30 focus:border-success-500 focus:outline-none transition"
             />
-            <p className="text-[11px] text-slate-400 dark:text-gray-500 mt-1">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
               {t('freeDeliveryThresholdHint')}
             </p>
           </div>
@@ -130,7 +130,7 @@ export const DeliveryTab = ({
               placeholder="0"
               className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-success-500/30 focus:border-success-500 focus:outline-none transition"
             />
-            <p className="text-[11px] text-slate-400 dark:text-gray-500 mt-1">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
               {t('maxDeliveryDistanceKmHint')}
             </p>
           </div>
@@ -147,7 +147,7 @@ export const DeliveryTab = ({
             placeholder={t('allowedPostalCodesPlaceholder')}
             className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-success-500/30 focus:border-success-500 focus:outline-none transition"
           />
-          <p className="text-[11px] text-slate-400 dark:text-gray-500 mt-1">
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
             {t('allowedPostalCodesHint')}
           </p>
         </div>
@@ -161,7 +161,7 @@ export const DeliveryTab = ({
                 <h3 className="text-xs font-bold text-slate-900 dark:text-white">
                   {t('storeCoordinates')}
                 </h3>
-                <p className="text-[11px] text-slate-400 dark:text-gray-500">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   {formData.address ? formData.address : 'Koppreitergasse 8, 1120 Wien'}
                 </p>
               </div>
@@ -171,7 +171,7 @@ export const DeliveryTab = ({
               type="button"
               disabled={geocodingStore || !formData.address}
               onClick={handleGeocodeStoreAddress}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 hover:border-success-500 text-slate-700 dark:text-gray-300 hover:text-success-600 dark:hover:text-success-400 text-xs font-semibold shadow-2xs transition disabled:opacity-40 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 hover:border-success-500 text-slate-700 dark:text-gray-300 hover:text-success-600 dark:hover:text-success-400 text-xs font-semibold shadow-sm transition disabled:opacity-40 cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${geocodingStore ? 'animate-spin text-success-600' : ''}`} />
               <span>{geocodingStore ? (language === 'ar' ? 'جارٍ التحديد...' : 'Ermittle...') : t('updateCoordsFromAddress')}</span>
@@ -210,7 +210,7 @@ export const DeliveryTab = ({
       </div>
 
       {/* Delivery Time Windows Card */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-gray-850 p-5 sm:p-7 shadow-xs space-y-5">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl border border-slate-200/80 dark:border-gray-850 p-5 sm:p-7 shadow-sm space-y-5">
         <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100 dark:border-gray-800">
           <div className="w-9 h-9 rounded-xl bg-primary-50 dark:bg-primary-950/50 text-primary-600 dark:text-primary-400 flex items-center justify-center shrink-0">
             <Clock className="w-4 h-4" />
@@ -228,7 +228,7 @@ export const DeliveryTab = ({
         </div>
 
         {loadingWindows ? (
-          <p className="text-xs text-slate-400">{language === 'ar' ? 'جارٍ التحميل...' : 'Wird geladen...'}</p>
+          <p className="text-xs text-slate-500">{language === 'ar' ? 'جارٍ التحميل...' : 'Wird geladen...'}</p>
         ) : (
           <div className="space-y-3">
             <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400">
@@ -236,7 +236,7 @@ export const DeliveryTab = ({
             </span>
             <div className="flex flex-wrap gap-2">
               {deliveryWindows.length === 0 && (
-                <p className="text-xs text-slate-400 italic">
+                <p className="text-xs text-slate-500 italic">
                   {language === 'ar' ? 'لا توجد أوقات مضافة بعد.' : 'Noch keine Zeitfenster angelegt.'}
                 </p>
               )}
@@ -246,7 +246,7 @@ export const DeliveryTab = ({
                   className={`flex items-center gap-2 pl-3.5 pr-2 py-1.5 rounded-xl border text-xs font-bold transition ${
                     win.isActive
                       ? 'bg-success-50 dark:bg-success-950/40 border-success-200 dark:border-success-900/60 text-success-800 dark:text-success-300'
-                      : 'bg-slate-50 dark:bg-gray-950 border-slate-200 dark:border-gray-800 text-slate-400 dark:text-gray-500'
+                      : 'bg-slate-50 dark:bg-gray-950 border-slate-200 dark:border-gray-800 text-slate-500 dark:text-slate-400'
                   }`}
                 >
                   <span>{windowLabel(win.startHour, win.endHour, language === 'ar')}</span>
@@ -320,7 +320,7 @@ export const DeliveryTab = ({
             <button
               type="button"
               onClick={handleAddDeliveryWindow}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-success-600 hover:bg-success-700 active:bg-success-800 text-white text-xs font-bold cursor-pointer shadow-xs transition touch-manipulation"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-success-600 hover:bg-success-700 active:bg-success-800 text-white text-xs font-bold cursor-pointer shadow-sm transition touch-manipulation"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>{language === 'ar' ? 'إضافة وقت' : 'Zeitfenster hinzufügen'}</span>

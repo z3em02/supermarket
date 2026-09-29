@@ -36,7 +36,7 @@ export const OrderStatusSummary = ({
             aria-pressed={active}
             className={`p-2.5 sm:p-3 rounded-xl border text-start transition touch-manipulation cursor-pointer ${
               active
-                ? `${styles.active} text-slate-900 dark:text-white shadow-2xs`
+                ? `${styles.active} text-slate-900 dark:text-white shadow-sm`
                 : 'bg-white dark:bg-gray-900 border-slate-200/80 dark:border-gray-850 hover:border-slate-300 dark:hover:border-gray-700'
             }`}
           >

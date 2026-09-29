@@ -182,7 +182,7 @@ export const CustomerRegister = () => {
 
       {/* Main Container */}
       <main className="flex-1 flex items-center justify-center px-3 xs:px-4 py-6 sm:py-10">
-        <div className="w-full max-w-2xl bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-gray-800 shadow-xl shadow-slate-200/50 dark:shadow-none p-4 sm:p-6 md:p-10">
+        <div className="w-full max-w-2xl bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-lg shadow-slate-200/50 dark:shadow-none p-4 sm:p-6 md:p-10">
 
           {/* Stepper Header */}
           <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-6 sm:mb-8">
@@ -287,7 +287,7 @@ export const CustomerRegister = () => {
                     minLength={8}
                     className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-500"
                   />
-                  <p className="text-[11px] text-slate-400 dark:text-gray-500 mt-1">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                     {strongPasswordHint(isAr)}
                   </p>
                 </div>
@@ -592,7 +592,7 @@ export const CustomerRegister = () => {
       </main>
 
       {/* Footer */}
-      <footer className="py-4 text-center text-xs text-slate-400 dark:text-gray-600 border-t border-slate-200/50 dark:border-gray-900">
+      <footer className="py-4 text-center text-xs text-slate-500 dark:text-slate-400 border-t border-slate-200/50 dark:border-gray-900">
         &copy; {new Date().getFullYear()} {getStoreName()} &bull; {isAr ? 'خدمة التوصيل المباشر إلى المنزل' : 'Direkter Lieferservice nach Hause'}
       </footer>
     </div>

@@ -8,8 +8,8 @@ export const LegalTab = ({
   const { language, direction } = useLanguage();
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-gray-850 p-4 sm:p-8 shadow-sm space-y-5 sm:space-y-6">
+    <div className="space-y-6 animate-fade-in">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl border border-slate-200/80 dark:border-gray-850 p-4 sm:p-8 shadow-sm space-y-5 sm:space-y-6">
         <div className="flex items-center gap-2.5 sm:gap-3 pb-4 border-b border-slate-100 dark:border-gray-800">
           <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-promo-50 dark:bg-promo-950/50 text-promo-600 dark:text-promo-400 flex items-center justify-center shrink-0">
             <Gavel className="w-4 sm:w-5 h-4 sm:h-5" />
@@ -38,7 +38,7 @@ export const LegalTab = ({
               placeholder={language === 'ar' ? 'الاسم القانوني الكامل' : 'z.B. Max Mustermann'}
               className="w-full px-3.5 sm:px-4 py-2 sm:py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none transition"
             />
-            <p className="text-[11px] text-slate-400 dark:text-gray-500 mt-1">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
               {language === 'ar' ? 'مطلوب قانونياً لصفحة Impressum (§ 5 ECG).' : 'Gesetzlich für das Impressum erforderlich (§ 5 ECG).'}
             </p>
           </div>
@@ -88,7 +88,7 @@ export const LegalTab = ({
               <span className="text-xs font-bold text-slate-800 dark:text-gray-200 block">
                 {language === 'ar' ? 'منشأة صغيرة (بدون ضريبة القيمة المضافة)' : 'Kleinunternehmer (keine USt.)'}
               </span>
-              <span className="text-[11px] text-slate-400 dark:text-gray-500 block mt-0.5">
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
                 {language === 'ar' ? '§ 6 Abs. 1 Z 27 UStG' : 'Gemäß § 6 Abs. 1 Z 27 UStG'}
               </span>
             </div>
@@ -102,7 +102,7 @@ export const LegalTab = ({
               }`}
             >
               <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out ${
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition duration-200 ease-in-out ${
                   formData.isKleinunternehmer ? (direction === 'rtl' ? '-translate-x-5' : 'translate-x-5') : 'translate-x-0'
                 }`}
               />

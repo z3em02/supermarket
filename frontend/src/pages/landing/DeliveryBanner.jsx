@@ -9,9 +9,9 @@ export const DeliveryBanner = () => {
 
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-600 via-info-600 to-brand-800 text-white p-8 sm:p-12 shadow-md">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-600 via-info-600 to-brand-800 text-white p-8 sm:p-12 shadow-md">
         <div className="relative z-10 max-w-2xl space-y-4">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-white text-xs font-bold uppercase tracking-wider backdrop-blur-xs">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-white text-xs font-bold uppercase tracking-wider backdrop-blur-sm">
             <Truck className="w-3.5 h-3.5" />
             <span>{language === 'ar' ? 'خدمة التوصيل المنزلي' : 'Lieferservice direkt nach Hause'}</span>
           </span>

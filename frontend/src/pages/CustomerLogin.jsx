@@ -77,7 +77,7 @@ export const CustomerLogin = () => {
 
       {/* Main Login Card */}
       <main className="flex-1 flex items-center justify-center px-3 xs:px-4 py-6 sm:py-12">
-        <div className="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-gray-800 shadow-xl shadow-slate-200/50 dark:shadow-none p-5 sm:p-8">
+        <div className="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-lg shadow-slate-200/50 dark:shadow-none p-5 sm:p-8">
           
           <div className="text-center mb-6 sm:mb-8">
             <div className="w-12 h-12 sm:w-14 sm:h-14 mx-auto rounded-2xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-200 dark:border-brand-800 mb-3 sm:mb-4 shadow-sm">
@@ -86,7 +86,7 @@ export const CustomerLogin = () => {
             <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
               {isAr ? 'تسجيل دخول العملاء' : 'Kunden-Anmeldung'}
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-gray-400 mt-1.5 leading-relaxed break-words">
+            <p className="text-body-muted mt-1.5 leading-relaxed break-words">
               {isAr 
                 ? 'سجل دخولك لطلب منتجاتك المفضلة مباشرة إلى باب منزلك مع الدفع عند الاستلام' 
                 : 'Melden Sie sich an, um Lebensmittel bequem nach Hause liefern zu lassen mit Barzahlung an der Tür.'}
@@ -174,7 +174,7 @@ export const CustomerLogin = () => {
       </main>
 
       {/* Footer */}
-      <footer className="py-4 text-center text-xs text-slate-400 dark:text-gray-600 border-t border-slate-200/50 dark:border-gray-900">
+      <footer className="py-4 text-center text-xs text-slate-500 dark:text-slate-400 border-t border-slate-200/50 dark:border-gray-900">
         &copy; {new Date().getFullYear()} {getStoreName()} &bull; {isAr ? 'خدمة التوصيل المباشر إلى المنزل' : 'Direkter Lieferservice nach Hause'}
       </footer>
     </div>

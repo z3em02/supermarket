@@ -28,7 +28,7 @@ export const DriverHeader = ({
   const { toggleTheme, theme } = useTheme();
 
   return (
-    <header className="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-gray-800 shadow-xs px-4 py-3 sm:px-6">
+    <header className="sticky top-0 z-30 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-gray-800 shadow-sm px-4 py-3 sm:px-6">
       <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5 min-w-0">
           {adminUser && (
@@ -88,8 +88,10 @@ export const DriverHeader = ({
           {driverUser && !adminUser && (
             <button
               onClick={handleDriverLogout}
-              className="p-2 rounded-xl bg-danger-50 hover:bg-danger-100 dark:bg-danger-950/40 dark:hover:bg-danger-950/60 text-danger-600 dark:text-danger-400 transition"
+              type="button"
+              className="inline-flex items-center justify-center min-w-11 min-h-11 p-2 rounded-xl bg-danger-50 hover:bg-danger-100 dark:bg-danger-950/40 dark:hover:bg-danger-950/60 text-danger-600 dark:text-danger-400 transition"
               title={isAr ? 'تسجيل الخروج' : 'Abmelden'}
+              aria-label={isAr ? 'تسجيل الخروج' : 'Abmelden'}
             >
               <LogOut className="w-4 h-4" />
             </button>

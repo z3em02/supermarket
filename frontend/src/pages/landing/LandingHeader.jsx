@@ -28,7 +28,7 @@ export const LandingHeader = ({
   const { isAuthenticated: isCustomerLoggedIn, customer } = useCustomerAuth();
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-gray-800 transition-colors shadow-2xs">
+    <header className="sticky top-0 z-40 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-gray-800 transition-colors shadow-sm">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-20 flex items-center justify-between gap-2 sm:gap-4">
 
         {/* Logo & Brand */}
@@ -37,10 +37,10 @@ export const LandingHeader = ({
             <img
               src={settings.logoUrl}
               alt={getStoreName(language)}
-              className="w-8 h-8 sm:w-11 sm:h-11 object-contain rounded-xl bg-slate-50 dark:bg-gray-850 p-1 border border-slate-200 dark:border-gray-750 shadow-xs shrink-0"
+              className="w-8 h-8 sm:w-11 sm:h-11 object-contain rounded-xl bg-slate-50 dark:bg-gray-850 p-1 border border-slate-200 dark:border-gray-750 shadow-sm shrink-0"
             />
           ) : (
-            <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-tr from-primary-600 via-promo-600 to-primary-700 flex items-center justify-center text-white shadow-md shadow-primary-500/20 group-hover:scale-105 transition-transform duration-200 shrink-0">
+            <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-tr from-brand-600 via-promo-600 to-brand-700 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform duration-200 shrink-0">
               <Store className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           )}
@@ -56,13 +56,13 @@ export const LandingHeader = ({
 
         {/* Center Navigation Links (Desktop lg+) */}
         <nav className="hidden lg:flex items-center gap-5 text-sm font-semibold text-slate-600 dark:text-gray-300 shrink-0">
-          <a href="#catalog" className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+          <a href="#catalog" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
             {t('catalog')}
           </a>
-          <a href="#reviews" className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+          <a href="#reviews" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
             {t('googleReviewsTitle') || 'Google Reviews'}
           </a>
-          <a href="#contact" className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+          <a href="#contact" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
             {t('contactAndLocation')}
           </a>
         </nav>
@@ -136,7 +136,7 @@ export const LandingHeader = ({
 
       {/* Mobile Dropdown Nav Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-slate-200 dark:border-gray-800 bg-white/98 dark:bg-gray-900/98 backdrop-blur-lg px-4 py-4 space-y-3 shadow-xl animate-in slide-in-from-top-2 duration-150">
+        <div className="lg:hidden border-t border-slate-200 dark:border-gray-800 bg-white/98 dark:bg-gray-900/98 backdrop-blur-lg px-4 py-4 space-y-3 shadow-lg animate-fade-in">
           {/* Phone Controls: Language Selector & Theme Toggle */}
           <div className="sm:hidden flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 dark:bg-gray-850 border border-slate-200/80 dark:border-gray-800">
             <span className="text-xs font-bold text-slate-600 dark:text-gray-400">
@@ -182,7 +182,7 @@ export const LandingHeader = ({
                   <Link
                     to="/customer/login"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="px-3 py-2 rounded-xl bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-900 dark:text-white font-bold text-xs flex items-center justify-center gap-1.5 transition touch-manipulation shadow-2xs"
+                    className="px-3 py-2 rounded-xl bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-900 dark:text-white font-bold text-xs flex items-center justify-center gap-1.5 transition touch-manipulation shadow-sm"
                   >
                     <LogIn className="w-3.5 h-3.5" />
                     <span>{language === 'ar' ? 'تسجيل الدخول' : 'Anmelden'}</span>
@@ -190,7 +190,7 @@ export const LandingHeader = ({
                   <Link
                     to="/customer/register"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition touch-manipulation shadow-2xs"
+                    className="px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition touch-manipulation shadow-sm"
                   >
                     <UserPlus className="w-3.5 h-3.5" />
                     <span>{language === 'ar' ? 'حساب جديد' : 'Registrieren'}</span>
@@ -223,7 +223,7 @@ export const LandingHeader = ({
               onClick={() => setMobileMenuOpen(false)}
               className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-800 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-gray-800 transition touch-manipulation"
             >
-              <MapPin className="w-4 h-4 text-primary-500" />
+              <MapPin className="w-4 h-4 text-brand-500" />
               <span>{t('contactAndLocation')}</span>
             </a>
           </div>

@@ -64,14 +64,14 @@ export const CustomerTable = ({
                   {/* Header Row: Avatar, Name, and Actions */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-success-500 to-info-600 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-success-500 to-info-600 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-sm">
                         {initials}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="font-bold text-slate-900 dark:text-white text-sm truncate">
                           {cust.name}
                         </p>
-                        <div className="flex items-center gap-1.5 text-[11px] text-slate-400 mt-0.5">
+                        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 mt-0.5">
                           <Calendar className="w-3 h-3 shrink-0" />
                           <span>{new Date(cust.createdAt).toLocaleDateString()}</span>
                         </div>
@@ -91,7 +91,7 @@ export const CustomerTable = ({
                       <button
                         disabled={deletingId === cust.id}
                         onClick={() => handleDeleteCustomer(cust.id, cust.name)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-danger-600 hover:bg-danger-50 dark:hover:bg-danger-950/50 transition cursor-pointer touch-manipulation"
+                        className="p-1.5 rounded-lg text-slate-500 hover:text-danger-600 hover:bg-danger-50 dark:hover:bg-danger-950/50 transition cursor-pointer touch-manipulation"
                         title={language === 'ar' ? 'حذف العميل' : 'Kunde löschen'}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -103,12 +103,12 @@ export const CustomerTable = ({
                   <div className="grid grid-cols-1 gap-1.5 bg-slate-50 dark:bg-gray-950/60 rounded-xl p-2.5 border border-slate-100 dark:border-gray-800 text-xs">
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-slate-700 dark:text-gray-300 font-mono truncate inline-flex items-center gap-1.5">
-                        <Phone className="w-3 h-3 text-slate-400 shrink-0" />
+                        <Phone className="w-3 h-3 text-slate-500 shrink-0" />
                         <span>{isRevealed(cust.id) ? (cust.phone || '—') : maskPhone(cust.phone)}</span>
                         <button
                           type="button"
                           onClick={() => toggleReveal(cust.id)}
-                          className="p-0.5 rounded text-slate-400 hover:text-slate-700 dark:hover:text-gray-200 cursor-pointer shrink-0"
+                          className="p-0.5 rounded text-slate-500 hover:text-slate-700 dark:hover:text-gray-200 cursor-pointer shrink-0"
                           title={isRevealed(cust.id) ? (language === 'ar' ? 'إخفاء' : 'Verbergen') : (language === 'ar' ? 'إظهار' : 'Anzeigen')}
                         >
                           {isRevealed(cust.id) ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
@@ -129,7 +129,7 @@ export const CustomerTable = ({
 
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-slate-600 dark:text-gray-300 truncate inline-flex items-center gap-1.5 min-w-0" title={cust.email}>
-                        <Mail className="w-3 h-3 text-slate-400 shrink-0" />
+                        <Mail className="w-3 h-3 text-slate-500 shrink-0" />
                         <span className="truncate">{cust.email}</span>
                       </span>
                       {cust.emailVerified ? (
@@ -153,7 +153,7 @@ export const CustomerTable = ({
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-slate-800 dark:text-slate-200 break-words">{isRevealed(cust.id) ? addressStr : maskAddress(addressStr)}</p>
                         {cust.deliveryNotes && isRevealed(cust.id) && (
-                          <p className="text-[11px] text-slate-400 italic mt-0.5 break-words">
+                          <p className="text-[11px] text-slate-500 italic mt-0.5 break-words">
                             Hinweis: {cust.deliveryNotes}
                           </p>
                         )}
@@ -171,7 +171,7 @@ export const CustomerTable = ({
                       <span>{cust.totalOrders} {language === 'ar' ? 'طلبات' : 'Bestellungen'}</span>
                     </button>
                     <div className="text-end font-mono">
-                      <span className="text-[11px] text-slate-400 me-1">{language === 'ar' ? 'الإنفاق:' : 'Umsatz:'}</span>
+                      <span className="text-[11px] text-slate-500 me-1">{language === 'ar' ? 'الإنفاق:' : 'Umsatz:'}</span>
                       <span className="text-xs font-black text-success-600 dark:text-success-400">
                         €{(cust.totalSpent || 0).toFixed(2)}
                       </span>
@@ -183,15 +183,15 @@ export const CustomerTable = ({
           </div>
 
           {/* Desktop Table View (>= md) */}
-          <div className="hidden md:block overflow-x-auto">
+          <div className="hidden md:block overflow-auto max-h-[70vh]">
             <table className="w-full text-sm text-start" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-              <thead className="bg-slate-50/80 dark:bg-gray-850 text-[11px] uppercase tracking-wider text-slate-500 dark:text-gray-400 border-b border-slate-100 dark:border-gray-800">
+              <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-gray-850 text-[11px] uppercase tracking-wider text-slate-500 dark:text-gray-400 border-b border-slate-100 dark:border-gray-800">
                 <tr>
-                  <th className="px-5 py-3.5 text-start">{language === 'ar' ? 'العميل' : 'Kunde'}</th>
-                  <th className="px-5 py-3.5 text-start">{language === 'ar' ? 'بيانات الاتصال والتحقق' : 'Kontakt & Verifizierung'}</th>
-                  <th className="px-5 py-3.5 text-start">{language === 'ar' ? 'عنوان التوصيل' : 'Lieferadresse'}</th>
-                  <th className="px-5 py-3.5 text-center">{language === 'ar' ? 'الطلبات والإنفاق' : 'Bestellungen & Umsatz'}</th>
-                  <th className="px-5 py-3.5 text-end">{language === 'ar' ? 'الإجراءات' : 'Aktionen'}</th>
+                  <th scope="col" className="px-5 py-3.5 text-start">{language === 'ar' ? 'العميل' : 'Kunde'}</th>
+                  <th scope="col" className="px-5 py-3.5 text-start">{language === 'ar' ? 'بيانات الاتصال والتحقق' : 'Kontakt & Verifizierung'}</th>
+                  <th scope="col" className="px-5 py-3.5 text-start">{language === 'ar' ? 'عنوان التوصيل' : 'Lieferadresse'}</th>
+                  <th scope="col" className="px-5 py-3.5 text-center">{language === 'ar' ? 'الطلبات والإنفاق' : 'Bestellungen & Umsatz'}</th>
+                  <th scope="col" className="px-5 py-3.5 text-end">{language === 'ar' ? 'الإجراءات' : 'Aktionen'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-gray-850">
@@ -210,18 +210,18 @@ export const CustomerTable = ({
                   ].filter(Boolean).join(', ');
 
                   return (
-                    <tr key={cust.id} className="hover:bg-slate-50/70 dark:hover:bg-gray-850/50 transition">
+                    <tr key={cust.id} className="even:bg-slate-50/60 dark:even:bg-gray-950/40 hover:bg-slate-100/70 dark:hover:bg-gray-850/60 transition">
                       {/* Customer Name & Initials */}
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-success-500 to-info-600 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-success-500 to-info-600 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-sm">
                             {initials}
                           </div>
                           <div>
                             <p className="font-bold text-slate-900 dark:text-white text-sm">
                               {cust.name}
                             </p>
-                            <div className="flex items-center gap-1.5 text-[11px] text-slate-400 mt-0.5">
+                            <div className="flex items-center gap-1.5 text-[11px] text-slate-500 mt-0.5">
                               <Calendar className="w-3 h-3" />
                               <span>{new Date(cust.createdAt).toLocaleDateString()}</span>
                             </div>
@@ -235,12 +235,12 @@ export const CustomerTable = ({
                           {/* Phone */}
                           <div className="flex items-center gap-1.5 font-mono">
                             <span className="text-slate-700 dark:text-gray-300 inline-flex items-center gap-1.5">
-                              <Phone className="w-3 h-3 text-slate-400 shrink-0" />
+                              <Phone className="w-3 h-3 text-slate-500 shrink-0" />
                               <span>{isRevealed(cust.id) ? (cust.phone || '—') : maskPhone(cust.phone)}</span>
                               <button
                                 type="button"
                                 onClick={() => toggleReveal(cust.id)}
-                                className="p-0.5 rounded text-slate-400 hover:text-slate-700 dark:hover:text-gray-200 cursor-pointer shrink-0"
+                                className="p-0.5 rounded text-slate-500 hover:text-slate-700 dark:hover:text-gray-200 cursor-pointer shrink-0"
                                 title={isRevealed(cust.id) ? (language === 'ar' ? 'إخفاء' : 'Verbergen') : (language === 'ar' ? 'إظهار' : 'Anzeigen')}
                               >
                                 {isRevealed(cust.id) ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
@@ -262,7 +262,7 @@ export const CustomerTable = ({
                           {/* Email */}
                           <div className="flex items-center gap-1.5 text-slate-600 dark:text-gray-300">
                             <span className="truncate max-w-xs inline-flex items-center gap-1.5 min-w-0" title={cust.email}>
-                              <Mail className="w-3 h-3 text-slate-400 shrink-0" />
+                              <Mail className="w-3 h-3 text-slate-500 shrink-0" />
                               <span className="truncate">{cust.email}</span>
                             </span>
                             {cust.emailVerified ? (
@@ -289,14 +289,14 @@ export const CustomerTable = ({
                               <div>
                                 <p className="font-medium text-slate-800 dark:text-slate-200">{isRevealed(cust.id) ? addressStr : maskAddress(addressStr)}</p>
                                 {cust.deliveryNotes && isRevealed(cust.id) && (
-                                  <p className="text-[11px] text-slate-400 italic mt-0.5">
+                                  <p className="text-[11px] text-slate-500 italic mt-0.5">
                                     Hinweis: {cust.deliveryNotes}
                                   </p>
                                 )}
                               </div>
                             </div>
                           ) : (
-                            <span className="text-slate-400 italic">{language === 'ar' ? 'لم يُحدد عنوان' : 'Keine Adresse hinterlegt'}</span>
+                            <span className="text-slate-500 italic">{language === 'ar' ? 'لم يُحدد عنوان' : 'Keine Adresse hinterlegt'}</span>
                           )}
                         </div>
                       </td>
@@ -332,7 +332,7 @@ export const CustomerTable = ({
                           <button
                             disabled={deletingId === cust.id}
                             onClick={() => handleDeleteCustomer(cust.id, cust.name)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-danger-600 hover:bg-danger-50 dark:hover:bg-danger-950/50 transition cursor-pointer"
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-danger-600 hover:bg-danger-50 dark:hover:bg-danger-950/50 transition cursor-pointer"
                             title={language === 'ar' ? 'حذف العميل' : 'Kunde löschen'}
                           >
                             <Trash2 className="w-4 h-4" />

@@ -20,7 +20,7 @@ export const CustomerStats = ({
         <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-2">
           {metrics.total}
         </p>
-        <p className="text-[10px] sm:text-[11px] text-slate-400 mt-1 truncate">
+        <p className="text-[10px] sm:text-[11px] text-slate-500 mt-1 truncate">
           {metrics.bothVerified} {language === 'ar' ? 'موثق بالكامل' : 'voll verifiziert'}
         </p>
       </div>
@@ -37,7 +37,7 @@ export const CustomerStats = ({
         <p className="text-xl sm:text-2xl font-black text-success-600 dark:text-success-400 mt-2">
           {metrics.phoneVerified}
         </p>
-        <p className="text-[10px] sm:text-[11px] text-slate-400 mt-1 truncate">
+        <p className="text-[10px] sm:text-[11px] text-slate-500 mt-1 truncate">
           {metrics.total ? Math.round((metrics.phoneVerified / metrics.total) * 100) : 0}% {language === 'ar' ? 'نسبة التحقق' : 'Verifizierungsquote'}
         </p>
       </div>
@@ -54,7 +54,7 @@ export const CustomerStats = ({
         <p className="text-xl sm:text-2xl font-black text-promo-600 dark:text-promo-400 mt-2">
           {metrics.emailVerified}
         </p>
-        <p className="text-[10px] sm:text-[11px] text-slate-400 mt-1 truncate">
+        <p className="text-[10px] sm:text-[11px] text-slate-500 mt-1 truncate">
           {metrics.total ? Math.round((metrics.emailVerified / metrics.total) * 100) : 0}% {language === 'ar' ? 'تأكيد بالبريد' : 'E-Mail Bestätigt'}
         </p>
       </div>
@@ -71,7 +71,7 @@ export const CustomerStats = ({
         <p className="text-xl sm:text-2xl font-black text-warning-600 dark:text-warning-400 mt-2 font-mono truncate">
           €{metrics.totalRevenue.toFixed(2)}
         </p>
-        <p className="text-[10px] sm:text-[11px] text-slate-400 mt-1 truncate">
+        <p className="text-[10px] sm:text-[11px] text-slate-500 mt-1 truncate">
           {metrics.totalOrders} {language === 'ar' ? 'إجمالي الطلبات' : 'Bestellungen gesamt'}
         </p>
       </div>

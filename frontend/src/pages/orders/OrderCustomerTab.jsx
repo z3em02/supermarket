@@ -36,12 +36,12 @@ export const OrderCustomerTab = ({ order, stale, runWrite, actions }) => {
     <>
       <Card padding="px-4 sm:px-5 py-1">
         <div className={row}>
-          <User className="w-4 h-4 mt-1 text-slate-400 shrink-0" aria-hidden="true" />
+          <User className="w-4 h-4 mt-1 text-slate-500 shrink-0" aria-hidden="true" />
           <div className="min-w-0"><p className={label}>{isAr ? 'العميل' : 'Kunde'}</p><p className={value}>{name}</p></div>
         </div>
         {phone && (
           <div className={row}>
-            <Phone className="w-4 h-4 mt-1 text-slate-400 shrink-0" aria-hidden="true" />
+            <Phone className="w-4 h-4 mt-1 text-slate-500 shrink-0" aria-hidden="true" />
             <div className="min-w-0 flex-1"><p className={label}>{isAr ? 'الهاتف' : 'Telefon'}</p><p className={`${value} tabular-nums`} dir="ltr">{phone}</p></div>
             <a href={`tel:${phone.replace(/[^\d+]/g, '')}`}
               className="inline-flex items-center gap-1.5 min-h-11 px-3 rounded-xl bg-success-600 hover:bg-success-700 text-white text-sm font-bold shrink-0">
@@ -51,12 +51,12 @@ export const OrderCustomerTab = ({ order, stale, runWrite, actions }) => {
         )}
         {email && (
           <div className={row}>
-            <Mail className="w-4 h-4 mt-1 text-slate-400 shrink-0" aria-hidden="true" />
+            <Mail className="w-4 h-4 mt-1 text-slate-500 shrink-0" aria-hidden="true" />
             <div className="min-w-0"><p className={label}>E-Mail</p><a href={`mailto:${email}`} className={`${value} text-primary-700 dark:text-primary-300 hover:underline`}>{email}</a></div>
           </div>
         )}
         <div className={row}>
-          <MapPin className="w-4 h-4 mt-1 text-slate-400 shrink-0" aria-hidden="true" />
+          <MapPin className="w-4 h-4 mt-1 text-slate-500 shrink-0" aria-hidden="true" />
           <div className="min-w-0 flex-1"><p className={label}>{isAr ? 'عنوان التوصيل' : 'Lieferadresse'}</p><p className={value}>{address || '—'}</p></div>
           {address && (
             <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`} target="_blank" rel="noopener noreferrer"
@@ -67,7 +67,7 @@ export const OrderCustomerTab = ({ order, stale, runWrite, actions }) => {
         </div>
         {order.deliveryNotes && (
           <div className={row}>
-            <FileText className="w-4 h-4 mt-1 text-slate-400 shrink-0" aria-hidden="true" />
+            <FileText className="w-4 h-4 mt-1 text-slate-500 shrink-0" aria-hidden="true" />
             <div className="min-w-0"><p className={label}>{isAr ? 'ملاحظات التوصيل' : 'Lieferhinweise'}</p><p className="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-line">{order.deliveryNotes}</p></div>
           </div>
         )}

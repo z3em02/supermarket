@@ -12,20 +12,20 @@ export const ProductDetailModal = ({
   const { language, t } = useLanguage();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
       <div
-        className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl max-w-xl w-full p-4 sm:p-6 shadow-2xl border border-slate-200 dark:border-gray-800 space-y-4 sm:space-y-6 max-h-[90dvh] overflow-y-auto"
+        className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl max-w-xl w-full p-4 sm:p-6 shadow-2xl border border-slate-200 dark:border-gray-800 space-y-4 sm:space-y-6 max-h-[90dvh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
         <div className="flex items-center justify-between">
-          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-primary-50 dark:bg-primary-950 text-primary-700 dark:text-primary-400">
+          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-brand-50 dark:bg-brand-950 text-brand-700 dark:text-brand-400">
             {selectedProduct.category ? (language === 'ar' ? selectedProduct.category.nameAr : selectedProduct.category.nameDe) : t('allCategories')}
           </span>
           <button
             type="button"
             onClick={() => setSelectedProduct(null)}
-            className="p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-gray-800 transition-colors cursor-pointer touch-manipulation"
+            className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-gray-800 transition-colors cursor-pointer touch-manipulation"
           >
             <X className="w-5 h-5" />
           </button>
@@ -41,7 +41,7 @@ export const ProductDetailModal = ({
               onError={(e) => { e.target.style.display = 'none'; }}
             />
           ) : (
-            <Package className="w-12 h-12 sm:w-16 sm:h-16 text-primary-600 dark:text-primary-400" />
+            <Package className="w-12 h-12 sm:w-16 sm:h-16 text-brand-600 dark:text-brand-400" />
           )}
         </div>
 
@@ -54,7 +54,7 @@ export const ProductDetailModal = ({
               </h3>
               {getPromotionBadge(selectedProduct.id)}
             </div>
-            <div className="flex items-center gap-2 sm:gap-3 text-xs text-slate-400 dark:text-gray-500 font-mono flex-wrap">
+            <div className="flex items-center gap-2 sm:gap-3 text-xs text-slate-500 dark:text-slate-400 font-mono flex-wrap">
               <span>SKU: {selectedProduct.sku}</span>
               <span>•</span>
               <div>{getStockBadge(selectedProduct.stock)}</div>
@@ -69,7 +69,7 @@ export const ProductDetailModal = ({
 
           <div className="pt-4 border-t border-slate-100 dark:border-gray-800 flex flex-col xs:flex-row items-stretch xs:items-center justify-between gap-3">
             <div>
-              <span className="block text-[11px] text-slate-400 font-semibold">{language === 'ar' ? 'السعر للتوصيل' : 'Preis für Hauszustellung'}</span>
+              <span className="block text-[11px] text-slate-500 font-semibold">{language === 'ar' ? 'السعر للتوصيل' : 'Preis für Hauszustellung'}</span>
               {(() => {
                 const priceInfo = getProductPrices(selectedProduct);
                 return (
@@ -79,7 +79,7 @@ export const ProductDetailModal = ({
                         <span className="text-xl sm:text-2xl font-black text-danger-600 dark:text-danger-400 font-mono">
                           €{priceInfo.promoPrice.toFixed(2)}
                         </span>
-                        <span className="line-through text-xs text-slate-400 font-mono">
+                        <span className="line-through text-xs text-slate-500 font-mono">
                           €{priceInfo.basePrice.toFixed(2)}
                         </span>
                       </div>
@@ -96,7 +96,7 @@ export const ProductDetailModal = ({
                   </div>
                 );
               })()}
-              <span className="block text-[10px] text-slate-400 dark:text-gray-500 mt-0.5">
+              <span className="block text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                 {t('pricesInclVatNotice')}
               </span>
             </div>
