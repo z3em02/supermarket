@@ -17,8 +17,10 @@ const decimalsToNumbers = (value) => {
   return out;
 };
 
+// SQL query logging is opt-in (PRISMA_LOG_QUERIES=true): printing every
+// query in development buried the server's own log lines.
 const basePrisma = new PrismaClient({
-  log: process.env.NODE_ENV === 'development'
+  log: process.env.PRISMA_LOG_QUERIES === 'true'
     ? ['query', 'error', 'warn']
     : ['error', 'warn']
 });

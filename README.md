@@ -100,6 +100,8 @@ Never commit `.env` files.
 | `REDIS_URL` | Recommended in production; shares rate-limit counters across processes/servers. Without it each PM2 worker counts on its own, so every limit is multiplied by the worker count (the server warns at startup). |
 | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | Optional; Web Push for order-status notifications. Generate the pair with `npx web-push generate-vapid-keys`. |
 | `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` | Optional; admin created by the seed script. Without a password a one-time random one is printed. |
+| `PRISMA_LOG_QUERIES` | Optional; `true` prints every SQL query Prisma runs (debugging only, very noisy). Off by default. |
+| `TEST_CUSTOMER_EMAIL` / `TEST_CUSTOMER_PHONE` / `TEST_CUSTOMER_NAME` / `TEST_CUSTOMER_PASSWORD` | Optional; the verified test customer created by `node scripts/createTestCustomer.js`. Without a password a random one is printed once. |
 
 **`frontend/.env`**
 
