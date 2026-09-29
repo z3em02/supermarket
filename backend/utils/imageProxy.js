@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const dns = require('dns');
 const http = require('http');
 const https = require('https');
-const { isPrivateOrLocalHost } = require('./googleScraper');
+const { isPrivateOrLocalHost } = require('./url');
 
 const UPLOADS_DIR = path.join(__dirname, '..', 'uploads');
 const MAX_LOGO_SIZE = 2 * 1024 * 1024; // 2 MB

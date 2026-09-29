@@ -3,6 +3,7 @@
 const prisma = require('../lib/prisma');
 const { logAudit } = require('../lib/auditLog');
 const { decrypt, decryptCustomerPII } = require('../utils/piiCrypto');
+const { DECLINED_STATUSES } = require('./orderShared');
 
 /**
  * List all customers (Admin)
@@ -60,7 +61,7 @@ const listCustomers = async (req, res) => {
     });
 
     const enriched = customers.map(c => {
-      const validOrders = (c.orders || []).filter(o => !['declined', 'rejected', 'canceled', 'cancelled'].includes(o.status?.toLowerCase()));
+      const validOrders = (c.orders || []).filter(o => !DECLINED_STATUSES.includes(o.status?.toLowerCase()));
       const totalSpent = validOrders.reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
       return {
         ...decryptCustomerPII(c),

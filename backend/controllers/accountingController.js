@@ -1,7 +1,9 @@
 const prisma = require('../lib/prisma');
 const { CUSTOMER_PUBLIC_SELECT } = require('../utils/serialize');
 const { logAudit } = require('../lib/auditLog');
-const { decryptCustomerPII, decrypt } = require('../utils/piiCrypto');
+// Reuse the shared order/customer PII-decrypt helper (was a local copy) so
+// the decrypt field list can't drift between here and the order controllers.
+const { DECLINED_STATUSES, withDecryptedCustomer: withDecryptedOrder } = require('./orderShared');
 const { parseStartDate, parseEndDate } = require('../utils/validation');
 
 // createdAt filter for the Accounting page's date range. A plain date covers
@@ -24,18 +26,6 @@ const createdAtRange = (startDate, endDate) => {
   return { filter: Object.keys(createdAt).length ? { createdAt } : {} };
 };
 
-// Orders carry their own encrypted customer* snapshot columns (see
-// README.md "Personal data & GDPR"), plus the joined `customer` relation which also
-// holds encrypted fields — decrypt both before any of it is read.
-const withDecryptedOrder = (ord) => ({
-  ...ord,
-  customerName: 'customerName' in ord ? decrypt(ord.customerName) : ord.customerName,
-  customerPhone: 'customerPhone' in ord ? decrypt(ord.customerPhone) : ord.customerPhone,
-  customerEmail: 'customerEmail' in ord ? decrypt(ord.customerEmail) : ord.customerEmail,
-  deliveryAddress: 'deliveryAddress' in ord ? decrypt(ord.deliveryAddress) : ord.deliveryAddress,
-  deliveryNotes: 'deliveryNotes' in ord ? decrypt(ord.deliveryNotes) : ord.deliveryNotes,
-  customer: ord.customer ? decryptCustomerPII(ord.customer) : ord.customer
-});
 
 const getAccountingSummary = async (req, res) => {
   try {
@@ -48,7 +38,7 @@ const getAccountingSummary = async (req, res) => {
     // Valid non-declined orders
     const validOrders = (await prisma.order.findMany({
       where: {
-        status: { notIn: ['declined', 'rejected', 'canceled', 'cancelled'] },
+        status: { notIn: DECLINED_STATUSES },
         ...dateFilter
       },
       include: {
@@ -201,7 +191,7 @@ const exportAccountingData = async (req, res) => {
 
     const orders = (await prisma.order.findMany({
       where: {
-        status: { notIn: ['declined', 'rejected', 'canceled', 'cancelled'] },
+        status: { notIn: DECLINED_STATUSES },
         ...dateFilter
       },
       include: {
