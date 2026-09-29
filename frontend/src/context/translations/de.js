@@ -62,7 +62,7 @@ export const de = {
     addNewProduct: "Neues Produkt hinzufügen",
     viewOrders: "Bestellungen anzeigen",
     gettingStarted: "Erste Schritte",
-    tip1: "Kunden können sich online registrieren und ihre Adresse per SMS/E-Mail verifizieren",
+    tip1: "Kunden können sich online registrieren und ihre Adresse per WhatsApp/E-Mail verifizieren",
     tip2: "Erstellen Sie Produkte mit Preisen und Lagerbeständen",
     tip3: "Überwachen und verwalten Sie eingehende Hauszustellungen",
     tip4: "Verfolgen Sie Ihre finanzielle Leistung im Buchhaltungsbereich",

@@ -8,12 +8,6 @@ import { getApiUrl } from '../utils/api';
 import { printHtmlInHiddenIframe } from '../utils/printDocument';
 import { buildCustomerOrderReportHtml } from '../utils/customerOrderReport';
 import {
-  sendPhoneVerificationCode,
-  confirmPhoneVerificationCode,
-  resetRecaptcha,
-  isFirebasePhoneAuthConfigured
-} from '../utils/firebaseClient';
-import {
   Package,
   MapPin,
   AlertTriangle,
@@ -76,25 +70,8 @@ export const CustomerAccount = () => {
   const [verifyingType, setVerifyingType] = useState(null); // 'email' | 'phone' | null
   const [otpInput, setOtpInput] = useState('');
   const [verifyingLoading, setVerifyingLoading] = useState(false);
-  // Holds the Firebase confirmationResult between "send SMS code" and "confirm code"
-  const [phoneConfirmationResult, setPhoneConfirmationResult] = useState(null);
-
-  const PHONE_RECAPTCHA_CONTAINER_ID = 'firebase-phone-recaptcha-container';
-
-  const resolvePhoneVerifyError = (err) => {
-    if (err?.response?.data?.error) return err.response.data.error;
-    const messages = {
-      'auth/invalid-verification-code': isAr ? 'رمز التحقق غير صحيح' : 'Ungültiger Verifizierungscode',
-      'auth/code-expired': isAr ? 'انتهت صلاحية الرمز، يرجى طلب رمز جديد' : 'Der Code ist abgelaufen, bitte fordern Sie einen neuen an',
-      'auth/too-many-requests': isAr ? 'محاولات كثيرة جداً، حاول لاحقاً' : 'Zu viele Versuche, bitte später erneut versuchen',
-      'auth/invalid-phone-number': isAr ? 'رقم الهاتف غير صالح' : 'Ungültige Telefonnummer',
-      'auth/missing-phone-number': isAr ? 'رقم الهاتف مفقود' : 'Telefonnummer fehlt',
-      'auth/captcha-check-failed': isAr ? 'فشل التحقق الأمني، حاول مرة أخرى' : 'Sicherheitsprüfung fehlgeschlagen, bitte erneut versuchen',
-      'auth/quota-exceeded': isAr ? 'تم تجاوز الحد المسموح للرسائل، حاول لاحقاً' : 'SMS-Kontingent überschritten, bitte später erneut versuchen',
-      'auth/operation-not-allowed': isAr ? 'التحقق من الهاتف غير مفعّل حالياً، يرجى المحاولة لاحقاً' : 'Telefonverifizierung ist derzeit nicht verfügbar, bitte später erneut versuchen'
-    };
-    return messages[err?.code] || err?.message || (isAr ? 'حدث خطأ أثناء التحقق من الهاتف' : 'Fehler bei der Telefonverifizierung');
-  };
+  // False while the WhatsApp code is still being sent
+  const [phoneCodeSent, setPhoneCodeSent] = useState(false);
 
   useEffect(() => {
     if (authLoading) return; // wait for the initial session check to resolve
@@ -262,32 +239,23 @@ export const CustomerAccount = () => {
       return;
     }
 
-    // Phone: Firebase sends the SMS directly to the customer's phone (no
-    // backend call needed for this step) via an invisible reCAPTCHA check.
-    if (!isFirebasePhoneAuthConfigured()) {
-      setProfileError(isAr ? 'Telefonverifizierung ist derzeit nicht verfügbar.' : 'Telefonverifizierung ist derzeit nicht verfügbar.');
-      return;
-    }
+    // Phone: the backend sends the code via WhatsApp.
     setVerifyingType('phone');
+    setPhoneCodeSent(false);
     setVerifyingLoading(true);
     try {
-      const confirmation = await sendPhoneVerificationCode(customer.phone, PHONE_RECAPTCHA_CONTAINER_ID);
-      setPhoneConfirmationResult(confirmation);
+      await resendOtp('phone');
+      setPhoneCodeSent(true);
     } catch (err) {
-      console.error('Firebase phone send error:', err);
       setVerifyingType(null);
-      setProfileError(resolvePhoneVerifyError(err));
-      resetRecaptcha();
+      setProfileError(err.response?.data?.error || (isAr ? 'تعذر إرسال الرمز عبر واتساب' : 'Code konnte nicht per WhatsApp gesendet werden'));
     } finally {
       setVerifyingLoading(false);
     }
   };
 
   const handleCancelVerify = () => {
-    if (verifyingType === 'phone') {
-      resetRecaptcha();
-      setPhoneConfirmationResult(null);
-    }
+    setPhoneCodeSent(false);
     setVerifyingType(null);
     setOtpInput('');
     setProfileError('');
@@ -301,13 +269,8 @@ export const CustomerAccount = () => {
       if (verifyingType === 'email') {
         await verifyEmail(otpInput.trim());
       } else {
-        if (!phoneConfirmationResult) {
-          throw new Error(isAr ? 'يرجى طلب رمز جديد.' : 'Bitte fordern Sie einen neuen Code an.');
-        }
-        const idToken = await confirmPhoneVerificationCode(phoneConfirmationResult, otpInput.trim());
-        await verifyPhone(idToken);
-        setPhoneConfirmationResult(null);
-        resetRecaptcha();
+        await verifyPhone(otpInput.trim());
+        setPhoneCodeSent(false);
       }
       setVerifyingType(null);
       setOtpInput('');
@@ -318,11 +281,7 @@ export const CustomerAccount = () => {
       );
       refreshProfile();
     } catch (err) {
-      setProfileError(
-        verifyingType === 'phone'
-          ? resolvePhoneVerifyError(err)
-          : (err.response?.data?.error || (isAr ? 'رمز التحقق غير صحيح' : 'Ungültiger Code'))
-      );
+      setProfileError(err.response?.data?.error || (isAr ? 'رمز التحقق غير صحيح' : 'Ungültiger Code'));
     } finally {
       setVerifyingLoading(false);
     }
@@ -425,9 +384,6 @@ export const CustomerAccount = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-gray-950 text-slate-800 dark:text-gray-100 transition-colors">
-      {/* Invisible reCAPTCHA host for Firebase Phone Auth; must stay mounted
-          whenever a phone-verification attempt could start */}
-      <div id={PHONE_RECAPTCHA_CONTAINER_ID} />
       {/* Navigation Header */}
       <AccountHeader isAr={isAr} navigate={navigate} />
 
@@ -444,7 +400,7 @@ export const CustomerAccount = () => {
             handleSubmitVerifyOtp={handleSubmitVerifyOtp}
             isAr={isAr}
             otpInput={otpInput}
-            phoneConfirmationResult={phoneConfirmationResult}
+            phoneCodeSent={phoneCodeSent}
             profileError={profileError}
             setOtpInput={setOtpInput}
             verifyingLoading={verifyingLoading}

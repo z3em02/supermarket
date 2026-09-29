@@ -6,7 +6,7 @@ const { JWT_SECRET, SECURE_COOKIES } = require('../lib/config');
 const { sendAdminLoginOtpEmail } = require('../utils/emailService');
 const { generateCsrfToken, setCsrfCookie } = require('../middleware/csrf');
 const { logAudit } = require('../lib/auditLog');
-const { secureCompare } = require('../utils/validation');
+const { secureCompare, isString } = require('../utils/validation');
 
 const PENDING_2FA_SCOPE = 'admin-2fa-pending';
 const SESSION_TTL = '24h'; // #22 fix: limit admin JWT lifetime to 24h (previously 30d)
@@ -31,7 +31,7 @@ const verifyPendingToken = (pendingToken) => {
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) {
+    if (!email || !password || !isString(email) || !isString(password)) {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
@@ -131,8 +131,9 @@ const verify2FA = async (req, res) => {
 
     logAudit(admin.email, 'ADMIN_LOGIN', 'Erfolgreiche 2FA-Anmeldung im Admin-Dashboard');
 
+    // The session lives in the HttpOnly cookie set above; the JWT is
+    // deliberately not echoed in the body (the frontend never reads it).
     res.json({
-      token,
       admin: { id: admin.id, email: admin.email, name: admin.name }
     });
   } catch (error) {
@@ -248,9 +249,9 @@ const changePassword = async (req, res) => {
 
     logAudit(updated.email, 'ADMIN_CHANGE_PASSWORD', 'Admin-Passwort geändert und alte Sitzungen widerrufen');
 
+    // Fresh session set as an HttpOnly cookie above; not echoed in the body.
     res.json({
-      message: 'Password changed successfully. All other admin sessions have been revoked.',
-      token
+      message: 'Password changed successfully. All other admin sessions have been revoked.'
     });
   } catch (error) {
     console.error('Admin change password error:', error);

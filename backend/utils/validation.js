@@ -2,6 +2,36 @@ const crypto = require('crypto');
 
 const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim());
 
+// True only for a real string primitive. Handlers use this to reject object/
+// array/number inputs up front (returning 400) that would otherwise reach a
+// `.trim()` call or a Prisma `where` clause and throw an unhandled 500.
+const isString = (value) => typeof value === 'string';
+
+// Every optional field is either absent (undefined) or a string. Returns the
+// name of the first offending field, or null if all are fine.
+const firstNonStringField = (obj, fields) => {
+  for (const f of fields) {
+    if (obj[f] !== undefined && !isString(obj[f])) return f;
+  }
+  return null;
+};
+
+// Trims and hard-caps a free-text field so one request can't persist an
+// unbounded string (the 100kb body limit is otherwise the only bound).
+const clampText = (value, max) => String(value ?? '').trim().slice(0, max);
+
+// Per-field maximum lengths for customer-entered text (mirrors the driver
+// controller's .slice(0, 60) pattern). Generous enough for real addresses.
+const FIELD_MAX = {
+  name: 100,
+  street: 120,
+  houseNumber: 20,
+  postalCode: 12,
+  city: 80,
+  floorApartment: 60,
+  deliveryNotes: 500
+};
+
 // Constant-time string comparison for secrets (OTP codes, tokens) so a
 // mismatch doesn't leak how many leading characters matched via timing.
 // crypto.timingSafeEqual requires equal-length buffers, so a length
@@ -16,9 +46,9 @@ const secureCompare = (a, b) => {
 
 // Normalizes an Austrian phone number to E.164 (+43...), accepting a leading
 // +43, 0043, or a local 0-prefixed number (e.g. "0660 1234567" -> "+436601234567").
-// Firebase Phone Auth requires E.164, and storing customers' numbers in this
-// single canonical form lets us compare against the phone_number claim on the
-// verified Firebase ID token with a plain string match.
+// Storing customers' numbers in this single canonical form makes lookups a
+// plain hash match, and it's what the WhatsApp Cloud API expects as the
+// recipient (minus the "+", see utils/whatsappService.js).
 const normalizeAustrianPhone = (phone) => {
   let trimmed = String(phone || '').trim().replace(/[\s\-()]/g, '');
   if (trimmed.startsWith('0043')) trimmed = `+43${trimmed.slice(4)}`;
@@ -111,5 +141,9 @@ module.exports = {
   secureCompare,
   parseValidDate,
   parseStartDate,
-  parseEndDate
+  parseEndDate,
+  isString,
+  firstNonStringField,
+  clampText,
+  FIELD_MAX
 };

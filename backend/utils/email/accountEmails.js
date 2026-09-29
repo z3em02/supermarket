@@ -26,6 +26,8 @@ const sendCustomerVerificationEmail = async (customerEmail, customerName, verifi
     const settings = await getStoreSettings();
     const isAr = lang === 'ar';
     const storeName = (isAr ? settings.storeNameAr : settings.storeNameDe) || settings.storeName || 'Hajar Supermarkt';
+    // HTML-escaped for use inside email markup (admin-set, still untrusted in HTML)
+    const safeStoreName = escapeHtml(storeName);
 
     const title = isAr ? 'تأكيد البريد الإلكتروني للطلب المنزلي' : 'Bestätigung Ihrer E-Mail-Adresse';
     const subtitle = isAr ? 'رمز التحقق الخاص بحسابك' : 'Verifizierungscode für Ihr Lieferkonto';
@@ -36,7 +38,7 @@ const sendCustomerVerificationEmail = async (customerEmail, customerName, verifi
     const contentHtml = isAr ? `
       <p style="font-size: 16px; color: #0f172a; margin-top: 0;">مرحباً <strong>${customerName}</strong>،</p>
       <p style="color: #475569; line-height: 1.8; font-size: 14px;">
-        شكراً لانضمامك إلى خدمة التوصيل المنزلي من <strong>${storeName}</strong>.
+        شكراً لانضمامك إلى خدمة التوصيل المنزلي من <strong>${safeStoreName}</strong>.
         لتأكيد بريدك الإلكتروني وإتمام تسجيل حسابك، يُرجى إدخال رمز التحقق المكون من 6 أرقام:
       </p>
 
@@ -51,7 +53,7 @@ const sendCustomerVerificationEmail = async (customerEmail, customerName, verifi
     ` : `
       <p style="font-size: 16px; color: #0f172a; margin-top: 0;">Hallo <strong>${customerName}</strong>,</p>
       <p style="color: #475569; line-height: 1.8; font-size: 14px;">
-        vielen Dank für Ihre Registrierung bei unserem Lieferservice <strong>${storeName}</strong>.
+        vielen Dank für Ihre Registrierung bei unserem Lieferservice <strong>${safeStoreName}</strong>.
         Bitte geben Sie den folgenden 6-stelligen Code ein, um Ihre E-Mail-Adresse zu bestätigen:
       </p>
 
@@ -96,6 +98,8 @@ const sendPasswordResetEmail = async (customerEmail, customerName, resetToken, l
     const settings = await getStoreSettings();
     const isAr = lang === 'ar';
     const storeName = (isAr ? settings.storeNameAr : settings.storeNameDe) || settings.storeName || 'Hajar Supermarkt';
+    // HTML-escaped for use inside email markup (admin-set, still untrusted in HTML)
+    const safeStoreName = escapeHtml(storeName);
 
     const resetUrl = `${publicOrigin()}/reset-password?token=${resetToken}`;
 
@@ -108,7 +112,7 @@ const sendPasswordResetEmail = async (customerEmail, customerName, resetToken, l
     const contentHtml = isAr ? `
       <p style="font-size: 16px; color: #0f172a; margin-top: 0;">مرحباً <strong>${customerName}</strong>،</p>
       <p style="color: #475569; line-height: 1.8; font-size: 14px;">
-        تلقينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك في <strong>${storeName}</strong>. اضغط على الزر أدناه لتعيين كلمة مرور جديدة:
+        تلقينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك في <strong>${safeStoreName}</strong>. اضغط على الزر أدناه لتعيين كلمة مرور جديدة:
       </p>
       <div style="text-align: center; margin: 28px 0;">
         <a href="${resetUrl}" class="btn-primary" style="background: #16a34a; color: #ffffff !important; text-decoration: none; padding: 15px 32px; border-radius: 12px; font-weight: 800; font-size: 15px; display: inline-block;">
@@ -121,7 +125,7 @@ const sendPasswordResetEmail = async (customerEmail, customerName, resetToken, l
     ` : `
       <p style="font-size: 16px; color: #0f172a; margin-top: 0;">Hallo <strong>${customerName}</strong>,</p>
       <p style="color: #475569; line-height: 1.8; font-size: 14px;">
-        wir haben eine Anfrage zum Zurücksetzen des Passworts für Ihr Konto bei <strong>${storeName}</strong> erhalten. Klicken Sie auf die Schaltfläche unten, um ein neues Passwort festzulegen:
+        wir haben eine Anfrage zum Zurücksetzen des Passworts für Ihr Konto bei <strong>${safeStoreName}</strong> erhalten. Klicken Sie auf die Schaltfläche unten, um ein neues Passwort festzulegen:
       </p>
       <div style="text-align: center; margin: 28px 0;">
         <a href="${resetUrl}" class="btn-primary" style="background: #16a34a; color: #ffffff !important; text-decoration: none; padding: 15px 32px; border-radius: 12px; font-weight: 800; font-size: 15px; display: inline-block;">
@@ -166,6 +170,8 @@ const sendAdminLoginOtpEmail = async (adminEmail, adminName, code) => {
 
     const settings = await getStoreSettings();
     const storeName = settings.storeNameDe || settings.storeName || 'Hajar Supermarkt';
+    // HTML-escaped for use inside email markup (admin-set, still untrusted in HTML)
+    const safeStoreName = escapeHtml(storeName);
     const safeName = escapeHtml(adminName || 'Admin');
 
     const title = 'Admin-Anmeldecode';
@@ -175,7 +181,7 @@ const sendAdminLoginOtpEmail = async (adminEmail, adminName, code) => {
     const contentHtml = `
       <p style="font-size: 16px; color: #0f172a; margin-top: 0;">Hallo <strong>${safeName}</strong>,</p>
       <p style="color: #475569; line-height: 1.8; font-size: 14px;">
-        Jemand versucht sich gerade mit Ihrem Admin-Konto bei <strong>${storeName}</strong> anzumelden.
+        Jemand versucht sich gerade mit Ihrem Admin-Konto bei <strong>${safeStoreName}</strong> anzumelden.
         Geben Sie den folgenden Code ein, um die Anmeldung abzuschließen:
       </p>
 

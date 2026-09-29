@@ -3,12 +3,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useCustomerAuth } from '../context/CustomerAuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useStoreSettings } from '../context/StoreSettingsContext';
-import {
-  sendPhoneVerificationCode,
-  confirmPhoneVerificationCode,
-  resetRecaptcha,
-  isFirebasePhoneAuthConfigured
-} from '../utils/firebaseClient';
 import { LanguageSelector } from '../components/LanguageSelector';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { isStrongPassword, strongPasswordHint } from '../utils/validation';
@@ -57,30 +51,16 @@ export const CustomerRegister = () => {
   const [phoneCode, setPhoneCode] = useState('');
   const [emailVerified, setEmailVerified] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
-  // Firebase confirmationResult between "send SMS code" and "confirm code"
-  const [phoneConfirmationResult, setPhoneConfirmationResult] = useState(null);
+  // True once a WhatsApp code has been sent, to show the code input
+  const [phoneCodeSent, setPhoneCodeSent] = useState(false);
   const [sendingPhoneCode, setSendingPhoneCode] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  const PHONE_RECAPTCHA_CONTAINER_ID = 'firebase-phone-recaptcha-container-register';
-
-  const resolvePhoneError = (err) => {
-    if (err?.response?.data?.error) return err.response.data.error;
-    const messages = {
-      'auth/invalid-verification-code': isAr ? 'رمز التحقق غير صحيح' : 'Ungültiger Verifizierungscode',
-      'auth/code-expired': isAr ? 'انتهت صلاحية الرمز، يرجى طلب رمز جديد' : 'Der Code ist abgelaufen, bitte fordern Sie einen neuen an',
-      'auth/too-many-requests': isAr ? 'محاولات كثيرة جداً، حاول لاحقاً' : 'Zu viele Versuche, bitte später erneut versuchen',
-      'auth/invalid-phone-number': isAr ? 'رقم الهاتف غير صالح' : 'Ungültige Telefonnummer',
-      'auth/missing-phone-number': isAr ? 'رقم الهاتف مفقود' : 'Telefonnummer fehlt',
-      'auth/captcha-check-failed': isAr ? 'فشل التحقق الأمني، حاول مرة أخرى' : 'Sicherheitsprüfung fehlgeschlagen, bitte erneut versuchen',
-      'auth/quota-exceeded': isAr ? 'تم تجاوز الحد المسموح للرسائل، حاول لاحقاً' : 'SMS-Kontingent überschritten, bitte später erneut versuchen',
-      'auth/operation-not-allowed': isAr ? 'التحقق من الهاتف غير مفعّل حالياً، يرجى المحاولة لاحقاً' : 'Telefonverifizierung ist derzeit nicht verfügbar, bitte später erneut versuchen'
-    };
-    return messages[err?.code] || err?.message || (isAr ? 'حدث خطأ أثناء التحقق من الهاتف' : 'Fehler bei der Telefonverifizierung');
-  };
+  const resolvePhoneError = (err) =>
+    err?.response?.data?.error || (isAr ? 'حدث خطأ أثناء التحقق من الهاتف' : 'Fehler bei der Telefonverifizierung');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -136,38 +116,28 @@ export const CustomerRegister = () => {
     }
   };
 
-  // Firebase sends the SMS directly to the customer's phone (no backend call
-  // for this step) via an invisible reCAPTCHA check.
+  // The backend sends the code to the account's phone number via WhatsApp.
   const handleSendPhoneCode = async () => {
-    if (!isFirebasePhoneAuthConfigured()) {
-      setError(isAr ? 'Telefonverifizierung ist derzeit nicht verfügbar.' : 'Telefonverifizierung ist derzeit nicht verfügbar.');
-      return;
-    }
     try {
       setSendingPhoneCode(true);
       setError('');
-      const confirmation = await sendPhoneVerificationCode(formData.phone, PHONE_RECAPTCHA_CONTAINER_ID);
-      setPhoneConfirmationResult(confirmation);
-      setSuccessMsg(isAr ? 'تم إرسال رمز عبر الرسائل القصيرة' : 'SMS-Code wurde gesendet');
+      await resendOtp('phone');
+      setPhoneCodeSent(true);
+      setSuccessMsg(isAr ? 'تم إرسال الرمز عبر واتساب' : 'Code wurde per WhatsApp gesendet');
     } catch (err) {
-      console.error('Firebase phone send error:', err);
       setError(resolvePhoneError(err));
-      resetRecaptcha();
     } finally {
       setSendingPhoneCode(false);
     }
   };
 
   const handleVerifyPhone = async () => {
-    if (!phoneCode.trim() || !phoneConfirmationResult) return;
+    if (!phoneCode.trim()) return;
     try {
       setLoading(true);
       setError('');
-      const idToken = await confirmPhoneVerificationCode(phoneConfirmationResult, phoneCode.trim());
-      await verifyPhone(idToken);
+      await verifyPhone(phoneCode.trim());
       setPhoneVerified(true);
-      setPhoneConfirmationResult(null);
-      resetRecaptcha();
       setSuccessMsg(isAr ? 'تم التحقق من رقم الهاتف بنجاح!' : 'Telefonnummer erfolgreich verifiziert!');
     } catch (err) {
       setError(resolvePhoneError(err));
@@ -535,14 +505,14 @@ export const CustomerRegister = () => {
                     <div className="flex items-center gap-2 min-w-0">
                       <Phone className="w-4 h-4 text-emerald-600 shrink-0" />
                       <span className="font-bold text-xs sm:text-sm text-slate-800 dark:text-gray-200 truncate">
-                        {isAr ? 'رمز تأكيد رقم الهاتف (SMS)' : 'Telefon-Bestätigungscode (SMS)'}
+                        {isAr ? 'رمز تأكيد رقم الهاتف (واتساب)' : 'Telefon-Bestätigungscode (WhatsApp)'}
                       </span>
                     </div>
                     {phoneVerified ? (
                       <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
                         <CheckCircle2 className="w-4 h-4" /> {isAr ? 'تم التحقق' : 'Verifiziert'}
                       </span>
-                    ) : phoneConfirmationResult ? (
+                    ) : phoneCodeSent ? (
                       <button
                         type="button"
                         onClick={handleSendPhoneCode}
@@ -556,7 +526,7 @@ export const CustomerRegister = () => {
                   </div>
 
                   {!phoneVerified ? (
-                    phoneConfirmationResult ? (
+                    phoneCodeSent ? (
                       <div className="flex flex-col xs:flex-row gap-2 mt-2">
                         <input
                           type="text"
@@ -584,7 +554,7 @@ export const CustomerRegister = () => {
                       >
                         {sendingPhoneCode
                           ? (isAr ? 'جارٍ الإرسال...' : 'Wird gesendet...')
-                          : (isAr ? 'إرسال رمز عبر الرسائل القصيرة' : 'SMS-Code senden')}
+                          : (isAr ? 'إرسال الرمز عبر واتساب' : 'Code per WhatsApp senden')}
                       </button>
                     )
                   ) : (
@@ -594,9 +564,6 @@ export const CustomerRegister = () => {
                   )}
                 </div>
               </div>
-
-              {/* Invisible reCAPTCHA host for Firebase Phone Auth */}
-              <div id={PHONE_RECAPTCHA_CONTAINER_ID} />
 
               {/* Complete & Enter Store Button */}
               <div className="pt-4">

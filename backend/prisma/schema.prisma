@@ -96,6 +96,8 @@ model Customer {
   resetToken        String?
   resetTokenExpiry  DateTime?
   otpAttempts       Int                @default(0)
+  // Separate counter so email and WhatsApp code attempts don't reset each other
+  phoneOtpAttempts  Int                @default(0)
   tokenVersion      Int                @default(0)
   street            String?
   houseNumber       String?

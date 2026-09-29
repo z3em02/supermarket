@@ -5,7 +5,7 @@ export const VerifyContactModal = ({
   handleSubmitVerifyOtp,
   isAr,
   otpInput,
-  phoneConfirmationResult,
+  phoneCodeSent,
   profileError,
   setOtpInput,
   verifyingLoading,
@@ -35,10 +35,10 @@ export const VerifyContactModal = ({
         </div>
       )}
 
-      {verifyingType === 'phone' && !phoneConfirmationResult ? (
+      {verifyingType === 'phone' && !phoneCodeSent ? (
         <p className="text-xs text-amber-700 dark:text-amber-300">
           {verifyingLoading
-            ? (isAr ? 'جارٍ إرسال رمز عبر الرسائل القصيرة...' : 'SMS-Code wird gesendet...')
+            ? (isAr ? 'جارٍ إرسال الرمز عبر واتساب...' : 'Code wird per WhatsApp gesendet...')
             : (isAr ? 'تعذر إرسال الرمز.' : 'Code konnte nicht gesendet werden.')}
         </p>
       ) : (

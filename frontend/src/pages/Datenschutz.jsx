@@ -247,7 +247,7 @@ export const Datenschutz = () => {
                 Wenn Sie sich als Privatkunde für unseren Lieferservice registrieren oder Bestellungen aufgeben, erheben wir Ihre Kontaktdaten (Vollständiger Name, E-Mail-Adresse, Telefonnummer, genaue Lieferadresse samt Stockwerk/Türnummer sowie Hinweise für den Fahrer).
               </p>
               <p>
-                Die Verarbeitung dieser Daten ist erforderlich, um Ihre Identität per SMS-/E-Mail-Code (OTP) zu verifizieren und Ihre Bestellung zuverlässig an Ihre Haustür zu liefern. Rechnungen und steuerrelevante Geschäftsunterlagen werden gemäß § 132 BAO für die gesetzliche Frist von 7 Jahren aufbewahrt.
+                Die Verarbeitung dieser Daten ist erforderlich, um Ihre Identität per WhatsApp-/E-Mail-Code (OTP) zu verifizieren und Ihre Bestellung zuverlässig an Ihre Haustür zu liefern. Rechnungen und steuerrelevante Geschäftsunterlagen werden gemäß § 132 BAO für die gesetzliche Frist von 7 Jahren aufbewahrt.
               </p>
               <p className="text-xs text-slate-500">Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung) und Art. 6 Abs. 1 lit. c DSGVO (rechtliche Verpflichtung nach österreichischem Steuerrecht).</p>
             </div>

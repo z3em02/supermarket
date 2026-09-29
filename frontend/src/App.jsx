@@ -31,11 +31,9 @@ const MaintenanceGate = ({ children }) => {
   return settings?.maintenanceMode ? <MaintenancePage /> : children;
 };
 
-// CustomerRegister and CustomerAccount both import Firebase Auth (phone
-// verification / push notifications) — lazy-loading them keeps that SDK out
-// of the bundle every anonymous landing-page visitor downloads before first
-// paint, since it's only needed once someone actually registers or opens
-// their account.
+// CustomerRegister and CustomerAccount are only needed once someone actually
+// registers or opens their account — lazy-loading them keeps them out of the
+// bundle every anonymous landing-page visitor downloads before first paint.
 const CustomerRegister = lazy(() => import('./pages/CustomerRegister').then(m => ({ default: m.CustomerRegister })));
 const CustomerAccount = lazy(() => import('./pages/CustomerAccount').then(m => ({ default: m.CustomerAccount })));
 

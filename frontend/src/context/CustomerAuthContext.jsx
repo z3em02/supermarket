@@ -80,11 +80,10 @@ export const CustomerAuthProvider = ({ children }) => {
     return res.data;
   };
 
-  // idToken comes from Firebase Phone Auth (see utils/firebaseClient.js) after
-  // the customer confirms the SMS code with Firebase directly.
-  const verifyPhone = async (idToken) => {
+  // code is the one sent to the customer's phone via WhatsApp (resendOtp('phone')).
+  const verifyPhone = async (code) => {
     const apiUrl = getApiUrl();
-    const res = await customerAxios.post(`${apiUrl}/api/customer/verify-phone`, { idToken });
+    const res = await customerAxios.post(`${apiUrl}/api/customer/verify-phone`, { code });
     if (res.data.phoneVerified) {
       setCustomer(prev => prev ? { ...prev, phoneVerified: true } : prev);
       localStorage.setItem('customer_user', JSON.stringify({ ...customer, phoneVerified: true }));

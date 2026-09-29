@@ -8,9 +8,11 @@ const { calculatePromotionForItem } = require('./pricingService');
 const { roundMoney } = require('./money');
 
 // A positive integer quantity, or null for anything that shouldn't become an
-// order line ("0", "0.5", "abc", negative numbers, missing values).
+// order line ("0", "0.5", "abc", negative numbers, missing values). Uses
+// Number() rather than parseInt() so a fractional value like 2.5 or "2.5" is
+// rejected outright instead of being silently truncated to 2.
 const parseQuantity = (raw) => {
-  const qty = parseInt(raw, 10);
+  const qty = typeof raw === 'number' ? raw : Number(String(raw ?? '').trim());
   return Number.isInteger(qty) && qty > 0 ? qty : null;
 };
 

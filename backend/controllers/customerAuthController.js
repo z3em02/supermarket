@@ -3,9 +3,9 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const prisma = require('../lib/prisma');
 const { sendCustomerVerificationEmail } = require('../utils/emailService');
-const { verifyFirebaseIdToken } = require('../utils/firebaseAdmin');
+const { sendWhatsAppOtp } = require('../utils/whatsappService');
 const { JWT_SECRET, SECURE_COOKIES } = require('../lib/config');
-const { isValidEmail, isValidPhone, isValidPostalCode, normalizeAustrianPhone, isStrongPassword, STRONG_PASSWORD_HINT, secureCompare } = require('../utils/validation');
+const { isValidEmail, isValidPhone, isValidPostalCode, normalizeAustrianPhone, isStrongPassword, STRONG_PASSWORD_HINT, secureCompare, isString, firstNonStringField, clampText, FIELD_MAX } = require('../utils/validation');
 const { encrypt, decrypt, hashLookup, decryptCustomerPII } = require('../utils/piiCrypto');
 const { generateCsrfToken, setCsrfCookie } = require('../middleware/csrf');
 
@@ -33,6 +33,12 @@ const register = async (req, res) => {
 
     if (!name || !email || !phone || !password) {
       return res.status(400).json({ error: 'Name, email, phone number, and password are required' });
+    }
+
+    // Reject non-string fields before any .trim()/Prisma call (clean 400, not 500).
+    const badField = firstNonStringField(req.body, ['name', 'email', 'phone', 'password', 'street', 'houseNumber', 'postalCode', 'city', 'floorApartment', 'deliveryNotes']);
+    if (badField) {
+      return res.status(400).json({ error: `Invalid value for "${badField}"` });
     }
 
     if (!isValidEmail(email)) {
@@ -77,9 +83,8 @@ const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Generate email verification OTP (15 min validity). Phone verification
-    // is handled client-side via Firebase Phone Auth (see verifyPhone below),
-    // not a server-generated code.
+    // Generate email verification OTP (15 min validity). The phone code is
+    // sent via WhatsApp only when the customer asks for it (see resendOtp).
     const emailOtp = generateOTP();
     const otpExpiry = new Date(Date.now() + 15 * 60 * 1000);
 
@@ -87,7 +92,7 @@ const register = async (req, res) => {
 
     const customer = await prisma.customer.create({
       data: {
-        name: name.trim(),
+        name: clampText(name, FIELD_MAX.name),
         email: encrypt(trimmedEmail),
         emailHash,
         emailVerified: false,
@@ -97,12 +102,12 @@ const register = async (req, res) => {
         phoneHash,
         phoneVerified: false,
         password: hashedPassword,
-        street: encrypt(street.trim()),
-        houseNumber: encrypt(houseNumber.trim()),
-        postalCode: encrypt(postalCode.trim()),
-        city: encrypt(city.trim()),
-        floorApartment: encrypt(floorApartment.trim()),
-        deliveryNotes: encrypt(deliveryNotes.trim()),
+        street: encrypt(clampText(street, FIELD_MAX.street)),
+        houseNumber: encrypt(clampText(houseNumber, FIELD_MAX.houseNumber)),
+        postalCode: encrypt(clampText(postalCode, FIELD_MAX.postalCode)),
+        city: encrypt(clampText(city, FIELD_MAX.city)),
+        floorApartment: encrypt(clampText(floorApartment, FIELD_MAX.floorApartment)),
+        deliveryNotes: encrypt(clampText(deliveryNotes, FIELD_MAX.deliveryNotes)),
         preferredLanguage: cleanLang
       }
     });
@@ -139,9 +144,9 @@ const register = async (req, res) => {
     // #4 fix: issue the CSRF cookie alongside the session cookie.
     setCsrfCookie(res, generateCsrfToken(), 7 * 24 * 60 * 60 * 1000);
 
+    // Session set as the HttpOnly customer_token cookie above; not echoed here.
     res.status(201).json({
       message: 'Registration successful. Verification codes have been generated.',
-      token,
       customerId: customer.id,
       customer: {
         id: customer.id,
@@ -245,26 +250,49 @@ const verifyEmail = async (req, res) => {
   }
 };
 
+// Code lifetime and attempt counter per channel. WhatsApp codes are
+// short-lived (and each message is billed), email codes last longer.
+const OTP_CHANNELS = {
+  email: {
+    codeField: 'emailOtp',
+    expiryField: 'emailOtpExpiry',
+    attemptsField: 'otpAttempts',
+    verifiedField: 'emailVerified',
+    ttlMs: 15 * 60 * 1000
+  },
+  phone: {
+    codeField: 'phoneOtp',
+    expiryField: 'phoneOtpExpiry',
+    attemptsField: 'phoneOtpAttempts',
+    verifiedField: 'phoneVerified',
+    ttlMs: 10 * 60 * 1000
+  }
+};
+const OTP_RESEND_COOLDOWN_MS = 60 * 1000;
+const MAX_OTP_ATTEMPTS = 5;
+
 /**
- * Verify Phone via Firebase Phone Auth
+ * Verify Phone Code (sent via WhatsApp, see resendOtp)
  *
- * The client verifies possession of the phone number directly with Firebase
- * (SMS + reCAPTCHA) and hands us the resulting ID token. We verify that
- * token's signature with firebase-admin and check its `phone_number` claim
- * matches the phone number on this customer's account before marking it
- * verified — this endpoint never sees or trusts a client-supplied code.
- * Requires the customer's own JWT (customerAuthMiddleware) so a caller can't
- * verify their own phone possession against someone else's account.
+ * Mirrors verifyEmail: expiry first, then an atomic attempt reservation,
+ * then a constant-time compare. Uses its own attempt counter so email and
+ * phone verification can't reset each other's lockout.
  */
 const verifyPhone = async (req, res) => {
   try {
-    const { idToken } = req.body;
-    if (!idToken) {
-      return res.status(400).json({ error: 'Firebase ID token is required' });
+    const { code } = req.body;
+    const targetId = req.customer?.customerId;
+
+    if (!targetId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    if (!code) {
+      return res.status(400).json({ error: 'Verification code is required' });
     }
 
     const customer = await prisma.customer.findUnique({
-      where: { id: req.customer.customerId }
+      where: { id: targetId }
     });
 
     if (!customer) {
@@ -275,17 +303,31 @@ const verifyPhone = async (req, res) => {
       return res.json({ message: 'Phone number is already verified', phoneVerified: true });
     }
 
-    let decoded;
-    try {
-      decoded = await verifyFirebaseIdToken(idToken);
-    } catch (err) {
-      console.error('Firebase phone token verification failed:', err.message);
-      return res.status(400).json({ error: 'Invalid or expired verification. Please try again.' });
+    if (!customer.phoneOtp || (customer.phoneOtpExpiry && new Date() > customer.phoneOtpExpiry)) {
+      return res.status(400).json({ error: 'Der Verifizierungscode ist abgelaufen. Bitte fordern Sie einen neuen an / Verification code has expired. Please request a new one.' });
     }
 
-    const verifiedPhone = decoded.phone_number ? normalizeAustrianPhone(decoded.phone_number) : null;
-    if (!verifiedPhone || verifiedPhone !== normalizeAustrianPhone(decrypt(customer.phone))) {
-      return res.status(400).json({ error: 'The verified phone number does not match your account phone number.' });
+    const reserved = await prisma.customer.updateMany({
+      where: { id: customer.id, phoneOtpAttempts: { lt: MAX_OTP_ATTEMPTS } },
+      data: { phoneOtpAttempts: { increment: 1 } }
+    });
+    if (reserved.count === 0) {
+      return res.status(429).json({ error: 'Zu viele fehlerhafte Versuche. Bitte fordern Sie einen neuen Code an / Too many incorrect attempts. Please request a new code.' });
+    }
+
+    if (!secureCompare(customer.phoneOtp, String(code).trim())) {
+      const lockedOut = customer.phoneOtpAttempts + 1 >= MAX_OTP_ATTEMPTS;
+      if (lockedOut) {
+        await prisma.customer.update({
+          where: { id: customer.id },
+          data: { phoneOtp: null, phoneOtpExpiry: null }
+        });
+      }
+      return res.status(lockedOut ? 429 : 400).json({
+        error: lockedOut
+          ? 'Zu viele fehlerhafte Versuche. Bitte fordern Sie einen neuen Code an / Too many incorrect attempts. Please request a new code.'
+          : 'Ungültiger Bestätigungscode / Invalid phone verification code'
+      });
     }
 
     const updated = await prisma.customer.update({
@@ -293,7 +335,8 @@ const verifyPhone = async (req, res) => {
       data: {
         phoneVerified: true,
         phoneOtp: null,
-        phoneOtpExpiry: null
+        phoneOtpExpiry: null,
+        phoneOtpAttempts: 0
       }
     });
 
@@ -309,16 +352,15 @@ const verifyPhone = async (req, res) => {
 };
 
 /**
- * Resend Email OTP
+ * Send / Resend a verification code
  *
- * Phone verification codes are sent by Firebase directly to the client
- * (SMS + reCAPTCHA), so there is nothing for the backend to resend for
- * type: 'phone' — the frontend re-triggers Firebase's own signInWithPhoneNumber
- * instead of calling this endpoint.
+ * type 'email' emails the code; type 'phone' sends it to the account's
+ * phone number via WhatsApp. The phone code is only sent on request (not
+ * at registration) since every WhatsApp message is billed.
  */
 const resendOtp = async (req, res) => {
   try {
-    const { type } = req.body; // type: 'email'
+    const { type } = req.body;
     // #5 & #13 fix: require authenticated customer session; ignore client-supplied customerId
     const targetId = req.customer?.customerId;
 
@@ -326,7 +368,8 @@ const resendOtp = async (req, res) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    if (type !== 'email') {
+    const channel = OTP_CHANNELS[type];
+    if (!channel) {
       return res.status(400).json({ error: 'Unsupported verification type' });
     }
 
@@ -338,36 +381,56 @@ const resendOtp = async (req, res) => {
       return res.status(404).json({ error: 'Customer not found' });
     }
 
-    if (customer.emailVerified) {
-      return res.status(400).json({ error: 'Email is already verified' });
+    if (customer[channel.verifiedField]) {
+      return res.status(400).json({ error: type === 'email' ? 'Email is already verified' : 'Phone number is already verified' });
     }
 
-    // Rate-limit resend: minimum 60s cooldown between OTP generations
-    if (customer.emailOtpExpiry) {
-      const msLeft = customer.emailOtpExpiry.getTime() - Date.now();
-      // OTP expiry is 15 minutes = 900s. If msLeft > 14 minutes (840s), less than 60s has passed
-      if (msLeft > 14 * 60 * 1000) {
-        return res.status(429).json({ error: 'Please wait at least 60 seconds before requesting a new code.' });
-      }
+    // Rate-limit resend: the previous code must be at least 60s old
+    // (it was issued at expiry - ttl).
+    const previousExpiry = customer[channel.expiryField];
+    if (previousExpiry && previousExpiry.getTime() - channel.ttlMs + OTP_RESEND_COOLDOWN_MS > Date.now()) {
+      return res.status(429).json({ error: 'Please wait at least 60 seconds before requesting a new code.' });
     }
 
     const newCode = generateOTP();
-    const expiry = new Date(Date.now() + 15 * 60 * 1000);
-    const customerEmail = decrypt(customer.email);
+    const expiry = new Date(Date.now() + channel.ttlMs);
 
     await prisma.customer.update({
       where: { id: customer.id },
       data: {
-        emailOtp: newCode,
-        emailOtpExpiry: expiry,
-        otpAttempts: 0
+        [channel.codeField]: newCode,
+        [channel.expiryField]: expiry,
+        [channel.attemptsField]: 0
       }
     });
-    await sendCustomerVerificationEmail(customerEmail, customer.name, newCode, customer.preferredLanguage);
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`✉️ RESENT Email OTP for ${customerEmail}: [ ${newCode} ]`);
+
+    if (type === 'email') {
+      const customerEmail = decrypt(customer.email);
+      await sendCustomerVerificationEmail(customerEmail, customer.name, newCode, customer.preferredLanguage);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`✉️ RESENT Email OTP for ${customerEmail}: [ ${newCode} ]`);
+      }
+      return res.json({ message: 'New email verification code sent' });
     }
-    return res.json({ message: 'New email verification code sent' });
+
+    const customerPhone = decrypt(customer.phone);
+    try {
+      await sendWhatsAppOtp(customerPhone, newCode, customer.preferredLanguage);
+    } catch (err) {
+      console.error('WhatsApp OTP send failed:', err.message);
+      // Clear the unsent code so the 60s cooldown doesn't block a retry.
+      await prisma.customer.update({
+        where: { id: customer.id },
+        data: { phoneOtp: null, phoneOtpExpiry: null }
+      });
+      return res.status(502).json({
+        error: 'WhatsApp-Nachricht konnte nicht gesendet werden. Bitte prüfen Sie, ob die Nummer WhatsApp nutzt, und versuchen Sie es erneut / Could not send the WhatsApp message. Please check that the number uses WhatsApp and try again.'
+      });
+    }
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`📱 WhatsApp OTP for ${customerPhone}: [ ${newCode} ]`);
+    }
+    return res.json({ message: 'New phone verification code sent via WhatsApp' });
   } catch (error) {
     console.error('Resend OTP error:', error);
     res.status(500).json({ error: 'Failed to resend code' });
@@ -382,6 +445,12 @@ const login = async (req, res) => {
     const { identifier, password } = req.body;
 
     if (!identifier || !password) {
+      return res.status(400).json({ error: 'Email or phone number, and password are required' });
+    }
+
+    // Reject non-string credentials up front — otherwise an object/array would
+    // reach .trim()/Prisma and surface as a 500 instead of a clean 400.
+    if (!isString(identifier) || !isString(password)) {
       return res.status(400).json({ error: 'Email or phone number, and password are required' });
     }
 
@@ -426,8 +495,8 @@ const login = async (req, res) => {
     // #4 fix: issue the CSRF cookie alongside the session cookie.
     setCsrfCookie(res, generateCsrfToken(), 7 * 24 * 60 * 60 * 1000);
 
+    // Session set as the HttpOnly customer_token cookie above; not echoed here.
     res.json({
-      token,
       customer: {
         id: customer.id,
         name: customer.name,

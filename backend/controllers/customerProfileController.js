@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const prisma = require('../lib/prisma');
 const { sendCustomerVerificationEmail } = require('../utils/emailService');
 const { JWT_SECRET, SECURE_COOKIES } = require('../lib/config');
-const { isValidEmail, isValidPhone, isValidPostalCode, normalizeAustrianPhone, isStrongPassword, STRONG_PASSWORD_HINT } = require('../utils/validation');
+const { isValidEmail, isValidPhone, isValidPostalCode, normalizeAustrianPhone, isStrongPassword, STRONG_PASSWORD_HINT, isString, firstNonStringField, clampText, FIELD_MAX } = require('../utils/validation');
 const { encrypt, hashLookup, decryptCustomerPII } = require('../utils/piiCrypto');
 const { generateCsrfToken, setCsrfCookie } = require('../middleware/csrf');
 const { generateOTP } = require('./customerAuthController');
@@ -66,6 +66,13 @@ const updateProfile = async (req, res) => {
       currentPassword
     } = req.body;
 
+    // Any provided field must be a string — otherwise a later .trim() or
+    // Prisma write would throw a 500. Absent fields (undefined) are fine.
+    const badField = firstNonStringField(req.body, ['name', 'email', 'phone', 'street', 'houseNumber', 'postalCode', 'city', 'floorApartment', 'deliveryNotes', 'preferredLanguage', 'password', 'currentPassword']);
+    if (badField) {
+      return res.status(400).json({ error: `Invalid value for "${badField}"` });
+    }
+
     const existing = await prisma.customer.findUnique({
       where: { id: customerId }
     });
@@ -116,13 +123,13 @@ const updateProfile = async (req, res) => {
     }
 
     const updateData = {};
-    if (name !== undefined) updateData.name = name.trim();
-    if (street !== undefined) updateData.street = encrypt(street.trim());
-    if (houseNumber !== undefined) updateData.houseNumber = encrypt(houseNumber.trim());
-    if (postalCode !== undefined) updateData.postalCode = encrypt(postalCode.trim());
-    if (city !== undefined) updateData.city = encrypt(city.trim());
-    if (floorApartment !== undefined) updateData.floorApartment = encrypt(floorApartment.trim());
-    if (deliveryNotes !== undefined) updateData.deliveryNotes = encrypt(deliveryNotes.trim());
+    if (name !== undefined) updateData.name = clampText(name, FIELD_MAX.name);
+    if (street !== undefined) updateData.street = encrypt(clampText(street, FIELD_MAX.street));
+    if (houseNumber !== undefined) updateData.houseNumber = encrypt(clampText(houseNumber, FIELD_MAX.houseNumber));
+    if (postalCode !== undefined) updateData.postalCode = encrypt(clampText(postalCode, FIELD_MAX.postalCode));
+    if (city !== undefined) updateData.city = encrypt(clampText(city, FIELD_MAX.city));
+    if (floorApartment !== undefined) updateData.floorApartment = encrypt(clampText(floorApartment, FIELD_MAX.floorApartment));
+    if (deliveryNotes !== undefined) updateData.deliveryNotes = encrypt(clampText(deliveryNotes, FIELD_MAX.deliveryNotes));
     if (preferredLanguage !== undefined) {
       updateData.preferredLanguage = ['de', 'ar', 'en'].includes(preferredLanguage) ? preferredLanguage : 'de';
     }
@@ -161,6 +168,7 @@ const updateProfile = async (req, res) => {
       updateData.phoneVerified = false;
       updateData.phoneOtp = null;
       updateData.phoneOtpExpiry = null;
+      updateData.phoneOtpAttempts = 0;
     }
 
     // Password change (already validated to be >= 8 chars above, if provided)
@@ -194,9 +202,10 @@ const updateProfile = async (req, res) => {
       }
     });
 
-    let freshToken = null;
     if (isPasswordChanging) {
-      freshToken = jwt.sign(
+      // A password change bumps tokenVersion, revoking the old session — issue
+      // a fresh one as an HttpOnly cookie so the current device stays logged in.
+      const freshToken = jwt.sign(
         { customerId: updated.id, role: 'customer', tokenVersion: updated.tokenVersion },
         JWT_SECRET,
         { expiresIn: '7d' }
@@ -212,10 +221,10 @@ const updateProfile = async (req, res) => {
       setCsrfCookie(res, generateCsrfToken(), 7 * 24 * 60 * 60 * 1000);
     }
 
+    // Session cookie handled above; JWT is not echoed in the body.
     res.json({
       message: 'Profile updated successfully',
       customer: decryptCustomerPII(updated),
-      token: freshToken || undefined,
       reverifyEmail: updateData.email !== undefined,
       reverifyPhone: updateData.phone !== undefined
     });
