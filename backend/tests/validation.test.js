@@ -4,6 +4,7 @@ const {
   isValidEmail,
   isValidPhone,
   isValidPostalCode,
+  isCompleteDeliveryAddress,
   normalizeAustrianPhone,
   isStrongPassword,
   secureCompare,
@@ -114,4 +115,16 @@ test('parseStartDate / parseEndDate cover the whole calendar day in store time (
     assert.strictEqual(parseStartDate(bad), null, `start ${JSON.stringify(bad)}`);
     assert.strictEqual(parseEndDate(bad), null, `end ${JSON.stringify(bad)}`);
   }
+});
+
+test('a delivery address needs a street/place name and a postal code', () => {
+  assert.strictEqual(isCompleteDeliveryAddress('Favoritenstraße 12, 1100 Wien'), true);
+  assert.strictEqual(isCompleteDeliveryAddress('Mariahilfer Str. 5/3, 1060 Wien'), true);
+  assert.strictEqual(isCompleteDeliveryAddress('شارع فافوريتن 12، 1100 فيينا'), true);
+  assert.strictEqual(isCompleteDeliveryAddress(''), false);
+  assert.strictEqual(isCompleteDeliveryAddress('   '), false);
+  assert.strictEqual(isCompleteDeliveryAddress(null), false);
+  assert.strictEqual(isCompleteDeliveryAddress('Home Delivery Address'), false); // old placeholder
+  assert.strictEqual(isCompleteDeliveryAddress('1100 1100'), false); // no street
+  assert.strictEqual(isCompleteDeliveryAddress('Favoritenstraße 12'), false); // no postal code
 });

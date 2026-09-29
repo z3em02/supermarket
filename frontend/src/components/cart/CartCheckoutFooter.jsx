@@ -12,6 +12,7 @@ export const CartCheckoutFooter = ({
   ArrowIcon,
   amountUntilFreeDelivery,
   baseServiceFee,
+  addressMissing,
   belowMinOrder,
   coupon,
   couponDiscount,
@@ -119,6 +120,12 @@ export const CartCheckoutFooter = ({
         </div>
       )}
 
+      {addressMissing && (
+        <div role="alert" className="text-[11px] font-semibold text-danger-800 dark:text-danger-300 bg-danger-50 dark:bg-danger-950/40 border border-danger-200 dark:border-danger-900/40 rounded-xl px-3 py-1.5 text-center">
+          {isAr ? 'أدخل عنوان التوصيل للمتابعة.' : 'Bitte Lieferadresse eingeben, um zu bestellen.'}
+        </div>
+      )}
+
       {belowMinOrder && (
         <div className="text-[11px] font-semibold text-warning-800 dark:text-warning-300 bg-warning-50 dark:bg-warning-950/40 border border-warning-200 dark:border-warning-900/40 rounded-xl px-3 py-1.5 text-center">
           {isAr
@@ -207,7 +214,7 @@ export const CartCheckoutFooter = ({
       <button
         type="button"
         onClick={handlePlaceOrder}
-        disabled={submitting || (isAuthenticated && (!isVerified || belowMinOrder))}
+        disabled={submitting || (isAuthenticated && (!isVerified || belowMinOrder || addressMissing))}
         className="w-full py-4 px-6 rounded-2xl bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-black text-sm shadow-lg shadow-brand-600/25 transition flex items-center justify-center gap-2 cursor-pointer"
       >
         {submitting ? (

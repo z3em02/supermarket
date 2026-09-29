@@ -162,7 +162,7 @@ export const OrderDrawer = ({
       )}
 
       <div role="tablist" aria-label={isAr ? 'أقسام الطلب' : 'Bestellbereiche'}
-        className="sticky top-0 z-10 flex gap-1 px-2 sm:px-4 pt-3 bg-slate-50/95 dark:bg-gray-950/95 backdrop-blur border-b border-slate-200 dark:border-gray-800 overflow-x-auto">
+        className="sticky top-0 z-10 flex gap-1 px-2 sm:px-4 pt-3 bg-slate-50 dark:bg-gray-950 border-b border-slate-200 dark:border-gray-800 overflow-x-auto">
         {TABS.map((tItem) => {
           const Icon = tItem.icon;
           const active = tab === tItem.id;

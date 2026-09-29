@@ -23,6 +23,7 @@ import {
 import { useCouponCode } from './cart/useCouponCode';
 import { CartCheckoutFooter } from './cart/CartCheckoutFooter';
 import { DeliveryDetailsForm } from './cart/DeliveryDetailsForm';
+import { isCompleteDeliveryAddress } from '../utils/address';
 import { LoginToCheckoutPrompt } from './cart/LoginToCheckoutPrompt';
 import { CartItemList } from './cart/CartItemList';
 import { EmptyCart } from './cart/EmptyCart';
@@ -274,6 +275,8 @@ export const CustomerCartDrawer = ({
   const belowMinOrder = minOrderValue > 0 && itemsSubtotal < minOrderValue;
 
   const isVerified = Boolean(customer?.emailVerified && customer?.phoneVerified);
+  // No order without an address the driver can find (the server checks this too).
+  const addressMissing = isAuthenticated && !isCompleteDeliveryAddress(deliveryAddress);
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
@@ -296,6 +299,15 @@ export const CustomerCartDrawer = ({
         isAr
           ? 'يجب تأكيد رقم هاتفك أولاً لتتمكن من تقديم الطلب.'
           : 'Bitte bestätigen Sie zuerst Ihre Telefonnummer, um eine Bestellung aufgeben zu können.'
+      );
+      return;
+    }
+
+    if (addressMissing) {
+      setError(
+        isAr
+          ? 'يرجى إدخال عنوان التوصيل الكامل (الشارع، رقم المنزل، الرمز البريدي، المدينة).'
+          : 'Bitte geben Sie Ihre vollständige Lieferadresse ein (Straße, Hausnummer, PLZ, Ort).'
       );
       return;
     }
@@ -376,7 +388,7 @@ export const CustomerCartDrawer = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/60 backdrop-blur-sm transition-opacity animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/60 backdrop-blur-sm transition-opacity animate-fade-in">
       {/* Drawer Container */}
       <div 
         className="w-full sm:max-w-md md:max-w-lg bg-white dark:bg-gray-900 h-full shadow-2xl flex flex-col justify-between overflow-hidden border-s border-slate-200 dark:border-gray-800"
@@ -468,6 +480,7 @@ export const CustomerCartDrawer = ({
               ) : (
                 /* Authenticated Customer Delivery Form */
                 <DeliveryDetailsForm
+                  addressMissing={addressMissing}
                   allowedPostalCodes={allowedPostalCodes}
                   deliveryAddress={deliveryAddress}
                   deliveryDate={deliveryDate}
@@ -496,6 +509,7 @@ export const CustomerCartDrawer = ({
             ArrowIcon={ArrowIcon}
             amountUntilFreeDelivery={amountUntilFreeDelivery}
             baseServiceFee={baseServiceFee}
+            addressMissing={addressMissing}
             belowMinOrder={belowMinOrder}
             coupon={coupon}
             couponDiscount={couponDiscount}

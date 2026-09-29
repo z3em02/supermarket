@@ -62,6 +62,15 @@ const isValidPhone = (phone) => /^\+43[1-9]\d{3,12}$/.test(normalizeAustrianPhon
 
 const isValidPostalCode = (postalCode) => /^\d+$/.test(String(postalCode || '').trim());
 
+// A delivery address a driver can actually find: a street/place name (3+
+// letters) and a 4-5 digit postal code, e.g. "Favoritenstraße 12, 1100 Wien".
+// Checked when an order is placed, so an empty profile + empty cart field
+// can no longer produce an order with no address.
+const isCompleteDeliveryAddress = (address) => {
+  const a = String(address || '').trim();
+  return a.length >= 8 && /\p{L}{3,}/u.test(a) && /(^|\D)\d{4,5}(\D|$)/.test(a);
+};
+
 // Parses a date string, returning null for anything that isn't a valid date
 // (rather than letting an unparseable string reach Prisma as an Invalid
 // Date, which throws a PrismaClientValidationError / 500 instead of a
@@ -135,6 +144,7 @@ module.exports = {
   isValidEmail,
   isValidPhone,
   isValidPostalCode,
+  isCompleteDeliveryAddress,
   normalizeAustrianPhone,
   isStrongPassword,
   STRONG_PASSWORD_HINT,

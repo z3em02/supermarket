@@ -18,6 +18,7 @@ import {
 } from '../../utils/deliverySlot';
 
 export const DeliveryDetailsForm = ({
+  addressMissing,
   allowedPostalCodes,
   deliveryAddress,
   deliveryDate,
@@ -84,8 +85,16 @@ export const DeliveryDetailsForm = ({
             onChange={(e) => setDeliveryAddress(e.target.value)}
             placeholder={isAr ? 'الشارع، رقم المنزل، الرمز البريدي، المدينة، الطابق...' : 'Straße, Hausnummer, PLZ, Ort, Stock/Tür'}
             required
-            className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500"
+            aria-invalid={addressMissing || undefined}
+            aria-describedby={addressMissing ? 'delivery-address-error' : undefined}
+            className={`w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-gray-900 border ${addressMissing ? 'border-danger-400 dark:border-danger-700' : 'border-slate-200 dark:border-gray-800'} text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500`}
           />
+          {addressMissing && (
+            <p id="delivery-address-error" className="mt-1.5 text-[11px] font-semibold text-danger-700 dark:text-danger-400 flex items-center gap-1">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+              {isAr ? 'يرجى إدخال عنوان التوصيل الكامل (الشارع، رقم المنزل، الرمز البريدي، المدينة).' : 'Bitte geben Sie Ihre vollständige Lieferadresse ein (Straße, Hausnummer, PLZ, Ort).'}
+            </p>
+          )}
           {!isPostalCodeAllowed && (
             <div className="mt-2.5 p-2.5 rounded-xl bg-warning-50 dark:bg-warning-950/40 border border-warning-200 dark:border-warning-800 text-warning-800 dark:text-warning-200 text-xs flex items-start gap-2">
               <AlertTriangle className="w-4 h-4 shrink-0 text-warning-600 mt-0.5" />

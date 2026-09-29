@@ -12,7 +12,7 @@ export const ProductDetailModal = ({
   const { language, t } = useLanguage();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
       <div
         className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl max-w-xl w-full p-4 sm:p-6 shadow-2xl border border-slate-200 dark:border-gray-800 space-y-4 sm:space-y-6 max-h-[90dvh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}

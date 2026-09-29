@@ -16,7 +16,7 @@ const {
 } = require('../utils/orderPricing');
 const { isValidDeliverySlot } = require('../utils/deliverySlot');
 const { calculateDeliveryDistance } = require('../utils/distanceService');
-const { parseValidDate } = require('../utils/validation');
+const { parseValidDate, isCompleteDeliveryAddress } = require('../utils/validation');
 const { orderMatchesSearch } = require('../utils/orderSearch');
 const {
   withDecryptedCustomer,
@@ -372,8 +372,16 @@ const createOrder = async (req, res) => {
       customer.floorApartment && `Apt/Floor: ${customer.floorApartment}`
     ].filter(Boolean);
 
-    const deliveryAddress = req.body.deliveryAddress || addressParts.join(', ') || 'Home Delivery Address';
+    const deliveryAddress = String(req.body.deliveryAddress || addressParts.join(', ')).trim();
     const deliveryNotes = req.body.deliveryNotes || customer.deliveryNotes || notes || null;
+
+    // No placeholder address: an order must say where it goes.
+    if (!isCompleteDeliveryAddress(deliveryAddress)) {
+      return res.status(400).json({
+        code: 'ADDRESS_REQUIRED',
+        error: 'Bitte geben Sie eine vollständige Lieferadresse mit Straße, Hausnummer und Postleitzahl an. / Please enter a complete delivery address with street, house number and postal code.'
+      });
+    }
 
     // Delivery rules: minimum order value, service area and distance-based delivery fee
     const storeSettings = await prisma.storeSettings.findUnique({ where: { id: 'default' } });
