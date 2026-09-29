@@ -40,7 +40,7 @@ export const LandingHeader = ({
               className="w-8 h-8 sm:w-11 sm:h-11 object-contain rounded-xl bg-slate-50 dark:bg-gray-850 p-1 border border-slate-200 dark:border-gray-750 shadow-sm shrink-0"
             />
           ) : (
-            <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-tr from-brand-600 via-promo-600 to-brand-700 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform duration-200 shrink-0">
+            <div className="w-8 h-8 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform duration-200 shrink-0">
               <Store className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           )}
