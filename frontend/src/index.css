@@ -33,6 +33,53 @@
   ::-webkit-scrollbar-thumb {
     @apply bg-slate-300/80 rounded-full hover:bg-slate-400 dark:bg-gray-800 dark:hover:bg-gray-700;
   }
+
+  /* Keyboard focus ring everywhere (mouse clicks don't show it). */
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary-500/70 ring-offset-2 ring-offset-white dark:ring-primary-400/80 dark:ring-offset-gray-950;
+  }
+
+  /* Numbers line up in tables, totals and counters. */
+  table td,
+  table th {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Type scale (README "Design system"). Cairo covers Latin + Arabic. */
+@layer components {
+  .text-heading-xl {
+    @apply text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white;
+  }
+  .text-heading-lg {
+    @apply text-base sm:text-lg font-bold text-slate-900 dark:text-white;
+  }
+  .text-heading-md {
+    @apply text-sm sm:text-base font-bold text-slate-900 dark:text-white;
+  }
+  .text-body-muted {
+    @apply text-xs sm:text-sm text-slate-500 dark:text-slate-400;
+  }
+  .text-caption {
+    @apply text-[11px] sm:text-xs text-slate-500 dark:text-slate-400;
+  }
+}
+
+/* Respect the OS "reduce motion" setting: no pulsing, spinning slowly is
+   still allowed so loading indicators keep meaning something. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-spin {
+    animation-duration: 1.5s !important;
+    animation-iteration-count: infinite !important;
+  }
 }
 
 @media print {

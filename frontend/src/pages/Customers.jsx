@@ -8,9 +8,12 @@ import { CustomerTable } from './customers/CustomerTable';
 import { CustomerFilters } from './customers/CustomerFilters';
 import { CustomerStats } from './customers/CustomerStats';
 import { useStatusBadge } from './orders/useStatusBadge';
+import { useToast, useConfirm } from '../context/FeedbackContext';
 
 export const Customers = () => {
   const { t, language } = useLanguage();
+  const toast = useToast();
+  const confirm = useConfirm();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -59,7 +62,7 @@ export const Customers = () => {
     const confirmMsg = language === 'ar'
       ? `هل أنت متأكد من رغبتك في حذف العميل "${name}"؟`
       : `Möchten Sie den Kunden "${name}" wirklich löschen?`;
-    if (!window.confirm(confirmMsg)) return;
+    if (!(await confirm({ message: confirmMsg, confirmText: t('delete'), variant: 'danger' }))) return;
 
     try {
       setDeletingId(id);
@@ -71,7 +74,7 @@ export const Customers = () => {
       }
     } catch (error) {
       console.error('Error deleting customer:', error);
-      alert(error.response?.data?.error || t('error'));
+      toast.error(error.response?.data?.error || t('error'));
     } finally {
       setDeletingId(null);
     }

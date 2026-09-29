@@ -7,6 +7,7 @@ import {
   Edit2,
   Trash2
 } from 'lucide-react';
+import { Button, EmptyState, SkeletonList } from '../../components/ui';
 
 export const OffersTab = ({
   filteredOffers,
@@ -18,22 +19,15 @@ export const OffersTab = ({
 }) => (
     <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-xs overflow-hidden">
       {loading ? (
-        <div className="p-8 text-center text-slate-500">Laden...</div>
+        <div className="p-4"><SkeletonList variant="table" count={4} columns={5} /></div>
       ) : filteredOffers.length === 0 ? (
-        <div className="p-12 text-center">
-          <Sparkles className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-          <h3 className="text-base font-semibold text-slate-800 dark:text-white">Keine Angebote gefunden</h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
-            Erstellen Sie ein Angebot für ein einzelnes Produkt oder eine beliebte 2+1 Gratis Aktion!
-          </p>
-          <button
-            onClick={handleOpenCreateOffer}
-            className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-success-600 text-white text-sm font-medium hover:bg-success-700 transition"
-          >
-            <Plus className="w-4 h-4" />
-            Angebot erstellen
-          </button>
-        </div>
+        <EmptyState
+          className="border-0 rounded-none"
+          icon={Sparkles}
+          title="Keine Angebote gefunden"
+          description="Erstellen Sie ein Angebot für ein einzelnes Produkt oder eine beliebte 2+1 Gratis Aktion!"
+          action={<Button icon={Plus} onClick={handleOpenCreateOffer}>Angebot erstellen</Button>}
+        />
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">

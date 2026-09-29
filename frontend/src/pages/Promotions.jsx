@@ -9,9 +9,12 @@ import { CouponModal } from './promotions/CouponModal';
 import { OffersTab } from './promotions/OffersTab';
 import { CouponsTab } from './promotions/CouponsTab';
 import { PromotionStats } from './promotions/PromotionStats';
+import { useToast, useConfirm } from '../context/FeedbackContext';
 
 export const Promotions = () => {
   const { t } = useLanguage();
+  const toast = useToast();
+  const confirm = useConfirm();
   const [activeTab, setActiveTab] = useState('coupons'); // 'coupons' or 'offers'
 
   // Data
@@ -188,17 +191,19 @@ export const Promotions = () => {
       setCoupons(prev => prev.map(c => (c.id === coup.id ? { ...c, isActive: !c.isActive } : c)));
     } catch (err) {
       console.error('Toggle coupon status error:', err);
+      toast.error(err.response?.data?.error || t('error'));
     }
   };
 
   const handleDeleteCoupon = async (id) => {
-    if (!window.confirm('Möchten Sie diesen Gutschein wirklich löschen?')) return;
+    if (!(await confirm({ message: t('confirmDeleteCoupon'), confirmText: t('delete'), variant: 'danger' }))) return;
     try {
       const apiUrl = getApiUrl();
       await axios.delete(`${apiUrl}/api/coupons/${id}`);
       setCoupons(prev => prev.filter(c => c.id !== id));
     } catch (err) {
       console.error('Delete coupon error:', err);
+      toast.error(err.response?.data?.error || t('error'));
     }
   };
 
@@ -294,17 +299,19 @@ export const Promotions = () => {
       setPromotions(prev => prev.map(p => (p.id === off.id ? { ...p, isActive: !p.isActive } : p)));
     } catch (err) {
       console.error('Toggle offer status error:', err);
+      toast.error(err.response?.data?.error || t('error'));
     }
   };
 
   const handleDeleteOffer = async (id) => {
-    if (!window.confirm('Möchten Sie dieses Angebot wirklich löschen?')) return;
+    if (!(await confirm({ message: t('confirmDeleteOffer'), confirmText: t('delete'), variant: 'danger' }))) return;
     try {
       const apiUrl = getApiUrl();
       await axios.delete(`${apiUrl}/api/promotions/${id}`);
       setPromotions(prev => prev.filter(p => p.id !== id));
     } catch (err) {
       console.error('Delete promotion error:', err);
+      toast.error(err.response?.data?.error || t('error'));
     }
   };
 

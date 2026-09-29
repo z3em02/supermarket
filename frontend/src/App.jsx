@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import { CustomerAuthProvider } from './context/CustomerAuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { FeedbackProvider } from './context/FeedbackContext';
 import { StoreSettingsProvider } from './context/StoreSettingsContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { SectionPasscodeGate } from './components/SectionPasscodeGate';
@@ -65,6 +66,7 @@ function App() {
         <StoreSettingsProvider>
           <AuthProvider>
             <CustomerAuthProvider>
+              <FeedbackProvider>
               <Router>
                 <Routes>
                   {/* Public Storefront & Catalog */}
@@ -132,6 +134,7 @@ function App() {
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Router>
+              </FeedbackProvider>
           </CustomerAuthProvider>
         </AuthProvider>
       </StoreSettingsProvider>

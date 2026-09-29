@@ -18,9 +18,11 @@ import { DriverOrderCard } from './driver/DriverOrderCard';
 import { DriverLoginScreen } from './driver/DriverLoginScreen';
 import { DriverHeader } from './driver/DriverHeader';
 import { useStatusBadge } from './orders/useStatusBadge';
+import { useToast } from '../context/FeedbackContext';
 
 export const DriverDeliveryView = () => {
   const { language, direction } = useLanguage();
+  const toast = useToast();
   const isAr = language === 'ar';
 
   const { user: adminUser } = useAuth();
@@ -255,7 +257,7 @@ export const DriverDeliveryView = () => {
       if ((err.response?.status === 401 || err.response?.status === 403) && !adminUser) {
         handleDriverLogout();
       } else {
-        alert(err.response?.data?.error || (isAr ? 'فشل تحديث الحالة' : 'Statusaktualisierung fehlgeschlagen'));
+        toast.error(err.response?.data?.error || (isAr ? 'فشل تحديث الحالة' : 'Statusaktualisierung fehlgeschlagen'));
       }
     } finally {
       setUpdatingId(null);

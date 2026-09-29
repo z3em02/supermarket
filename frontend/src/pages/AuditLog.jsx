@@ -21,6 +21,7 @@ import {
   Clock,
   ChevronDown
 } from 'lucide-react';
+import { EmptyState, SkeletonList } from '../components/ui';
 
 const ACTION_DEFINITIONS = {
   // Authentication & Security
@@ -455,25 +456,19 @@ export const AuditLog = () => {
       {/* Audit Log Entries List */}
       <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-2xs overflow-hidden">
         {loading ? (
-          <div className="flex flex-col items-center justify-center h-56 space-y-3">
-            <div className="animate-spin rounded-full h-9 w-9 border-b-2 border-promo-600" />
-            <p className="text-xs text-slate-400">{isAr ? 'جارٍ تحميل السجلات...' : 'Protokolle werden geladen...'}</p>
-          </div>
+          <div className="p-4"><SkeletonList variant="table" count={8} columns={4} /></div>
         ) : error ? (
           <div className="p-8 text-center">
             <AlertTriangle className="w-8 h-8 text-danger-500 mx-auto mb-2" />
             <p className="text-sm font-bold text-danger-600 dark:text-danger-400">{error}</p>
           </div>
         ) : filteredEntries.length === 0 ? (
-          <div className="p-12 text-center text-slate-400 space-y-2">
-            <ScrollText className="w-10 h-10 mx-auto text-slate-300 dark:text-gray-700" />
-            <h3 className="font-bold text-slate-800 dark:text-gray-200 text-sm">
-              {isAr ? 'لا توجد سجلات مطابقة' : 'Keine Protokolleinträge gefunden'}
-            </h3>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto">
-              {isAr ? 'جرب تغيير فئة الفلتر أو مصطلح البحث أعلاه.' : 'Passen Sie Ihre Suche oder den gewählten Filter an.'}
-            </p>
-          </div>
+          <EmptyState
+            className="border-0 rounded-none"
+            icon={ScrollText}
+            title={isAr ? 'لا توجد سجلات مطابقة' : 'Keine Protokolleinträge gefunden'}
+            description={isAr ? 'جرب تغيير فئة الفلتر أو مصطلح البحث أعلاه.' : 'Passen Sie Ihre Suche oder den gewählten Filter an.'}
+          />
         ) : (
           <div className="divide-y divide-slate-100 dark:divide-gray-800/80">
             {filteredEntries.map((entry) => {

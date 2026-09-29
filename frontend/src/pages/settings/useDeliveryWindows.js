@@ -2,9 +2,12 @@ import { useState, useEffect } from 'react';
 import { getApiUrl } from '../../utils/api';
 import axios from '../../utils/adminAxios';
 import { useLanguage } from '../../context/LanguageContext';
+import { useToast, useConfirm } from '../../context/FeedbackContext';
 
 export const useDeliveryWindows = () => {
   const { language } = useLanguage();
+  const toast = useToast();
+  const confirm = useConfirm();
 
   // Delivery time windows (admin-configurable options offered at checkout)
   const [deliveryWindows, setDeliveryWindows] = useState([]);
@@ -75,13 +78,14 @@ export const useDeliveryWindows = () => {
   };
 
   const handleDeleteDeliveryWindow = async (id) => {
-    if (!window.confirm(language === 'ar' ? 'هل تريد حذف هذا الوقت؟' : 'Dieses Zeitfenster löschen?')) return;
+    if (!(await confirm({ message: language === 'ar' ? 'هل تريد حذف هذا الوقت؟' : 'Dieses Zeitfenster löschen?', confirmText: language === 'ar' ? 'حذف' : 'Löschen', variant: 'danger' }))) return;
     try {
       const apiUrl = getApiUrl();
       await axios.delete(`${apiUrl}/api/delivery-windows/${id}`);
       setDeliveryWindows((prev) => prev.filter((w) => w.id !== id));
     } catch (err) {
       console.error('Error deleting delivery window:', err);
+      toast.error(err.response?.data?.error || (language === 'ar' ? 'تعذر الحذف' : 'Löschen fehlgeschlagen'));
     }
   };
 

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { maskPhone, maskAddress } from './masking';
+import { EmptyState, SkeletonList } from '../../components/ui';
 
 export const CustomerTable = ({
   deletingId,
@@ -30,21 +31,16 @@ export const CustomerTable = ({
   return (
     <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-850 shadow-sm overflow-hidden">
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-success-600"></div>
-        </div>
+        <div className="p-4"><SkeletonList variant="table" count={6} columns={5} /></div>
       ) : filteredCustomers.length === 0 ? (
-        <div className="text-center py-16 px-4">
-          <Users className="w-12 h-12 text-slate-300 dark:text-gray-600 mx-auto mb-3" />
-          <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
-            {language === 'ar' ? 'لم يتم العثور على عملاء' : 'Keine Kunden gefunden'}
-          </h3>
-          <p className="text-xs text-slate-400 mt-1">
-            {searchTerm 
-              ? (language === 'ar' ? 'جرّب تعديل كلمة البحث' : 'Passen Sie Ihre Suchfilter an')
-              : (language === 'ar' ? 'لم يقم أي عميل بالتسجيل بعد' : 'Es haben sich noch keine Kunden registriert')}
-          </p>
-        </div>
+        <EmptyState
+          className="border-0 rounded-none"
+          icon={Users}
+          title={language === 'ar' ? 'لم يتم العثور على عملاء' : 'Keine Kunden gefunden'}
+          description={searchTerm
+            ? (language === 'ar' ? 'جرّب تعديل كلمة البحث' : 'Passen Sie Ihre Suchfilter an')
+            : (language === 'ar' ? 'لم يقم أي عميل بالتسجيل بعد' : 'Es haben sich noch keine Kunden registriert')}
+        />
       ) : (
         <>
           {/* Mobile Cards View (< md) */}

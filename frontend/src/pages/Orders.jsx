@@ -15,9 +15,12 @@ import { StatusChangeModal } from './orders/StatusChangeModal';
 import { AcceptOrderModal } from './orders/AcceptOrderModal';
 import { OrderCard } from './orders/OrderCard';
 import { OrderStatusSummary } from './orders/OrderStatusSummary';
+import { useToast } from '../context/FeedbackContext';
+import { EmptyState, Pagination, SkeletonList } from '../components/ui';
 
 export const Orders = () => {
   const { t, language } = useLanguage();
+  const toast = useToast();
 
   // All server data and mutating actions live in the hook; this component
   // keeps only view state (which modal is open, search/filter, form inputs)
@@ -104,7 +107,7 @@ export const Orders = () => {
       setSelectedOrder((prev) => (prev && prev.id === orderId ? { ...prev, assignedDriverName: newName } : prev));
     } catch (err) {
       console.error('Error assigning driver:', err);
-      alert(err.response?.data?.error || (language === 'ar' ? 'فشل تعيين السائق' : 'Fahrer konnte nicht zugewiesen werden'));
+      toast.error(err.response?.data?.error || (language === 'ar' ? 'فشل تعيين السائق' : 'Fahrer konnte nicht zugewiesen werden'));
     } finally {
       setAssigningDriverId(null);
     }
@@ -120,7 +123,7 @@ export const Orders = () => {
       setAcceptModalDriver('');
     } catch (error) {
       console.error('Error accepting order:', error);
-      alert(error.response?.data?.error || t('error'));
+      toast.error(error.response?.data?.error || t('error'));
     } finally {
       setAcceptingOrder(false);
     }
@@ -130,7 +133,7 @@ export const Orders = () => {
     e.preventDefault();
     const items = orderForm.items.filter((item) => item.productId && Number(item.quantity) > 0);
     if (!orderForm.customerId || items.length === 0) {
-      alert((t('error') || 'Fehler') + ': ' + (t('selectCustomer') || 'Kunde auswählen') + ' & ' + (t('selectProduct') || 'Produkt auswählen'));
+      toast.warning((t('error') || 'Fehler') + ': ' + (t('selectCustomer') || 'Kunde auswählen') + ' & ' + (t('selectProduct') || 'Produkt auswählen'));
       return;
     }
 
@@ -148,7 +151,7 @@ export const Orders = () => {
       setOrderForm({ customerId: '', customerName: '', customerPhone: '', deliveryAddress: '', notes: '', items: [{ productId: '', quantity: 1 }] });
     } catch (error) {
       console.error('Error creating order:', error);
-      alert(error.response?.data?.error || t('error'));
+      toast.error(error.response?.data?.error || t('error'));
     }
   };
 
@@ -185,7 +188,7 @@ export const Orders = () => {
       await refreshSelectedOrder(orderId);
     } catch (error) {
       console.error('Error updating order status:', error);
-      alert(error.response?.data?.error || t('error'));
+      toast.error(error.response?.data?.error || t('error'));
     } finally {
       setUpdating(false);
     }
@@ -199,7 +202,7 @@ export const Orders = () => {
       await refreshSelectedOrder(orderId);
     } catch (error) {
       console.error('Error updating order status:', error);
-      alert(error.response?.data?.error || t('error'));
+      toast.error(error.response?.data?.error || t('error'));
     } finally {
       setUpdating(false);
     }
@@ -225,7 +228,7 @@ export const Orders = () => {
       await refreshSelectedOrder(orderId);
     } catch (error) {
       console.error('Error updating delivery slot:', error);
-      alert(error.response?.data?.error || t('error'));
+      toast.error(error.response?.data?.error || t('error'));
     } finally {
       setSavingDeliverySlot(false);
     }
@@ -300,7 +303,7 @@ export const Orders = () => {
     e.preventDefault();
     if (!editingOrder) return;
     if (editItems.length === 0) {
-      alert(language === 'ar' ? 'يجب أن يحتوي الطلب على منتج واحد على الأقل' : 'Der Auftrag muss mindestens einen Artikel enthalten.');
+      toast.warning(language === 'ar' ? 'يجب أن يحتوي الطلب على منتج واحد على الأقل' : 'Der Auftrag muss mindestens einen Artikel enthalten.');
       return;
     }
 
@@ -322,7 +325,7 @@ export const Orders = () => {
       await refreshSelectedOrder(orderId, updated);
     } catch (err) {
       console.error('Error saving order edit:', err);
-      alert(err.response?.data?.error || (language === 'ar' ? 'فشل حفظ التعديل' : 'Fehler beim Speichern der Änderung'));
+      toast.error(err.response?.data?.error || (language === 'ar' ? 'فشل حفظ التعديل' : 'Fehler beim Speichern der Änderung'));
     } finally {
       setSavingEdit(false);
     }
@@ -356,11 +359,7 @@ export const Orders = () => {
   );
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div>
-      </div>
-    );
+    return <SkeletonList count={6} />;
   }
 
   return (
@@ -446,42 +445,19 @@ export const Orders = () => {
         ))}
 
         {filteredOrders.length === 0 && (
-          <div className="text-center py-16 bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800">
-            <Package className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-            <p className="text-slate-500 dark:text-slate-400 font-medium">{t('noOrdersFound')}</p>
-          </div>
+          <EmptyState icon={Package} title={t('noOrdersFound')} />
         )}
       </div>
 
       {/* Pagination — the list is server-paginated (page/status/search sent to
           the API), so only one page of orders is ever loaded at a time. */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between gap-3 pt-1">
-          <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            {language === 'ar'
-              ? `صفحة ${page} من ${totalPages} · ${total} طلب`
-              : `Seite ${page} von ${totalPages} · ${total} ${total === 1 ? 'Bestellung' : 'Bestellungen'}`}
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setPage(Math.max(1, page - 1))}
-              disabled={page <= 1}
-              className="px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 text-xs sm:text-sm font-medium text-slate-700 dark:text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-gray-800 transition cursor-pointer touch-manipulation"
-            >
-              {language === 'ar' ? 'التالي' : 'Zurück'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setPage(Math.min(totalPages, page + 1))}
-              disabled={page >= totalPages}
-              className="px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 text-xs sm:text-sm font-medium text-slate-700 dark:text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-gray-800 transition cursor-pointer touch-manipulation"
-            >
-              {language === 'ar' ? 'السابق' : 'Weiter'}
-            </button>
-          </div>
-        </div>
-      )}
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        total={total}
+        itemLabel={language === 'ar' ? 'طلب' : (total === 1 ? 'Bestellung' : 'Bestellungen')}
+        onPageChange={setPage}
+      />
 
       {/* Accept Order — requires choosing a driver, since a driver only ever
           sees orders assigned to them; an order accepted with nobody chosen

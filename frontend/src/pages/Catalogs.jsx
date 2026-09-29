@@ -13,9 +13,13 @@ import {
   Check, 
   FolderOpen
 } from 'lucide-react';
+import { useToast, useConfirm } from '../context/FeedbackContext';
+import { EmptyState, SkeletonList } from '../components/ui';
 
 export const Catalogs = () => {
   const { t } = useLanguage();
+  const toast = useToast();
+  const confirm = useConfirm();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -98,14 +102,14 @@ export const Catalogs = () => {
       fetchCategories();
     } catch (error) {
       console.error('Error saving category:', error);
-      alert(error.response?.data?.error || t('saveCatalogError'));
+      toast.error(error.response?.data?.error || t('saveCatalogError'));
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async (cat) => {
-    if (!window.confirm(t('confirmDeleteCatalog'))) return;
+    if (!(await confirm({ message: t('confirmDeleteCatalog'), confirmText: t('delete'), variant: 'danger' }))) return;
 
     try {
       const apiUrl = getApiUrl();
@@ -113,16 +117,12 @@ export const Catalogs = () => {
       fetchCategories();
     } catch (error) {
       console.error('Error deleting category:', error);
-      alert(error.response?.data?.error || t('deleteCatalogError'));
+      toast.error(error.response?.data?.error || t('deleteCatalogError'));
     }
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div>
-      </div>
-    );
+    return <SkeletonList count={6} />;
   }
 
   return (
@@ -201,15 +201,7 @@ export const Catalogs = () => {
 
       {/* Category Cards Grid */}
       {filteredCategories.length === 0 ? (
-        <div className="text-center py-16 bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-850 p-6 sm:p-8 shadow-sm">
-          <FolderOpen className="w-12 h-12 text-slate-400 dark:text-gray-500 mx-auto mb-3" />
-          <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-            {t('noCatalogsFound')}
-          </h3>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-gray-400 mt-1">
-            {t('adjustFiltersHint')}
-          </p>
-        </div>
+        <EmptyState icon={FolderOpen} title={t('noCatalogsFound')} description={t('adjustFiltersHint')} />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
           {filteredCategories.map((cat) => (

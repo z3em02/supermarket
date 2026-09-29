@@ -9,6 +9,18 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      keyframes: {
+        'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },
+        'toast-in': { from: { opacity: '0', transform: 'translateY(-6px)' }, to: { opacity: '1', transform: 'none' } },
+        'drawer-in-end': { from: { transform: 'translateX(100%)' }, to: { transform: 'none' } },
+        'drawer-in-start': { from: { transform: 'translateX(-100%)' }, to: { transform: 'none' } }
+      },
+      animation: {
+        'fade-in': 'fade-in 150ms ease-out',
+        'toast-in': 'toast-in 180ms ease-out',
+        'drawer-in-end': 'drawer-in-end 220ms ease-out',
+        'drawer-in-start': 'drawer-in-start 220ms ease-out'
+      },
       colors: {
         // Semantic design tokens — use these, not raw palette names (see
         // README "Design system"). Each maps to a full Tailwind palette, so

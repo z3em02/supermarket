@@ -23,9 +23,12 @@ import {
   FileSpreadsheet,
   Phone
 } from 'lucide-react';
+import { useToast } from '../context/FeedbackContext';
+import { SkeletonList } from '../components/ui';
 
 export const Accounting = () => {
   const { t, language } = useLanguage();
+  const toast = useToast();
   const { theme } = useTheme();
   const [data, setData] = useState({
     summary: {
@@ -83,18 +86,14 @@ export const Accounting = () => {
       link.remove();
     } catch (error) {
       console.error('Error exporting data:', error);
-      alert(t('error'));
+      toast.error(error.response?.data?.error || t('error'));
     }
   };
 
   const formatCurrency = (value) => `€${Number(value || 0).toFixed(2)}`;
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div>
-      </div>
-    );
+    return <SkeletonList variant="table" count={8} columns={6} />;
   }
 
   return (

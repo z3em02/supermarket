@@ -10,9 +10,13 @@ import { ProductFormModal } from './products/ProductFormModal';
 import { RestockModal } from './products/RestockModal';
 import { ProductCardGrid } from './products/ProductCardGrid';
 import { ProductFilters } from './products/ProductFilters';
+import { useToast, useConfirm } from '../context/FeedbackContext';
+import { SkeletonList } from '../components/ui';
 
 export const Products = () => {
   const { t } = useLanguage();
+  const toast = useToast();
+  const confirm = useConfirm();
   const [searchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -92,10 +96,11 @@ export const Products = () => {
 
       setShowModal(false);
       setEditingProduct(null);
+      toast.success(t('saved'));
       fetchData();
     } catch (error) {
       console.error('Error saving product:', error);
-      alert(error.response?.data?.error || t('saveProductError'));
+      toast.error(error.response?.data?.error || t('saveProductError'));
     }
   };
 
@@ -132,7 +137,7 @@ export const Products = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm(t('confirmDeleteProduct'))) return;
+    if (!(await confirm({ message: t('confirmDeleteProduct'), confirmText: t('delete'), variant: 'danger' }))) return;
 
     try {
       const apiUrl = getApiUrl();
@@ -140,7 +145,7 @@ export const Products = () => {
       fetchData();
     } catch (error) {
       console.error('Error deleting product:', error);
-      alert(error.response?.data?.error || t('deleteProductError'));
+      toast.error(error.response?.data?.error || t('deleteProductError'));
     }
   };
 
@@ -151,7 +156,7 @@ export const Products = () => {
 
     const qtyToAdd = parseInt(restockAmount, 10);
     if (isNaN(qtyToAdd) || qtyToAdd <= 0) {
-      alert('Please enter a valid quantity');
+      toast.warning(t('invalidQuantity'));
       return;
     }
 
@@ -168,7 +173,7 @@ export const Products = () => {
       await fetchData();
     } catch (error) {
       console.error('Error updating stock:', error);
-      alert(error.response?.data?.error || 'Failed to update stock');
+      toast.error(error.response?.data?.error || t('error'));
     } finally {
       setIsRestocking(false);
     }
@@ -193,11 +198,7 @@ export const Products = () => {
   });
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div>
-      </div>
-    );
+    return <SkeletonList count={8} />;
   }
 
   return (

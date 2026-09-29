@@ -20,9 +20,11 @@ import { LegalTab } from './settings/LegalTab';
 import { GoogleTab } from './settings/GoogleTab';
 import { DeliveryTab } from './settings/DeliveryTab';
 import { GeneralTab } from './settings/GeneralTab';
+import { useConfirm } from '../context/FeedbackContext';
 
 export const Settings = () => {
   const { t, language } = useLanguage();
+  const confirm = useConfirm();
   const {
     settings,
     updateStoreSettings,
@@ -249,7 +251,7 @@ export const Settings = () => {
   };
 
   const handleDeleteReview = async (id) => {
-    if (window.confirm(t('confirmDeleteReview'))) {
+    if (await confirm({ message: t('confirmDeleteReview'), confirmText: t('delete'), variant: 'danger' })) {
       const res = await deleteReview(id);
       if (res.success) {
         setSuccessMessage(t('reviewDeletedSuccess'));

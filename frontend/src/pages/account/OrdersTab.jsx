@@ -18,6 +18,7 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { OrderProgressTimeline } from '../../components/OrderProgressTimeline';
 import { formatDeliverySlot } from '../../utils/deliverySlot';
+import { useConfirm } from '../../context/FeedbackContext';
 
 export const OrdersTab = ({
   actionFeedback,
@@ -35,6 +36,7 @@ export const OrdersTab = ({
   respondingOrderId
 }) => {
   const { language } = useLanguage();
+  const confirm = useConfirm();
 
   return (
     <div className="space-y-4">
@@ -165,10 +167,14 @@ export const OrdersTab = ({
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
-                        if (window.confirm(isAr ? 'هل أنت متأكد من رغبتك في إلغاء هذا الطلب بالكامل؟' : 'Möchten Sie diese Bestellung wirklich stornieren?')) {
-                          handleCustomerResponse(order.id, 'decline');
-                        }
+                      onClick={async () => {
+                        const ok = await confirm({
+                          message: isAr ? 'هل أنت متأكد من رغبتك في إلغاء هذا الطلب بالكامل؟' : 'Möchten Sie diese Bestellung wirklich stornieren?',
+                          confirmText: isAr ? 'إلغاء الطلب' : 'Stornieren',
+                          cancelText: isAr ? 'رجوع' : 'Zurück',
+                          variant: 'danger'
+                        });
+                        if (ok) handleCustomerResponse(order.id, 'decline');
                       }}
                       disabled={respondingOrderId === order.id}
                       className="px-4 py-2.5 rounded-xl bg-danger-50 hover:bg-danger-100 dark:bg-danger-950/50 dark:hover:bg-danger-900/60 text-danger-700 dark:text-danger-300 font-bold text-xs border border-danger-200 dark:border-danger-900/60 transition disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation"

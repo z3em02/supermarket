@@ -634,3 +634,17 @@ changes by audience (`admin`, `customer` — who is told what *they* need to do 
 | out_for_delivery / shipped | `info`, pulses |
 | delivered / completed | `success` |
 | declined / rejected / cancelled | `danger` |
+
+### Feedback and shared components
+
+- **Never use `alert()` / `window.confirm()`.** Use `useToast()` (`toast.success/error/warning/info`)
+  and `await useConfirm()({ message, variant })` from `context/FeedbackContext.jsx`. Toasts are
+  non-blocking and announced to screen readers; the confirm dialog is themed, RTL-aware, and
+  focuses *Cancel* for `variant: 'danger'` so Enter never deletes by accident. Escape cancels it
+  without also closing a drawer underneath.
+- **Shared primitives** live in `frontend/src/components/ui/` (import from `components/ui`):
+  `Button` / `IconButton` (icon-only buttons require a `label`), `Card`, `Badge`, `Input`,
+  `Textarea`, `Select`, `Modal`, `Drawer` (Escape, focus trap, scroll lock, opens from the
+  inline-end side so it flips in Arabic), `EmptyState`, `Skeleton*` and `Pagination`.
+- **Loading**: list pages show `SkeletonList` placeholders shaped like the content, not a spinner.
+- **Empty lists**: `EmptyState` (icon + message + optional action).
