@@ -133,6 +133,18 @@ The admin login is at `${ADMIN_BASE}/login` (currently
 `/console-eb68a2f3/login`). Change `ADMIN_BASE` before deploying a fork. It
 hides the page but is not real access control.
 
+**Test data** (from `backend/`, after the seed):
+
+```bash
+node scripts/createTestCustomer.js      # a verified customer you can log in with (TEST_CUSTOMER_* vars)
+node scripts/createFakeOrders.js 50     # 50 demo orders over the last 14 days, all statuses (default 30)
+node scripts/createFakeOrders.js --delete   # remove every demo order again
+```
+
+Demo orders are guest orders tagged `[Demo-Bestellung]` in their internal note;
+`--delete` only removes orders with that tag. Stock is not changed. The script
+refuses to run with `NODE_ENV=production` unless `--allow-production` is passed.
+
 **Schema changes**: edit `backend/prisma/schema.prisma`, then run
 `npx prisma db push`. There is no migrations directory.
 
