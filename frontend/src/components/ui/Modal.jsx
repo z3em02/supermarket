@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useDialogBehavior } from './useDialogBehavior';
@@ -11,7 +12,9 @@ export const Modal = ({ isOpen, onClose, title, description, size = 'md', footer
   const titleId = useId();
   const panelRef = useDialogBehavior(isOpen, onClose);
   if (!isOpen) return null;
-  return (
+  // Portal to <body>: a transformed/filtered ancestor would otherwise become
+  // the containing block of this fixed overlay.
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in"
       onMouseDown={(e) => { if (e.target === e.currentTarget) onClose?.(); }}
@@ -38,6 +41,7 @@ export const Modal = ({ isOpen, onClose, title, description, size = 'md', footer
         <div className="flex-1 overflow-y-auto px-5 sm:px-6 pb-5 space-y-4">{children}</div>
         {footer && <div className="px-5 sm:px-6 py-4 border-t border-slate-100 dark:border-gray-800 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

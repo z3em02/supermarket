@@ -1,26 +1,24 @@
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { ADMIN_BASE } from '../config/adminPath';
 import { Search, Truck, Package, Plus } from 'lucide-react';
-import { todayIso, parseDeliverySlot } from '../utils/deliverySlot';
 import { printHtmlInHiddenIframe } from '../utils/printDocument';
 import { buildA4ReceiptHtml, buildThermalReceiptHtml } from '../utils/adminOrderReceipt';
 import { useOrders } from './orders/useOrders';
-import { EditOrderModal } from './orders/EditOrderModal';
 import { CreateOrderModal } from './orders/CreateOrderModal';
 import { PrintOrderModal } from './orders/PrintOrderModal';
-import { OrderDetailModal } from './orders/OrderDetailModal';
-import { StatusChangeModal } from './orders/StatusChangeModal';
+import { OrderDrawer } from './orders/OrderDrawer';
 import { AcceptOrderModal } from './orders/AcceptOrderModal';
 import { OrderCard } from './orders/OrderCard';
 import { OrderStatusSummary } from './orders/OrderStatusSummary';
-import { useToast } from '../context/FeedbackContext';
+import { useConfirm, useToast } from '../context/FeedbackContext';
 import { EmptyState, Pagination, SkeletonList } from '../components/ui';
 
 export const Orders = () => {
   const { t, language } = useLanguage();
   const toast = useToast();
+  const confirm = useConfirm();
 
   // All server data and mutating actions live in the hook; this component
   // keeps only view state (which modal is open, search/filter, form inputs)
@@ -45,6 +43,7 @@ export const Orders = () => {
     setSearchTerm,
     reloadFormData,
     fetchOrderById,
+    fetchOrderHistory,
     assignDriver,
     createOrder,
     changeStatus,
@@ -53,17 +52,12 @@ export const Orders = () => {
   } = useOrders();
 
   // --- View state -------------------------------------------------------
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
+  // The order drawer is the single place to see and change one order.
+  const [drawer, setDrawer] = useState(null); // { order, tab, session }
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [printOrder, setPrintOrder] = useState(null);
   const [updating, setUpdating] = useState(false);
   const [expandedOrders, setExpandedOrders] = useState({});
-  const [editingDeliverySlot, setEditingDeliverySlot] = useState(false);
-  const [editDeliveryDate, setEditDeliveryDate] = useState('');
-  const [editSelectedWindow, setEditSelectedWindow] = useState(null);
-  const [savingDeliverySlot, setSavingDeliverySlot] = useState(false);
-  const [assigningDriverId, setAssigningDriverId] = useState(null);
 
   // Accept modal (accepting requires choosing a driver)
   const [acceptModalOrder, setAcceptModalOrder] = useState(null);
@@ -71,12 +65,6 @@ export const Orders = () => {
   const [acceptingOrder, setAcceptingOrder] = useState(false);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
-
-  // Status Change / Admin Note modal
-  const [statusModalOrder, setStatusModalOrder] = useState(null);
-  const [targetStatus, setTargetStatus] = useState('');
-  const [adminNoteInput, setAdminNoteInput] = useState('');
-  const [customerNoteInput, setCustomerNoteInput] = useState('');
 
   const [orderForm, setOrderForm] = useState({
     customerId: '',
@@ -87,31 +75,38 @@ export const Orders = () => {
     items: [{ productId: '', quantity: 1 }]
   });
 
-  // Edit Order modal state
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editingOrder, setEditingOrder] = useState(null);
-  const [editItems, setEditItems] = useState([]);
-  const [editReason, setEditReason] = useState('');
-  const [savingEdit, setSavingEdit] = useState(false);
-
   const toggleOrderItemsExpand = (id) => {
     setExpandedOrders((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // --- Orchestration handlers ------------------------------------------
+  // --- Drawer -----------------------------------------------------------
 
-  const handleAssignDriver = async (orderId, assignedDriverName) => {
-    setAssigningDriverId(orderId);
+  // Opens the drawer on a freshly loaded order (list rows omit accounting /
+  // coupon detail, and the drawer needs the current updatedAt for its
+  // stale-edit check).
+  const openDrawer = async (order, tab = 'overview') => {
     try {
-      const newName = await assignDriver(orderId, assignedDriverName);
-      setSelectedOrder((prev) => (prev && prev.id === orderId ? { ...prev, assignedDriverName: newName } : prev));
-    } catch (err) {
-      console.error('Error assigning driver:', err);
-      toast.error(err.response?.data?.error || (language === 'ar' ? 'فشل تعيين السائق' : 'Fahrer konnte nicht zugewiesen werden'));
-    } finally {
-      setAssigningDriverId(null);
+      const fresh = await fetchOrderById(order.id);
+      setDrawer((prev) => ({ order: fresh, tab, session: (prev?.session || 0) + 1 }));
+    } catch (error) {
+      console.error('Error fetching order details:', error);
+      toast.error(error.response?.data?.error || t('error'));
     }
   };
+
+  const handleDrawerOrderChanged = useCallback((updated) => {
+    setDrawer((prev) => (prev && prev.order.id === updated.id ? { ...prev, order: updated } : prev));
+  }, []);
+
+  const drawerActions = useMemo(() => ({
+    fetchOrderById, fetchOrderHistory, assignDriver, changeStatus, saveDeliverySlot, saveOrderEdit, reloadFormData
+  }), [fetchOrderById, fetchOrderHistory, assignDriver, changeStatus, saveDeliverySlot, saveOrderEdit, reloadFormData]);
+
+  const drawerReference = useMemo(() => ({
+    activeDrivers, knownDriverNames, deliveryWindows, products
+  }), [activeDrivers, knownDriverNames, deliveryWindows, products]);
+
+  // --- List quick actions (no drawer needed) ----------------------------
 
   const handleConfirmAccept = async () => {
     if (!acceptModalOrder || !acceptModalDriver) return;
@@ -119,6 +114,7 @@ export const Orders = () => {
     try {
       await assignDriver(acceptModalOrder.id, acceptModalDriver);
       await changeStatus(acceptModalOrder.id, { status: 'accepted' });
+      toast.success(language === 'ar' ? 'تم قبول الطلب' : 'Bestellung angenommen');
       setAcceptModalOrder(null);
       setAcceptModalDriver('');
     } catch (error) {
@@ -147,6 +143,7 @@ export const Orders = () => {
         notes: orderForm.notes,
         items
       });
+      toast.success(language === 'ar' ? 'تم إنشاء الطلب' : 'Bestellung angelegt');
       setShowCreateModal(false);
       setOrderForm({ customerId: '', customerName: '', customerPhone: '', deliveryAddress: '', notes: '', items: [{ productId: '', quantity: 1 }] });
     } catch (error) {
@@ -155,51 +152,12 @@ export const Orders = () => {
     }
   };
 
-  // Open the Status Change & Admin Note Modal
-  const openStatusModal = (order, newStatus) => {
-    setStatusModalOrder(order);
-    setTargetStatus(newStatus || order.status);
-    setAdminNoteInput(order.adminNotes || '');
-    setCustomerNoteInput(order.notes || '');
-  };
-
-  // Reflect a mutation into the open detail view, if it's the same order.
-  const refreshSelectedOrder = async (orderId, fallback) => {
-    if (!selectedOrder || selectedOrder.id !== orderId) return;
-    if (fallback !== undefined) { setSelectedOrder(fallback); return; }
-    try {
-      setSelectedOrder(await fetchOrderById(orderId));
-    } catch (err) {
-      console.error('Error refreshing order detail:', err);
-    }
-  };
-
-  const handleConfirmStatusChange = async () => {
-    if (!statusModalOrder) return;
-    setUpdating(true);
-    try {
-      await changeStatus(statusModalOrder.id, {
-        status: targetStatus,
-        notes: customerNoteInput,
-        adminNotes: adminNoteInput
-      });
-      const orderId = statusModalOrder.id;
-      setStatusModalOrder(null);
-      await refreshSelectedOrder(orderId);
-    } catch (error) {
-      console.error('Error updating order status:', error);
-      toast.error(error.response?.data?.error || t('error'));
-    } finally {
-      setUpdating(false);
-    }
-  };
-
-  // Direct quick status change (without modal)
+  // One-click next step from the card (preparing / shipped / delivered).
   const handleQuickStatusChange = async (orderId, newStatus) => {
     setUpdating(true);
     try {
       await changeStatus(orderId, { status: newStatus });
-      await refreshSelectedOrder(orderId);
+      toast.success(language === 'ar' ? 'تم تحديث الحالة' : 'Status aktualisiert');
     } catch (error) {
       console.error('Error updating order status:', error);
       toast.error(error.response?.data?.error || t('error'));
@@ -208,127 +166,22 @@ export const Orders = () => {
     }
   };
 
-  // Admin directly overwrites the customer's requested delivery slot (e.g.
-  // after a phone call) — no separate customer approval needed.
-  const handleOpenEditDeliverySlot = (order) => {
-    const parsed = parseDeliverySlot(order.deliverySlot);
-    setEditDeliveryDate(parsed?.date || todayIso());
-    const matching = parsed
-      ? deliveryWindows.find((w) => w.startHour === parsed.startHour && w.endHour === parsed.endHour)
-      : null;
-    setEditSelectedWindow(matching || deliveryWindows[0] || null);
-    setEditingDeliverySlot(true);
-  };
-
-  const handleSaveDeliverySlot = async (orderId) => {
-    setSavingDeliverySlot(true);
-    try {
-      await saveDeliverySlot(orderId, editDeliveryDate, editSelectedWindow);
-      setEditingDeliverySlot(false);
-      await refreshSelectedOrder(orderId);
-    } catch (error) {
-      console.error('Error updating delivery slot:', error);
-      toast.error(error.response?.data?.error || t('error'));
-    } finally {
-      setSavingDeliverySlot(false);
-    }
-  };
-
-  const handleViewDetails = async (order) => {
-    try {
-      setSelectedOrder(await fetchOrderById(order.id));
-      setShowDetailModal(true);
-      setEditingDeliverySlot(false);
-    } catch (error) {
-      console.error('Error fetching order details:', error);
-    }
-  };
-
-  const handleOpenEditModal = (order) => {
-    setEditingOrder(order);
-    setEditReason(order.modificationReason || '');
-    if (!products || products.length === 0) {
-      reloadFormData();
-    }
-    const items = (order.orderItems || []).map((it) => ({
-      id: it.id,
-      productId: it.productId,
-      quantity: it.quantity,
-      price: it.price,
-      subtotal: it.subtotal || it.price * it.quantity,
-      product: it.product
-    }));
-    setEditItems(items);
-    setShowEditModal(true);
-  };
-
-  const handleUpdateItemQuantity = (index, delta) => {
-    setEditItems((prev) => {
-      const next = [...prev];
-      const newQty = Math.max(1, (next[index].quantity || 1) + delta);
-      next[index] = {
-        ...next[index],
-        quantity: newQty,
-        subtotal: newQty * next[index].price
-      };
-      return next;
-    });
-  };
-
-  const handleRemoveItemFromEdit = (index) => {
-    setEditItems((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleAddProductWithQty = (prod, qty = 1) => {
-    if (!prod) return;
-    const addQty = Math.max(1, Number(qty) || 1);
-    const existingIndex = editItems.findIndex((it) => it.productId === prod.id);
-    if (existingIndex >= 0) {
-      handleUpdateItemQuantity(existingIndex, addQty);
-    } else {
-      setEditItems((prev) => [
-        ...prev,
-        {
-          productId: prod.id,
-          quantity: addQty,
-          price: prod.b2bPrice,
-          subtotal: prod.b2bPrice * addQty,
-          product: prod
-        }
-      ]);
-    }
-  };
-
-  const handleSaveOrderEdit = async (e) => {
-    e.preventDefault();
-    if (!editingOrder) return;
-    if (editItems.length === 0) {
-      toast.warning(language === 'ar' ? 'يجب أن يحتوي الطلب على منتج واحد على الأقل' : 'Der Auftrag muss mindestens einen Artikel enthalten.');
+  // Decline from the card: one confirm, no drawer. Any other status change
+  // from the card opens the drawer on its overview.
+  const handleCardStatusAction = async (order, targetStatus) => {
+    if (targetStatus !== 'declined') {
+      openDrawer(order, 'overview');
       return;
     }
-
-    try {
-      setSavingEdit(true);
-      const payload = {
-        items: editItems.map((it) => ({
-          productId: it.productId,
-          quantity: it.quantity,
-          price: it.price
-        })),
-        modificationReason: editReason.trim() || (language === 'ar' ? 'تعديل بسبب عدم توفر بعض المنتجات' : 'Anpassung wegen fehlender Verfügbarkeit einzelner Artikel.')
-      };
-
-      const orderId = editingOrder.id;
-      const updated = await saveOrderEdit(orderId, payload);
-      setShowEditModal(false);
-      setEditingOrder(null);
-      await refreshSelectedOrder(orderId, updated);
-    } catch (err) {
-      console.error('Error saving order edit:', err);
-      toast.error(err.response?.data?.error || (language === 'ar' ? 'فشل حفظ التعديل' : 'Fehler beim Speichern der Änderung'));
-    } finally {
-      setSavingEdit(false);
-    }
+    const ok = await confirm({
+      title: language === 'ar' ? 'رفض الطلب؟' : 'Bestellung ablehnen?',
+      message: language === 'ar'
+        ? `الطلب #${order.id.slice(0, 8).toUpperCase()} — سيتم إبلاغ العميل وإرجاع المخزون.`
+        : `Bestellung #${order.id.slice(0, 8).toUpperCase()} — der Kunde wird benachrichtigt, Lagerbestand wird zurückgebucht.`,
+      confirmText: language === 'ar' ? 'رفض الطلب' : 'Ablehnen',
+      variant: 'danger'
+    });
+    if (ok) handleQuickStatusChange(order.id, 'declined');
   };
 
   const handleOpenPrintModal = (order) => {
@@ -341,22 +194,6 @@ export const Orders = () => {
       ? buildThermalReceiptHtml(order, language)
       : buildA4ReceiptHtml(order, language));
   };
-
-  // The server already applied the status filter and matched the search
-  // against order number + driver name across all pages. This only *additionally*
-  // narrows the loaded page by customer name/phone/address — which the server
-  // can't match because those columns are encrypted at rest. It keeps any order
-  // whose number or driver matched server-side, so server results are never
-  // dropped here. (Customer-name search therefore only spans the current page.)
-  const q = searchTerm.trim().toLowerCase();
-  const filteredOrders = !q ? orders : orders.filter((order) =>
-    order.id.toLowerCase().includes(q) ||
-    (order.assignedDriverName && order.assignedDriverName.toLowerCase().includes(q)) ||
-    (order.customer?.name && order.customer.name.toLowerCase().includes(q)) ||
-    (order.customerName && order.customerName.toLowerCase().includes(q)) ||
-    (order.customerPhone && order.customerPhone.toLowerCase().includes(q)) ||
-    (order.deliveryAddress && order.deliveryAddress.toLowerCase().includes(q))
-  );
 
   if (loading) {
     return <SkeletonList count={6} />;
@@ -427,15 +264,15 @@ export const Orders = () => {
 
       {/* Orders List */}
       <div className="space-y-3">
-        {filteredOrders.map((order) => (
+        {orders.map((order) => (
           <OrderCard
             key={order.id}
             isExpanded={!!expandedOrders[order.id]}
-            handleOpenEditModal={handleOpenEditModal}
+            handleOpenEditModal={(o) => openDrawer(o, 'items')}
             handleOpenPrintModal={handleOpenPrintModal}
             handleQuickStatusChange={handleQuickStatusChange}
-            handleViewDetails={handleViewDetails}
-            openStatusModal={openStatusModal}
+            handleViewDetails={(o) => openDrawer(o, 'overview')}
+            openStatusModal={handleCardStatusAction}
             order={order}
             setAcceptModalDriver={setAcceptModalDriver}
             setAcceptModalOrder={setAcceptModalOrder}
@@ -444,7 +281,7 @@ export const Orders = () => {
           />
         ))}
 
-        {filteredOrders.length === 0 && (
+        {orders.length === 0 && (
           <EmptyState icon={Package} title={t('noOrdersFound')} />
         )}
       </div>
@@ -475,49 +312,17 @@ export const Orders = () => {
         />
       )}
 
-      {/* Status Change & Admin Note Modal */}
-      {statusModalOrder && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <StatusChangeModal
-            adminNoteInput={adminNoteInput}
-            customerNoteInput={customerNoteInput}
-            handleConfirmStatusChange={handleConfirmStatusChange}
-            setAdminNoteInput={setAdminNoteInput}
-            setCustomerNoteInput={setCustomerNoteInput}
-            setStatusModalOrder={setStatusModalOrder}
-            setTargetStatus={setTargetStatus}
-            statusModalOrder={statusModalOrder}
-            targetStatus={targetStatus}
-            updating={updating}
-          />
-        </div>
-      )}
-
-      {/* Order Detail Modal */}
-      {showDetailModal && selectedOrder && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 animate-in fade-in duration-200">
-          <OrderDetailModal
-            activeDrivers={activeDrivers}
-            assigningDriverId={assigningDriverId}
-            deliveryWindows={deliveryWindows}
-            editDeliveryDate={editDeliveryDate}
-            editSelectedWindow={editSelectedWindow}
-            editingDeliverySlot={editingDeliverySlot}
-            handleAssignDriver={handleAssignDriver}
-            handleOpenEditDeliverySlot={handleOpenEditDeliverySlot}
-            handleOpenEditModal={handleOpenEditModal}
-            handleOpenPrintModal={handleOpenPrintModal}
-            handleSaveDeliverySlot={handleSaveDeliverySlot}
-            knownDriverNames={knownDriverNames}
-            openStatusModal={openStatusModal}
-            savingDeliverySlot={savingDeliverySlot}
-            selectedOrder={selectedOrder}
-            setEditDeliveryDate={setEditDeliveryDate}
-            setEditSelectedWindow={setEditSelectedWindow}
-            setEditingDeliverySlot={setEditingDeliverySlot}
-            setShowDetailModal={setShowDetailModal}
-          />
-        </div>
+      {drawer && (
+        <OrderDrawer
+          key={`${drawer.order.id}:${drawer.session}`}
+          order={drawer.order}
+          initialTab={drawer.tab}
+          onClose={() => setDrawer(null)}
+          onOrderChanged={handleDrawerOrderChanged}
+          onPrint={handleOpenPrintModal}
+          actions={drawerActions}
+          reference={drawerReference}
+        />
       )}
 
       {/* Printable Invoice / Packing Slip Modal */}
@@ -540,22 +345,6 @@ export const Orders = () => {
             setShowCreateModal={setShowCreateModal}
           />
         </div>
-      )}
-      {/* ── Edit Order Modal (Unavailable items & customer approval) ── */}
-      {showEditModal && editingOrder && (
-        <EditOrderModal
-          editItems={editItems}
-          editReason={editReason}
-          editingOrder={editingOrder}
-          handleAddProductWithQty={handleAddProductWithQty}
-          handleRemoveItemFromEdit={handleRemoveItemFromEdit}
-          handleSaveOrderEdit={handleSaveOrderEdit}
-          handleUpdateItemQuantity={handleUpdateItemQuantity}
-          products={products}
-          savingEdit={savingEdit}
-          setEditReason={setEditReason}
-          setShowEditModal={setShowEditModal}
-        />
       )}
     </div>
   );

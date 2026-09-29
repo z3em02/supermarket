@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useDialogBehavior } from './useDialogBehavior';
@@ -11,7 +12,9 @@ export const Drawer = ({ isOpen, onClose, title, subtitle, headerExtra, footer, 
   const panelRef = useDialogBehavior(isOpen, onClose);
   if (!isOpen) return null;
   const rtl = direction === 'rtl';
-  return (
+  // Portal to <body>: a transformed/filtered ancestor would otherwise become
+  // the containing block of this fixed overlay (and sticky headers would sit on top).
+  return createPortal(
     <div className="fixed inset-0 z-50" dir={direction}>
       <div className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm animate-fade-in" onClick={onClose} aria-hidden="true" />
       <div
@@ -38,6 +41,7 @@ export const Drawer = ({ isOpen, onClose, title, subtitle, headerExtra, footer, 
         <div className="flex-1 overflow-y-auto">{children}</div>
         {footer && <footer className="px-4 sm:px-6 py-3 bg-white dark:bg-gray-900 border-t border-slate-200 dark:border-gray-800">{footer}</footer>}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

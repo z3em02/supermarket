@@ -11,7 +11,7 @@ export default {
     extend: {
       keyframes: {
         'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },
-        'toast-in': { from: { opacity: '0', transform: 'translateY(-6px)' }, to: { opacity: '1', transform: 'none' } },
+        'toast-in': { from: { opacity: '0', transform: 'translateY(6px)' }, to: { opacity: '1', transform: 'none' } },
         'drawer-in-end': { from: { transform: 'translateX(100%)' }, to: { transform: 'none' } },
         'drawer-in-start': { from: { transform: 'translateX(-100%)' }, to: { transform: 'none' } }
       },

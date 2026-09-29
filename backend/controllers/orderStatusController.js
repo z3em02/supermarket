@@ -11,6 +11,7 @@ const {
   decrementStockOrThrow,
   concurrentUpdateError
 } = require('./orderShared');
+const { isStaleOrderVersion, STALE_ORDER_MESSAGE } = require('../utils/orderSearch');
 
 const updateOrderStatus = async (req, res) => {
   try {
@@ -38,6 +39,13 @@ const updateOrderStatus = async (req, res) => {
     // the ID (e.g. from an old link) isn't enough.
     if (req.driver && order.assignedDriverName !== req.driver.name) {
       return res.status(404).json({ error: 'Order not found' });
+    }
+
+    // The admin order drawer sends the version it's showing; if the order
+    // changed since (another admin, the customer, a driver), refuse instead
+    // of overwriting that change with stale data.
+    if (!req.driver && isStaleOrderVersion(order.updatedAt, req.body.expectedUpdatedAt)) {
+      return res.status(409).json({ error: STALE_ORDER_MESSAGE, code: 'STALE_ORDER' });
     }
 
     if (!req.driver && deliverySlot !== undefined && deliverySlot !== null && !(await isValidDeliverySlot(deliverySlot, { allowPastHoursForToday: true }))) {
@@ -286,17 +294,27 @@ const updateOrderStatus = async (req, res) => {
 const assignOrderDriver = async (req, res) => {
   try {
     const { id } = req.params;
-    const { assignedDriverName } = req.body;
+    const { assignedDriverName, expectedUpdatedAt } = req.body;
 
-    const order = await prisma.order.findUnique({ where: { id }, select: { id: true } });
+    const order = await prisma.order.findUnique({ where: { id }, select: { id: true, updatedAt: true } });
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
     }
+    if (isStaleOrderVersion(order.updatedAt, expectedUpdatedAt)) {
+      return res.status(409).json({ error: STALE_ORDER_MESSAGE, code: 'STALE_ORDER' });
+    }
 
     const clean = assignedDriverName ? String(assignedDriverName).trim().slice(0, 60) : null;
-    const updated = await prisma.order.update({
+    // Guarded on the version read above, so a change landing in between is a 409 too.
+    const guarded = await prisma.order.updateMany({
+      where: { id, updatedAt: order.updatedAt },
+      data: { assignedDriverName: clean || null }
+    });
+    if (guarded.count === 0) {
+      return res.status(409).json({ error: STALE_ORDER_MESSAGE, code: 'STALE_ORDER' });
+    }
+    const updated = await prisma.order.findUnique({
       where: { id },
-      data: { assignedDriverName: clean || null },
       include: {
         customer: { select: CUSTOMER_PUBLIC_SELECT },
         orderItems: { include: { product: true } },

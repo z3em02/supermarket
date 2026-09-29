@@ -20,9 +20,8 @@ const EMPTY_METRICS = {
  * linearly (measured: ~1MB / 180ms at 400 orders). page/status/search are sent
  * to the server; polling just re-fetches the current page, which is cheap.
  *
- * NOTE: customer names are encrypted at rest, so the server `search` matches
- * order number + driver name only. The page additionally narrows the loaded
- * rows by customer name client-side (see the page's own filter).
+ * The server `search` covers the whole order history: order number, driver,
+ * customer name, phone and address (it decrypts those columns to match).
  */
 export const useOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -38,6 +37,7 @@ export const useOrders = () => {
   const [products, setProducts] = useState([]);
   const [deliveryWindows, setDeliveryWindows] = useState([]);
   const [activeDrivers, setActiveDrivers] = useState([]);
+  const [driverAccountNames, setDriverAccountNames] = useState([]);
 
   // Latest requested filters, read by refresh()/poll without re-creating them.
   const queryRef = useRef({ page: 1, status: 'all', search: '' });
@@ -64,8 +64,13 @@ export const useOrders = () => {
     }
   }, []);
 
+  // Only the newest request may set the list, so a slow response for an
+  // older search term can't overwrite the results of the current one.
+  const requestSeqRef = useRef(0);
+
   // Fetches the current page (server-side filtered) plus the summary metrics.
   const refresh = useCallback(async () => {
+    const seq = ++requestSeqRef.current;
     try {
       const apiUrl = getApiUrl();
       const { page: p, status, search } = queryRef.current;
@@ -76,6 +81,7 @@ export const useOrders = () => {
         axios.get(`${apiUrl}/api/orders`, { params }),
         fetchMetrics()
       ]);
+      if (seq !== requestSeqRef.current) return;
       const body = listRes.data;
       // Envelope { data, total, page, totalPages } for the browse view; fall
       // back to a bare array if an older backend answers.
@@ -143,19 +149,28 @@ export const useOrders = () => {
     fetchActiveDeliveryWindows().then(setDeliveryWindows).catch(() => {});
   }, []);
 
+  // Active driver accounts (Settings → Fahrerkonten), so the assign-driver
+  // choice lists every driver, not only those online or on the current page.
+  useEffect(() => {
+    axios.get(`${getApiUrl()}/api/settings/drivers/names`)
+      .then((res) => setDriverAccountNames(Array.isArray(res.data) ? res.data : []))
+      .catch((err) => console.error('Error fetching driver names:', err));
+  }, []);
+
   useEffect(() => {
     fetchActiveDrivers();
     const interval = setInterval(fetchActiveDrivers, 15000);
     return () => clearInterval(interval);
   }, [fetchActiveDrivers]);
 
-  // Union of who's online now and every name ever assigned on a loaded order,
-  // so the autocomplete still suggests someone even while they're offline.
+  // Driver accounts + who's online now + names on loaded orders (older
+  // assignments may name a driver whose account was since removed).
   const knownDriverNames = useMemo(() => {
-    const names = new Set(activeDrivers.map((s) => s.driverName));
+    const names = new Set(driverAccountNames);
+    activeDrivers.forEach((s) => names.add(s.driverName));
     orders.forEach((o) => { if (o.assignedDriverName) names.add(o.assignedDriverName); });
-    return Array.from(names);
-  }, [activeDrivers, orders]);
+    return Array.from(names).sort((a, b) => a.localeCompare(b));
+  }, [driverAccountNames, activeDrivers, orders]);
 
   // Changing the filter or search resets to page 1 (guards against landing on
   // a now-out-of-range page).
@@ -170,13 +185,25 @@ export const useOrders = () => {
     return res.data;
   }, []);
 
-  // Patches the list optimistically and returns the new assigned name so the
-  // caller can also reflect it into an open detail view.
-  const assignDriver = useCallback(async (orderId, assignedDriverName) => {
+  // Loads the order's own history (status changes, edits, driver changes)
+  // for the drawer's "Verlauf" tab.
+  const fetchOrderHistory = useCallback(async (id) => {
     const apiUrl = getApiUrl();
-    const res = await axios.put(`${apiUrl}/api/orders/${orderId}/assign-driver`, { assignedDriverName: assignedDriverName || null });
-    setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, assignedDriverName: res.data.assignedDriverName } : o)));
-    return res.data.assignedDriverName;
+    const res = await axios.get(`${apiUrl}/api/orders/${id}/history`);
+    return res.data;
+  }, []);
+
+  // The drawer passes `expectedUpdatedAt` (the version it's showing) so the
+  // server answers 409 STALE_ORDER instead of overwriting a newer change.
+  // List quick actions don't, and always apply.
+  const assignDriver = useCallback(async (orderId, assignedDriverName, expectedUpdatedAt) => {
+    const apiUrl = getApiUrl();
+    const res = await axios.put(`${apiUrl}/api/orders/${orderId}/assign-driver`, {
+      assignedDriverName: assignedDriverName || null,
+      expectedUpdatedAt
+    });
+    setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, assignedDriverName: res.data.assignedDriverName, updatedAt: res.data.updatedAt } : o)));
+    return res.data;
   }, []);
 
   const createOrder = useCallback(async (payload) => {
@@ -187,16 +214,19 @@ export const useOrders = () => {
 
   const changeStatus = useCallback(async (orderId, body) => {
     const apiUrl = getApiUrl();
-    await axios.put(`${apiUrl}/api/orders/${orderId}/status`, body);
+    const res = await axios.put(`${apiUrl}/api/orders/${orderId}/status`, body);
     await refresh();
+    return res.data;
   }, [refresh]);
 
-  const saveDeliverySlot = useCallback(async (orderId, date, window) => {
+  const saveDeliverySlot = useCallback(async (orderId, date, window, expectedUpdatedAt) => {
     const apiUrl = getApiUrl();
-    await axios.put(`${apiUrl}/api/orders/${orderId}/status`, {
-      deliverySlot: buildDeliverySlot(date, window?.startHour, window?.endHour)
+    const res = await axios.put(`${apiUrl}/api/orders/${orderId}/status`, {
+      deliverySlot: buildDeliverySlot(date, window?.startHour, window?.endHour),
+      expectedUpdatedAt
     });
     await refresh();
+    return res.data;
   }, [refresh]);
 
   const saveOrderEdit = useCallback(async (orderId, payload) => {
@@ -231,6 +261,7 @@ export const useOrders = () => {
     refresh,
     reloadFormData,
     fetchOrderById,
+    fetchOrderHistory,
     assignDriver,
     createOrder,
     changeStatus,

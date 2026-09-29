@@ -102,7 +102,8 @@ export const FeedbackProvider = ({ children }) => {
       {children}
 
       <div
-        className={`fixed top-4 z-[9999] flex flex-col gap-2 w-full max-w-sm px-4 pointer-events-none ${direction === 'rtl' ? 'left-0 sm:left-4' : 'right-0 sm:right-4'}`}
+        // Bottom corner, above dialogs: never covers page/drawer headers or their close buttons.
+        className={`fixed bottom-4 z-[10001] flex flex-col gap-2 w-full max-w-sm px-4 pointer-events-none ${direction === 'rtl' ? 'left-0 sm:left-4' : 'right-0 sm:right-4'}`}
         dir={direction}
       >
         {toasts.map((x) => {

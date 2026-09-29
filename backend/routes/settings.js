@@ -12,6 +12,7 @@ const {
 const { getPasscodeStatus, setPasscode, verifyPasscode } = require('../controllers/sectionPasscodeController');
 const {
   listDrivers,
+  listActiveDriverNames,
   createDriver,
   updateDriver,
   resetDriverPin,
@@ -69,6 +70,7 @@ router.post('/passcode/verify', authMiddleware, passcodeVerifyLimiter, verifyPas
 // Driver accounts (managed in Settings, behind the section PIN gate since a
 // driver's PIN is a real credential — same sensitivity class as the section
 // PIN itself, unlike the read-only settings routes above).
+router.get('/drivers/names', authMiddleware, listActiveDriverNames);
 router.get('/drivers', authMiddleware, sectionUnlockMiddleware, listDrivers);
 router.post('/drivers', authMiddleware, sectionUnlockMiddleware, passcodeVerifyLimiter, createDriver);
 router.put('/drivers/:id', authMiddleware, sectionUnlockMiddleware, updateDriver);

@@ -22,7 +22,7 @@ export const OrderStatusSummary = ({
   const { t, language } = useLanguage();
 
   return (
-    <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 lg:grid-cols-8 gap-2 sm:gap-2.5">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
       {TILES.map((tile) => {
         const tone = tile.filter === 'all' ? 'neutral' : (STATUS_TONES[normalizeOrderStatus(tile.filter)] || 'neutral');
         const styles = TONE_TILE_CLASSES[tone];

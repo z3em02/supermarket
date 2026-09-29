@@ -7,6 +7,8 @@ const VARIANTS = {
   brand: 'bg-brand-600 hover:bg-brand-700 text-white shadow-sm',
   secondary: 'bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-gray-800',
   danger: 'bg-danger-600 hover:bg-danger-700 text-white shadow-sm',
+  // For actions with a side effect worth pausing on (e.g. emailing the customer).
+  warning: 'bg-warning-600 hover:bg-warning-700 text-white shadow-sm',
   ghost: 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-800'
 };
 
