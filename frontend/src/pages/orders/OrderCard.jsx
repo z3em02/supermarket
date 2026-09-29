@@ -215,8 +215,9 @@ export const OrderCard = ({
           {currentStatus === 'pending' && (
             <>
               <button type="button" onClick={() => openStatusModal(order, 'declined')} disabled={updating}
-                className="min-h-9 px-2.5 rounded-lg bg-danger-50 hover:bg-danger-100 dark:bg-danger-950/40 text-danger-700 dark:text-danger-300 border border-danger-200 dark:border-danger-900/50 font-bold transition cursor-pointer touch-manipulation disabled:opacity-50">
-                {t('decline')}
+                title={t('decline')} aria-label={t('decline')}
+                className="inline-flex items-center justify-center min-w-9 min-h-9 rounded-lg bg-danger-50 hover:bg-danger-100 dark:bg-danger-950/40 text-danger-700 dark:text-danger-300 border border-danger-200 dark:border-danger-900/50 transition cursor-pointer touch-manipulation disabled:opacity-50">
+                <XCircle className="w-4 h-4" aria-hidden="true" />
               </button>
               <button type="button" onClick={openAccept} disabled={updating} className={`${quickBtn} bg-success-600 hover:bg-success-700`}>
                 {t('accept')}
@@ -229,13 +230,15 @@ export const OrderCard = ({
             </button>
           )}
           {currentStatus === 'preparing' && (
-            <button type="button" onClick={() => handleQuickStatusChange(order.id, 'shipped')} disabled={updating} className={`${quickBtn} bg-primary-600 hover:bg-primary-700`}>
-              <Truck className="w-3 h-3" aria-hidden="true" />{t('markShipped')}
+            <button type="button" onClick={() => handleQuickStatusChange(order.id, 'shipped')} disabled={updating}
+              title={t('markShipped')} aria-label={t('markShipped')} className={`${quickBtn} bg-primary-600 hover:bg-primary-700`}>
+              <Truck className="w-3 h-3" aria-hidden="true" />{t('shipped')}
             </button>
           )}
           {currentStatus === 'shipped' && (
-            <button type="button" onClick={() => handleQuickStatusChange(order.id, 'delivered')} disabled={updating} className={`${quickBtn} bg-success-600 hover:bg-success-700`}>
-              <CheckCircle2 className="w-3 h-3" aria-hidden="true" />{t('markDelivered')}
+            <button type="button" onClick={() => handleQuickStatusChange(order.id, 'delivered')} disabled={updating}
+              title={t('markDelivered')} aria-label={t('markDelivered')} className={`${quickBtn} bg-success-600 hover:bg-success-700`}>
+              <CheckCircle2 className="w-3 h-3" aria-hidden="true" />{t('delivered')}
             </button>
           )}
           {currentStatus === 'declined' && (
