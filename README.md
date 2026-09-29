@@ -25,8 +25,8 @@ architecture notes for Claude Code live in [`CLAUDE.md`](CLAUDE.md).
 
 ## 1. Features
 
-- **Customers**: register with email OTP and phone verification (Firebase
-  Phone Auth); an account must be verified before it can order. Order
+- **Customers**: register with email OTP and a phone code sent via WhatsApp
+  (Meta WhatsApp Cloud API); an account must be verified before it can order. Order
   history with live status, one-click reorder, printable order report, push
   notifications, and a preferred language (DE/AR) used for every email and
   push.
@@ -46,7 +46,7 @@ architecture notes for Claude Code live in [`CLAUDE.md`](CLAUDE.md).
 ## 2. Tech stack
 
 - **Backend**: Node.js, Express 5, Prisma ORM on PostgreSQL, JWT auth in
-  HttpOnly cookies, Nodemailer, Firebase Admin (phone verification), web-push
+  HttpOnly cookies, Nodemailer, WhatsApp Cloud API (phone verification), web-push
   (VAPID), optional Redis (rate limiting)
 - **Frontend**: React 19, Vite, Tailwind CSS, React Router 7
 - **Deployment**: nginx (reverse proxy + static hosting) + PM2 (cluster mode)
@@ -94,7 +94,8 @@ Never commit `.env` files.
 | `TRUST_PROXY` | `true` (default) behind nginx; needed for correct client IPs in rate limiting. |
 | `FORCE_SECURE_COOKIES` | `true` for HTTPS staging environments that don't set `NODE_ENV=production`. |
 | `EMAIL_HOST` / `EMAIL_PORT` / `EMAIL_USER` / `EMAIL_PASSWORD` / `EMAIL_FROM` | SMTP for OTPs, order emails, password reset. Placeholder values → emails are skipped and logged. |
-| `FIREBASE_SERVICE_ACCOUNT_PATH` | Optional; path to the Firebase service-account JSON (default `backend/firebase-service-account.json`, gitignored). |
+| `WHATSAPP_PHONE_NUMBER_ID` / `WHATSAPP_ACCESS_TOKEN` / `WHATSAPP_OTP_TEMPLATE` | WhatsApp Cloud API for phone verification codes ([4.4](#44-whatsapp-phone-verification)). Unset in development → codes are logged to the console; unset in production → phone verification fails. |
+| `WHATSAPP_TEMPLATE_DEFAULT_LANGUAGE` / `WHATSAPP_GRAPH_API_VERSION` | Optional; template language used when the customer's language isn't available (default `de`), Graph API version (default `v23.0`). |
 | `REDIS_URL` | Recommended in production; shares rate-limit counters across processes/servers. Without it each PM2 worker counts on its own, so every limit is multiplied by the worker count (the server warns at startup). |
 | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | Optional; Web Push for order-status notifications. Generate the pair with `npx web-push generate-vapid-keys`. |
 | `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` | Optional; admin created by the seed script. Without a password a one-time random one is printed. |
@@ -104,8 +105,6 @@ Never commit `.env` files.
 | Variable | Description |
 | --- | --- |
 | `VITE_API_URL` | Leave **empty** when nginx proxies `/api` on the same domain (standard setup). Only set an absolute URL if the API is on a separate host. |
-| `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_STORAGE_BUCKET`, `VITE_FIREBASE_MESSAGING_SENDER_ID`, `VITE_FIREBASE_APP_ID` | Optional; Firebase web config for phone verification. Not secret. |
-
 ### Run it
 
 ```bash
@@ -149,7 +148,7 @@ build on every pull request and every push to `main`.
 | PostgreSQL | Supabase, Neon, self-hosted, … | Yes |
 | A domain + TLS certificate | Public URL, HTTPS, CORS (`FRONTEND_URL`) | Yes |
 | SMTP account | OTPs, order emails, password resets | Recommended |
-| Firebase project | Phone verification at registration | Optional (email verification still works without it) |
+| Meta WhatsApp Business account | Phone verification codes via WhatsApp | Yes (customers can't order without a verified phone) |
 | Redis | Shared rate limiting across PM2 instances/servers | Recommended (PM2 runs one worker per CPU core) |
 
 ### 4.2 Server and database
@@ -204,7 +203,7 @@ JWT_SECRET=<openssl rand -hex 32>
 SECTION_UNLOCK_SECRET=<openssl rand -hex 32, different>
 ENCRYPTION_KEY=<openssl rand -hex 32>
 REDIS_URL=redis://localhost:6379
-# plus DATABASE_URL, DIRECT_URL, EMAIL_*, and optionally FIREBASE_SERVICE_ACCOUNT_PATH, VAPID_*
+# plus DATABASE_URL, DIRECT_URL, EMAIL_*, WHATSAPP_*, and optionally VAPID_*
 ```
 
 The backend's rate limiter keeps its counters in Redis when `REDIS_URL` is
@@ -220,26 +219,52 @@ reachable backend would trust a client-supplied `X-Forwarded-For` header.
 
 Generate the secrets fresh for each deployment; never copy them from dev.
 
-### 4.4 Firebase (only for phone verification)
+### 4.4 WhatsApp (phone verification)
 
-Phone verification needs both the frontend and the backend config. If either
-is missing, the feature is disabled.
+The customer's phone number is verified with a 6-digit code the backend sends
+through Meta's WhatsApp Cloud API (`backend/utils/whatsappService.js`). The
+customer presses "Code per WhatsApp senden" (`POST /api/customer/resend-otp`
+with `type: 'phone'`) and enters the code (`POST /api/customer/verify-phone`).
+Codes are valid for 10 minutes, can be re-sent after 60 seconds, and lock
+after 5 wrong attempts. Only backend config is needed; the browser never talks
+to Meta.
 
-1. Create a project at [console.firebase.google.com](https://console.firebase.google.com)
-   and enable Authentication → Sign-in method → **Phone**.
-2. **Frontend**: Project Settings → General → Your apps → add a Web app → copy
-   the values into the `VITE_FIREBASE_*` variables.
-3. **Backend**: Project Settings → Service accounts → Generate new private key
-   → save as `backend/firebase-service-account.json` (gitignored), or point
-   `FIREBASE_SERVICE_ACCOUNT_PATH` at it. When rotating, delete the old key
-   in the console.
-4. **Before going live**, restrict the Web API key in the
-   [Google Cloud credentials page](https://console.cloud.google.com/apis/credentials)
-   ("Browser key (auto created by Firebase)"):
-   - Application restriction: Websites → `https://yourdomain.com/*`,
-     `https://*.yourdomain.com/*`
-   - API restriction: *Identity Toolkit API* and *Token Service API* only
-   - Enable **Firebase App Check** (reCAPTCHA) to stop automated SMS abuse
+1. In [Meta for Developers](https://developers.facebook.com/apps) create a
+   **Business** app and add the **WhatsApp** product. Link it to your Meta
+   Business portfolio (business verification is needed to message more than
+   a few test numbers).
+2. Add and verify the store's sending phone number (WhatsApp → API Setup).
+   Copy its **Phone number ID** into `WHATSAPP_PHONE_NUMBER_ID`.
+3. In WhatsApp Manager → Message templates, create a template in category
+   **Authentication**, with the **Copy code** button, in German (`de`) and
+   Arabic (`ar`) under the same name. Put the name in `WHATSAPP_OTP_TEMPLATE`.
+   Customers get the language they chose; if a language isn't approved yet,
+   `WHATSAPP_TEMPLATE_DEFAULT_LANGUAGE` (default `de`) is used.
+4. In Business Settings → System users, create a system user, assign it the
+   app and the WhatsApp account, and generate a **permanent** token with the
+   `whatsapp_business_messaging` permission. Put it in `WHATSAPP_ACCESS_TOKEN`
+   (the temporary token from API Setup expires after 24 hours).
+5. Add a payment method in WhatsApp Manager: authentication messages are
+   billed per message delivered.
+
+**Development vs production:** with `NODE_ENV=production` the code is always
+sent with the template, and `WHATSAPP_OTP_TEMPLATE` is required. In any other
+environment it's sent as a plain text message instead, so you can test
+before the template is approved. WhatsApp only delivers free text within 24
+hours after the recipient last messaged your business number, so first send
+any message from the test phone to that number (and, on Meta's test number,
+add the phone as a recipient under API Setup). Otherwise Meta rejects it with
+error 131047.
+
+In development you can leave the `WHATSAPP_*` variables empty: the code is
+printed to the backend console instead. In production a missing config makes
+sending fail with an error, since customers can't order without a verified
+phone.
+
+Cost control: each send is limited by the per-IP `authLimiter`, nginx's
+`limit_req` on `resend-otp`, the 60-second cooldown per account and the
+one-account-per-phone-number rule. Keep an eye on the WhatsApp Manager
+insights for unusual volume.
 
 ### 4.5 Build, start, nginx
 
@@ -274,7 +299,7 @@ That config handles:
   endpoints (under all three customer route prefixes).
 
 After changing the CSP, complete one registration with phone verification
-with the browser console open, to check nothing Firebase needs is blocked.
+with the browser console open, to check nothing the page needs is blocked.
 
 Point DNS at the server and get a certificate (e.g. Certbot).
 
@@ -304,7 +329,7 @@ once. This is expected.
 - [ ] `FRONTEND_URL` is the real production domain, not `localhost`
 - [ ] `HOST=127.0.0.1` and `REDIS_URL` set; port 5000 not reachable from outside
 - [ ] nginx serves HTTPS only; HTTP redirects to HTTPS; `nginx -t` passes
-- [ ] Firebase Web API key restricted, App Check enabled (if phone verification is used)
+- [ ] WhatsApp: permanent system-user token set, OTP template approved in `de` and `ar`, payment method added ([4.4](#44-whatsapp-phone-verification))
 - [ ] `ADMIN_BASE` changed from the default
 - [ ] One full run: customer registration → order → admin fulfilment → driver delivery
 - [ ] Consider a WAF/DDoS layer in front (e.g. Cloudflare); the app itself has none
@@ -444,7 +469,6 @@ encryption was introduced are backfilled by
 
 No code findings are open. These manual items remain:
 
-- [ ] **#3** Restrict and rotate the Firebase Web API key, enable App Check ([4.4](#44-firebase-only-for-phone-verification))
 - [ ] **#19** Set `FRONTEND_URL` to the production domain ([4.3](#43-production-environment))
 - [ ] **#20** Verify the live server enforces HTTPS with an HTTP→HTTPS redirect ([4.5](#45-build-start-nginx))
 - [ ] Consider a WAF/DDoS layer (e.g. Cloudflare)
