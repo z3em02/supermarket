@@ -1,13 +1,12 @@
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import axios from '../utils/adminAxios';
-import { getApiUrl } from '../utils/api';
 import { useLanguage } from '../context/LanguageContext';
 import { ADMIN_BASE } from '../config/adminPath';
 import { Search, Truck, Package, Plus } from 'lucide-react';
-import { todayIso, buildDeliverySlot, parseDeliverySlot, fetchActiveDeliveryWindows } from '../utils/deliverySlot';
+import { todayIso, parseDeliverySlot } from '../utils/deliverySlot';
 import { printHtmlInHiddenIframe } from '../utils/printDocument';
 import { buildA4ReceiptHtml, buildThermalReceiptHtml } from '../utils/adminOrderReceipt';
+import { useOrders } from './orders/useOrders';
 import { EditOrderModal } from './orders/EditOrderModal';
 import { CreateOrderModal } from './orders/CreateOrderModal';
 import { PrintOrderModal } from './orders/PrintOrderModal';
@@ -17,18 +16,32 @@ import { AcceptOrderModal } from './orders/AcceptOrderModal';
 import { OrderCard } from './orders/OrderCard';
 import { OrderStatusSummary } from './orders/OrderStatusSummary';
 
-// Replaces/adds the received orders by id, newest first (see fetchOrders).
-const mergeOrdersById = (current, received) => {
-  if (received.length === 0) return current;
-  const byId = new Map(current.map((o) => [o.id, o]));
-  for (const o of received) byId.set(o.id, o);
-  return [...byId.values()].sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0));
-};
-
 export const Orders = () => {
   const { t, language } = useLanguage();
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+
+  // All server data and mutating actions live in the hook; this component
+  // keeps only view state (which modal is open, search/filter, form inputs)
+  // and orchestrates the hook's actions around it.
+  const {
+    orders,
+    loading,
+    customers,
+    customersLocked,
+    products,
+    deliveryWindows,
+    activeDrivers,
+    knownDriverNames,
+    metrics,
+    reloadFormData,
+    fetchOrderById,
+    assignDriver,
+    createOrder,
+    changeStatus,
+    saveDeliverySlot,
+    saveOrderEdit
+  } = useOrders();
+
+  // --- View state -------------------------------------------------------
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showPrintModal, setShowPrintModal] = useState(false);
@@ -41,91 +54,14 @@ export const Orders = () => {
   const [editDeliveryDate, setEditDeliveryDate] = useState('');
   const [editSelectedWindow, setEditSelectedWindow] = useState(null);
   const [savingDeliverySlot, setSavingDeliverySlot] = useState(false);
-  const [deliveryWindows, setDeliveryWindows] = useState([]);
-
-  useEffect(() => {
-    fetchActiveDeliveryWindows().then(setDeliveryWindows).catch(() => {});
-  }, []);
-
-  // Currently logged-in drivers, fetched for the "assign to driver" dropdowns
-  // (both the standalone reassignment control and the required accept-modal
-  // selection below) — combined with knownDriverNames so someone who's
-  // previously logged in but currently offline is still selectable.
-  const [activeDrivers, setActiveDrivers] = useState([]);
   const [assigningDriverId, setAssigningDriverId] = useState(null);
 
-  const fetchActiveDrivers = async () => {
-    try {
-      const apiUrl = getApiUrl();
-      const res = await axios.get(`${apiUrl}/api/settings/driver-sessions`);
-      setActiveDrivers(Array.isArray(res.data) ? res.data : []);
-    } catch (err) {
-      console.error('Error fetching active driver sessions:', err);
-    }
-  };
-
-  useEffect(() => {
-    fetchActiveDrivers();
-    const interval = setInterval(fetchActiveDrivers, 15000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Union of who's online now and every name ever assigned on a loaded
-  // order, so the autocomplete still suggests someone even while they're
-  // offline.
-  const knownDriverNames = useMemo(() => {
-    const names = new Set(activeDrivers.map((s) => s.driverName));
-    orders.forEach((o) => { if (o.assignedDriverName) names.add(o.assignedDriverName); });
-    return Array.from(names);
-  }, [activeDrivers, orders]);
-
-  const handleAssignDriver = async (orderId, assignedDriverName) => {
-    setAssigningDriverId(orderId);
-    try {
-      const apiUrl = getApiUrl();
-      const res = await axios.put(`${apiUrl}/api/orders/${orderId}/assign-driver`, { assignedDriverName: assignedDriverName || null });
-      setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, assignedDriverName: res.data.assignedDriverName } : o)));
-      setSelectedOrder((prev) => (prev && prev.id === orderId ? { ...prev, assignedDriverName: res.data.assignedDriverName } : prev));
-    } catch (err) {
-      console.error('Error assigning driver:', err);
-      alert(err.response?.data?.error || (language === 'ar' ? 'فشل تعيين السائق' : 'Fahrer konnte nicht zugewiesen werden'));
-    } finally {
-      setAssigningDriverId(null);
-    }
-  };
-
-  // Accepting an order now requires picking who delivers it in the same
-  // step — a driver only ever sees orders assigned to them, so an order
-  // accepted with nobody assigned would be invisible to every driver.
+  // Accept modal (accepting requires choosing a driver)
   const [acceptModalOrder, setAcceptModalOrder] = useState(null);
   const [acceptModalDriver, setAcceptModalDriver] = useState('');
   const [acceptingOrder, setAcceptingOrder] = useState(false);
 
-  const handleConfirmAccept = async () => {
-    if (!acceptModalOrder || !acceptModalDriver) return;
-    setAcceptingOrder(true);
-    try {
-      const apiUrl = getApiUrl();
-      await axios.put(`${apiUrl}/api/orders/${acceptModalOrder.id}/assign-driver`, { assignedDriverName: acceptModalDriver });
-      await axios.put(`${apiUrl}/api/orders/${acceptModalOrder.id}/status`, { status: 'accepted' });
-      await fetchOrders();
-      setAcceptModalOrder(null);
-      setAcceptModalDriver('');
-    } catch (error) {
-      console.error('Error accepting order:', error);
-      alert(error.response?.data?.error || t('error'));
-    } finally {
-      setAcceptingOrder(false);
-    }
-  };
-
-  const toggleOrderItemsExpand = (id) => {
-    setExpandedOrders((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [customers, setCustomers] = useState([]);
-  const [customersLocked, setCustomersLocked] = useState(false);
-  const [products, setProducts] = useState([]);
 
   // Status Change / Admin Note modal
   const [statusModalOrder, setStatusModalOrder] = useState(null);
@@ -149,78 +85,40 @@ export const Orders = () => {
   const [editReason, setEditReason] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
 
-  const fetchCreateFormData = async () => {
-    try {
-      const apiUrl = getApiUrl();
-      const [customersRes, productsRes] = await Promise.all([
-        // The customer list sits behind the Kunden section PIN; when it's
-        // locked the create form explains that instead of an empty dropdown.
-        axios.get(`${apiUrl}/api/customer-auth/customers`).catch((err) => ({
-          data: [],
-          locked: err.response?.data?.code === 'SECTION_LOCKED'
-        })),
-        axios.get(`${apiUrl}/api/products`)
-      ]);
-      setCustomers(customersRes.data);
-      setCustomersLocked(Boolean(customersRes.locked));
-      setProducts(productsRes.data);
-    } catch (error) {
-      console.error('Error fetching form data:', error);
-    }
+  const toggleOrderItemsExpand = (id) => {
+    setExpandedOrders((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // After the first full load, every refresh (the 20 s poll below and the
-  // refetch after each change made on this page) only asks for orders
-  // updated since the previous fetch — by the server's clock, minus a
-  // minute of overlap so an update whose transaction committed a moment
-  // late isn't skipped — and merges them into the list by id.
-  const syncCursorRef = useRef(null);
-  const fetchOrders = async () => {
+  // --- Orchestration handlers ------------------------------------------
+
+  const handleAssignDriver = async (orderId, assignedDriverName) => {
+    setAssigningDriverId(orderId);
     try {
-      const apiUrl = getApiUrl();
-      const cursor = syncCursorRef.current;
-      const params = cursor ? { updatedSince: new Date(new Date(cursor).getTime() - 60 * 1000).toISOString() } : undefined;
-      const response = await axios.get(`${apiUrl}/api/orders`, { params });
-      const received = response.data;
-      // Without the header (an older backend) fall back to a full reload each time.
-      syncCursorRef.current = response.headers['x-server-time'] || null;
-      setOrders((prev) => (cursor ? mergeOrdersById(prev, received) : received));
-    } catch (error) {
-      console.error('Error fetching orders:', error);
+      const newName = await assignDriver(orderId, assignedDriverName);
+      setSelectedOrder((prev) => (prev && prev.id === orderId ? { ...prev, assignedDriverName: newName } : prev));
+    } catch (err) {
+      console.error('Error assigning driver:', err);
+      alert(err.response?.data?.error || (language === 'ar' ? 'فشل تعيين السائق' : 'Fahrer konnte nicht zugewiesen werden'));
     } finally {
-      setLoading(false);
+      setAssigningDriverId(null);
     }
   };
 
-  useEffect(() => {
-    fetchOrders();
-    fetchCreateFormData();
-
-    // Poll for new orders so the list stays current without a manual refresh
-    // when a customer submits an order while this page is open.
-    const pollId = setInterval(fetchOrders, 20000);
-    return () => clearInterval(pollId);
-  }, []);
-
-  // Status metrics summary
-  const metrics = useMemo(() => {
-    const counts = {
-      total: orders.length,
-      pending: 0,
-      pending_customer_approval: 0,
-      accepted: 0,
-      preparing: 0,
-      shipped: 0,
-      delivered: 0,
-      declined: 0
-    };
-    orders.forEach((o) => {
-      const s = o.status?.toLowerCase();
-      if (s === 'declined' || s === 'rejected' || s === 'decline') counts.declined += 1;
-      else if (counts[s] !== undefined) counts[s] += 1;
-    });
-    return counts;
-  }, [orders]);
+  const handleConfirmAccept = async () => {
+    if (!acceptModalOrder || !acceptModalDriver) return;
+    setAcceptingOrder(true);
+    try {
+      await assignDriver(acceptModalOrder.id, acceptModalDriver);
+      await changeStatus(acceptModalOrder.id, { status: 'accepted' });
+      setAcceptModalOrder(null);
+      setAcceptModalDriver('');
+    } catch (error) {
+      console.error('Error accepting order:', error);
+      alert(error.response?.data?.error || t('error'));
+    } finally {
+      setAcceptingOrder(false);
+    }
+  };
 
   const handleCreateOrder = async (e) => {
     e.preventDefault();
@@ -231,22 +129,17 @@ export const Orders = () => {
     }
 
     try {
-      const apiUrl = getApiUrl();
-      await axios.post(
-        `${apiUrl}/api/orders`,
-        {
-          customerId: orderForm.customerId,
-          customerName: orderForm.customerName,
-          customerPhone: orderForm.customerPhone,
-          deliveryAddress: orderForm.deliveryAddress,
-          paymentMethod: 'cash_on_delivery',
-          notes: orderForm.notes,
-          items
-        }
-      );
+      await createOrder({
+        customerId: orderForm.customerId,
+        customerName: orderForm.customerName,
+        customerPhone: orderForm.customerPhone,
+        deliveryAddress: orderForm.deliveryAddress,
+        paymentMethod: 'cash_on_delivery',
+        notes: orderForm.notes,
+        items
+      });
       setShowCreateModal(false);
       setOrderForm({ customerId: '', customerName: '', customerPhone: '', deliveryAddress: '', notes: '', items: [{ productId: '', quantity: 1 }] });
-      fetchOrders();
     } catch (error) {
       console.error('Error creating order:', error);
       alert(error.response?.data?.error || t('error'));
@@ -261,25 +154,29 @@ export const Orders = () => {
     setCustomerNoteInput(order.notes || '');
   };
 
+  // Reflect a mutation into the open detail view, if it's the same order.
+  const refreshSelectedOrder = async (orderId, fallback) => {
+    if (!selectedOrder || selectedOrder.id !== orderId) return;
+    if (fallback !== undefined) { setSelectedOrder(fallback); return; }
+    try {
+      setSelectedOrder(await fetchOrderById(orderId));
+    } catch (err) {
+      console.error('Error refreshing order detail:', err);
+    }
+  };
+
   const handleConfirmStatusChange = async () => {
     if (!statusModalOrder) return;
     setUpdating(true);
     try {
-      const apiUrl = getApiUrl();
-      await axios.put(
-        `${apiUrl}/api/orders/${statusModalOrder.id}/status`,
-        {
-          status: targetStatus,
-          notes: customerNoteInput,
-          adminNotes: adminNoteInput
-        }
-      );
+      await changeStatus(statusModalOrder.id, {
+        status: targetStatus,
+        notes: customerNoteInput,
+        adminNotes: adminNoteInput
+      });
+      const orderId = statusModalOrder.id;
       setStatusModalOrder(null);
-      await fetchOrders();
-      if (selectedOrder && selectedOrder.id === statusModalOrder.id) {
-        const updatedOrder = await axios.get(`${apiUrl}/api/orders/${statusModalOrder.id}`);
-        setSelectedOrder(updatedOrder.data);
-      }
+      await refreshSelectedOrder(orderId);
     } catch (error) {
       console.error('Error updating order status:', error);
       alert(error.response?.data?.error || t('error'));
@@ -292,15 +189,8 @@ export const Orders = () => {
   const handleQuickStatusChange = async (orderId, newStatus) => {
     setUpdating(true);
     try {
-      const apiUrl = getApiUrl();
-      await axios.put(`${apiUrl}/api/orders/${orderId}/status`,
-        { status: newStatus }
-      );
-      await fetchOrders();
-      if (selectedOrder && selectedOrder.id === orderId) {
-        const updatedOrder = await axios.get(`${apiUrl}/api/orders/${orderId}`);
-        setSelectedOrder(updatedOrder.data);
-      }
+      await changeStatus(orderId, { status: newStatus });
+      await refreshSelectedOrder(orderId);
     } catch (error) {
       console.error('Error updating order status:', error);
       alert(error.response?.data?.error || t('error'));
@@ -324,17 +214,9 @@ export const Orders = () => {
   const handleSaveDeliverySlot = async (orderId) => {
     setSavingDeliverySlot(true);
     try {
-      const apiUrl = getApiUrl();
-      await axios.put(
-        `${apiUrl}/api/orders/${orderId}/status`,
-        { deliverySlot: buildDeliverySlot(editDeliveryDate, editSelectedWindow?.startHour, editSelectedWindow?.endHour) }
-      );
+      await saveDeliverySlot(orderId, editDeliveryDate, editSelectedWindow);
       setEditingDeliverySlot(false);
-      await fetchOrders();
-      if (selectedOrder && selectedOrder.id === orderId) {
-        const updatedOrder = await axios.get(`${apiUrl}/api/orders/${orderId}`);
-        setSelectedOrder(updatedOrder.data);
-      }
+      await refreshSelectedOrder(orderId);
     } catch (error) {
       console.error('Error updating delivery slot:', error);
       alert(error.response?.data?.error || t('error'));
@@ -345,9 +227,7 @@ export const Orders = () => {
 
   const handleViewDetails = async (order) => {
     try {
-      const apiUrl = getApiUrl();
-      const response = await axios.get(`${apiUrl}/api/orders/${order.id}`);
-      setSelectedOrder(response.data);
+      setSelectedOrder(await fetchOrderById(order.id));
       setShowDetailModal(true);
       setEditingDeliverySlot(false);
     } catch (error) {
@@ -359,7 +239,7 @@ export const Orders = () => {
     setEditingOrder(order);
     setEditReason(order.modificationReason || '');
     if (!products || products.length === 0) {
-      fetchCreateFormData();
+      reloadFormData();
     }
     const items = (order.orderItems || []).map((it) => ({
       id: it.id,
@@ -420,7 +300,6 @@ export const Orders = () => {
 
     try {
       setSavingEdit(true);
-      const apiUrl = getApiUrl();
       const payload = {
         items: editItems.map((it) => ({
           productId: it.productId,
@@ -430,14 +309,11 @@ export const Orders = () => {
         modificationReason: editReason.trim() || (language === 'ar' ? 'تعديل بسبب عدم توفر بعض المنتجات' : 'Anpassung wegen fehlender Verfügbarkeit einzelner Artikel.')
       };
 
-      const res = await axios.put(`${apiUrl}/api/orders/${editingOrder.id}/edit`, payload);
-
+      const orderId = editingOrder.id;
+      const updated = await saveOrderEdit(orderId, payload);
       setShowEditModal(false);
       setEditingOrder(null);
-      await fetchOrders();
-      if (selectedOrder && selectedOrder.id === editingOrder.id) {
-        setSelectedOrder(res.data);
-      }
+      await refreshSelectedOrder(orderId, updated);
     } catch (err) {
       console.error('Error saving order edit:', err);
       alert(err.response?.data?.error || (language === 'ar' ? 'فشل حفظ التعديل' : 'Fehler beim Speichern der Änderung'));
@@ -457,15 +333,14 @@ export const Orders = () => {
       : buildA4ReceiptHtml(order, language));
   };
 
-
   const filteredOrders = orders.filter((order) => {
-    const matchesSearch = 
+    const matchesSearch =
       order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (order.customer?.name && order.customer.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (order.customerName && order.customerName.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (order.customerPhone && order.customerPhone.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (order.deliveryAddress && order.deliveryAddress.toLowerCase().includes(searchTerm.toLowerCase()));
-    
+
     let matchesStatus = true;
     if (statusFilter !== 'all') {
       const orderStatus = order.status?.toLowerCase();
@@ -576,7 +451,6 @@ export const Orders = () => {
         )}
       </div>
 
-      {/* Status Change & Admin Note Modal */}
       {/* Accept Order — requires choosing a driver, since a driver only ever
           sees orders assigned to them; an order accepted with nobody chosen
           would be invisible to every driver. */}
@@ -593,6 +467,7 @@ export const Orders = () => {
         />
       )}
 
+      {/* Status Change & Admin Note Modal */}
       {statusModalOrder && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <StatusChangeModal
