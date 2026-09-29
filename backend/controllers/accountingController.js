@@ -35,13 +35,25 @@ const getAccountingSummary = async (req, res) => {
     if (range.error) return res.status(400).json({ error: range.error });
     const dateFilter = range.filter;
 
-    // Valid non-declined orders
+    // Valid non-declined orders. The top-customer and monthly groupings below
+    // need every matching row (customer names are encrypted at rest, so they
+    // can't be grouped in SQL), but only these columns are used — a field
+    // list keeps the payload and the number of decrypt() calls down instead
+    // of loading (and decrypting) every column of every order.
     const validOrders = (await prisma.order.findMany({
       where: {
         status: { notIn: DECLINED_STATUSES },
         ...dateFilter
       },
-      include: {
+      select: {
+        id: true,
+        customerId: true,
+        totalAmount: true,
+        status: true,
+        createdAt: true,
+        customerName: true,
+        customerPhone: true,
+        customerEmail: true,
         customer: { select: CUSTOMER_PUBLIC_SELECT }
       },
       orderBy: {
@@ -100,7 +112,9 @@ const getAccountingSummary = async (req, res) => {
       .sort((a, b) => a.month.localeCompare(b.month))
       .slice(-12);
 
-    // Recent transactions formatted for frontend table
+    // Recent transactions formatted for frontend table. The customer name is
+    // already resolved into customerName here, so the full order object is no
+    // longer embedded (the frontend only read order.customerName as a fallback).
     const recentTransactions = validOrders.slice(0, 20).map(ord => ({
       id: ord.id,
       orderId: ord.id,
@@ -109,8 +123,7 @@ const getAccountingSummary = async (req, res) => {
       type: 'Barzahlung',
       amount: ord.totalAmount,
       status: ord.status,
-      transactionDate: ord.createdAt,
-      order: ord
+      transactionDate: ord.createdAt
     }));
 
     res.json({
