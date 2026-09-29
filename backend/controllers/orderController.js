@@ -30,50 +30,97 @@ const {
 // a list the driver app re-downloads every few seconds.
 const DRIVER_DELIVERED_HISTORY_DAYS = 7;
 
+// Default/maximum orders returned per page for the admin browse view.
+const ORDERS_PAGE_SIZE = 50;
+const ORDERS_PAGE_MAX = 100;
+
+const ORDER_INCLUDE = {
+  customer: { select: CUSTOMER_PUBLIC_SELECT },
+  orderItems: { include: { product: true } }
+};
+
+// Builds the where-clause for the admin browse view from the status filter and
+// the free-text search. NOTE: customerName/phone/email/address are encrypted at
+// rest, so a substring search can't run in SQL against them — server-side search
+// therefore covers the order number and the (plaintext) assigned driver name.
+// The frontend still narrows the *current page* by customer name client-side on
+// the already-decrypted rows.
+const buildBrowseWhere = ({ status, search }) => {
+  const where = {};
+  if (status && status !== 'all') {
+    where.status = status === 'declined' ? { in: DECLINED_STATUSES } : status;
+  }
+  const q = typeof search === 'string' ? search.trim() : '';
+  if (q) {
+    where.OR = [
+      { id: { contains: q, mode: 'insensitive' } },
+      { assignedDriverName: { contains: q, mode: 'insensitive' } }
+    ];
+  }
+  return where;
+};
+
 const getOrders = async (req, res) => {
   try {
-    let where = {};
-    if (req.driver) {
-      // A driver only sees orders an admin has actually assigned to them —
-      // not the whole book (financial detail, other drivers' customers, etc) —
-      // and of those only open ones plus recent deliveries.
-      where = {
-        assignedDriverName: req.driver.name,
-        status: { notIn: DECLINED_STATUSES },
-        OR: [
-          { status: { not: 'delivered' } },
-          { updatedAt: { gte: new Date(Date.now() - DRIVER_DELIVERED_HISTORY_DAYS * 24 * 60 * 60 * 1000) } }
-        ]
-      };
-    } else if (req.query.updatedSince) {
-      // The Orders page polls with this after its first full load, so each
-      // poll only transfers (and decrypts) orders that actually changed.
-      const since = parseValidDate(req.query.updatedSince);
-      if (!since) return res.status(400).json({ error: 'Invalid updatedSince' });
-      where = { updatedAt: { gte: since } };
-    }
     // The client's next updatedSince cursor comes from this server clock,
     // taken before the query, rather than from the newest updatedAt it
     // received — one stray future timestamp (clock skew, a manual DB edit)
     // would otherwise push the cursor ahead and hide real updates.
     res.set('X-Server-Time', new Date().toISOString());
 
-    const orders = await prisma.order.findMany({
-      where,
-      include: {
-        customer: { select: CUSTOMER_PUBLIC_SELECT },
-        orderItems: {
-          include: {
-            product: true
-          }
-        }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
+    // --- Driver view: scoped list, not paginated (a driver's book is small) ---
+    if (req.driver) {
+      const orders = await prisma.order.findMany({
+        where: {
+          assignedDriverName: req.driver.name,
+          status: { notIn: DECLINED_STATUSES },
+          OR: [
+            { status: { not: 'delivered' } },
+            { updatedAt: { gte: new Date(Date.now() - DRIVER_DELIVERED_HISTORY_DAYS * 24 * 60 * 60 * 1000) } }
+          ]
+        },
+        include: ORDER_INCLUDE,
+        orderBy: { createdAt: 'desc' }
+      });
+      return res.json(withDecryptedCustomers(orders));
+    }
 
-    res.json(withDecryptedCustomers(orders));
+    // --- Incremental poll: only orders changed since the cursor (kept as a
+    // flat array so the frontend can merge them into whatever page is shown) ---
+    if (req.query.updatedSince) {
+      const since = parseValidDate(req.query.updatedSince);
+      if (!since) return res.status(400).json({ error: 'Invalid updatedSince' });
+      const orders = await prisma.order.findMany({
+        where: { updatedAt: { gte: since } },
+        include: ORDER_INCLUDE,
+        orderBy: { createdAt: 'desc' }
+      });
+      return res.json(withDecryptedCustomers(orders));
+    }
+
+    // --- Admin browse: server-side pagination + status/search filtering ---
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(ORDERS_PAGE_MAX, Math.max(1, parseInt(req.query.limit, 10) || ORDERS_PAGE_SIZE));
+    const where = buildBrowseWhere({ status: req.query.status, search: req.query.search });
+
+    const [total, orders] = await Promise.all([
+      prisma.order.count({ where }),
+      prisma.order.findMany({
+        where,
+        include: ORDER_INCLUDE,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit
+      })
+    ]);
+
+    res.json({
+      data: withDecryptedCustomers(orders),
+      total,
+      page,
+      limit,
+      totalPages: Math.max(1, Math.ceil(total / limit))
+    });
   } catch (error) {
     console.error('Get orders error:', error);
     res.status(500).json({ error: 'Internal server error' });
