@@ -1,7 +1,9 @@
 const prisma = require('../lib/prisma');
 const { CUSTOMER_PUBLIC_SELECT } = require('../utils/serialize');
 const { logAudit } = require('../lib/auditLog');
-const { decryptCustomerPII, decrypt } = require('../utils/piiCrypto');
+// Reuse the shared order/customer PII-decrypt helper (was a local copy) so
+// the decrypt field list can't drift between here and the order controllers.
+const { DECLINED_STATUSES, withDecryptedCustomer: withDecryptedOrder } = require('./orderShared');
 const { parseStartDate, parseEndDate } = require('../utils/validation');
 
 // createdAt filter for the Accounting page's date range. A plain date covers
@@ -24,18 +26,6 @@ const createdAtRange = (startDate, endDate) => {
   return { filter: Object.keys(createdAt).length ? { createdAt } : {} };
 };
 
-// Orders carry their own encrypted customer* snapshot columns (see
-// README.md "Personal data & GDPR"), plus the joined `customer` relation which also
-// holds encrypted fields — decrypt both before any of it is read.
-const withDecryptedOrder = (ord) => ({
-  ...ord,
-  customerName: 'customerName' in ord ? decrypt(ord.customerName) : ord.customerName,
-  customerPhone: 'customerPhone' in ord ? decrypt(ord.customerPhone) : ord.customerPhone,
-  customerEmail: 'customerEmail' in ord ? decrypt(ord.customerEmail) : ord.customerEmail,
-  deliveryAddress: 'deliveryAddress' in ord ? decrypt(ord.deliveryAddress) : ord.deliveryAddress,
-  deliveryNotes: 'deliveryNotes' in ord ? decrypt(ord.deliveryNotes) : ord.deliveryNotes,
-  customer: ord.customer ? decryptCustomerPII(ord.customer) : ord.customer
-});
 
 const getAccountingSummary = async (req, res) => {
   try {
@@ -45,13 +35,25 @@ const getAccountingSummary = async (req, res) => {
     if (range.error) return res.status(400).json({ error: range.error });
     const dateFilter = range.filter;
 
-    // Valid non-declined orders
+    // Valid non-declined orders. The top-customer and monthly groupings below
+    // need every matching row (customer names are encrypted at rest, so they
+    // can't be grouped in SQL), but only these columns are used — a field
+    // list keeps the payload and the number of decrypt() calls down instead
+    // of loading (and decrypting) every column of every order.
     const validOrders = (await prisma.order.findMany({
       where: {
-        status: { notIn: ['declined', 'rejected', 'canceled', 'cancelled'] },
+        status: { notIn: DECLINED_STATUSES },
         ...dateFilter
       },
-      include: {
+      select: {
+        id: true,
+        customerId: true,
+        totalAmount: true,
+        status: true,
+        createdAt: true,
+        customerName: true,
+        customerPhone: true,
+        customerEmail: true,
         customer: { select: CUSTOMER_PUBLIC_SELECT }
       },
       orderBy: {
@@ -110,7 +112,9 @@ const getAccountingSummary = async (req, res) => {
       .sort((a, b) => a.month.localeCompare(b.month))
       .slice(-12);
 
-    // Recent transactions formatted for frontend table
+    // Recent transactions formatted for frontend table. The customer name is
+    // already resolved into customerName here, so the full order object is no
+    // longer embedded (the frontend only read order.customerName as a fallback).
     const recentTransactions = validOrders.slice(0, 20).map(ord => ({
       id: ord.id,
       orderId: ord.id,
@@ -119,8 +123,7 @@ const getAccountingSummary = async (req, res) => {
       type: 'Barzahlung',
       amount: ord.totalAmount,
       status: ord.status,
-      transactionDate: ord.createdAt,
-      order: ord
+      transactionDate: ord.createdAt
     }));
 
     res.json({
@@ -201,7 +204,7 @@ const exportAccountingData = async (req, res) => {
 
     const orders = (await prisma.order.findMany({
       where: {
-        status: { notIn: ['declined', 'rejected', 'canceled', 'cancelled'] },
+        status: { notIn: DECLINED_STATUSES },
         ...dateFilter
       },
       include: {

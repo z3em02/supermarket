@@ -9,8 +9,41 @@ const {
   secureCompare,
   parseValidDate,
   parseStartDate,
-  parseEndDate
+  parseEndDate,
+  isString,
+  firstNonStringField,
+  clampText,
+  FIELD_MAX
 } = require('../utils/validation');
+
+test('isString only accepts string primitives', () => {
+  for (const v of ['', 'x', '  ']) assert.strictEqual(isString(v), true);
+  for (const v of [1, null, undefined, {}, [], true]) assert.strictEqual(isString(v), false);
+});
+
+test('firstNonStringField finds the first non-string provided field', () => {
+  assert.strictEqual(firstNonStringField({ name: 'ok', email: 'ok' }, ['name', 'email']), null);
+  assert.strictEqual(firstNonStringField({ name: 'ok', email: { a: 1 } }, ['name', 'email']), 'email');
+  // undefined (absent) fields are allowed
+  assert.strictEqual(firstNonStringField({ name: 'ok' }, ['name', 'email']), null);
+  assert.strictEqual(firstNonStringField({ name: 42 }, ['name']), 'name');
+});
+
+test('clampText trims and hard-caps length', () => {
+  assert.strictEqual(clampText('  hi  ', 10), 'hi');
+  assert.strictEqual(clampText('a'.repeat(50), 10), 'a'.repeat(10));
+  assert.strictEqual(clampText(null, 10), '');
+  assert.strictEqual(clampText(undefined, 10), '');
+  assert.strictEqual(clampText(123, 10), '123');
+});
+
+test('FIELD_MAX exposes sensible caps', () => {
+  assert.strictEqual(FIELD_MAX.name, 100);
+  assert.ok(FIELD_MAX.deliveryNotes >= FIELD_MAX.name);
+  for (const k of ['name', 'street', 'houseNumber', 'postalCode', 'city', 'floorApartment', 'deliveryNotes']) {
+    assert.strictEqual(typeof FIELD_MAX[k], 'number');
+  }
+});
 
 test('normalizeAustrianPhone converts local and 0043 formats to E.164', () => {
   assert.strictEqual(normalizeAustrianPhone('0660 1234567'), '+436601234567');

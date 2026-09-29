@@ -1,5 +1,5 @@
 const prisma = require('../lib/prisma');
-const { isPrivateOrLocalHost } = require('../utils/googleScraper');
+const { isPrivateOrLocalHost } = require('../utils/url');
 const { logAudit } = require('../lib/auditLog');
 
 const generateProductId = () => {

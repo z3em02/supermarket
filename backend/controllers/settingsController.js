@@ -1,5 +1,5 @@
 const prisma = require('../lib/prisma');
-const { isPrivateOrLocalHost } = require('../utils/googleScraper');
+const { isPrivateOrLocalHost } = require('../utils/url');
 const { downloadAndCacheLogo, deleteCachedLogo } = require('../utils/imageProxy');
 const { logAudit } = require('../lib/auditLog');
 const { PUBLIC_SETTINGS_SELECT, DEFAULT_SETTINGS, cleanString } = require('./settingsShared');
