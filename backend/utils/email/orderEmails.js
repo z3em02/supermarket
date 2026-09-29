@@ -20,6 +20,8 @@ const sendOrderStatusEmail = async (customerEmail, customerName, orderDetails, s
     const settings = await getStoreSettings();
     const isAr = lang === 'ar';
     const storeName = (isAr ? settings.storeNameAr : settings.storeNameDe) || settings.storeName || 'Hajar Supermarkt';
+    // HTML-escaped for use inside email markup (admin-set, still untrusted in HTML)
+    const safeStoreName = escapeHtml(storeName);
 
     const portalUrl = `${publicOrigin()}/account`;
 
@@ -46,7 +48,7 @@ const sendOrderStatusEmail = async (customerEmail, customerName, orderDetails, s
       ? (isAr ? 'تعديل في طلبك يتطلب موافقتك' : 'Wichtig: Bestelländerung prüfen')
       : (isAr ? `تحديث الطلب #${orderNumber}: ${statusInfo.ar}` : `Bestellbericht #${orderNumber}: ${statusInfo.de}`);
     
-    const subtitle = isAr ? `تقرير الطلب الرسمي - ${storeName}` : `Offizieller Bestellbericht - ${storeName}`;
+    const subtitle = isAr ? `تقرير الطلب الرسمي - ${safeStoreName}` : `Offizieller Bestellbericht - ${safeStoreName}`;
     const subject = isPendingApproval
       ? (isAr ? `⚠️ تعديل في طلبك #${orderNumber} يتطلب موافقتك - ${storeName}` : `⚠️ Wichtig: Änderung an Ihrer Bestellung #${orderNumber} bestätigen - ${storeName}`)
       : (isAr ? `تقرير الطلب #${orderNumber}: ${statusInfo.ar} - ${storeName}` : `Bestellbericht #${orderNumber}: ${statusInfo.de} - ${storeName}`);
@@ -282,6 +284,8 @@ const sendCustomerOrderConfirmationEmail = async (customerEmail, customerName, o
     const settings = await getStoreSettings();
     const isAr = lang === 'ar';
     const storeName = (isAr ? settings.storeNameAr : settings.storeNameDe) || settings.storeName || 'Hajar Supermarkt';
+    // HTML-escaped for use inside email markup (admin-set, still untrusted in HTML)
+    const safeStoreName = escapeHtml(storeName);
 
     const title = isAr ? 'تم استلام طلب التوصيل المنزلي بنجاح!' : 'Bestellung erfolgreich eingegangen!';
     const subtitle = isAr ? `طلب رقم #${order.id.slice(0, 8).toUpperCase()}` : `Bestellnummer #${order.id.slice(0, 8).toUpperCase()}`;
