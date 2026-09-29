@@ -10,6 +10,7 @@ import { OffersTab } from './promotions/OffersTab';
 import { CouponsTab } from './promotions/CouponsTab';
 import { PromotionStats } from './promotions/PromotionStats';
 import { useToast, useConfirm } from '../context/FeedbackContext';
+import { Button, Input } from '../components/ui';
 
 export const Promotions = () => {
   const { t } = useLanguage();
@@ -356,21 +357,13 @@ export const Promotions = () => {
         {/* Action Button */}
         <div>
           {activeTab === 'coupons' ? (
-            <button
-              onClick={handleOpenCreateCoupon}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-medium text-sm shadow-sm shadow-primary-600/30 transition"
-            >
-              <Plus className="w-4 h-4" />
+            <Button icon={Plus} onClick={handleOpenCreateCoupon}>
               {t('createCoupon')}
-            </button>
+            </Button>
           ) : (
-            <button
-              onClick={handleOpenCreateOffer}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-success-600 hover:bg-success-700 text-white font-medium text-sm shadow-sm shadow-success-600/30 transition"
-            >
-              <Plus className="w-4 h-4" />
+            <Button icon={Plus} onClick={handleOpenCreateOffer}>
               {t('createOffer')} (z.B. 2+1)
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -389,8 +382,10 @@ export const Promotions = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-gray-800 pb-3">
         <div className="flex items-center gap-2">
           <button
+            type="button"
+            aria-pressed={activeTab === 'coupons'}
             onClick={() => setActiveTab('coupons')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition ${
+            className={`flex items-center gap-2 min-h-11 px-4 rounded-xl text-sm font-semibold transition cursor-pointer touch-manipulation ${
               activeTab === 'coupons'
                 ? 'bg-primary-600 text-white shadow-sm shadow-primary-600/20'
                 : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-800'
@@ -401,10 +396,12 @@ export const Promotions = () => {
           </button>
 
           <button
+            type="button"
+            aria-pressed={activeTab === 'offers'}
             onClick={() => setActiveTab('offers')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition ${
+            className={`flex items-center gap-2 min-h-11 px-4 rounded-xl text-sm font-semibold transition cursor-pointer touch-manipulation ${
               activeTab === 'offers'
-                ? 'bg-success-600 text-white shadow-sm shadow-success-600/20'
+                ? 'bg-primary-600 text-white shadow-sm shadow-primary-600/20'
                 : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-800'
             }`}
           >
@@ -414,14 +411,14 @@ export const Promotions = () => {
         </div>
 
         {/* Search */}
-        <div className="relative w-full sm:w-64">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-          <input
+        <div className="w-full sm:w-64">
+          <Input
+            icon={Search}
             type="text"
+            aria-label="Suche"
             placeholder={activeTab === 'coupons' ? 'Gutscheincode suchen...' : 'Produkt suchen...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-slate-900 dark:text-white"
           />
         </div>
       </div>

@@ -2,7 +2,8 @@ import { useEffect, useState, useMemo } from 'react';
 import axios from '../utils/adminAxios';
 import { getApiUrl } from '../utils/api';
 import { useLanguage } from '../context/LanguageContext';
-import { Users, AlertCircle } from 'lucide-react';
+import { Users, AlertCircle, RefreshCw } from 'lucide-react';
+import { Button } from '../components/ui';
 import { CustomerDetailModal } from './customers/CustomerDetailModal';
 import { CustomerTable } from './customers/CustomerTable';
 import { CustomerFilters } from './customers/CustomerFilters';
@@ -169,12 +170,9 @@ export const Customers = () => {
           </div>
         </div>
 
-        <button
-          onClick={fetchCustomers}
-          className="w-full sm:w-auto justify-center px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-750 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl transition cursor-pointer flex items-center gap-1.5 touch-manipulation"
-        >
-          <span>{language === 'ar' ? 'تحديث البيانات' : 'Aktualisieren'}</span>
-        </button>
+        <Button variant="secondary" icon={RefreshCw} onClick={fetchCustomers} className="w-full sm:w-auto">
+          {language === 'ar' ? 'تحديث البيانات' : 'Aktualisieren'}
+        </Button>
       </div>
 
       {/* Error Alert */}
@@ -184,12 +182,9 @@ export const Customers = () => {
             <AlertCircle className="w-5 h-5 shrink-0" />
             <span>{error}</span>
           </div>
-          <button
-            onClick={fetchCustomers}
-            className="px-3 py-1.5 rounded-lg bg-danger-600 hover:bg-danger-700 text-white text-xs font-bold transition cursor-pointer touch-manipulation self-end sm:self-auto"
-          >
+          <Button variant="danger" size="sm" onClick={fetchCustomers} className="min-h-11 self-end sm:self-auto">
             {language === 'ar' ? 'إعادة المحاولة' : 'Erneut versuchen'}
-          </button>
+          </Button>
         </div>
       )}
 

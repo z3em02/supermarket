@@ -327,24 +327,20 @@ export const Orders = () => {
 
       {/* Printable Invoice / Packing Slip Modal */}
       {showPrintModal && printOrder && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 animate-fade-in">
-          <PrintOrderModal printOrder={printOrder} printReceipt={printReceipt} setShowPrintModal={setShowPrintModal} />
-        </div>
+        <PrintOrderModal printOrder={printOrder} printReceipt={printReceipt} setShowPrintModal={setShowPrintModal} />
       )}
 
       {/* Create Order Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 animate-fade-in">
-          <CreateOrderModal
-            customers={customers}
-            customersLocked={customersLocked}
-            handleCreateOrder={handleCreateOrder}
-            orderForm={orderForm}
-            products={products}
-            setOrderForm={setOrderForm}
-            setShowCreateModal={setShowCreateModal}
-          />
-        </div>
+        <CreateOrderModal
+          customers={customers}
+          customersLocked={customersLocked}
+          handleCreateOrder={handleCreateOrder}
+          orderForm={orderForm}
+          products={products}
+          setOrderForm={setOrderForm}
+          setShowCreateModal={setShowCreateModal}
+        />
       )}
     </div>
   );

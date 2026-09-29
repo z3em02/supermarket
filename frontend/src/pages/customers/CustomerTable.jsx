@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { maskPhone, maskAddress } from './masking';
-import { EmptyState, SkeletonList } from '../../components/ui';
+import { Button, EmptyState, IconButton, SkeletonList } from '../../components/ui';
 
 export const CustomerTable = ({
   deletingId,
@@ -29,7 +29,7 @@ export const CustomerTable = ({
   const { language } = useLanguage();
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-850 shadow-sm overflow-hidden">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-sm overflow-hidden">
       {loading ? (
         <div className="p-4"><SkeletonList variant="table" count={6} columns={5} /></div>
       ) : filteredCustomers.length === 0 ? (
@@ -79,23 +79,17 @@ export const CustomerTable = ({
                     </div>
 
                     <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        onClick={() => setSelectedCustomer(cust)}
-                        className="px-2.5 py-1.5 rounded-lg bg-success-50 hover:bg-success-100 dark:bg-success-950/60 dark:hover:bg-success-900/60 text-success-700 dark:text-success-300 font-semibold text-xs transition cursor-pointer flex items-center gap-1 touch-manipulation"
-                        title={language === 'ar' ? 'عرض الطلبات' : 'Bestellungen ansehen'}
-                      >
-                        <ExternalLink className="w-3 h-3" />
-                        <span>{language === 'ar' ? 'عرض' : 'Details'}</span>
-                      </button>
-
-                      <button
+                      <Button variant="secondary" size="sm" icon={ExternalLink} onClick={() => setSelectedCustomer(cust)}
+                        className="min-h-11" title={language === 'ar' ? 'عرض الطلبات' : 'Bestellungen ansehen'}>
+                        {language === 'ar' ? 'عرض' : 'Details'}
+                      </Button>
+                      <IconButton
+                        icon={Trash2}
+                        label={language === 'ar' ? 'حذف العميل' : 'Kunde löschen'}
                         disabled={deletingId === cust.id}
                         onClick={() => handleDeleteCustomer(cust.id, cust.name)}
-                        className="p-1.5 rounded-lg text-slate-500 hover:text-danger-600 hover:bg-danger-50 dark:hover:bg-danger-950/50 transition cursor-pointer touch-manipulation"
-                        title={language === 'ar' ? 'حذف العميل' : 'Kunde löschen'}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                        className="hover:!text-danger-600 hover:!bg-danger-50 dark:hover:!bg-danger-950/50"
+                      />
                     </div>
                   </div>
 
@@ -105,14 +99,12 @@ export const CustomerTable = ({
                       <span className="text-slate-700 dark:text-gray-300 font-mono truncate inline-flex items-center gap-1.5">
                         <Phone className="w-3 h-3 text-slate-500 shrink-0" />
                         <span>{isRevealed(cust.id) ? (cust.phone || '—') : maskPhone(cust.phone)}</span>
-                        <button
-                          type="button"
+                        <IconButton
+                          icon={isRevealed(cust.id) ? EyeOff : Eye}
+                          label={isRevealed(cust.id) ? (language === 'ar' ? 'إخفاء' : 'Verbergen') : (language === 'ar' ? 'إظهار' : 'Anzeigen')}
                           onClick={() => toggleReveal(cust.id)}
-                          className="p-0.5 rounded text-slate-500 hover:text-slate-700 dark:hover:text-gray-200 cursor-pointer shrink-0"
-                          title={isRevealed(cust.id) ? (language === 'ar' ? 'إخفاء' : 'Verbergen') : (language === 'ar' ? 'إظهار' : 'Anzeigen')}
-                        >
-                          {isRevealed(cust.id) ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                        </button>
+                          className="-my-3 shrink-0"
+                        />
                       </span>
                       {cust.phoneVerified ? (
                         <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-success-50 text-success-700 border border-success-200 dark:bg-success-950/60 dark:text-success-300 dark:border-success-900/60 text-[10px] font-bold shrink-0">
@@ -163,13 +155,9 @@ export const CustomerTable = ({
 
                   {/* Stats Footer */}
                   <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-gray-800">
-                    <button
-                      onClick={() => setSelectedCustomer(cust)}
-                      className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-750 text-xs font-bold text-slate-800 dark:text-slate-200 transition cursor-pointer flex items-center gap-1.5 touch-manipulation"
-                    >
-                      <ShoppingBag className="w-3.5 h-3.5 text-success-600" />
-                      <span>{cust.totalOrders} {language === 'ar' ? 'طلبات' : 'Bestellungen'}</span>
-                    </button>
+                    <Button variant="secondary" size="sm" icon={ShoppingBag} onClick={() => setSelectedCustomer(cust)} className="min-h-11">
+                      {cust.totalOrders} {language === 'ar' ? 'طلبات' : 'Bestellungen'}
+                    </Button>
                     <div className="text-end font-mono">
                       <span className="text-[11px] text-slate-500 me-1">{language === 'ar' ? 'الإنفاق:' : 'Umsatz:'}</span>
                       <span className="text-xs font-black text-success-600 dark:text-success-400">
@@ -237,14 +225,12 @@ export const CustomerTable = ({
                             <span className="text-slate-700 dark:text-gray-300 inline-flex items-center gap-1.5">
                               <Phone className="w-3 h-3 text-slate-500 shrink-0" />
                               <span>{isRevealed(cust.id) ? (cust.phone || '—') : maskPhone(cust.phone)}</span>
-                              <button
-                                type="button"
+                              <IconButton
+                                icon={isRevealed(cust.id) ? EyeOff : Eye}
+                                label={isRevealed(cust.id) ? (language === 'ar' ? 'إخفاء' : 'Verbergen') : (language === 'ar' ? 'إظهار' : 'Anzeigen')}
                                 onClick={() => toggleReveal(cust.id)}
-                                className="p-0.5 rounded text-slate-500 hover:text-slate-700 dark:hover:text-gray-200 cursor-pointer shrink-0"
-                                title={isRevealed(cust.id) ? (language === 'ar' ? 'إخفاء' : 'Verbergen') : (language === 'ar' ? 'إظهار' : 'Anzeigen')}
-                              >
-                                {isRevealed(cust.id) ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                              </button>
+                                className="-my-3 shrink-0"
+                              />
                             </span>
                             {cust.phoneVerified ? (
                               <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-success-50 text-success-700 border border-success-200 dark:bg-success-950/60 dark:text-success-300 dark:border-success-900/60 text-[10px] font-bold">
@@ -304,13 +290,9 @@ export const CustomerTable = ({
                       {/* Order Count & Total Spent */}
                       <td className="px-5 py-4 text-center">
                         <div className="inline-flex flex-col items-center">
-                          <button
-                            onClick={() => setSelectedCustomer(cust)}
-                            className="px-3 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-750 text-xs font-bold text-slate-800 dark:text-slate-200 transition cursor-pointer flex items-center gap-1.5"
-                          >
-                            <ShoppingBag className="w-3.5 h-3.5 text-success-600" />
-                            <span>{cust.totalOrders} {language === 'ar' ? 'طلبات' : 'Bestellungen'}</span>
-                          </button>
+                          <Button variant="secondary" size="sm" icon={ShoppingBag} onClick={() => setSelectedCustomer(cust)}>
+                            {cust.totalOrders} {language === 'ar' ? 'طلبات' : 'Bestellungen'}
+                          </Button>
                           <span className="text-xs font-mono font-black text-success-600 dark:text-success-400 mt-1">
                             €{(cust.totalSpent || 0).toFixed(2)}
                           </span>
@@ -320,23 +302,17 @@ export const CustomerTable = ({
                       {/* Actions */}
                       <td className="px-5 py-4 text-end">
                         <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => setSelectedCustomer(cust)}
-                            className="px-3 py-1.5 rounded-lg bg-success-50 hover:bg-success-100 dark:bg-success-950/60 dark:hover:bg-success-900/60 text-success-700 dark:text-success-300 font-semibold text-xs transition cursor-pointer flex items-center gap-1"
-                            title={language === 'ar' ? 'عرض الطلبات' : 'Bestellungen ansehen'}
-                          >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                            <span>{language === 'ar' ? 'عرض' : 'Details'}</span>
-                          </button>
-
-                          <button
+                          <Button variant="secondary" size="sm" icon={ExternalLink} onClick={() => setSelectedCustomer(cust)}
+                            className="min-h-11" title={language === 'ar' ? 'عرض الطلبات' : 'Bestellungen ansehen'}>
+                            {language === 'ar' ? 'عرض' : 'Details'}
+                          </Button>
+                          <IconButton
+                            icon={Trash2}
+                            label={language === 'ar' ? 'حذف العميل' : 'Kunde löschen'}
                             disabled={deletingId === cust.id}
                             onClick={() => handleDeleteCustomer(cust.id, cust.name)}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-danger-600 hover:bg-danger-50 dark:hover:bg-danger-950/50 transition cursor-pointer"
-                            title={language === 'ar' ? 'حذف العميل' : 'Kunde löschen'}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                            className="hover:!text-danger-600 hover:!bg-danger-50 dark:hover:!bg-danger-950/50"
+                          />
                         </div>
                       </td>
                     </tr>

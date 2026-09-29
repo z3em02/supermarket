@@ -9,6 +9,19 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useStoreSettings } from '../../context/StoreSettingsContext';
+import { Button, Card, CardHeader, IconButton, Input, Switch } from '../../components/ui';
+
+const PreviewLink = ({ href }) => (href ? (
+  <a
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="inline-flex items-center gap-1 min-h-9 text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400 font-semibold"
+  >
+    <span>Vorschau</span>
+    <ExternalLink className="w-3 h-3" aria-hidden="true" />
+  </a>
+) : null);
 
 export const GoogleTab = ({
   formData,
@@ -18,86 +31,44 @@ export const GoogleTab = ({
   syncFeedback,
   syncing
 }) => {
-  const { t, language, direction } = useLanguage();
+  const { t, language } = useLanguage();
   const { settings, reviews, reviewsLoading } = useStoreSettings();
 
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Google Integration & Scraper Settings */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl border border-slate-200/80 dark:border-gray-850 p-5 sm:p-7 shadow-sm space-y-5">
-        <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100 dark:border-gray-800">
-          <div className="w-9 h-9 rounded-xl bg-warning-50 dark:bg-warning-950/50 text-warning-600 dark:text-warning-400 flex items-center justify-center shrink-0">
-            <Navigation className="w-4 h-4" />
-          </div>
-          <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-            {t('googleMaps')} & {t('googleReviews')}
-          </h2>
-        </div>
+      <Card>
+        <CardHeader icon={Navigation} title={`${t('googleMaps')} & ${t('googleReviews')}`} />
 
         <div className="space-y-4">
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-gray-300">
-                {t('mapsUrl')}
-              </label>
-              {formData.mapUrl && (
-                <a
-                  href={formData.mapUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400 inline-flex items-center gap-1 font-semibold"
-                >
-                  <span>Vorschau</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              )}
-            </div>
-            <input
+          <div className="space-y-1">
+            <Input
+              label={t('mapsUrl')}
               type="url"
               value={formData.mapUrl}
               onChange={(e) => handleChange('mapUrl', e.target.value)}
               placeholder={t('mapsUrlPlaceholder')}
-              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none transition"
             />
+            <PreviewLink href={formData.mapUrl} />
           </div>
 
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-gray-300 mb-1.5">
-              {t('mapsEmbedUrl')}
-            </label>
-            <input
-              type="text"
-              value={formData.mapEmbedUrl}
-              onChange={(e) => handleChange('mapEmbedUrl', e.target.value)}
-              placeholder={t('mapsEmbedUrlPlaceholder')}
-              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none transition"
-            />
-          </div>
+          <Input
+            label={t('mapsEmbedUrl')}
+            type="text"
+            value={formData.mapEmbedUrl}
+            onChange={(e) => handleChange('mapEmbedUrl', e.target.value)}
+            placeholder={t('mapsEmbedUrlPlaceholder')}
+          />
 
-          <div className="pt-2 border-t border-slate-100 dark:border-gray-800">
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-gray-300">
-                {t('googleReviewsUrl')}
-              </label>
-              {formData.googleReviewsUrl && (
-                <a
-                  href={formData.googleReviewsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-warning-600 hover:text-warning-700 dark:text-warning-400 inline-flex items-center gap-1 font-semibold"
-                >
-                  <span>Vorschau</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              )}
-            </div>
-            <input
+          <div className="pt-3 border-t border-slate-100 dark:border-gray-800 space-y-1">
+            <Input
+              label={t('googleReviewsUrl')}
               type="url"
               value={formData.googleReviewsUrl}
               onChange={(e) => handleChange('googleReviewsUrl', e.target.value)}
               placeholder={t('googleReviewsUrlPlaceholder')}
-              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none transition"
             />
+            <PreviewLink href={formData.googleReviewsUrl} />
           </div>
 
           {/* Scraper Metric Card */}
@@ -118,15 +89,9 @@ export const GoogleTab = ({
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={handleSyncGoogle}
-              disabled={syncing}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs text-white bg-success-600 hover:bg-success-700 active:bg-success-800 disabled:opacity-50 shadow-sm transition cursor-pointer"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
-              <span>{syncing ? (language === 'ar' ? 'جارٍ الجلب...' : 'Wird abgerufen...') : (language === 'ar' ? 'تحديث الآن' : 'Jetzt synchronisieren')}</span>
-            </button>
+            <Button icon={RefreshCw} loading={syncing} onClick={handleSyncGoogle}>
+              {syncing ? (language === 'ar' ? 'جارٍ الجلب...' : 'Wird abgerufen...') : (language === 'ar' ? 'تحديث الآن' : 'Jetzt synchronisieren')}
+            </Button>
           </div>
 
           {syncFeedback && (
@@ -144,10 +109,10 @@ export const GoogleTab = ({
             </div>
           )}
         </div>
-      </div>
+      </Card>
 
       {/* Google Reviews Management */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl border border-slate-200/80 dark:border-gray-850 p-5 sm:p-7 shadow-sm space-y-5">
+      <Card className="space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-gray-800">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-warning-50 dark:bg-warning-950/50 text-warning-600 dark:text-warning-400 flex items-center justify-center shrink-0">
@@ -157,31 +122,22 @@ export const GoogleTab = ({
               <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
                 {t('manageGoogleReviews')}
               </h2>
-              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-gray-400">
+              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
                 {reviews.length} {language === 'ar' ? 'تقييمات معروضة في الموقع' : 'aktive Rezensionen auf der Website'}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center justify-between sm:justify-end gap-3 bg-slate-50 dark:bg-gray-950 px-3.5 py-1.5 rounded-xl border border-slate-200/80 dark:border-gray-800">
-            <span className="text-xs font-bold text-slate-700 dark:text-gray-300">
+          <div className="flex items-center justify-between sm:justify-end gap-2 bg-slate-50 dark:bg-gray-950 ps-3.5 pe-1 rounded-xl border border-slate-200/80 dark:border-gray-800">
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
               {t('showGoogleReviews')}
             </span>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={formData.showGoogleReviews}
-              onClick={() => handleChange('showGoogleReviews', !formData.showGoogleReviews)}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none touch-manipulation ${
-                formData.showGoogleReviews ? 'bg-primary-600' : 'bg-slate-300 dark:bg-gray-700'
-              }`}
-            >
-              <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition duration-200 ease-in-out ${
-                  formData.showGoogleReviews ? (direction === 'rtl' ? '-translate-x-5' : 'translate-x-5') : 'translate-x-0'
-                }`}
-              />
-            </button>
+            <Switch
+              checked={formData.showGoogleReviews}
+              onChange={(next) => handleChange('showGoogleReviews', next)}
+              tone="primary"
+              label={t('showGoogleReviews')}
+            />
           </div>
         </div>
 
@@ -226,19 +182,17 @@ export const GoogleTab = ({
                           <h4 className="text-xs font-bold text-slate-900 dark:text-white leading-tight truncate">
                             {rev.authorName}
                           </h4>
-                          <span className="text-[10px] text-slate-500">
+                          <span className="text-[11px] text-slate-500">
                             {rev.relativeTime || 'Kürzlich'}
                           </span>
                         </div>
                       </div>
-                      <button
-                        type="button"
+                      <IconButton
+                        icon={Trash2}
+                        label={t('deleteReview')}
                         onClick={() => handleDeleteReview(rev.id)}
-                        className="text-slate-300 hover:text-danger-600 p-1 rounded-lg hover:bg-danger-50 dark:hover:bg-danger-950/40 transition cursor-pointer"
-                        title={t('deleteReview')}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                        className="-m-2 hover:!text-danger-600 hover:!bg-danger-50 dark:hover:!bg-danger-950/40"
+                      />
                     </div>
 
                     <div className="flex items-center gap-0.5 mb-1.5">
@@ -254,7 +208,7 @@ export const GoogleTab = ({
                       ))}
                     </div>
 
-                    <p className="text-xs text-slate-600 dark:text-gray-300 line-clamp-3 leading-relaxed">
+                    <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-3 leading-relaxed">
                       {text || 'Kein Text vorhanden'}
                     </p>
                   </div>
@@ -263,7 +217,7 @@ export const GoogleTab = ({
             })}
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 };

@@ -8,7 +8,7 @@ export const CustomerStats = ({
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-      <div className="bg-white dark:bg-gray-900 rounded-2xl p-3.5 sm:p-5 border border-slate-200/80 dark:border-gray-850 shadow-sm">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl p-3.5 sm:p-5 border border-slate-200/80 dark:border-gray-800 shadow-sm">
         <div className="flex items-center justify-between">
           <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-gray-400">
             {language === 'ar' ? 'إجمالي العملاء' : 'Gesamte Kunden'}
@@ -25,7 +25,7 @@ export const CustomerStats = ({
         </p>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 rounded-2xl p-3.5 sm:p-5 border border-slate-200/80 dark:border-gray-850 shadow-sm">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl p-3.5 sm:p-5 border border-slate-200/80 dark:border-gray-800 shadow-sm">
         <div className="flex items-center justify-between">
           <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-gray-400">
             {language === 'ar' ? 'هاتف موثق' : 'Handy verifiziert'}
@@ -42,7 +42,7 @@ export const CustomerStats = ({
         </p>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 rounded-2xl p-3.5 sm:p-5 border border-slate-200/80 dark:border-gray-850 shadow-sm">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl p-3.5 sm:p-5 border border-slate-200/80 dark:border-gray-800 shadow-sm">
         <div className="flex items-center justify-between">
           <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-gray-400">
             {language === 'ar' ? 'بريد موثق' : 'E-Mail verifiziert'}
@@ -59,7 +59,7 @@ export const CustomerStats = ({
         </p>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 rounded-2xl p-3.5 sm:p-5 border border-slate-200/80 dark:border-gray-850 shadow-sm">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl p-3.5 sm:p-5 border border-slate-200/80 dark:border-gray-800 shadow-sm">
         <div className="flex items-center justify-between">
           <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-gray-400">
             {language === 'ar' ? 'إجمالي المبيعات' : 'Kundenumsatz'}

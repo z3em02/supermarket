@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { windowLabel } from '../../utils/deliverySlot';
+import { Button, Card, CardHeader, IconButton, Input } from '../../components/ui';
 
 export const DeliveryTab = ({
   deliveryWindowSettings,
@@ -18,6 +19,7 @@ export const DeliveryTab = ({
   handleGeocodeStoreAddress
 }) => {
   const { t, language } = useLanguage();
+  const isAr = language === 'ar';
   const {
     loadingWindows,
     deliveryWindows,
@@ -32,241 +34,177 @@ export const DeliveryTab = ({
     windowError
   } = deliveryWindowSettings;
 
+  const addOnEnter = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddDeliveryWindow(e);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Delivery Rules Card */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl border border-slate-200/80 dark:border-gray-850 p-5 sm:p-7 shadow-sm space-y-5">
-        <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100 dark:border-gray-800">
-          <div className="w-9 h-9 rounded-xl bg-success-50 dark:bg-success-950/50 text-success-600 dark:text-success-400 flex items-center justify-center shrink-0">
-            <Truck className="w-4 h-4" />
-          </div>
-          <div>
-            <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-              {t('deliveryRules')}
-            </h2>
-            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-gray-400">
-              {t('deliveryRulesDesc')}
-            </p>
-          </div>
-        </div>
+      <Card className="space-y-5">
+        <CardHeader icon={Truck} title={t('deliveryRules')} description={t('deliveryRulesDesc')} />
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-gray-300 mb-1.5">
-              {t('minOrderValue')} (€)
-            </label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={formData.minOrderValue}
-              onChange={(e) => handleChange('minOrderValue', e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-success-500/30 focus:border-success-500 focus:outline-none transition"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-gray-300 mb-1.5">
-              {t('baseServiceFee')}
-            </label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={formData.deliveryFee}
-              onChange={(e) => handleChange('deliveryFee', e.target.value)}
-              placeholder="2.00"
-              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-success-500/30 focus:border-success-500 focus:outline-none transition"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-gray-300 mb-1.5">
-              {t('deliveryFeePerKm')}
-            </label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={formData.deliveryFeePerKm}
-              onChange={(e) => handleChange('deliveryFeePerKm', e.target.value)}
-              placeholder="0.10"
-              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-success-500/30 focus:border-success-500 focus:outline-none transition"
-            />
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-              {t('deliveryFeePerKmHint')}
-            </p>
-          </div>
+          <Input
+            label={`${t('minOrderValue')} (€)`}
+            type="number"
+            min="0"
+            step="0.01"
+            value={formData.minOrderValue}
+            onChange={(e) => handleChange('minOrderValue', e.target.value)}
+          />
+          <Input
+            label={t('baseServiceFee')}
+            type="number"
+            min="0"
+            step="0.01"
+            value={formData.deliveryFee}
+            onChange={(e) => handleChange('deliveryFee', e.target.value)}
+            placeholder="2.00"
+          />
+          <Input
+            label={t('deliveryFeePerKm')}
+            hint={t('deliveryFeePerKmHint')}
+            type="number"
+            min="0"
+            step="0.01"
+            value={formData.deliveryFeePerKm}
+            onChange={(e) => handleChange('deliveryFeePerKm', e.target.value)}
+            placeholder="0.10"
+          />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-gray-800">
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-gray-300 mb-1.5">
-              {t('freeDeliveryThreshold')}
-            </label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={formData.freeDeliveryThreshold}
-              onChange={(e) => handleChange('freeDeliveryThreshold', e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-success-500/30 focus:border-success-500 focus:outline-none transition"
-            />
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-              {t('freeDeliveryThresholdHint')}
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-gray-300 mb-1.5">
-              {t('maxDeliveryDistanceKm')}
-            </label>
-            <input
-              type="number"
-              min="0"
-              step="0.1"
-              value={formData.maxDeliveryDistanceKm}
-              onChange={(e) => handleChange('maxDeliveryDistanceKm', e.target.value)}
-              placeholder="0"
-              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-success-500/30 focus:border-success-500 focus:outline-none transition"
-            />
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-              {t('maxDeliveryDistanceKmHint')}
-            </p>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-100 dark:border-gray-800">
+          <Input
+            label={t('freeDeliveryThreshold')}
+            hint={t('freeDeliveryThresholdHint')}
+            type="number"
+            min="0"
+            step="0.01"
+            value={formData.freeDeliveryThreshold}
+            onChange={(e) => handleChange('freeDeliveryThreshold', e.target.value)}
+          />
+          <Input
+            label={t('maxDeliveryDistanceKm')}
+            hint={t('maxDeliveryDistanceKmHint')}
+            type="number"
+            min="0"
+            step="0.1"
+            value={formData.maxDeliveryDistanceKm}
+            onChange={(e) => handleChange('maxDeliveryDistanceKm', e.target.value)}
+            placeholder="0"
+          />
         </div>
 
-        <div className="pt-2 border-t border-slate-100 dark:border-gray-800">
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-gray-300 mb-1.5">
-            {t('allowedPostalCodes')}
-          </label>
-          <input
+        <div className="pt-4 border-t border-slate-100 dark:border-gray-800">
+          <Input
+            label={t('allowedPostalCodes')}
+            hint={t('allowedPostalCodesHint')}
             type="text"
             value={formData.allowedPostalCodes}
             onChange={(e) => handleChange('allowedPostalCodes', e.target.value)}
             placeholder={t('allowedPostalCodesPlaceholder')}
-            className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-success-500/30 focus:border-success-500 focus:outline-none transition"
           />
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-            {t('allowedPostalCodesHint')}
-          </p>
         </div>
 
         {/* Supermarket Origin Coordinates */}
         <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-gray-950/60 border border-slate-200/70 dark:border-gray-800/80 space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-success-600 dark:text-success-400 shrink-0" />
+              <MapPin className="w-4 h-4 text-success-600 dark:text-success-400 shrink-0" aria-hidden="true" />
               <div>
                 <h3 className="text-xs font-bold text-slate-900 dark:text-white">
                   {t('storeCoordinates')}
                 </h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                <p className="text-caption">
                   {formData.address ? formData.address : 'Koppreitergasse 8, 1120 Wien'}
                 </p>
               </div>
             </div>
 
-            <button
-              type="button"
-              disabled={geocodingStore || !formData.address}
+            <Button
+              variant="secondary"
+              icon={RefreshCw}
+              loading={geocodingStore}
+              disabled={!formData.address}
               onClick={handleGeocodeStoreAddress}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 hover:border-success-500 text-slate-700 dark:text-gray-300 hover:text-success-600 dark:hover:text-success-400 text-xs font-semibold shadow-sm transition disabled:opacity-40 cursor-pointer"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${geocodingStore ? 'animate-spin text-success-600' : ''}`} />
-              <span>{geocodingStore ? (language === 'ar' ? 'جارٍ التحديد...' : 'Ermittle...') : t('updateCoordsFromAddress')}</span>
-            </button>
+              {geocodingStore ? (isAr ? 'جارٍ التحديد...' : 'Ermittle...') : t('updateCoordsFromAddress')}
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            <div>
-              <label className="block text-[11px] font-bold text-slate-500 dark:text-gray-400 mb-1">
-                {t('storeLatitude')}
-              </label>
-              <input
-                type="number"
-                step="any"
-                value={formData.storeLatitude}
-                onChange={(e) => handleChange('storeLatitude', e.target.value)}
-                placeholder="48.1746605"
-                className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-xs font-mono text-slate-900 dark:text-white focus:ring-2 focus:ring-success-500/30 focus:border-success-500 focus:outline-none transition"
-              />
-            </div>
-            <div>
-              <label className="block text-[11px] font-bold text-slate-500 dark:text-gray-400 mb-1">
-                {t('storeLongitude')}
-              </label>
-              <input
-                type="number"
-                step="any"
-                value={formData.storeLongitude}
-                onChange={(e) => handleChange('storeLongitude', e.target.value)}
-                placeholder="16.3272662"
-                className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-xs font-mono text-slate-900 dark:text-white focus:ring-2 focus:ring-success-500/30 focus:border-success-500 focus:outline-none transition"
-              />
-            </div>
+            <Input
+              label={t('storeLatitude')}
+              type="number"
+              step="any"
+              value={formData.storeLatitude}
+              onChange={(e) => handleChange('storeLatitude', e.target.value)}
+              placeholder="48.1746605"
+              className="font-mono"
+            />
+            <Input
+              label={t('storeLongitude')}
+              type="number"
+              step="any"
+              value={formData.storeLongitude}
+              onChange={(e) => handleChange('storeLongitude', e.target.value)}
+              placeholder="16.3272662"
+              className="font-mono"
+            />
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Delivery Time Windows Card */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl border border-slate-200/80 dark:border-gray-850 p-5 sm:p-7 shadow-sm space-y-5">
-        <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100 dark:border-gray-800">
-          <div className="w-9 h-9 rounded-xl bg-primary-50 dark:bg-primary-950/50 text-primary-600 dark:text-primary-400 flex items-center justify-center shrink-0">
-            <Clock className="w-4 h-4" />
-          </div>
-          <div>
-            <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-              {language === 'ar' ? 'أوقات التوصيل (Zeitfenster)' : 'Liefer-Zeitfenster'}
-            </h2>
-            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-gray-400">
-              {language === 'ar'
-                ? 'الأوقات التي يمكن للعملاء اختيارها عند إتمام الطلب.'
-                : 'Zeitfenster, die Kunden beim Checkout auswählen können. Nur aktive werden angezeigt.'}
-            </p>
-          </div>
-        </div>
+      <Card className="space-y-5">
+        <CardHeader
+          icon={Clock}
+          title={isAr ? 'أوقات التوصيل (Zeitfenster)' : 'Liefer-Zeitfenster'}
+          description={isAr
+            ? 'الأوقات التي يمكن للعملاء اختيارها عند إتمام الطلب.'
+            : 'Zeitfenster, die Kunden beim Checkout auswählen können. Nur aktive werden angezeigt.'}
+        />
 
         {loadingWindows ? (
-          <p className="text-xs text-slate-500">{language === 'ar' ? 'جارٍ التحميل...' : 'Wird geladen...'}</p>
+          <p className="text-xs text-slate-500">{isAr ? 'جارٍ التحميل...' : 'Wird geladen...'}</p>
         ) : (
           <div className="space-y-3">
-            <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400">
-              {language === 'ar' ? 'الأوقات المتاحة حالياً:' : 'Vorhandene Zeitfenster:'}
+            <span className="block text-xs font-bold text-slate-600 dark:text-slate-300">
+              {isAr ? 'الأوقات المتاحة حالياً:' : 'Vorhandene Zeitfenster:'}
             </span>
             <div className="flex flex-wrap gap-2">
               {deliveryWindows.length === 0 && (
                 <p className="text-xs text-slate-500 italic">
-                  {language === 'ar' ? 'لا توجد أوقات مضافة بعد.' : 'Noch keine Zeitfenster angelegt.'}
+                  {isAr ? 'لا توجد أوقات مضافة بعد.' : 'Noch keine Zeitfenster angelegt.'}
                 </p>
               )}
               {deliveryWindows.map((win) => (
                 <div
                   key={win.id}
-                  className={`flex items-center gap-2 pl-3.5 pr-2 py-1.5 rounded-xl border text-xs font-bold transition ${
+                  className={`flex items-center gap-0.5 ps-3.5 pe-0.5 rounded-xl border text-xs font-bold transition ${
                     win.isActive
                       ? 'bg-success-50 dark:bg-success-950/40 border-success-200 dark:border-success-900/60 text-success-800 dark:text-success-300'
                       : 'bg-slate-50 dark:bg-gray-950 border-slate-200 dark:border-gray-800 text-slate-500 dark:text-slate-400'
                   }`}
                 >
-                  <span>{windowLabel(win.startHour, win.endHour, language === 'ar')}</span>
-                  <button
-                    type="button"
+                  <span className="me-1 tabular-nums">{windowLabel(win.startHour, win.endHour, isAr)}</span>
+                  <IconButton
+                    icon={Power}
+                    label={win.isActive ? (isAr ? 'إيقاف' : 'Deaktivieren') : (isAr ? 'تفعيل' : 'Aktivieren')}
                     onClick={() => handleToggleDeliveryWindow(win)}
                     disabled={savingWindowId === win.id}
-                    title={win.isActive ? (language === 'ar' ? 'إيقاف' : 'Deaktivieren') : (language === 'ar' ? 'تفعيل' : 'Aktivieren')}
-                    className="p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 disabled:opacity-40 cursor-pointer"
-                  >
-                    <Power className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    type="button"
+                    className="!text-current"
+                  />
+                  <IconButton
+                    icon={Trash2}
+                    label={isAr ? 'حذف' : 'Löschen'}
                     onClick={() => handleDeleteDeliveryWindow(win.id)}
-                    title={language === 'ar' ? 'حذف' : 'Löschen'}
-                    className="p-1 rounded-lg hover:bg-danger-100 dark:hover:bg-danger-950/50 text-danger-500 cursor-pointer"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                    className="!text-danger-600 dark:!text-danger-400 hover:!bg-danger-100 dark:hover:!bg-danger-950/50"
+                  />
                 </div>
               ))}
             </div>
@@ -274,63 +212,42 @@ export const DeliveryTab = ({
         )}
 
         {/* Add New Window Inline (No page refresh) */}
-        <div className="pt-3 border-t border-slate-100 dark:border-gray-800 space-y-2">
-          <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400">
-            {language === 'ar' ? 'إضافة وقت جديد:' : 'Neues Zeitfenster anlegen:'}
+        <div className="pt-4 border-t border-slate-100 dark:border-gray-800 space-y-2">
+          <span className="block text-xs font-bold text-slate-600 dark:text-slate-300">
+            {isAr ? 'إضافة وقت جديد:' : 'Neues Zeitfenster anlegen:'}
           </span>
           <div className="flex flex-wrap items-end gap-2.5">
-            <div>
-              <label className="block text-[10px] font-semibold text-slate-500 dark:text-gray-400 mb-1">
-                {language === 'ar' ? 'من (ساعة 0–23)' : 'Von (Stunde 0–23)'}
-              </label>
-              <input
+            <div className="w-32">
+              <Input
+                label={isAr ? 'من (ساعة 0–23)' : 'Von (Stunde 0–23)'}
                 type="number"
                 min="0"
                 max="23"
                 value={newStartHour}
                 onChange={(e) => setNewStartHour(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddDeliveryWindow(e);
-                  }
-                }}
-                className="w-20 px-3 py-2 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-success-500/30 focus:border-success-500 focus:outline-none transition"
+                onKeyDown={addOnEnter}
               />
             </div>
-            <div>
-              <label className="block text-[10px] font-semibold text-slate-500 dark:text-gray-400 mb-1">
-                {language === 'ar' ? 'إلى (ساعة 1–24)' : 'Bis (Stunde 1–24)'}
-              </label>
-              <input
+            <div className="w-32">
+              <Input
+                label={isAr ? 'إلى (ساعة 1–24)' : 'Bis (Stunde 1–24)'}
                 type="number"
                 min="1"
                 max="24"
                 value={newEndHour}
                 onChange={(e) => setNewEndHour(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddDeliveryWindow(e);
-                  }
-                }}
-                className="w-20 px-3 py-2 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-success-500/30 focus:border-success-500 focus:outline-none transition"
+                onKeyDown={addOnEnter}
               />
             </div>
-            <button
-              type="button"
-              onClick={handleAddDeliveryWindow}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-success-600 hover:bg-success-700 active:bg-success-800 text-white text-xs font-bold cursor-pointer shadow-sm transition touch-manipulation"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>{language === 'ar' ? 'إضافة وقت' : 'Zeitfenster hinzufügen'}</span>
-            </button>
+            <Button icon={Plus} onClick={handleAddDeliveryWindow}>
+              {isAr ? 'إضافة وقت' : 'Zeitfenster hinzufügen'}
+            </Button>
           </div>
           {windowError && (
             <p className="text-xs text-danger-600 dark:text-danger-400">{windowError}</p>
           )}
         </div>
-      </div>
+      </Card>
     </div>
   );
 };

@@ -11,7 +11,7 @@ import { RestockModal } from './products/RestockModal';
 import { ProductCardGrid } from './products/ProductCardGrid';
 import { ProductFilters } from './products/ProductFilters';
 import { useToast, useConfirm } from '../context/FeedbackContext';
-import { SkeletonList } from '../components/ui';
+import { Button, SkeletonList } from '../components/ui';
 
 export const Products = () => {
   const { t } = useLanguage();
@@ -231,13 +231,9 @@ export const Products = () => {
             <ArrowUpRight className="w-3.5 h-3.5 text-slate-500 shrink-0" />
           </Link>
 
-          <button
-            onClick={handleOpenAddModal}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 sm:py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium text-xs sm:text-sm rounded-xl shadow-sm transition touch-manipulation cursor-pointer"
-          >
-            <Plus className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-            <span>{t('addProduct')}</span>
-          </button>
+          <Button icon={Plus} onClick={handleOpenAddModal} className="w-full sm:w-auto">
+            {t('addProduct')}
+          </Button>
         </div>
       </div>
 

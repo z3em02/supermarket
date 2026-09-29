@@ -1,5 +1,6 @@
 import { Package, Plus, Edit, Trash2 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
+import { Button, IconButton } from '../../components/ui';
 
 export const ProductCardGrid = ({
   filteredProducts,
@@ -14,7 +15,7 @@ export const ProductCardGrid = ({
       {filteredProducts.map((product) => (
         <div 
           key={product.id} 
-          className="group bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-850 shadow-sm hover:shadow-lg dark:hover:border-gray-700 transition-all duration-300 flex flex-col justify-between overflow-hidden"
+          className="group bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-sm hover:shadow-lg dark:hover:border-gray-700 transition-all duration-300 flex flex-col justify-between overflow-hidden"
         >
           <div>
             {/* Product Media Area */}
@@ -87,33 +88,16 @@ export const ProductCardGrid = ({
           </div>
 
           {/* Card Action Footer */}
-          <div className="px-4 py-3 bg-slate-50/70 dark:bg-gray-950/60 border-t border-slate-100 dark:border-gray-850 flex items-center justify-between gap-2">
-            <button
-              type="button"
-              onClick={() => setRestockProduct(product)}
-              className="text-xs font-semibold text-success-600 dark:text-success-400 hover:underline flex items-center gap-1"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>{t('quickRestock')}</span>
-            </button>
+          <div className="px-4 py-1 bg-slate-50/70 dark:bg-gray-950/60 border-t border-slate-100 dark:border-gray-850 flex items-center justify-between gap-2">
+            <Button variant="ghost" size="sm" icon={Plus} onClick={() => setRestockProduct(product)}
+              className="min-h-11 -ms-3 !text-success-700 dark:!text-success-400">
+              {t('quickRestock')}
+            </Button>
 
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => handleEdit(product)}
-                className="p-1.5 rounded-lg text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400 hover:bg-slate-200/60 dark:hover:bg-gray-800 transition"
-                title={t('edit')}
-              >
-                <Edit className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDelete(product.id)}
-                className="p-1.5 rounded-lg text-slate-500 hover:text-danger-600 dark:text-slate-400 dark:hover:text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-950/40 transition"
-                title={t('delete')}
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+            <div className="flex items-center">
+              <IconButton icon={Edit} label={t('edit')} onClick={() => handleEdit(product)} />
+              <IconButton icon={Trash2} label={t('delete')} onClick={() => handleDelete(product.id)}
+                className="hover:!text-danger-600 dark:hover:!text-danger-400 hover:!bg-danger-50 dark:hover:!bg-danger-950/40" />
             </div>
           </div>
         </div>
