@@ -7,6 +7,7 @@ const {
   withDecryptedCustomer,
   pushOrderStatusUpdate,
   DECLINED_STATUSES,
+  VALID_ORDER_STATUSES,
   decrementStockOrThrow,
   concurrentUpdateError
 } = require('./orderShared');
@@ -43,18 +44,14 @@ const updateOrderStatus = async (req, res) => {
       return res.status(400).json({ error: 'Invalid delivery slot' });
     }
 
-    // #34 fix: whitelist every allowed status — reject arbitrary strings that
-    // could corrupt stock-management logic or the accounting state machine.
-    const VALID_STATUSES = [
-      'pending', 'accepted', 'preparing', 'shipped', 'out_for_delivery',
-      'delivered', 'declined', 'rejected', 'canceled', 'cancelled',
-      'pending_customer_approval'
-    ];
+    // #34 fix: whitelist every allowed status (VALID_ORDER_STATUSES lives in
+    // orderShared) — reject arbitrary strings that could corrupt
+    // stock-management logic or the accounting state machine.
     let normalizedStatus = status ? status.toLowerCase().trim() : order.status;
     if (normalizedStatus === 'decline') normalizedStatus = 'declined';
 
-    if (status !== undefined && !VALID_STATUSES.includes(normalizedStatus)) {
-      return res.status(400).json({ error: `Invalid status "${normalizedStatus}". Allowed: ${VALID_STATUSES.join(', ')}` });
+    if (status !== undefined && !VALID_ORDER_STATUSES.includes(normalizedStatus)) {
+      return res.status(400).json({ error: `Invalid status "${normalizedStatus}". Allowed: ${VALID_ORDER_STATUSES.join(', ')}` });
     }
 
     // Drivers reach this route via driverOrAdminAuthMiddleware to update

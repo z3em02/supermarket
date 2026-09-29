@@ -52,6 +52,16 @@ const pushOrderStatusUpdate = (order, status, lang) => {
 // once an order reaches one of these terminal decline states.
 const DECLINED_STATUSES = ['declined', 'rejected', 'canceled', 'cancelled'];
 
+// The complete order-status vocabulary accepted by updateOrderStatus. Kept
+// here (not inline in the controller) so every place that reasons about
+// statuses shares one source of truth. #34 fix: an unknown status must be
+// rejected rather than silently corrupting stock/accounting state.
+const VALID_ORDER_STATUSES = [
+  'pending', 'accepted', 'preparing', 'shipped', 'out_for_delivery',
+  'delivered', 'declined', 'rejected', 'canceled', 'cancelled',
+  'pending_customer_approval'
+];
+
 // Atomically decrements stock only if enough is available (guards against two
 // concurrent orders overselling the same product); throws if not. Must run
 // inside a prisma.$transaction so a mid-loop failure rolls back prior decrements.
@@ -94,6 +104,7 @@ module.exports = {
   STATUS_PUSH_TEXT,
   pushOrderStatusUpdate,
   DECLINED_STATUSES,
+  VALID_ORDER_STATUSES,
   decrementStockOrThrow,
   couponError,
   concurrentUpdateError

@@ -2,7 +2,8 @@
 
 const prisma = require('../lib/prisma');
 const { logAudit } = require('../lib/auditLog');
-const { decrypt, decryptCustomerPII } = require('../utils/piiCrypto');
+const { decryptCustomerPII } = require('../utils/piiCrypto');
+const { DECLINED_STATUSES } = require('./orderShared');
 
 /**
  * List all customers (Admin)
@@ -26,29 +27,19 @@ const listCustomers = async (req, res) => {
         deliveryNotes: true,
         preferredLanguage: true,
         createdAt: true,
+        // The Kunden table shows totals; the detail modal shows each order's
+        // date/status/amount and its item COUNT (orderItems.length) — not the
+        // products themselves. So only the item ids are loaded (for the
+        // count), and paymentMethod/deliveryAddress (which needed a per-order
+        // decrypt) are dropped, avoiding a product join and a decrypt on every
+        // order of every customer.
         orders: {
           select: {
             id: true,
             totalAmount: true,
             status: true,
-            paymentMethod: true,
-            deliveryAddress: true,
             createdAt: true,
-            orderItems: {
-              select: {
-                id: true,
-                quantity: true,
-                price: true,
-                product: {
-                  select: {
-                    name: true,
-                    nameDe: true,
-                    nameAr: true,
-                    imageUrl: true
-                  }
-                }
-              }
-            }
+            orderItems: { select: { id: true } }
           },
           orderBy: { createdAt: 'desc' }
         },
@@ -60,14 +51,11 @@ const listCustomers = async (req, res) => {
     });
 
     const enriched = customers.map(c => {
-      const validOrders = (c.orders || []).filter(o => !['declined', 'rejected', 'canceled', 'cancelled'].includes(o.status?.toLowerCase()));
+      const validOrders = (c.orders || []).filter(o => !DECLINED_STATUSES.includes(o.status?.toLowerCase()));
       const totalSpent = validOrders.reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
       return {
         ...decryptCustomerPII(c),
-        orders: (c.orders || []).map(o => ({
-          ...o,
-          deliveryAddress: o.deliveryAddress ? decrypt(o.deliveryAddress) : o.deliveryAddress
-        })),
+        orders: c.orders || [],
         totalSpent,
         totalOrders: c._count?.orders || c.orders?.length || 0
       };
