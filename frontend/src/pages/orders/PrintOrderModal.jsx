@@ -23,7 +23,7 @@ export const PrintOrderModal = ({
       {/* Modal toolbar */}
       <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 dark:border-gray-800 shrink-0">
         <div className="flex items-center gap-2 sm:gap-2.5">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-primary-50 dark:bg-primary-950/60 border border-primary-200/80 dark:border-primary-900/40 flex items-center justify-center text-primary-600 dark:text-primary-400 shrink-0">
             <Printer className="w-4 h-4" />
           </div>
           <div>
@@ -36,7 +36,7 @@ export const PrintOrderModal = ({
             type="button"
             onClick={() => printReceipt(printOrder, 'a4')}
             title={language === 'ar' ? 'طباعة A4' : 'A4 drucken'}
-            className="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition touch-manipulation cursor-pointer"
+            className="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs font-semibold shadow-sm transition touch-manipulation cursor-pointer"
           >
             <FileText className="w-3.5 h-3.5" />
             <span className="hidden xs:inline">A4</span>
@@ -63,10 +63,10 @@ export const PrintOrderModal = ({
       {/* Receipt Preview */}
       <div className="p-4 sm:p-6 overflow-y-auto space-y-4 sm:space-y-5">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-4 sm:pb-5 border-b-2 border-blue-600 dark:border-blue-500">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-4 sm:pb-5 border-b-2 border-primary-600 dark:border-primary-500">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Truck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <Truck className="w-5 h-5 text-success-600 dark:text-success-400 shrink-0" />
               <span className="font-black text-base sm:text-lg text-slate-900 dark:text-white tracking-tight">Supermarkt Lieferservice</span>
             </div>
             <p className="text-xs text-slate-500 dark:text-gray-400">Hauszustellung &amp; Frische Produkte</p>
@@ -121,7 +121,7 @@ export const PrintOrderModal = ({
         <div className="rounded-xl border border-slate-200 dark:border-gray-800 overflow-x-auto">
           <table className="w-full text-xs min-w-[340px]" dir={language === 'ar' ? 'rtl' : 'ltr'}>
             <thead>
-              <tr className="bg-blue-900 dark:bg-blue-950 text-white">
+              <tr className="bg-primary-900 dark:bg-primary-950 text-white">
                 <th className="px-3 py-3 text-start font-semibold">{language === 'ar' ? 'المنتج' : 'Artikel'}</th>
                 <th className="px-3 py-3 text-center font-semibold">{language === 'ar' ? 'الرقم' : 'Art-Nr.'}</th>
                 <th className="px-3 py-3 text-end font-semibold">{language === 'ar' ? 'سعر الوحدة' : 'Einzelpreis'}</th>
@@ -140,7 +140,7 @@ export const PrintOrderModal = ({
                     <td className="px-3 py-2.5 text-center text-slate-400 dark:text-gray-500 font-mono">{item.product?.sku || '—'}</td>
                     <td className="px-3 py-2.5 text-end text-slate-600 dark:text-gray-400 font-mono">€{unitPrice.toFixed(2)}</td>
                     <td className="px-3 py-2.5 text-center">
-                      <span className="inline-flex items-center justify-center min-w-[28px] h-6 px-2 rounded-md bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-[11px] font-black border border-blue-200/80 dark:border-blue-900/40">
+                      <span className="inline-flex items-center justify-center min-w-[28px] h-6 px-2 rounded-md bg-primary-100 dark:bg-primary-950/60 text-primary-700 dark:text-primary-300 text-[11px] font-black border border-primary-200/80 dark:border-primary-900/40">
                         {item.quantity}
                       </span>
                     </td>
@@ -162,13 +162,13 @@ export const PrintOrderModal = ({
               </div>
             )}
             {Number(printOrder.promotionDiscount) > 0 && (
-              <div className="flex justify-between px-4 py-2 bg-rose-50/50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 text-xs font-semibold">
+              <div className="flex justify-between px-4 py-2 bg-danger-50/50 dark:bg-danger-950/20 text-danger-600 dark:text-danger-400 text-xs font-semibold">
                 <span>{language === 'ar' ? 'خصم العروض' : 'Aktionsrabatt'}</span>
                 <span className="font-mono">-€{Number(printOrder.promotionDiscount).toFixed(2)}</span>
               </div>
             )}
             {Number(printOrder.couponDiscount) > 0 && (
-              <div className="flex justify-between px-4 py-2 bg-purple-50/50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400 text-xs font-semibold">
+              <div className="flex justify-between px-4 py-2 bg-promo-50/50 dark:bg-promo-950/20 text-promo-600 dark:text-promo-400 text-xs font-semibold">
                 <span>{language === 'ar' ? 'كوبون الخصم' : 'Gutschein'} {printOrder.couponCode ? `(${printOrder.couponCode})` : ''}</span>
                 <span className="font-mono">-€{Number(printOrder.couponDiscount).toFixed(2)}</span>
               </div>
@@ -188,12 +188,12 @@ export const PrintOrderModal = ({
                 )}
               </div>
             ) : (
-              <div className="flex justify-between px-4 py-2 bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300 text-xs font-semibold">
+              <div className="flex justify-between px-4 py-2 bg-success-50/50 dark:bg-success-950/20 text-success-700 dark:text-success-300 text-xs font-semibold">
                 <span>{language === 'ar' ? 'رسوم التوصيل' : 'Liefergebühr'}</span>
                 <span>{language === 'ar' ? 'مجاناً' : 'Kostenlos'}</span>
               </div>
             )}
-            <div className="flex justify-between px-4 py-3 bg-blue-900 dark:bg-blue-950 text-white text-sm font-black">
+            <div className="flex justify-between px-4 py-3 bg-primary-900 dark:bg-primary-950 text-white text-sm font-black">
               <span>{language === 'ar' ? 'المجموع الكلي' : 'Gesamtbetrag'}</span>
               <span className="font-mono">€{Number(printOrder.totalAmount).toFixed(2)}</span>
             </div>
@@ -202,14 +202,14 @@ export const PrintOrderModal = ({
 
         {/* Notes */}
         {printOrder.notes && (
-          <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2">
-            <FileText className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+          <div className="p-3.5 rounded-xl bg-warning-50 dark:bg-warning-950/20 border border-warning-200/80 dark:border-warning-900/40 text-xs text-warning-900 dark:text-warning-200 flex items-start gap-2">
+            <FileText className="w-3.5 h-3.5 shrink-0 mt-0.5 text-warning-600 dark:text-warning-400" />
             <p><strong>{language === 'ar' ? 'ملاحظات' : 'Hinweise'}:</strong> {printOrder.notes}</p>
           </div>
         )}
         {printOrder.adminNotes && (
-          <div className="p-3.5 rounded-xl bg-purple-50 dark:bg-purple-950/20 border border-purple-200/80 dark:border-purple-900/40 text-xs text-purple-900 dark:text-purple-200 flex items-start gap-2">
-            <Lock className="w-3.5 h-3.5 shrink-0 mt-0.5 text-purple-600 dark:text-purple-400" />
+          <div className="p-3.5 rounded-xl bg-promo-50 dark:bg-promo-950/20 border border-promo-200/80 dark:border-promo-900/40 text-xs text-promo-900 dark:text-promo-200 flex items-start gap-2">
+            <Lock className="w-3.5 h-3.5 shrink-0 mt-0.5 text-promo-600 dark:text-promo-400" />
             <p><strong>{language === 'ar' ? 'ملاحظة داخلية' : 'Interne Notiz'}:</strong> {printOrder.adminNotes}</p>
           </div>
         )}

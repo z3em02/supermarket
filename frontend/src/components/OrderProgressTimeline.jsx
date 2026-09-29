@@ -16,7 +16,7 @@ export const OrderProgressTimeline = ({ status, language }) => {
 
   if (isOrderStopped(status)) {
     return (
-      <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 text-xs font-bold py-2">
+      <div className="flex items-center gap-2 text-danger-600 dark:text-danger-400 text-xs font-bold py-2">
         <XCircle className="w-4 h-4 shrink-0" />
         <span>{isAr ? 'تم إلغاء هذا الطلب' : 'Diese Bestellung wurde storniert'}</span>
       </div>
@@ -38,18 +38,18 @@ export const OrderProgressTimeline = ({ status, language }) => {
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors ${
                   done
-                    ? 'bg-emerald-600 border-emerald-600 text-white'
+                    ? 'bg-brand-600 border-brand-600 text-white'
                     : 'bg-slate-50 dark:bg-gray-950 border-slate-200 dark:border-gray-800 text-slate-300 dark:text-gray-600'
                 }`}
               >
                 {done && i < currentIndex ? <Check className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
               </div>
-              <span className={`text-[10px] font-semibold text-center leading-tight max-w-[60px] ${done ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-400 dark:text-gray-500'}`}>
+              <span className={`text-[10px] font-semibold text-center leading-tight max-w-[60px] ${done ? 'text-brand-700 dark:text-brand-400' : 'text-slate-400 dark:text-gray-500'}`}>
                 {isAr ? meta.ar : meta.de}
               </span>
             </div>
             {!isLast && (
-              <div className={`flex-1 h-0.5 mx-1 -mt-4 transition-colors ${i < currentIndex ? 'bg-emerald-600' : 'bg-slate-200 dark:bg-gray-800'}`} />
+              <div className={`flex-1 h-0.5 mx-1 -mt-4 transition-colors ${i < currentIndex ? 'bg-brand-600' : 'bg-slate-200 dark:bg-gray-800'}`} />
             )}
           </div>
         );

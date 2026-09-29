@@ -13,7 +13,7 @@ export const ThemeToggle = () => {
       aria-label="Toggle Theme"
     >
       {theme === 'dark' ? (
-        <Sun className="w-4 h-4 text-amber-400" />
+        <Sun className="w-4 h-4 text-warning-400" />
       ) : (
         <Moon className="w-4 h-4 text-slate-700" />
       )}

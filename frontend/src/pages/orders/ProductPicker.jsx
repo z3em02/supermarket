@@ -101,7 +101,7 @@ export const ProductPicker = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
           <label className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-            <Plus className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+            <Plus className="w-3.5 h-3.5 text-primary-600 dark:text-primary-400 shrink-0" />
             <span>{language === 'ar' ? 'إضافة منتج بديل أو عنصر إضافي:' : 'Ersatzprodukt oder weiteren Artikel hinzufügen:'}</span>
           </label>
           <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-0.5">
@@ -114,9 +114,9 @@ export const ProductPicker = ({
         <button
           type="button"
           onClick={() => setShowProductPicker((prev) => !prev)}
-          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/50 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 text-xs font-bold border border-blue-200 dark:border-blue-800/80 shadow-2xs transition shrink-0 cursor-pointer"
+          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary-50 hover:bg-primary-100 dark:bg-primary-950/50 dark:hover:bg-primary-900/60 text-primary-700 dark:text-primary-300 text-xs font-bold border border-primary-200 dark:border-primary-800/80 shadow-2xs transition shrink-0 cursor-pointer"
         >
-          <SlidersHorizontal className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+          <SlidersHorizontal className="w-3.5 h-3.5 text-primary-600 dark:text-primary-400" />
           <span>
             {showProductPicker
               ? language === 'ar'
@@ -140,7 +140,7 @@ export const ProductPicker = ({
           <select
             value={addSelectedProductId}
             onChange={(e) => setAddSelectedProductId(e.target.value)}
-            className="flex-1 px-3 py-2 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 px-3 py-2 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500"
           >
             <option value="">-- {language === 'ar' ? 'اختيار سريع لمنتج' : 'Schnellauswahl Produkt'} --</option>
             {products.map((p) => (
@@ -173,7 +173,7 @@ export const ProductPicker = ({
                 value={pickerSearch}
                 onChange={(e) => setPickerSearch(e.target.value)}
                 placeholder={language === 'ar' ? 'بحث بالاسم، رقم الصنف...' : 'Name, Art.-Nr., EAN...'}
-                className="w-full pl-8 pr-7 rtl:pr-8 rtl:pl-7 py-1.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-8 pr-7 rtl:pr-8 rtl:pl-7 py-1.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500"
               />
               {pickerSearch && (
                 <button
@@ -191,7 +191,7 @@ export const ProductPicker = ({
               <select
                 value={pickerCategory}
                 onChange={(e) => setPickerCategory(e.target.value)}
-                className="w-full px-2.5 py-1.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                className="w-full px-2.5 py-1.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer"
               >
                 <option value="all">
                   {language === 'ar' ? 'جميع الفئات' : 'Alle Kategorien'} ({products.length})
@@ -209,7 +209,7 @@ export const ProductPicker = ({
               <select
                 value={pickerStockFilter}
                 onChange={(e) => setPickerStockFilter(e.target.value)}
-                className="w-full px-2.5 py-1.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                className="w-full px-2.5 py-1.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer"
               >
                 <option value="all">{language === 'ar' ? 'جميع المخازن' : 'Alle Bestände'}</option>
                 <option value="in_stock">{language === 'ar' ? 'متوفر بالمخزن فقط (> 0)' : 'Nur vorrätig (> 0)'}</option>
@@ -223,7 +223,7 @@ export const ProductPicker = ({
               <select
                 value={pickerSort}
                 onChange={(e) => setPickerSort(e.target.value)}
-                className="w-full px-2.5 py-1.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                className="w-full px-2.5 py-1.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer"
               >
                 <option value="default">{language === 'ar' ? 'الترتيب: الافتراضي' : 'Sortierung: Standard'}</option>
                 <option value="name_asc">{language === 'ar' ? 'الاسم (أ – ي)' : 'Name (A → Z)'}</option>
@@ -251,7 +251,7 @@ export const ProductPicker = ({
                   setPickerStockFilter('all');
                   setPickerSort('default');
                 }}
-                className="flex items-center gap-1 text-rose-600 dark:text-rose-400 hover:underline font-semibold cursor-pointer"
+                className="flex items-center gap-1 text-danger-600 dark:text-danger-400 hover:underline font-semibold cursor-pointer"
               >
                 <RotateCcw className="w-3 h-3" />
                 <span>{language === 'ar' ? 'إعادة ضبط الفلاتر' : 'Filter zurücksetzen'}</span>
@@ -285,7 +285,7 @@ export const ProductPicker = ({
                     key={p.id}
                     className={`pt-2 first:pt-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 p-2 rounded-xl transition ${
                       existingItem
-                        ? 'bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/60'
+                        ? 'bg-primary-50/70 dark:bg-primary-950/30 border border-primary-200 dark:border-primary-900/60'
                         : 'hover:bg-white dark:hover:bg-gray-900'
                     }`}
                   >
@@ -327,20 +327,20 @@ export const ProductPicker = ({
                           </span>
                           <span className="text-slate-300 dark:text-gray-700">&bull;</span>
                           {isOutOfStock ? (
-                            <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 px-1.5 py-0.2 rounded">
+                            <span className="text-[10px] font-bold text-danger-600 dark:text-danger-400 bg-danger-50 dark:bg-danger-950/50 px-1.5 py-0.2 rounded">
                               {isAr ? 'نفذت الكمية (0)' : 'Ausverkauft (0)'}
                             </span>
                           ) : (p.stock || 0) <= 5 ? (
-                            <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.2 rounded">
+                            <span className="text-[10px] font-bold text-warning-600 dark:text-warning-400 bg-warning-50 dark:bg-warning-950/50 px-1.5 py-0.2 rounded">
                               {isAr ? `متبقي ${p.stock} فقط` : `Nur noch ${p.stock} Stk.`}
                             </span>
                           ) : (
-                            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.2 rounded">
+                            <span className="text-[10px] font-bold text-success-600 dark:text-success-400 bg-success-50 dark:bg-success-950/50 px-1.5 py-0.2 rounded">
                               {isAr ? `متوفر: ${p.stock}` : `Vorrätig: ${p.stock}`}
                             </span>
                           )}
                           {existingItem && (
-                            <span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/60 px-1.5 py-0.2 rounded">
+                            <span className="text-[10px] font-bold text-primary-700 dark:text-primary-300 bg-primary-100 dark:bg-primary-900/60 px-1.5 py-0.2 rounded">
                               {isAr ? `بالطلب (${currentQtyInOrder}×)` : `Im Auftrag (${currentQtyInOrder}×)`}
                             </span>
                           )}
@@ -390,8 +390,8 @@ export const ProductPicker = ({
                         }}
                         className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-xs cursor-pointer ${
                           existingItem
-                            ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                            : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                            ? 'bg-primary-600 hover:bg-primary-700 text-white'
+                            : 'bg-success-600 hover:bg-success-700 text-white'
                         }`}
                       >
                         <Plus className="w-3.5 h-3.5" />

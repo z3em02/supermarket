@@ -102,7 +102,7 @@ export const OrderDetailModal = ({
           </div>
           <div>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('totalAmount')}</p>
-            <p className="text-base font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+            <p className="text-base font-bold text-success-600 dark:text-success-400 font-mono">
               €{Number(selectedOrder.totalAmount).toFixed(2)}
             </p>
           </div>
@@ -110,8 +110,8 @@ export const OrderDetailModal = ({
 
         {/* Home Delivery Information Box */}
         {(selectedOrder.deliveryAddress || selectedOrder.customer || selectedOrder.orderType === 'home_delivery') && (
-          <div className="p-3.5 sm:p-4 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-850 text-xs space-y-1.5">
-            <div className="flex items-center gap-2 font-bold text-emerald-800 dark:text-emerald-300">
+          <div className="p-3.5 sm:p-4 rounded-xl bg-success-50/60 dark:bg-success-950/30 border border-success-200 dark:border-success-900/60 text-xs space-y-1.5">
+            <div className="flex items-center gap-2 font-bold text-success-800 dark:text-success-300">
               <Truck className="w-4 h-4 shrink-0" />
               <span>{language === 'ar' ? 'بيانات التوصيل المنزلي (الدفع عند الاستلام)' : 'Hauszustellung (Zahlung an der Haustür)'}</span>
             </div>
@@ -141,9 +141,9 @@ export const OrderDetailModal = ({
             </div>
 
             {/* Delivery time — its own prominent row with a visible edit button */}
-            <div className="flex items-center justify-between gap-2 pt-2 mt-1 border-t border-emerald-200/50 dark:border-emerald-850">
+            <div className="flex items-center justify-between gap-2 pt-2 mt-1 border-t border-success-200/50 dark:border-success-900/60">
               <span className="inline-flex items-center gap-1.5 min-w-0">
-                <Clock className="w-4 h-4 text-emerald-600 shrink-0" />
+                <Clock className="w-4 h-4 text-success-600 shrink-0" />
                 <span className="font-bold text-slate-700 dark:text-gray-200 truncate">
                   {formatDeliverySlot(selectedOrder.deliverySlot, language === 'ar') || (language === 'ar' ? 'لم يُحدد بعد' : 'Noch nicht festgelegt')}
                 </span>
@@ -152,7 +152,7 @@ export const OrderDetailModal = ({
                 <button
                   type="button"
                   onClick={() => handleOpenEditDeliverySlot(selectedOrder)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold cursor-pointer shrink-0 shadow-sm"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-success-600 hover:bg-success-700 text-white text-[11px] font-bold cursor-pointer shrink-0 shadow-sm"
                 >
                   <Edit className="w-3 h-3" />
                   {language === 'ar' ? 'تعديل الوقت' : 'Zeit bearbeiten'}
@@ -164,9 +164,9 @@ export const OrderDetailModal = ({
                 knownDriverNames (currently logged-in drivers, plus anyone
                 previously assigned on any loaded order) so the dropdown
                 isn't empty just because nobody's online right now. */}
-            <div className="flex items-center justify-between gap-2 pt-2 mt-1 border-t border-emerald-200/50 dark:border-emerald-850">
+            <div className="flex items-center justify-between gap-2 pt-2 mt-1 border-t border-success-200/50 dark:border-success-900/60">
               <span className="inline-flex items-center gap-1.5 min-w-0 shrink-0">
-                <User className="w-4 h-4 text-emerald-600 shrink-0" />
+                <User className="w-4 h-4 text-success-600 shrink-0" />
                 <span className="font-semibold text-slate-500 dark:text-gray-400 shrink-0">
                   {language === 'ar' ? 'السائق المسؤول:' : 'Zugewiesener Fahrer:'}
                 </span>
@@ -175,7 +175,7 @@ export const OrderDetailModal = ({
                 value={selectedOrder.assignedDriverName || ''}
                 disabled={assigningDriverId === selectedOrder.id}
                 onChange={(e) => handleAssignDriver(selectedOrder.id, e.target.value)}
-                className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 text-xs font-bold text-slate-800 dark:text-gray-200 outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer disabled:opacity-50 max-w-[60%]"
+                className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 text-xs font-bold text-slate-800 dark:text-gray-200 outline-none focus:ring-2 focus:ring-success-500 cursor-pointer disabled:opacity-50 max-w-[60%]"
               >
                 <option value="">
                   {language === 'ar' ? 'غير مُعيَّن' : 'Nicht zugewiesen'}
@@ -189,7 +189,7 @@ export const OrderDetailModal = ({
             </div>
 
             {editingDeliverySlot && (
-              <div className="pt-2 mt-1 border-t border-emerald-200/60 dark:border-emerald-850 space-y-2">
+              <div className="pt-2 mt-1 border-t border-success-200/60 dark:border-success-900/60 space-y-2">
                 <div className="flex flex-wrap items-end gap-2">
                   <div>
                     <label className="block text-[10px] font-semibold text-slate-500 dark:text-gray-400 mb-1">
@@ -201,12 +201,12 @@ export const OrderDetailModal = ({
                       min={todayIso()}
                       max={maxDeliveryDateIso()}
                       onChange={(e) => setEditDeliveryDate(e.target.value)}
-                      className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-success-500"
                     />
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {deliveryWindows.length === 0 ? (
-                      <p className="text-[11px] text-amber-700 dark:text-amber-400 self-center">
+                      <p className="text-[11px] text-warning-700 dark:text-warning-400 self-center">
                         {language === 'ar'
                           ? 'لا توجد أوقات توصيل مُفعّلة. أضفها في الإعدادات.'
                           : 'Keine aktiven Zeitfenster. Bitte in den Einstellungen anlegen.'}
@@ -219,8 +219,8 @@ export const OrderDetailModal = ({
                           onClick={() => setEditSelectedWindow(w)}
                           className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-bold transition cursor-pointer ${
                             editSelectedWindow?.id === w.id
-                              ? 'bg-emerald-600 border-emerald-600 text-white'
-                              : 'bg-white dark:bg-gray-900 border-slate-200 dark:border-gray-800 text-slate-600 dark:text-gray-300 hover:border-emerald-400'
+                              ? 'bg-success-600 border-success-600 text-white'
+                              : 'bg-white dark:bg-gray-900 border-slate-200 dark:border-gray-800 text-slate-600 dark:text-gray-300 hover:border-success-400'
                           }`}
                         >
                           {windowLabel(w.startHour, w.endHour, language === 'ar')}
@@ -234,7 +234,7 @@ export const OrderDetailModal = ({
                     type="button"
                     onClick={() => handleSaveDeliverySlot(selectedOrder.id)}
                     disabled={savingDeliverySlot || !editSelectedWindow}
-                    className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-[11px] font-bold cursor-pointer"
+                    className="px-3 py-1.5 rounded-lg bg-success-600 hover:bg-success-700 disabled:opacity-50 text-white text-[11px] font-bold cursor-pointer"
                   >
                     {savingDeliverySlot ? '...' : (language === 'ar' ? 'حفظ' : 'Speichern')}
                   </button>
@@ -298,13 +298,13 @@ export const OrderDetailModal = ({
               </div>
             )}
             {Number(selectedOrder.promotionDiscount) > 0 && (
-              <div className="flex justify-between text-rose-600 dark:text-rose-400 font-semibold">
+              <div className="flex justify-between text-danger-600 dark:text-danger-400 font-semibold">
                 <span className="flex items-center gap-1"><Sparkles className="w-3.5 h-3.5" /> {language === 'ar' ? 'خصم العروض' : 'Aktionsrabatt'}</span>
                 <span className="font-mono">-€{Number(selectedOrder.promotionDiscount).toFixed(2)}</span>
               </div>
             )}
             {Number(selectedOrder.couponDiscount) > 0 && (
-              <div className="flex justify-between text-purple-600 dark:text-purple-400 font-semibold">
+              <div className="flex justify-between text-promo-600 dark:text-promo-400 font-semibold">
                 <span className="flex items-center gap-1"><Tag className="w-3.5 h-3.5" /> {t('coupon')} {selectedOrder.couponCode ? `(${selectedOrder.couponCode})` : ''}</span>
                 <span className="font-mono">-€{Number(selectedOrder.couponDiscount).toFixed(2)}</span>
               </div>
@@ -318,7 +318,7 @@ export const OrderDetailModal = ({
                 {selectedOrder.deliveryDistanceKm != null && Number(selectedOrder.deliveryDistanceKm) > 0 && (
                   <div className="flex justify-between text-[11px] text-slate-500 dark:text-slate-400">
                     <span className="flex items-center gap-1">
-                      <MapPin className="w-3 h-3 text-emerald-600" />
+                      <MapPin className="w-3 h-3 text-success-600" />
                       <span>
                         {language === 'ar'
                           ? `المسافة: ${selectedOrder.deliveryDistanceKm} كم`
@@ -332,14 +332,14 @@ export const OrderDetailModal = ({
                 )}
               </div>
             ) : (
-              <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-semibold">
+              <div className="flex justify-between text-success-600 dark:text-success-400 font-semibold">
                 <span>{t('deliveryFee')}</span>
                 <span>{t('freeShipping')}</span>
               </div>
             )}
             <div className="flex justify-between pt-2 border-t border-slate-200 dark:border-gray-800 text-sm font-black text-slate-900 dark:text-white">
               <span>{t('total')}</span>
-              <span className="font-mono text-blue-600 dark:text-blue-400">€{Number(selectedOrder.totalAmount).toFixed(2)}</span>
+              <span className="font-mono text-primary-600 dark:text-primary-400">€{Number(selectedOrder.totalAmount).toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -352,25 +352,25 @@ export const OrderDetailModal = ({
               {customerResponse && (
                 <div className={`p-3.5 rounded-xl border flex items-center gap-2.5 text-xs font-bold ${
                   customerResponse.type === 'accepted'
-                    ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800 text-emerald-850 dark:text-emerald-200'
-                    : 'bg-rose-50 dark:bg-rose-950/50 border-rose-200 dark:border-rose-800 text-rose-850 dark:text-rose-200'
+                    ? 'bg-success-50 dark:bg-success-950/50 border-success-200 dark:border-success-800 text-success-800 dark:text-success-200'
+                    : 'bg-danger-50 dark:bg-danger-950/50 border-danger-200 dark:border-danger-800 text-danger-800 dark:text-danger-200'
                 }`}>
                   {customerResponse.type === 'accepted' ? (
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-success-600 shrink-0" />
                   ) : (
-                    <XCircle className="w-5 h-5 text-rose-600 shrink-0" />
+                    <XCircle className="w-5 h-5 text-danger-600 shrink-0" />
                   )}
                   <span>{customerResponse.label}</span>
                 </div>
               )}
 
               {customNotes && (
-                <div className="p-3.5 rounded-xl bg-purple-50 dark:bg-purple-950/30 border border-purple-200/80 dark:border-purple-900/50 space-y-1">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-purple-800 dark:text-purple-300 uppercase tracking-wider">
+                <div className="p-3.5 rounded-xl bg-promo-50 dark:bg-promo-950/30 border border-promo-200/80 dark:border-promo-900/50 space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-promo-800 dark:text-promo-300 uppercase tracking-wider">
                     <Lock className="w-3.5 h-3.5" />
                     <span>{t('adminNotes')} ({t('internalNoteOnly')})</span>
                   </div>
-                  <p className="text-xs text-purple-950 dark:text-purple-200 whitespace-pre-line">
+                  <p className="text-xs text-promo-950 dark:text-promo-200 whitespace-pre-line">
                     {customNotes}
                   </p>
                 </div>
@@ -397,7 +397,7 @@ export const OrderDetailModal = ({
                 setShowDetailModal(false);
                 openStatusModal(orderToEdit, orderToEdit.status);
               }}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 dark:text-blue-300 border border-blue-200/80 dark:border-blue-900/50 transition shadow-2xs touch-manipulation cursor-pointer flex-1 sm:flex-none"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-primary-50 hover:bg-primary-100 text-primary-700 dark:bg-primary-950/60 dark:hover:bg-primary-900/60 dark:text-primary-300 border border-primary-200/80 dark:border-primary-900/50 transition shadow-2xs touch-manipulation cursor-pointer flex-1 sm:flex-none"
               title={t('alwaysChangeStatusHint')}
             >
               <SlidersHorizontal className="w-4 h-4" />
@@ -411,7 +411,7 @@ export const OrderDetailModal = ({
                   setShowDetailModal(false);
                   handleOpenEditModal(orderToEdit);
                 }}
-                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:hover:bg-amber-900/60 dark:text-amber-300 border border-amber-300 dark:border-amber-800/80 transition touch-manipulation cursor-pointer flex-1 sm:flex-none"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-warning-50 hover:bg-warning-100 text-warning-800 dark:bg-warning-950/60 dark:hover:bg-warning-900/60 dark:text-warning-300 border border-warning-300 dark:border-warning-800/80 transition touch-manipulation cursor-pointer flex-1 sm:flex-none"
               >
                 <Edit className="w-4 h-4" />
                 <span>{language === 'ar' ? 'تعديل المنتجات' : 'Bestellung anpassen'}</span>

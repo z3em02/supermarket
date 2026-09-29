@@ -28,7 +28,7 @@ export const OffersTab = ({
           </p>
           <button
             onClick={handleOpenCreateOffer}
-            className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition"
+            className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-success-600 text-white text-sm font-medium hover:bg-success-700 transition"
           >
             <Plus className="w-4 h-4" />
             Angebot erstellen
@@ -77,12 +77,12 @@ export const OffersTab = ({
 
                   <td className="py-3.5 px-4">
                     {off.type === 'BUY_X_GET_Y' ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-promo-50 text-promo-700 dark:bg-promo-950/40 dark:text-promo-300 border border-promo-200 dark:border-promo-800">
                         <Gift className="w-3.5 h-3.5" />
                         {off.buyQuantity}+{off.getYQuantity} Gratis Deal
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-primary-50 text-primary-700 dark:bg-primary-950/40 dark:text-primary-300 border border-primary-200 dark:border-primary-800">
                         <Percent className="w-3.5 h-3.5" />
                         Einzelrabatt
                       </span>
@@ -91,7 +91,7 @@ export const OffersTab = ({
 
                   <td className="py-3.5 px-4 font-medium">
                     {off.type === 'BUY_X_GET_Y' ? (
-                      <span className="text-purple-600 dark:text-purple-400 font-semibold">
+                      <span className="text-promo-600 dark:text-promo-400 font-semibold">
                         Kaufe {off.buyQuantity}, erhalte {off.getYQuantity} gratis
                       </span>
                     ) : off.promotionalPrice != null ? (
@@ -99,12 +99,12 @@ export const OffersTab = ({
                         <span className="line-through text-xs text-slate-400">
                           €{Number(off.product?.b2bPrice || 0).toFixed(2)}
                         </span>
-                        <span className="text-emerald-600 dark:text-emerald-400 font-bold text-base">
+                        <span className="text-success-600 dark:text-success-400 font-bold text-base">
                           €{Number(off.promotionalPrice).toFixed(2)}
                         </span>
                       </div>
                     ) : (
-                      <span className="text-blue-600 dark:text-blue-400 font-semibold">
+                      <span className="text-primary-600 dark:text-primary-400 font-semibold">
                         -{off.discountPercent}% Rabatt
                       </span>
                     )}
@@ -113,7 +113,7 @@ export const OffersTab = ({
                   <td className="py-3.5 px-4">
                     <div className="flex flex-col gap-1">
                       {off.badgeTextDe && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-amber-50 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200 dark:border-amber-800 w-max">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-warning-50 text-warning-800 dark:bg-warning-950/50 dark:text-warning-300 border border-warning-200 dark:border-warning-800 w-max">
                           {off.badgeTextDe}
                         </span>
                       )}
@@ -140,7 +140,7 @@ export const OffersTab = ({
                     <button
                       onClick={() => handleToggleOfferStatus(off)}
                       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
-                        off.isActive ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-gray-700'
+                        off.isActive ? 'bg-success-500' : 'bg-slate-300 dark:bg-gray-700'
                       }`}
                     >
                       <span
@@ -162,7 +162,7 @@ export const OffersTab = ({
                       </button>
                       <button
                         onClick={() => handleDeleteOffer(off.id)}
-                        className="p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-500 transition"
+                        className="p-1.5 rounded-lg hover:bg-danger-50 dark:hover:bg-danger-950/30 text-danger-500 transition"
                         title="Löschen"
                       >
                         <Trash2 className="w-4 h-4" />

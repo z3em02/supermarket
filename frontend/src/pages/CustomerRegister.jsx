@@ -161,14 +161,14 @@ export const CustomerRegister = () => {
       {/* Top Header */}
       <header className="px-3 xs:px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between border-b border-slate-200/80 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md sticky top-0 z-30">
         <Link to="/" className="flex items-center gap-2 sm:gap-3 group min-w-0">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-600/20 group-hover:scale-105 transition">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-xl bg-brand-600 text-white flex items-center justify-center shadow-md shadow-brand-600/20 group-hover:scale-105 transition">
             <Truck className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div className="min-w-0">
             <span className="font-extrabold text-sm sm:text-base md:text-lg text-slate-900 dark:text-white block leading-tight truncate max-w-[140px] xs:max-w-[200px] sm:max-w-none">
               {getStoreName()}
             </span>
-            <span className="text-[10px] sm:text-xs font-semibold text-emerald-600 dark:text-emerald-400 block truncate">
+            <span className="text-[10px] sm:text-xs font-semibold text-brand-600 dark:text-brand-400 block truncate">
               {isAr ? 'تسجيل حساب عميل جديد' : 'Neues Kundenkonto'}
             </span>
           </div>
@@ -186,26 +186,26 @@ export const CustomerRegister = () => {
 
           {/* Stepper Header */}
           <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-6 sm:mb-8">
-            <div className={`flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold transition ${step === 1 ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'}`}>
+            <div className={`flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold transition ${step === 1 ? 'bg-brand-600 text-white shadow-sm shadow-brand-600/30' : 'bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-400'}`}>
               <span className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center text-[10px]">1</span>
               <span>{isAr ? 'البيانات والعنوان' : 'Daten & Adresse'}</span>
             </div>
             <div className="w-4 sm:w-6 h-0.5 bg-slate-200 dark:bg-gray-800" />
-            <div className={`flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold transition ${step === 2 ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30' : 'bg-slate-100 text-slate-500 dark:bg-gray-800 dark:text-gray-400'}`}>
+            <div className={`flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold transition ${step === 2 ? 'bg-brand-600 text-white shadow-sm shadow-brand-600/30' : 'bg-slate-100 text-slate-500 dark:bg-gray-800 dark:text-gray-400'}`}>
               <span className="w-4 h-4 rounded-full bg-black/10 dark:bg-white/10 flex items-center justify-center text-[10px]">2</span>
               <span>{isAr ? 'التحقق' : 'Verifizierung'}</span>
             </div>
           </div>
 
           {error && (
-            <div className="mb-5 sm:mb-6 p-3.5 sm:p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-300 text-xs sm:text-sm flex items-start gap-2.5">
+            <div className="mb-5 sm:mb-6 p-3.5 sm:p-4 rounded-2xl bg-danger-50 dark:bg-danger-950/50 border border-danger-200 dark:border-danger-900/50 text-danger-700 dark:text-danger-300 text-xs sm:text-sm flex items-start gap-2.5">
               <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 mt-0.5" />
               <span className="break-words">{error}</span>
             </div>
           )}
 
           {successMsg && (
-            <div className="mb-5 sm:mb-6 p-3.5 sm:p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-xs sm:text-sm flex items-start gap-2.5">
+            <div className="mb-5 sm:mb-6 p-3.5 sm:p-4 rounded-2xl bg-brand-50 dark:bg-brand-950/50 border border-brand-200 dark:border-brand-900/50 text-brand-700 dark:text-brand-300 text-xs sm:text-sm flex items-start gap-2.5">
               <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 mt-0.5" />
               <span className="break-words">{successMsg}</span>
             </div>
@@ -216,7 +216,7 @@ export const CustomerRegister = () => {
             <form onSubmit={handleRegisterSubmit} className="space-y-5 sm:space-y-6">
               <div>
                 <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-                  <UserPlus className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <UserPlus className="w-5 h-5 text-brand-600 shrink-0" />
                   <span>{isAr ? 'إنشاء حساب التوصيل المنزلي' : 'Konto für Hauszustellung anlegen'}</span>
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 leading-relaxed">
@@ -239,7 +239,7 @@ export const CustomerRegister = () => {
                     onChange={handleChange}
                     placeholder={isAr ? 'مثال: أحمد محمد' : 'z.B. Max Mustermann'}
                     required
-                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-500"
                   />
                 </div>
 
@@ -254,7 +254,7 @@ export const CustomerRegister = () => {
                     onChange={handleChange}
                     placeholder={isAr ? 'مثال: 01511234567 أو +43660...' : 'z.B. +43 660 1234567'}
                     required
-                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-500"
                   />
                 </div>
 
@@ -269,7 +269,7 @@ export const CustomerRegister = () => {
                     onChange={handleChange}
                     placeholder="name@example.com"
                     required
-                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-500"
                   />
                 </div>
 
@@ -285,7 +285,7 @@ export const CustomerRegister = () => {
                     placeholder="••••••••"
                     required
                     minLength={8}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-500"
                   />
                   <p className="text-[11px] text-slate-400 dark:text-gray-500 mt-1">
                     {strongPasswordHint(isAr)}
@@ -296,7 +296,7 @@ export const CustomerRegister = () => {
               {/* Delivery Address Section */}
               <div className="pt-4 border-t border-slate-100 dark:border-gray-800">
                 <div className="flex items-center gap-2 mb-4">
-                  <MapPin className="w-5 h-5 text-emerald-600" />
+                  <MapPin className="w-5 h-5 text-brand-600" />
                   <h3 className="font-bold text-slate-900 dark:text-white text-base">
                     {isAr ? 'عنوان التوصيل للمنزل' : 'Lieferadresse für Hauszustellung'}
                   </h3>
@@ -313,7 +313,7 @@ export const CustomerRegister = () => {
                       value={formData.street}
                       onChange={handleChange}
                       placeholder={isAr ? 'مثال: شارع المحطة' : 'z.B. Hauptstraße'}
-                      className="w-full px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-500"
                     />
                   </div>
 
@@ -327,7 +327,7 @@ export const CustomerRegister = () => {
                       value={formData.houseNumber}
                       onChange={handleChange}
                       placeholder="z.B. 12A"
-                      className="w-full px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-500"
                     />
                   </div>
 
@@ -341,7 +341,7 @@ export const CustomerRegister = () => {
                       value={formData.postalCode}
                       onChange={handleChange}
                       placeholder="z.B. 1010"
-                      className="w-full px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-500"
                     />
                   </div>
 
@@ -355,7 +355,7 @@ export const CustomerRegister = () => {
                       value={formData.city}
                       onChange={handleChange}
                       placeholder="z.B. Wien"
-                      className="w-full px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-500"
                     />
                   </div>
 
@@ -369,7 +369,7 @@ export const CustomerRegister = () => {
                       value={formData.floorApartment}
                       onChange={handleChange}
                       placeholder="z.B. 2. Stock / Tür 14"
-                      className="w-full px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-500"
                     />
                   </div>
 
@@ -383,16 +383,16 @@ export const CustomerRegister = () => {
                       value={formData.deliveryNotes}
                       onChange={handleChange}
                       placeholder={isAr ? 'مثال: يرجى الاتصال عند الوصول، الجرس لا يعمل' : 'z.B. Bitte bei Müller klingeln, 3. Stock'}
-                      className="w-full px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-500"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Zero Payment Method Notice */}
-              <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 flex items-start gap-2.5 sm:gap-3">
-                <Truck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                <div className="text-xs text-emerald-900 dark:text-emerald-200 leading-relaxed">
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-900/50 flex items-start gap-2.5 sm:gap-3">
+                <Truck className="w-5 h-5 text-brand-600 dark:text-brand-400 shrink-0 mt-0.5" />
+                <div className="text-xs text-brand-900 dark:text-brand-200 leading-relaxed">
                   <strong className="block font-bold">
                     {isAr ? 'لا حاجة لأي بطاقة بنكية أو وسيلة دفع مسبقة' : 'Keine Kreditkarte oder Online-Zahlung erforderlich!'}
                   </strong>
@@ -407,7 +407,7 @@ export const CustomerRegister = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3.5 sm:py-4 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-lg shadow-emerald-600/25 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 touch-manipulation"
+                className="w-full py-3.5 sm:py-4 px-6 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-lg shadow-brand-600/25 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 touch-manipulation"
               >
                 {loading ? (
                   <span>{isAr ? 'جارٍ الحفظ...' : 'Wird erstellt...'}</span>
@@ -421,7 +421,7 @@ export const CustomerRegister = () => {
 
               <div className="text-center text-xs text-slate-500 dark:text-gray-400 pt-1 sm:pt-2">
                 <span>{isAr ? 'لديك حساب بالفعل؟ ' : 'Bereits registriert? '}</span>
-                <Link to="/customer/login" className="font-bold text-emerald-600 hover:underline touch-manipulation">
+                <Link to="/customer/login" className="font-bold text-brand-600 hover:underline touch-manipulation">
                   {isAr ? 'تسجيل الدخول' : 'Jetzt anmelden'}
                 </Link>
               </div>
@@ -432,7 +432,7 @@ export const CustomerRegister = () => {
           {step === 2 && (
             <div className="space-y-6">
               <div className="text-center">
-                <div className="w-12 h-12 mx-auto rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200 mb-3">
+                <div className="w-12 h-12 mx-auto rounded-2xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-200 mb-3">
                   <ShieldCheck className="w-6 h-6" />
                 </div>
                 <h2 className="text-xl font-black text-slate-900 dark:text-white">
@@ -449,23 +449,23 @@ export const CustomerRegister = () => {
               {/* Verification Boxes */}
               <div className="space-y-4">
                 {/* 1. Email Verification */}
-                <div className={`p-4 sm:p-5 rounded-2xl border transition ${emailVerified ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800' : 'bg-slate-50 dark:bg-gray-950 border-slate-200 dark:border-gray-800'}`}>
+                <div className={`p-4 sm:p-5 rounded-2xl border transition ${emailVerified ? 'bg-brand-50/60 dark:bg-brand-950/20 border-brand-300 dark:border-brand-800' : 'bg-slate-50 dark:bg-gray-950 border-slate-200 dark:border-gray-800'}`}>
                   <div className="flex items-center justify-between mb-2 gap-2">
                     <div className="flex items-center gap-2 min-w-0">
-                      <Mail className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <Mail className="w-4 h-4 text-brand-600 shrink-0" />
                       <span className="font-bold text-xs sm:text-sm text-slate-800 dark:text-gray-200 truncate">
                         {isAr ? 'رمز تأكيد البريد الإلكتروني' : 'E-Mail-Bestätigungscode'}
                       </span>
                     </div>
                     {emailVerified ? (
-                      <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
+                      <span className="flex items-center gap-1 text-xs font-bold text-brand-600 dark:text-brand-400 shrink-0">
                         <CheckCircle2 className="w-4 h-4" /> {isAr ? 'تم التحقق' : 'Verifiziert'}
                       </span>
                     ) : (
                       <button
                         type="button"
                         onClick={handleResendEmail}
-                        className="text-xs text-slate-500 hover:text-emerald-600 font-medium flex items-center gap-1 cursor-pointer shrink-0 touch-manipulation"
+                        className="text-xs text-slate-500 hover:text-brand-600 font-medium flex items-center gap-1 cursor-pointer shrink-0 touch-manipulation"
                       >
                         <RotateCcw className="w-3 h-3" />
                         <span>{isAr ? 'إعادة الإرسال' : 'Erneut senden'}</span>
@@ -481,35 +481,35 @@ export const CustomerRegister = () => {
                         value={emailCode}
                         onChange={(e) => setEmailCode(e.target.value)}
                         placeholder="123456"
-                        className="flex-1 px-4 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 font-mono tracking-widest text-center text-base font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
+                        className="flex-1 px-4 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 font-mono tracking-widest text-center text-base font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500"
                       />
                       <button
                         type="button"
                         onClick={handleVerifyEmail}
                         disabled={loading || emailCode.length < 6}
-                        className="w-full xs:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs transition cursor-pointer touch-manipulation shrink-0"
+                        className="w-full xs:w-auto px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-bold text-xs transition cursor-pointer touch-manipulation shrink-0"
                       >
                         {isAr ? 'تأكيد' : 'Bestätigen'}
                       </button>
                     </div>
                   ) : (
-                    <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
+                    <p className="text-xs text-brand-600 dark:text-brand-400 mt-1">
                       {isAr ? 'تم تأكيد عنوان بريدك الإلكتروني بنجاح.' : 'Ihre E-Mail-Adresse wurde erfolgreich bestätigt.'}
                     </p>
                   )}
                 </div>
 
                 {/* 2. Phone Verification */}
-                <div className={`p-4 sm:p-5 rounded-2xl border transition ${phoneVerified ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800' : 'bg-slate-50 dark:bg-gray-950 border-slate-200 dark:border-gray-800'}`}>
+                <div className={`p-4 sm:p-5 rounded-2xl border transition ${phoneVerified ? 'bg-brand-50/60 dark:bg-brand-950/20 border-brand-300 dark:border-brand-800' : 'bg-slate-50 dark:bg-gray-950 border-slate-200 dark:border-gray-800'}`}>
                   <div className="flex items-center justify-between mb-2 gap-2">
                     <div className="flex items-center gap-2 min-w-0">
-                      <Phone className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <Phone className="w-4 h-4 text-brand-600 shrink-0" />
                       <span className="font-bold text-xs sm:text-sm text-slate-800 dark:text-gray-200 truncate">
                         {isAr ? 'رمز تأكيد رقم الهاتف (واتساب)' : 'Telefon-Bestätigungscode (WhatsApp)'}
                       </span>
                     </div>
                     {phoneVerified ? (
-                      <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
+                      <span className="flex items-center gap-1 text-xs font-bold text-brand-600 dark:text-brand-400 shrink-0">
                         <CheckCircle2 className="w-4 h-4" /> {isAr ? 'تم التحقق' : 'Verifiziert'}
                       </span>
                     ) : phoneCodeSent ? (
@@ -517,7 +517,7 @@ export const CustomerRegister = () => {
                         type="button"
                         onClick={handleSendPhoneCode}
                         disabled={sendingPhoneCode}
-                        className="text-xs text-slate-500 hover:text-emerald-600 font-medium flex items-center gap-1 cursor-pointer shrink-0 touch-manipulation disabled:opacity-50"
+                        className="text-xs text-slate-500 hover:text-brand-600 font-medium flex items-center gap-1 cursor-pointer shrink-0 touch-manipulation disabled:opacity-50"
                       >
                         <RotateCcw className="w-3 h-3" />
                         <span>{isAr ? 'إعادة الإرسال' : 'Erneut senden'}</span>
@@ -534,13 +534,13 @@ export const CustomerRegister = () => {
                           value={phoneCode}
                           onChange={(e) => setPhoneCode(e.target.value)}
                           placeholder="123456"
-                          className="flex-1 px-4 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 font-mono tracking-widest text-center text-base font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
+                          className="flex-1 px-4 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 font-mono tracking-widest text-center text-base font-bold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500"
                         />
                         <button
                           type="button"
                           onClick={handleVerifyPhone}
                           disabled={loading || phoneCode.length < 6}
-                          className="w-full xs:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs transition cursor-pointer touch-manipulation shrink-0"
+                          className="w-full xs:w-auto px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-bold text-xs transition cursor-pointer touch-manipulation shrink-0"
                         >
                           {isAr ? 'تأكيد' : 'Bestätigen'}
                         </button>
@@ -558,7 +558,7 @@ export const CustomerRegister = () => {
                       </button>
                     )
                   ) : (
-                    <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
+                    <p className="text-xs text-brand-600 dark:text-brand-400 mt-1">
                       {isAr ? 'تم تأكيد رقم هاتفك بنجاح.' : 'Ihre Telefonnummer wurde erfolgreich bestätigt.'}
                     </p>
                   )}
@@ -572,7 +572,7 @@ export const CustomerRegister = () => {
                   onClick={() => navigate('/')}
                   className={`w-full py-3.5 sm:py-4 px-6 rounded-xl font-bold text-sm shadow-lg transition flex items-center justify-center gap-2 cursor-pointer touch-manipulation ${
                     emailVerified && phoneVerified
-                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/25'
+                      ? 'bg-brand-600 hover:bg-brand-700 text-white shadow-brand-600/25'
                       : 'bg-slate-200 dark:bg-gray-800 text-slate-700 dark:text-gray-300 hover:bg-slate-300 dark:hover:bg-gray-700'
                   }`}
                 >

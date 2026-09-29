@@ -19,7 +19,7 @@ export const ProductDetailModal = ({
       >
         {/* Modal Header */}
         <div className="flex items-center justify-between">
-          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-400">
+          <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-primary-50 dark:bg-primary-950 text-primary-700 dark:text-primary-400">
             {selectedProduct.category ? (language === 'ar' ? selectedProduct.category.nameAr : selectedProduct.category.nameDe) : t('allCategories')}
           </span>
           <button
@@ -41,7 +41,7 @@ export const ProductDetailModal = ({
               onError={(e) => { e.target.style.display = 'none'; }}
             />
           ) : (
-            <Package className="w-12 h-12 sm:w-16 sm:h-16 text-blue-600 dark:text-blue-400" />
+            <Package className="w-12 h-12 sm:w-16 sm:h-16 text-primary-600 dark:text-primary-400" />
           )}
         </div>
 
@@ -76,7 +76,7 @@ export const ProductDetailModal = ({
                   <div>
                     {priceInfo.promoPrice != null ? (
                       <div className="flex items-baseline gap-2">
-                        <span className="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400 font-mono">
+                        <span className="text-xl sm:text-2xl font-black text-danger-600 dark:text-danger-400 font-mono">
                           €{priceInfo.promoPrice.toFixed(2)}
                         </span>
                         <span className="line-through text-xs text-slate-400 font-mono">
@@ -84,12 +84,12 @@ export const ProductDetailModal = ({
                         </span>
                       </div>
                     ) : (
-                      <span className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
+                      <span className="text-xl sm:text-2xl font-black text-brand-600 dark:text-brand-400 font-mono">
                         €{priceInfo.basePrice.toFixed(2)}
                       </span>
                     )}
                     {priceInfo.promoType === 'BUY_X_GET_Y' && (
-                      <span className="text-xs text-purple-600 dark:text-purple-400 font-bold block mt-0.5">
+                      <span className="text-xs text-promo-600 dark:text-promo-400 font-bold block mt-0.5">
                         {language === 'ar' ? 'عرض 2+1 مجاناً: أضف 3 وحدات للسلة وادفع ثمن 2 فقط!' : '2+1 Gratis Aktion: 3 Stück in den Warenkorb legen und 1 geschenkt bekommen!'}
                       </span>
                     )}
@@ -108,7 +108,7 @@ export const ProductDetailModal = ({
                 setSelectedProduct(null);
               }}
               disabled={selectedProduct.stock <= 0}
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white text-xs sm:text-sm font-bold shadow-md shadow-emerald-600/20 transition cursor-pointer touch-manipulation"
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:opacity-40 text-white text-xs sm:text-sm font-bold shadow-md shadow-brand-600/20 transition cursor-pointer touch-manipulation"
             >
               <ShoppingCart className="w-4 h-4" />
               <span>{selectedProduct.stock <= 0 ? t('outOfStock') : (language === 'ar' ? 'أضف للسلة والتوصيل' : 'In den Warenkorb')}</span>

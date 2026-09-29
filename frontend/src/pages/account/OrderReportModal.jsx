@@ -20,7 +20,7 @@ export const OrderReportModal = ({
         {/* Modal Top Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 dark:border-gray-800 mb-4 sm:mb-6 gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center shadow-md shrink-0">
               <Truck className="w-5 h-5" />
             </div>
             <div className="min-w-0">
@@ -37,7 +37,7 @@ export const OrderReportModal = ({
             <button
               type="button"
               onClick={() => printReceipt(reportOrder)}
-              className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition cursor-pointer touch-manipulation"
+              className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-sm transition cursor-pointer touch-manipulation"
             >
               <Printer className="w-4 h-4 shrink-0" />
               <span>{isAr ? 'طباعة' : 'Drucken'}</span>
@@ -79,7 +79,7 @@ export const OrderReportModal = ({
               <p className="text-slate-600 dark:text-gray-300">
                 <strong>{isAr ? 'تاريخ الطلب:' : 'Bestelldatum:'}</strong> {new Date(reportOrder.createdAt).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
               </p>
-              <p className="text-emerald-700 dark:text-emerald-300 font-semibold mt-1">
+              <p className="text-brand-700 dark:text-brand-300 font-semibold mt-1">
                 {isAr ? 'طريقة الدفع: الدفع عند الاستلام (نقداً أو بالبطاقة عند الباب)' : 'Zahlungsart: Barzahlung / Kartenzahlung an der Haustür'}
               </p>
             </div>
@@ -133,21 +133,21 @@ export const OrderReportModal = ({
                   </tr>
                 )}
                 {Number(reportOrder.promotionDiscount) > 0 && (
-                  <tr className="border-t border-slate-200 dark:border-gray-800 bg-rose-50/40 dark:bg-rose-950/20">
-                    <td colSpan="3" className="p-2.5 sm:p-3 text-end font-medium text-rose-600 dark:text-rose-400">
+                  <tr className="border-t border-slate-200 dark:border-gray-800 bg-danger-50/40 dark:bg-danger-950/20">
+                    <td colSpan="3" className="p-2.5 sm:p-3 text-end font-medium text-danger-600 dark:text-danger-400">
                       {isAr ? 'خصم العروض الترويجية:' : 'Aktionsrabatt:'}
                     </td>
-                    <td className="p-2.5 sm:p-3 text-end font-mono font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap">
+                    <td className="p-2.5 sm:p-3 text-end font-mono font-bold text-danger-600 dark:text-danger-400 whitespace-nowrap">
                       -€{Number(reportOrder.promotionDiscount).toFixed(2)}
                     </td>
                   </tr>
                 )}
                 {Number(reportOrder.couponDiscount) > 0 && (
-                  <tr className="border-t border-slate-200 dark:border-gray-800 bg-purple-50/40 dark:bg-purple-950/20">
-                    <td colSpan="3" className="p-2.5 sm:p-3 text-end font-medium text-purple-600 dark:text-purple-400">
+                  <tr className="border-t border-slate-200 dark:border-gray-800 bg-promo-50/40 dark:bg-promo-950/20">
+                    <td colSpan="3" className="p-2.5 sm:p-3 text-end font-medium text-promo-600 dark:text-promo-400">
                       {isAr ? 'كوبون الخصم:' : 'Gutschein:'} {reportOrder.couponCode ? `(${reportOrder.couponCode})` : ''}
                     </td>
-                    <td className="p-2.5 sm:p-3 text-end font-mono font-bold text-purple-600 dark:text-purple-400 whitespace-nowrap">
+                    <td className="p-2.5 sm:p-3 text-end font-mono font-bold text-promo-600 dark:text-promo-400 whitespace-nowrap">
                       -€{Number(reportOrder.couponDiscount).toFixed(2)}
                     </td>
                   </tr>
@@ -161,7 +161,7 @@ export const OrderReportModal = ({
                       </span>
                     )}:
                   </td>
-                  <td className="p-2.5 sm:p-3 text-end font-bold text-emerald-600 whitespace-nowrap">
+                  <td className="p-2.5 sm:p-3 text-end font-bold text-brand-600 whitespace-nowrap">
                     {Number(reportOrder.deliveryFee) > 0 ? `€${Number(reportOrder.deliveryFee).toFixed(2)}` : (isAr ? 'مجاناً (0.00 €)' : 'Kostenlos (0,00 €)')}
                   </td>
                 </tr>
@@ -169,7 +169,7 @@ export const OrderReportModal = ({
                   <td colSpan="3" className="p-2.5 sm:p-3 text-end font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white">
                     {isAr ? 'المجموع الإجمالي عند الاستلام:' : 'Gesamtbetrag bei Lieferung:'}
                   </td>
-                  <td className="p-2.5 sm:p-3 text-end font-mono font-black text-sm sm:text-base text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                  <td className="p-2.5 sm:p-3 text-end font-mono font-black text-sm sm:text-base text-brand-600 dark:text-brand-400 whitespace-nowrap">
                     €{Number(reportOrder.totalAmount).toFixed(2)}
                   </td>
                 </tr>

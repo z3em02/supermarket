@@ -18,7 +18,7 @@ export const OfferModal = ({
       <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 dark:border-gray-800 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-gray-800">
           <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-emerald-600" />
+            <Sparkles className="w-5 h-5 text-success-600" />
             {editingOffer ? t('editOffer') : t('createOffer')}
           </h2>
           <button
@@ -30,7 +30,7 @@ export const OfferModal = ({
         </div>
 
         {offerError && (
-          <div className="mt-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-sm flex items-center gap-2">
+          <div className="mt-4 p-3 rounded-xl bg-danger-50 dark:bg-danger-950/40 border border-danger-200 dark:border-danger-800 text-danger-700 dark:text-danger-300 text-sm flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{offerError}</span>
           </div>
@@ -46,7 +46,7 @@ export const OfferModal = ({
               required
               value={offerForm.productId}
               onChange={(e) => setOfferForm({ ...offerForm, productId: e.target.value })}
-              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-success-500"
             >
               <option value="" disabled>
                 -- Bitte Produkt wählen --
@@ -77,7 +77,7 @@ export const OfferModal = ({
                 }
                 className={`p-3 rounded-xl border text-xs font-bold flex flex-col items-center gap-1.5 transition ${
                   offerForm.type === 'BUY_X_GET_Y'
-                    ? 'border-purple-600 bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300'
+                    ? 'border-promo-600 bg-promo-50 text-promo-700 dark:bg-promo-950/40 dark:text-promo-300'
                     : 'border-slate-200 dark:border-gray-700 text-slate-600 dark:text-slate-400'
                 }`}
               >
@@ -97,7 +97,7 @@ export const OfferModal = ({
                 }
                 className={`p-3 rounded-xl border text-xs font-bold flex flex-col items-center gap-1.5 transition ${
                   offerForm.type === 'PRODUCT_DISCOUNT'
-                    ? 'border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300'
+                    ? 'border-primary-600 bg-primary-50 text-primary-700 dark:bg-primary-950/40 dark:text-primary-300'
                     : 'border-slate-200 dark:border-gray-700 text-slate-600 dark:text-slate-400'
                 }`}
               >
@@ -109,8 +109,8 @@ export const OfferModal = ({
 
           {/* Type = BUY_X_GET_Y */}
           {offerForm.type === 'BUY_X_GET_Y' && (
-            <div className="p-4 rounded-xl bg-purple-50/60 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800 space-y-3">
-              <p className="text-xs font-semibold text-purple-800 dark:text-purple-300">
+            <div className="p-4 rounded-xl bg-promo-50/60 dark:bg-promo-950/30 border border-promo-200 dark:border-promo-800 space-y-3">
+              <p className="text-xs font-semibold text-promo-800 dark:text-promo-300">
                 Formel: Kaufe X Einheiten und erhalte Y Einheiten kostenlos (z.B. 2+1 Gratis = Kaufe 2, erhalte 1 gratis)
               </p>
               <div className="grid grid-cols-2 gap-3">
@@ -160,7 +160,7 @@ export const OfferModal = ({
 
           {/* Type = PRODUCT_DISCOUNT */}
           {offerForm.type === 'PRODUCT_DISCOUNT' && (
-            <div className="p-4 rounded-xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 space-y-3">
+            <div className="p-4 rounded-xl bg-primary-50/60 dark:bg-primary-950/30 border border-primary-200 dark:border-primary-800 space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
@@ -269,7 +269,7 @@ export const OfferModal = ({
               type="checkbox"
               checked={offerForm.isActive}
               onChange={(e) => setOfferForm({ ...offerForm, isActive: e.target.checked })}
-              className="w-5 h-5 rounded-sm text-emerald-600 focus:ring-emerald-500"
+              className="w-5 h-5 rounded-sm text-success-600 focus:ring-success-500"
             />
           </div>
 
@@ -285,7 +285,7 @@ export const OfferModal = ({
             <button
               type="submit"
               disabled={offerSubmitting}
-              className="px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 shadow-sm shadow-emerald-600/30 transition disabled:opacity-50"
+              className="px-5 py-2.5 rounded-xl bg-success-600 text-white text-sm font-semibold hover:bg-success-700 shadow-sm shadow-success-600/30 transition disabled:opacity-50"
             >
               {offerSubmitting ? 'Speichern...' : t('save')}
             </button>

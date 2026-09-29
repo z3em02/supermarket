@@ -11,7 +11,7 @@ export const LegalTab = ({
     <div className="space-y-6 animate-in fade-in duration-200">
       <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-gray-850 p-4 sm:p-8 shadow-sm space-y-5 sm:space-y-6">
         <div className="flex items-center gap-2.5 sm:gap-3 pb-4 border-b border-slate-100 dark:border-gray-800">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-promo-50 dark:bg-promo-950/50 text-promo-600 dark:text-promo-400 flex items-center justify-center shrink-0">
             <Gavel className="w-4 sm:w-5 h-4 sm:h-5" />
           </div>
           <div>
@@ -36,7 +36,7 @@ export const LegalTab = ({
               value={formData.legalOwnerName}
               onChange={(e) => handleChange('legalOwnerName', e.target.value)}
               placeholder={language === 'ar' ? 'الاسم القانوني الكامل' : 'z.B. Max Mustermann'}
-              className="w-full px-3.5 sm:px-4 py-2 sm:py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:outline-none transition"
+              className="w-full px-3.5 sm:px-4 py-2 sm:py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none transition"
             />
             <p className="text-[11px] text-slate-400 dark:text-gray-500 mt-1">
               {language === 'ar' ? 'مطلوب قانونياً لصفحة Impressum (§ 5 ECG).' : 'Gesetzlich für das Impressum erforderlich (§ 5 ECG).'}
@@ -52,7 +52,7 @@ export const LegalTab = ({
               value={formData.gisaNumber}
               onChange={(e) => handleChange('gisaNumber', e.target.value)}
               placeholder="z.B. 12345678"
-              className="w-full px-3.5 sm:px-4 py-2 sm:py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:outline-none transition"
+              className="w-full px-3.5 sm:px-4 py-2 sm:py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none transition"
             />
           </div>
 
@@ -64,7 +64,7 @@ export const LegalTab = ({
               type="text"
               value={formData.businessPurposeDe}
               onChange={(e) => handleChange('businessPurposeDe', e.target.value)}
-              className="w-full px-3.5 sm:px-4 py-2 sm:py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:outline-none transition"
+              className="w-full px-3.5 sm:px-4 py-2 sm:py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none transition"
             />
           </div>
 
@@ -77,7 +77,7 @@ export const LegalTab = ({
               dir="rtl"
               value={formData.businessPurposeAr}
               onChange={(e) => handleChange('businessPurposeAr', e.target.value)}
-              className="w-full px-3.5 sm:px-4 py-2 sm:py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:outline-none transition"
+              className="w-full px-3.5 sm:px-4 py-2 sm:py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none transition"
             />
           </div>
         </div>
@@ -98,7 +98,7 @@ export const LegalTab = ({
               aria-checked={formData.isKleinunternehmer}
               onClick={() => handleChange('isKleinunternehmer', !formData.isKleinunternehmer)}
               className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none touch-manipulation ${
-                formData.isKleinunternehmer ? 'bg-blue-600' : 'bg-slate-300 dark:bg-gray-700'
+                formData.isKleinunternehmer ? 'bg-primary-600' : 'bg-slate-300 dark:bg-gray-700'
               }`}
             >
               <span
@@ -119,13 +119,13 @@ export const LegalTab = ({
                 value={formData.vatId}
                 onChange={(e) => handleChange('vatId', e.target.value)}
                 placeholder="ATU12345678"
-                className="w-full sm:w-64 px-3.5 sm:px-4 py-2 sm:py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:outline-none transition"
+                className="w-full sm:w-64 px-3.5 sm:px-4 py-2 sm:py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none transition"
               />
             </div>
           )}
         </div>
 
-        <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-850 text-amber-800 dark:text-amber-300 text-xs">
+        <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-warning-50 dark:bg-warning-950/40 border border-warning-200 dark:border-warning-900/60 text-warning-800 dark:text-warning-300 text-xs">
           <FileText className="w-4 h-4 shrink-0 mt-0.5" />
           <span>
             {language === 'ar'

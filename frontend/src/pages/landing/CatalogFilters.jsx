@@ -27,7 +27,7 @@ export const CatalogFilters = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t('searchProducts')}
-            className={`w-full py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:outline-none transition-all ${
+            className={`w-full py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none transition-all ${
               direction === 'rtl' ? 'pr-11 pl-3.5' : 'pl-11 pr-3.5'
             }`}
           />
@@ -42,7 +42,7 @@ export const CatalogFilters = ({
               onClick={() => setStockFilter('all')}
               className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                 stockFilter === 'all'
-                  ? 'bg-white dark:bg-gray-850 text-blue-600 dark:text-blue-400 shadow-xs border border-slate-200/60 dark:border-gray-750'
+                  ? 'bg-white dark:bg-gray-850 text-primary-600 dark:text-primary-400 shadow-xs border border-slate-200/60 dark:border-gray-750'
                   : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
@@ -53,7 +53,7 @@ export const CatalogFilters = ({
               onClick={() => setStockFilter('inStock')}
               className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                 stockFilter === 'inStock'
-                  ? 'bg-white dark:bg-gray-850 text-emerald-600 dark:text-emerald-400 shadow-xs border border-slate-200/60 dark:border-gray-750'
+                  ? 'bg-white dark:bg-gray-850 text-brand-600 dark:text-brand-400 shadow-xs border border-slate-200/60 dark:border-gray-750'
                   : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
@@ -64,7 +64,7 @@ export const CatalogFilters = ({
               onClick={() => setStockFilter('lowStock')}
               className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                 stockFilter === 'lowStock'
-                  ? 'bg-white dark:bg-gray-850 text-amber-600 dark:text-amber-400 shadow-xs border border-slate-200/60 dark:border-gray-750'
+                  ? 'bg-white dark:bg-gray-850 text-warning-600 dark:text-warning-400 shadow-xs border border-slate-200/60 dark:border-gray-750'
                   : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
@@ -78,7 +78,7 @@ export const CatalogFilters = ({
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:outline-none"
+              className="bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none"
             >
               <option value="name-asc">{t('sortNameAsc')}</option>
               <option value="name-desc">{t('sortNameDesc')}</option>
@@ -108,7 +108,7 @@ export const CatalogFilters = ({
           onClick={() => setSelectedCategory('all')}
           className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
             selectedCategory === 'all'
-              ? 'bg-blue-600 text-white shadow-xs'
+              ? 'bg-primary-600 text-white shadow-xs'
               : 'bg-slate-100 dark:bg-gray-950 text-slate-700 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-gray-850 border border-transparent dark:border-gray-850'
           }`}
         >
@@ -124,7 +124,7 @@ export const CatalogFilters = ({
               onClick={() => setSelectedCategory(cat.id)}
               className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                 isActive
-                  ? 'bg-blue-600 text-white shadow-xs'
+                  ? 'bg-primary-600 text-white shadow-xs'
                   : 'bg-slate-100 dark:bg-gray-950 text-slate-700 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-gray-850 border border-transparent dark:border-gray-850'
               }`}
             >

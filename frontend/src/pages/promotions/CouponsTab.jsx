@@ -33,7 +33,7 @@ export const CouponsTab = ({
           </p>
           <button
             onClick={handleOpenCreateCoupon}
-            className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition"
+            className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 transition"
           >
             <Plus className="w-4 h-4" />
             Gutschein erstellen
@@ -68,7 +68,7 @@ export const CouponsTab = ({
                         className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition"
                       >
                         {copiedCode === c.code ? (
-                          <Check className="w-3.5 h-3.5 text-emerald-500" />
+                          <Check className="w-3.5 h-3.5 text-success-500" />
                         ) : (
                           <Copy className="w-3.5 h-3.5" />
                         )}
@@ -81,7 +81,7 @@ export const CouponsTab = ({
 
                   <td className="py-3.5 px-4">
                     {c.discountType === 'PERCENTAGE' && (
-                      <span className="inline-flex items-center gap-1 font-semibold text-blue-600 dark:text-blue-400">
+                      <span className="inline-flex items-center gap-1 font-semibold text-primary-600 dark:text-primary-400">
                         <Percent className="w-3.5 h-3.5" />
                         {c.discountValue}% Rabatt
                         {c.maxDiscountAmount && (
@@ -90,12 +90,12 @@ export const CouponsTab = ({
                       </span>
                     )}
                     {c.discountType === 'FIXED' && (
-                      <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
+                      <span className="inline-flex items-center gap-1 font-semibold text-success-600 dark:text-success-400">
                         <Euro className="w-3.5 h-3.5" />€{Number(c.discountValue).toFixed(2)} Rabatt
                       </span>
                     )}
                     {c.discountType === 'COMBO' && (
-                      <span className="inline-flex items-center gap-1 font-semibold text-purple-600 dark:text-purple-400">
+                      <span className="inline-flex items-center gap-1 font-semibold text-promo-600 dark:text-promo-400">
                         <Gift className="w-3.5 h-3.5" />
                         Kombi {c.discountValue > 0 ? `(€${Number(c.discountValue).toFixed(2)})` : ''}
                       </span>
@@ -105,7 +105,7 @@ export const CouponsTab = ({
                   <td className="py-3.5 px-4">
                     <div className="flex flex-wrap gap-1.5">
                       {c.freeShipping && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-success-50 text-success-700 dark:bg-success-950/40 dark:text-success-300 border border-success-200 dark:border-success-800">
                           <Truck className="w-3 h-3" /> Gratis Lieferung
                         </span>
                       )}
@@ -145,7 +145,7 @@ export const CouponsTab = ({
                     <button
                       onClick={() => handleToggleCouponStatus(c)}
                       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
-                        c.isActive ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-gray-700'
+                        c.isActive ? 'bg-success-500' : 'bg-slate-300 dark:bg-gray-700'
                       }`}
                     >
                       <span
@@ -167,7 +167,7 @@ export const CouponsTab = ({
                       </button>
                       <button
                         onClick={() => handleDeleteCoupon(c.id)}
-                        className="p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-500 transition"
+                        className="p-1.5 rounded-lg hover:bg-danger-50 dark:hover:bg-danger-950/30 text-danger-500 transition"
                         title="Löschen"
                       >
                         <Trash2 className="w-4 h-4" />

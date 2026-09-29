@@ -166,7 +166,7 @@ export const LandingPage = () => {
     if (promo.type === 'BUY_X_GET_Y') {
       const text = (language === 'ar' ? promo.badgeTextAr : promo.badgeTextDe) || `${promo.buyQuantity || 2}+${promo.getYQuantity || 1} Gratis`;
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-black bg-purple-600 text-white shadow-xs tracking-tight">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-black bg-promo-600 text-white shadow-xs tracking-tight">
           <Gift className="w-3 h-3" />
           {text}
         </span>
@@ -180,7 +180,7 @@ export const LandingPage = () => {
         else text = language === 'ar' ? 'عرض خاص' : 'Aktion';
       }
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-black bg-rose-600 text-white shadow-xs tracking-tight">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-black bg-danger-600 text-white shadow-xs tracking-tight">
           <Sparkles className="w-3 h-3" />
           {text}
         </span>
@@ -304,7 +304,7 @@ export const LandingPage = () => {
   const getStockBadge = (stock) => {
     if (stock <= 0) {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-semibold bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400 border border-rose-200/80 dark:border-rose-900/60">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-semibold bg-danger-50 text-danger-700 dark:bg-danger-950/60 dark:text-danger-400 border border-danger-200/80 dark:border-danger-900/60">
           <XCircle className="w-3 h-3" />
           <span>{t('outOfStock')}</span>
         </span>
@@ -312,14 +312,14 @@ export const LandingPage = () => {
     }
     if (stock <= 15) {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-semibold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/80 dark:border-amber-900/60">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-semibold bg-warning-50 text-warning-700 dark:bg-warning-950/60 dark:text-warning-400 border border-warning-200/80 dark:border-warning-900/60">
           <AlertTriangle className="w-3 h-3" />
           <span>{t('lowStock')} ({stock})</span>
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-900/60">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-semibold bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-400 border border-brand-200/80 dark:border-brand-900/60">
         <CheckCircle2 className="w-3 h-3" />
         <span>{t('inStock')}</span>
       </span>
@@ -406,16 +406,16 @@ export const LandingPage = () => {
           <button
             type="button"
             onClick={() => setCartOpen(true)}
-            className="px-3.5 sm:px-5 py-2.5 sm:py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm shadow-2xl shadow-emerald-600/50 flex items-center gap-2 sm:gap-3 transition-transform hover:scale-105 cursor-pointer touch-manipulation"
+            className="px-3.5 sm:px-5 py-2.5 sm:py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-black text-xs sm:text-sm shadow-2xl shadow-brand-600/50 flex items-center gap-2 sm:gap-3 transition-transform hover:scale-105 cursor-pointer touch-manipulation"
           >
             <div className="relative">
               <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="absolute -top-2 -end-2 w-4 h-4 rounded-full bg-white text-emerald-700 text-[10px] font-black flex items-center justify-center font-mono">
+              <span className="absolute -top-2 -end-2 w-4 h-4 rounded-full bg-white text-brand-700 text-[10px] font-black flex items-center justify-center font-mono">
                 {totalCartCount}
               </span>
             </div>
             <span className="truncate">{language === 'ar' ? 'سلة التوصيل' : 'Zur Kasse'}</span>
-            <span className="font-mono bg-emerald-800/60 px-2 py-0.5 rounded-lg text-xs shrink-0">
+            <span className="font-mono bg-brand-800/60 px-2 py-0.5 rounded-lg text-xs shrink-0">
               €{Number(totalCartAmount).toFixed(2)}
             </span>
           </button>
@@ -435,7 +435,7 @@ export const LandingPage = () => {
       {/* Add-to-cart confirmation toast (replaces auto-opening the cart drawer) */}
       {addedToast && (
         <div className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-[70] flex items-center gap-2 bg-slate-900 dark:bg-gray-800 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-full shadow-lg transition">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <CheckCircle2 className="w-4 h-4 text-brand-400 shrink-0" />
           <span className="truncate max-w-[70vw]">
             {language === 'ar' ? `تمت إضافة "${addedToast}"` : `"${addedToast}" hinzugefügt`}
           </span>

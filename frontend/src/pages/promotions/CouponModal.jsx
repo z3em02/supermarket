@@ -24,7 +24,7 @@ export const CouponModal = ({
       <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 dark:border-gray-800 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-gray-800">
           <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Tag className="w-5 h-5 text-blue-600" />
+            <Tag className="w-5 h-5 text-primary-600" />
             {editingCoupon ? t('editCoupon') : t('createCoupon')}
           </h2>
           <button
@@ -36,7 +36,7 @@ export const CouponModal = ({
         </div>
 
         {couponError && (
-          <div className="mt-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-sm flex items-center gap-2">
+          <div className="mt-4 p-3 rounded-xl bg-danger-50 dark:bg-danger-950/40 border border-danger-200 dark:border-danger-800 text-danger-700 dark:text-danger-300 text-sm flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{couponError}</span>
           </div>
@@ -54,7 +54,7 @@ export const CouponModal = ({
               placeholder="z.B. SOMMER10 oder WELCOME"
               value={couponForm.code}
               onChange={(e) => setCouponForm({ ...couponForm, code: e.target.value.toUpperCase() })}
-              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl text-sm font-mono font-bold text-slate-900 dark:text-white uppercase focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl text-sm font-mono font-bold text-slate-900 dark:text-white uppercase focus:ring-2 focus:ring-primary-500"
             />
           </div>
 
@@ -65,7 +65,7 @@ export const CouponModal = ({
               onClick={() => setCouponForm({ ...couponForm, discountType: 'PERCENTAGE' })}
               className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1.5 transition ${
                 couponForm.discountType === 'PERCENTAGE'
-                  ? 'border-blue-600 bg-blue-50/80 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300'
+                  ? 'border-primary-600 bg-primary-50/80 text-primary-700 dark:bg-primary-950/50 dark:text-primary-300'
                   : 'border-slate-200 dark:border-gray-700 text-slate-600 dark:text-slate-400'
               }`}
             >
@@ -77,7 +77,7 @@ export const CouponModal = ({
               onClick={() => setCouponForm({ ...couponForm, discountType: 'FIXED' })}
               className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1.5 transition ${
                 couponForm.discountType === 'FIXED'
-                  ? 'border-emerald-600 bg-emerald-50/80 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
+                  ? 'border-success-600 bg-success-50/80 text-success-700 dark:bg-success-950/50 dark:text-success-300'
                   : 'border-slate-200 dark:border-gray-700 text-slate-600 dark:text-slate-400'
               }`}
             >
@@ -89,7 +89,7 @@ export const CouponModal = ({
               onClick={() => setCouponForm({ ...couponForm, discountType: 'COMBO', freeShipping: true })}
               className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1.5 transition ${
                 couponForm.discountType === 'COMBO'
-                  ? 'border-purple-600 bg-purple-50/80 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300'
+                  ? 'border-promo-600 bg-promo-50/80 text-promo-700 dark:bg-promo-950/50 dark:text-promo-300'
                   : 'border-slate-200 dark:border-gray-700 text-slate-600 dark:text-slate-400'
               }`}
             >
@@ -113,7 +113,7 @@ export const CouponModal = ({
                 placeholder={couponForm.discountType === 'PERCENTAGE' ? '10' : '5.00'}
                 value={couponForm.discountValue}
                 onChange={(e) => setCouponForm({ ...couponForm, discountValue: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500"
               />
             </div>
 
@@ -128,7 +128,7 @@ export const CouponModal = ({
                 placeholder="0.00"
                 value={couponForm.minOrderValue}
                 onChange={(e) => setCouponForm({ ...couponForm, minOrderValue: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500"
               />
             </div>
           </div>
@@ -139,11 +139,11 @@ export const CouponModal = ({
               type="checkbox"
               checked={couponForm.freeShipping}
               onChange={(e) => setCouponForm({ ...couponForm, freeShipping: e.target.checked })}
-              className="w-4 h-4 rounded-sm text-blue-600 focus:ring-blue-500"
+              className="w-4 h-4 rounded-sm text-primary-600 focus:ring-primary-500"
             />
             <div className="text-xs">
               <span className="font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
-                <Truck className="w-3.5 h-3.5 text-emerald-600" />
+                <Truck className="w-3.5 h-3.5 text-success-600" />
                 {t('includeFreeShipping')}
               </span>
               <p className="text-slate-500">Der Kunde zahlt keine Liefergebühr für diesen Auftrag.</p>
@@ -162,7 +162,7 @@ export const CouponModal = ({
                 placeholder="Unbegrenzt"
                 value={couponForm.usageLimit}
                 onChange={(e) => setCouponForm({ ...couponForm, usageLimit: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500"
               />
             </div>
 
@@ -175,7 +175,7 @@ export const CouponModal = ({
                 min="1"
                 value={couponForm.usageLimitPerCustomer}
                 onChange={(e) => setCouponForm({ ...couponForm, usageLimitPerCustomer: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500"
               />
             </div>
           </div>
@@ -190,7 +190,7 @@ export const CouponModal = ({
                 type="date"
                 value={couponForm.startDate}
                 onChange={(e) => setCouponForm({ ...couponForm, startDate: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500"
               />
             </div>
             <div>
@@ -201,7 +201,7 @@ export const CouponModal = ({
                 type="date"
                 value={couponForm.endDate}
                 onChange={(e) => setCouponForm({ ...couponForm, endDate: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500"
               />
             </div>
           </div>
@@ -216,7 +216,7 @@ export const CouponModal = ({
               placeholder="z.B. Willkommensgutschein für Neukunden"
               value={couponForm.description}
               onChange={(e) => setCouponForm({ ...couponForm, description: e.target.value })}
-              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xl text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500"
             />
           </div>
 
@@ -227,7 +227,7 @@ export const CouponModal = ({
               type="checkbox"
               checked={couponForm.isActive}
               onChange={(e) => setCouponForm({ ...couponForm, isActive: e.target.checked })}
-              className="w-5 h-5 rounded-sm text-blue-600 focus:ring-blue-500"
+              className="w-5 h-5 rounded-sm text-primary-600 focus:ring-primary-500"
             />
           </div>
 
@@ -243,7 +243,7 @@ export const CouponModal = ({
             <button
               type="submit"
               disabled={couponSubmitting}
-              className="px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 shadow-sm shadow-blue-600/30 transition disabled:opacity-50"
+              className="px-5 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 shadow-sm shadow-primary-600/30 transition disabled:opacity-50"
             >
               {couponSubmitting ? 'Speichern...' : t('save')}
             </button>

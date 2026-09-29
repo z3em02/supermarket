@@ -120,7 +120,7 @@ export const Catalogs = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div>
       </div>
     );
   }
@@ -131,7 +131,7 @@ export const Catalogs = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
-            <Layers className="w-5 sm:w-6 h-5 sm:h-6 text-blue-600 dark:text-blue-400 shrink-0" />
+            <Layers className="w-5 sm:w-6 h-5 sm:h-6 text-primary-600 dark:text-primary-400 shrink-0" />
             <span>{t('catalogs')}</span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1">
@@ -141,7 +141,7 @@ export const Catalogs = () => {
 
         <button
           onClick={handleOpenAddModal}
-          className="w-full sm:w-auto justify-center flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-sm transition cursor-pointer touch-manipulation"
+          className="w-full sm:w-auto justify-center flex items-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-sm transition cursor-pointer touch-manipulation"
         >
           <Plus className="w-4 sm:w-5 h-4 sm:h-5" />
           <span>{t('addCatalog')}</span>
@@ -151,7 +151,7 @@ export const Catalogs = () => {
       {/* Stats summary banner */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div className="bg-white dark:bg-gray-900 p-3.5 sm:p-4 rounded-xl border border-slate-200/80 dark:border-gray-850 shadow-2xs flex items-center gap-3.5">
-          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-blue-50 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50 flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-primary-50 dark:bg-primary-950/70 text-primary-600 dark:text-primary-400 border border-primary-100 dark:border-primary-900/50 flex items-center justify-center shrink-0">
             <Layers className="w-5 h-5" />
           </div>
           <div>
@@ -165,7 +165,7 @@ export const Catalogs = () => {
         </div>
 
         <div className="bg-white dark:bg-gray-900 p-3.5 sm:p-4 rounded-xl border border-slate-200/80 dark:border-gray-850 shadow-2xs flex items-center gap-3.5">
-          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/50 flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-success-50 dark:bg-success-950/70 text-success-600 dark:text-success-400 border border-success-100 dark:border-success-900/50 flex items-center justify-center shrink-0">
             <Package className="w-5 h-5" />
           </div>
           <div>
@@ -187,7 +187,7 @@ export const Catalogs = () => {
           placeholder={`${t('search')} (Deutsch / العربية)...`}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full ps-10 pe-9 py-2.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-xs sm:text-sm"
+          className="w-full ps-10 pe-9 py-2.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition text-xs sm:text-sm"
         />
         {searchTerm && (
           <button
@@ -219,11 +219,11 @@ export const Catalogs = () => {
             >
               <div className="space-y-3">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/50 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-primary-50 dark:bg-primary-950/70 text-primary-600 dark:text-primary-400 border border-primary-100 dark:border-primary-900/50 flex items-center justify-center shrink-0">
                     <Layers className="w-5 h-5" />
                   </div>
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 dark:bg-gray-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-gray-750">
-                    <Package className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                    <Package className="w-3.5 h-3.5 text-primary-600 dark:text-primary-400" />
                     <span>{cat._count?.products || 0} {t('items')}</span>
                   </span>
                 </div>
@@ -231,13 +231,13 @@ export const Catalogs = () => {
                 {/* Bilingual Titles */}
                 <div className="space-y-1">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">DE</span>
+                    <span className="text-[10px] font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wider">DE</span>
                     <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate text-start flex-1" title={cat.nameDe}>
                       {cat.nameDe}
                     </h3>
                   </div>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">AR</span>
+                    <span className="text-[10px] font-bold text-success-600 dark:text-success-400 uppercase tracking-wider">AR</span>
                     <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate text-start flex-1" dir="rtl" title={cat.nameAr}>
                       {cat.nameAr}
                     </h3>
@@ -270,13 +270,13 @@ export const Catalogs = () => {
                   onClick={() => handleOpenEditModal(cat)}
                   className="flex-1 sm:flex-none justify-center flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-gray-800 hover:bg-slate-100 dark:hover:bg-gray-750 border border-slate-200 dark:border-gray-700 rounded-lg transition cursor-pointer touch-manipulation"
                 >
-                  <Edit className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                  <Edit className="w-3.5 h-3.5 text-primary-600 dark:text-primary-400" />
                   <span>{t('edit')}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => handleDelete(cat)}
-                  className="flex-1 sm:flex-none justify-center flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-950/80 border border-rose-200/80 dark:border-rose-900/50 rounded-lg transition cursor-pointer touch-manipulation"
+                  className="flex-1 sm:flex-none justify-center flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-danger-600 dark:text-danger-400 bg-danger-50 dark:bg-danger-950/40 hover:bg-danger-100 dark:hover:bg-danger-950/80 border border-danger-200/80 dark:border-danger-900/50 rounded-lg transition cursor-pointer touch-manipulation"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   <span>{t('delete')}</span>
@@ -293,7 +293,7 @@ export const Catalogs = () => {
           <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-7 w-full max-w-lg max-h-[90dvh] overflow-y-auto border border-slate-200 dark:border-gray-800 shadow-2xl">
             <div className="flex items-center justify-between pb-3 sm:pb-4 mb-4 sm:mb-5 border-b border-slate-100 dark:border-gray-800">
               <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Layers className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" />
+                <Layers className="w-5 h-5 text-primary-600 dark:text-primary-400 shrink-0" />
                 <span>{editingCategory ? t('editCatalog') : t('addCatalog')}</span>
               </h2>
               <button
@@ -316,7 +316,7 @@ export const Catalogs = () => {
                   dir="ltr"
                   value={formData.nameDe}
                   onChange={(e) => setFormData({ ...formData, nameDe: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 transition"
                   placeholder="z. B. Trockenwaren, Getränke..."
                 />
               </div>
@@ -332,7 +332,7 @@ export const Catalogs = () => {
                   dir="rtl"
                   value={formData.nameAr}
                   onChange={(e) => setFormData({ ...formData, nameAr: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition text-right"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 transition text-right"
                   placeholder="مثال: بضائع جافة، مشروبات..."
                 />
               </div>
@@ -347,7 +347,7 @@ export const Catalogs = () => {
                   dir="ltr"
                   value={formData.descriptionDe}
                   onChange={(e) => setFormData({ ...formData, descriptionDe: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition text-xs sm:text-sm"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 transition text-xs sm:text-sm"
                   placeholder="Optionale Beschreibung auf Deutsch..."
                 />
               </div>
@@ -362,7 +362,7 @@ export const Catalogs = () => {
                   dir="rtl"
                   value={formData.descriptionAr}
                   onChange={(e) => setFormData({ ...formData, descriptionAr: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition text-xs sm:text-sm text-right"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 transition text-xs sm:text-sm text-right"
                   placeholder="وصف اختياري بالعربية..."
                 />
               </div>
@@ -379,7 +379,7 @@ export const Catalogs = () => {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2 sm:py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium rounded-xl shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer touch-manipulation"
+                  className="px-5 py-2 sm:py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-xs sm:text-sm font-medium rounded-xl shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer touch-manipulation"
                 >
                   <Check className="w-4 h-4" />
                   <span>{editingCategory ? t('update') : t('create')}</span>

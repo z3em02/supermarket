@@ -19,7 +19,7 @@ export const StatusChangeModal = ({
     <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-lg overflow-y-auto border border-slate-200 dark:border-gray-800 shadow-2xl space-y-5">
       <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-gray-800">
         <div className="flex items-center gap-2">
-          <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-100/80 dark:border-blue-900/50 text-blue-600 dark:text-blue-400">
+          <div className="p-2 rounded-xl bg-primary-50 dark:bg-primary-950/60 border border-primary-100/80 dark:border-primary-900/50 text-primary-600 dark:text-primary-400">
             <Lock className="w-4 h-4" />
           </div>
           <div>
@@ -48,7 +48,7 @@ export const StatusChangeModal = ({
           <select
             value={targetStatus}
             onChange={(e) => setTargetStatus(e.target.value)}
-            className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 text-sm capitalize"
+            className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 text-sm capitalize"
           >
             <option value="pending" className="dark:bg-gray-900 dark:text-white">{t('pending')}</option>
             <option value="accepted" className="dark:bg-gray-900 dark:text-white">{t('accepted')}</option>
@@ -59,7 +59,7 @@ export const StatusChangeModal = ({
             <option value="declined" className="dark:bg-gray-900 dark:text-white">{t('declined')}</option>
           </select>
           {targetStatus === 'declined' && (
-            <p className="mt-1.5 text-xs text-rose-600 dark:text-rose-400 font-medium">
+            <p className="mt-1.5 text-xs text-danger-600 dark:text-danger-400 font-medium">
               Note: If previously accepted or preparing, deducted stock will be automatically restored to inventory.
             </p>
           )}
@@ -68,11 +68,11 @@ export const StatusChangeModal = ({
         {/* Admin Note Input */}
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="block text-xs font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-promo-700 dark:text-promo-400 uppercase tracking-wider">
               {t('adminNotes')} ({t('internalNoteOnly')})
             </label>
             <span className="text-[11px] text-slate-400 flex items-center gap-1">
-              <Lock className="w-3 h-3 text-purple-500" /> Private
+              <Lock className="w-3 h-3 text-promo-500" /> Private
             </span>
           </div>
           <textarea
@@ -80,7 +80,7 @@ export const StatusChangeModal = ({
             value={adminNoteInput}
             onChange={(e) => setAdminNoteInput(e.target.value)}
             placeholder="z.B. 2. Stock links klingeln, Lieferzeitfenster 18:00-19:00, passend bar..."
-            className="w-full px-3.5 py-2.5 bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200/80 dark:border-purple-800/60 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-purple-500 text-sm placeholder-slate-400"
+            className="w-full px-3.5 py-2.5 bg-promo-50/50 dark:bg-promo-950/20 border border-promo-200/80 dark:border-promo-800/60 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-promo-500 text-sm placeholder-slate-400"
           />
         </div>
 
@@ -94,7 +94,7 @@ export const StatusChangeModal = ({
             value={customerNoteInput}
             onChange={(e) => setCustomerNoteInput(e.target.value)}
             placeholder={t('notesPlaceholder')}
-            className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 text-sm placeholder-slate-400"
+            className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 text-sm placeholder-slate-400"
           />
         </div>
       </div>
@@ -111,7 +111,7 @@ export const StatusChangeModal = ({
           type="button"
           onClick={handleConfirmStatusChange}
           disabled={updating}
-          className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-sm transition disabled:opacity-50"
+          className="px-5 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-xl shadow-sm transition disabled:opacity-50"
         >
           {updating ? t('loading') : t('save')}
         </button>

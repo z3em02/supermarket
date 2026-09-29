@@ -19,7 +19,7 @@ export const ProductFormModal = ({
       <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-7 w-full max-w-xl max-h-[90dvh] overflow-y-auto border border-slate-200 dark:border-gray-800 shadow-2xl">
         <div className="flex items-center justify-between pb-3 sm:pb-4 mb-4 sm:mb-5 border-b border-slate-100 dark:border-gray-800">
           <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Package className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <Package className="w-5 h-5 text-primary-600 dark:text-primary-400" />
             <span>{editingProduct ? t('editProduct') : t('addProduct')}</span>
           </h2>
           <button
@@ -40,7 +40,7 @@ export const ProductFormModal = ({
               <button
                 type="button"
                 onClick={() => setFormData(prev => ({ ...prev, sku: generateSku() }))}
-                className="flex items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                className="flex items-center gap-1 text-[11px] font-semibold text-primary-600 dark:text-primary-400 hover:underline"
               >
                 <RotateCw className="w-3 h-3" />
                 <span>{t('regenerateId')}</span>
@@ -51,7 +51,7 @@ export const ProductFormModal = ({
               required
               value={formData.sku}
               onChange={(e) => setFormData({ ...formData, sku: e.target.value.toUpperCase() })}
-              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 font-mono font-bold tracking-wide transition uppercase"
+              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 font-mono font-bold tracking-wide transition uppercase"
               placeholder="PRD-123456"
             />
             <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
@@ -71,7 +71,7 @@ export const ProductFormModal = ({
                 dir="ltr"
                 value={formData.nameDe}
                 onChange={(e) => setFormData({ ...formData, nameDe: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition"
+                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 transition"
                 placeholder="z. B. Basmati Reis 25kg"
               />
             </div>
@@ -85,7 +85,7 @@ export const ProductFormModal = ({
                 dir="rtl"
                 value={formData.nameAr}
                 onChange={(e) => setFormData({ ...formData, nameAr: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition text-right"
+                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 transition text-right"
                 placeholder="مثال: أرز بسمتي 25 كغ"
               />
             </div>
@@ -100,7 +100,7 @@ export const ProductFormModal = ({
               <Link
                 to={`${ADMIN_BASE}/catalogs`}
                 target="_blank"
-                className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                className="text-[11px] font-semibold text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1"
               >
                 <Layers className="w-3 h-3" />
                 <span>{t('newCatalogQuick')}</span>
@@ -109,7 +109,7 @@ export const ProductFormModal = ({
             <select
               value={formData.categoryId}
               onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition text-sm"
+              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 transition text-sm"
             >
               <option value="">-- {t('selectCategory')} --</option>
               {categories.map((c) => (
@@ -133,7 +133,7 @@ export const ProductFormModal = ({
                 required
                 value={formData.b2bPrice}
                 onChange={(e) => setFormData({ ...formData, b2bPrice: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition"
+                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 transition"
                 placeholder="19.99"
               />
             </div>
@@ -147,7 +147,7 @@ export const ProductFormModal = ({
                 required
                 value={formData.stock}
                 onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value, 10) || 0 })}
-                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition"
+                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 transition"
                 placeholder="50"
               />
             </div>
@@ -162,7 +162,7 @@ export const ProductFormModal = ({
               type="url"
               value={formData.imageUrl}
               onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition text-sm"
+              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 transition text-sm"
               placeholder="https://images.unsplash.com/..."
             />
           </div>
@@ -178,7 +178,7 @@ export const ProductFormModal = ({
                 dir="ltr"
                 value={formData.descriptionDe}
                 onChange={(e) => setFormData({ ...formData, descriptionDe: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition text-sm"
+                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 transition text-sm"
                 placeholder="Produktspezifikationen, Verpackungseinheiten..."
               />
             </div>
@@ -191,7 +191,7 @@ export const ProductFormModal = ({
                 dir="rtl"
                 value={formData.descriptionAr}
                 onChange={(e) => setFormData({ ...formData, descriptionAr: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition text-sm text-right"
+                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 transition text-sm text-right"
                 placeholder="المواصفات، عبوات الجملة، شروط التوريد..."
               />
             </div>
@@ -207,7 +207,7 @@ export const ProductFormModal = ({
             </button>
             <button
               type="submit"
-              className="w-full xs:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium rounded-xl shadow-sm transition touch-manipulation cursor-pointer text-center"
+              className="w-full xs:w-auto px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-xs sm:text-sm font-medium rounded-xl shadow-sm transition touch-manipulation cursor-pointer text-center"
             >
               {editingProduct ? t('update') : t('create')}
             </button>

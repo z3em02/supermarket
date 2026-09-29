@@ -28,7 +28,7 @@ export const LanguageSelector = () => {
         title={language === 'ar' ? 'تغيير اللغة' : 'Sprache ändern'}
         aria-label={language === 'ar' ? 'تغيير اللغة' : 'Sprache ändern'}
       >
-        <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+        <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary-600 dark:text-primary-400 shrink-0" />
         <span className="font-bold uppercase text-xs">{currentLang.code}</span>
         <span className="text-xs text-slate-500 dark:text-slate-400 hidden md:inline">
           {currentLang.nativeName}
@@ -52,7 +52,7 @@ export const LanguageSelector = () => {
                 }}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 text-sm text-left rtl:text-right transition ${
                   isSelected
-                    ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-semibold'
+                    ? 'bg-primary-50 dark:bg-primary-950/60 text-primary-700 dark:text-primary-300 font-semibold'
                     : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-gray-800/60'
                 }`}
               >
@@ -62,7 +62,7 @@ export const LanguageSelector = () => {
                   </span>
                   <span>{l.nativeName}</span>
                 </div>
-                {isSelected && <Check className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
+                {isSelected && <Check className="w-4 h-4 text-primary-600 dark:text-primary-400" />}
               </button>
             );
           })}

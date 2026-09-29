@@ -153,21 +153,21 @@ export const Dashboard = () => {
       value: stats.totalCustomers,
       locked: stats.totalCustomers === null,
       icon: Users,
-      color: 'bg-blue-50 text-blue-600 border border-blue-100/80 dark:bg-blue-950/60 dark:text-blue-400 dark:border-blue-900/50',
+      color: 'bg-primary-50 text-primary-600 border border-primary-100/80 dark:bg-primary-950/60 dark:text-primary-400 dark:border-primary-900/50',
       borderColor: 'border-slate-200/80 dark:border-gray-800'
     },
     {
       title: t('totalProducts'),
       value: stats.totalProducts,
       icon: Package,
-      color: 'bg-emerald-50 text-emerald-600 border border-emerald-100/80 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-900/50',
+      color: 'bg-success-50 text-success-600 border border-success-100/80 dark:bg-success-950/60 dark:text-success-400 dark:border-success-900/50',
       borderColor: 'border-slate-200/80 dark:border-gray-800'
     },
     {
       title: t('totalOrders'),
       value: stats.totalOrders,
       icon: ShoppingCart,
-      color: 'bg-purple-50 text-purple-600 border border-purple-100/80 dark:bg-purple-950/60 dark:text-purple-400 dark:border-purple-900/50',
+      color: 'bg-promo-50 text-promo-600 border border-promo-100/80 dark:bg-promo-950/60 dark:text-promo-400 dark:border-promo-900/50',
       borderColor: 'border-slate-200/80 dark:border-gray-800'
     },
     {
@@ -175,7 +175,7 @@ export const Dashboard = () => {
       value: stats.totalRevenue === null ? null : `€${stats.totalRevenue.toFixed(2)}`,
       locked: stats.totalRevenue === null,
       icon: DollarSign,
-      color: 'bg-amber-50 text-amber-600 border border-amber-100/80 dark:bg-amber-950/60 dark:text-amber-400 dark:border-amber-900/50',
+      color: 'bg-warning-50 text-warning-600 border border-warning-100/80 dark:bg-warning-950/60 dark:text-warning-400 dark:border-warning-900/50',
       borderColor: 'border-slate-200/80 dark:border-gray-800'
     },
     {
@@ -183,7 +183,7 @@ export const Dashboard = () => {
       value: stats.pendingOrders,
       locked: stats.pendingOrders === null,
       icon: Clock,
-      color: 'bg-rose-50 text-rose-600 border border-rose-100/80 dark:bg-rose-950/60 dark:text-rose-400 dark:border-rose-900/50',
+      color: 'bg-danger-50 text-danger-600 border border-danger-100/80 dark:bg-danger-950/60 dark:text-danger-400 dark:border-danger-900/50',
       borderColor: 'border-slate-200/80 dark:border-gray-800'
     }
   ];
@@ -209,17 +209,17 @@ export const Dashboard = () => {
   return (
     <div className="space-y-6 sm:space-y-8">
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-blue-600 to-indigo-700 dark:from-gray-900 dark:via-blue-950/40 dark:to-gray-900 dark:border dark:border-blue-900/30 text-white rounded-2xl p-5 sm:p-8 shadow-lg shadow-blue-500/10 dark:shadow-none">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-primary-600 to-promo-700 dark:from-gray-900 dark:via-primary-950/40 dark:to-gray-900 dark:border dark:border-primary-900/30 text-white rounded-2xl p-5 sm:p-8 shadow-lg shadow-primary-500/10 dark:shadow-none">
         <div>
           <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight">
             {t('dashboardOverview')}
           </h1>
-          <p className="text-blue-100 dark:text-slate-300 mt-1 text-xs sm:text-base">
+          <p className="text-primary-100 dark:text-slate-300 mt-1 text-xs sm:text-base">
             {t('welcomeMessage')}
           </p>
         </div>
-        <div className="flex items-center gap-2 self-start sm:self-auto bg-white/15 dark:bg-blue-950/70 dark:border dark:border-blue-800/60 backdrop-blur px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium">
-          <Sparkles className="w-4 h-4 text-amber-300 shrink-0" />
+        <div className="flex items-center gap-2 self-start sm:self-auto bg-white/15 dark:bg-primary-950/70 dark:border dark:border-primary-800/60 backdrop-blur px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium">
+          <Sparkles className="w-4 h-4 text-warning-300 shrink-0" />
           <span>{language === 'ar' ? 'إدارة التوصيل المنزلي' : 'Hauszustellung im Überblick'}</span>
         </div>
       </div>
@@ -237,7 +237,7 @@ export const Dashboard = () => {
         {/* Pending approvals */}
         {pendingDriverRequests.length > 0 && (
           <div className="border-b border-slate-100 dark:border-gray-850">
-            <p className="px-4 sm:px-5 pt-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+            <p className="px-4 sm:px-5 pt-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-warning-700 dark:text-warning-400">
               {language === 'ar' ? 'بانتظار الموافقة' : 'Warten auf Freigabe'}
             </p>
             <p className="px-4 sm:px-5 pb-2 text-[11px] text-slate-400 dark:text-gray-500">
@@ -249,7 +249,7 @@ export const Dashboard = () => {
               {pendingDriverRequests.map((reqItem) => (
                 <div key={reqItem.id} className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-warning-100 dark:bg-warning-950/60 text-warning-700 dark:text-warning-400 flex items-center justify-center shrink-0">
                       <Hourglass className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
@@ -265,7 +265,7 @@ export const Dashboard = () => {
                       type="button"
                       disabled={resolvingRequestId === reqItem.id}
                       onClick={() => handleResolveDriverRequest(reqItem.id, 'approve')}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition disabled:opacity-50 cursor-pointer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-success-600 hover:bg-success-700 text-white text-xs font-bold transition disabled:opacity-50 cursor-pointer"
                     >
                       <UserCheck className="w-3.5 h-3.5" />
                       <span>{language === 'ar' ? 'قبول' : 'Zulassen'}</span>
@@ -274,7 +274,7 @@ export const Dashboard = () => {
                       type="button"
                       disabled={resolvingRequestId === reqItem.id}
                       onClick={() => handleResolveDriverRequest(reqItem.id, 'reject')}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-gray-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-600 dark:text-gray-300 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-bold transition disabled:opacity-50 cursor-pointer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-gray-800 hover:bg-danger-50 dark:hover:bg-danger-950/40 text-slate-600 dark:text-gray-300 hover:text-danger-600 dark:hover:text-danger-400 text-xs font-bold transition disabled:opacity-50 cursor-pointer"
                     >
                       <X className="w-3.5 h-3.5" />
                       <span>{language === 'ar' ? 'رفض' : 'Ablehnen'}</span>
@@ -302,7 +302,7 @@ export const Dashboard = () => {
               {activeDrivers.map((session) => (
                 <div key={session.id} className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-success-100 dark:bg-success-950/60 text-success-700 dark:text-success-400 flex items-center justify-center shrink-0">
                       <Truck className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
@@ -317,7 +317,7 @@ export const Dashboard = () => {
                     type="button"
                     disabled={loggingOutSessionId === session.id}
                     onClick={() => handleLogoutDriver(session.id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-950/60 text-rose-600 dark:text-rose-400 text-xs font-bold transition disabled:opacity-50 cursor-pointer shrink-0"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-danger-50 hover:bg-danger-100 dark:bg-danger-950/40 dark:hover:bg-danger-950/60 text-danger-600 dark:text-danger-400 text-xs font-bold transition disabled:opacity-50 cursor-pointer shrink-0"
                   >
                     <LogOut className="w-3.5 h-3.5" />
                     <span>{language === 'ar' ? 'تسجيل خروج' : 'Abmelden'}</span>
@@ -330,7 +330,7 @@ export const Dashboard = () => {
       </div>
 
       {sectionLocked && (
-        <div className="flex items-center gap-2.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 text-amber-800 dark:text-amber-300 text-xs sm:text-sm rounded-2xl px-4 py-3">
+        <div className="flex items-center gap-2.5 bg-warning-50 dark:bg-warning-950/40 border border-warning-200 dark:border-warning-900/50 text-warning-800 dark:text-warning-300 text-xs sm:text-sm rounded-2xl px-4 py-3">
           <Lock className="w-4 h-4 shrink-0" />
           <span>
             {language === 'ar'
@@ -342,9 +342,9 @@ export const Dashboard = () => {
 
       {/* Proactive Low-Stock Admin Alert Banner */}
       {lowStockCount > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-300 dark:border-amber-700/60 rounded-2xl p-4 sm:p-5 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-warning-500/10 via-warning-500/5 to-transparent border border-warning-300 dark:border-warning-700/60 rounded-2xl p-4 sm:p-5 shadow-xs">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-400 shrink-0">
+            <div className="p-2.5 rounded-xl bg-warning-100 dark:bg-warning-950/80 text-warning-700 dark:text-warning-400 shrink-0">
               <AlertTriangle className="w-5 h-5" />
             </div>
             <div>
@@ -363,7 +363,7 @@ export const Dashboard = () => {
           <button
             type="button"
             onClick={() => navigate(`${ADMIN_BASE}/products?stock=low`)}
-            className="self-start sm:self-auto px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition shadow-sm shrink-0 cursor-pointer touch-manipulation flex items-center gap-1.5"
+            className="self-start sm:self-auto px-4 py-2 rounded-xl bg-warning-600 hover:bg-warning-700 text-white font-bold text-xs transition shadow-sm shrink-0 cursor-pointer touch-manipulation flex items-center gap-1.5"
           >
             <span>{language === 'ar' ? 'عرض المنتجات وإعادة التزويد' : 'Artikel ansehen & auffüllen'}</span>
             <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
@@ -413,77 +413,77 @@ export const Dashboard = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <button
             onClick={() => navigate('/')}
-            className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-gray-800 hover:border-blue-500 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/30 group transition"
+            className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-gray-800 hover:border-primary-500 dark:hover:border-primary-500 hover:bg-primary-50/50 dark:hover:bg-primary-950/30 group transition"
           >
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-100/80 dark:bg-blue-950/60 dark:border-blue-900/50 text-blue-600 dark:text-blue-400">
+              <div className="p-2.5 rounded-xl bg-primary-50 border border-primary-100/80 dark:bg-primary-950/60 dark:border-primary-900/50 text-primary-600 dark:text-primary-400">
                 <Store className="w-5 h-5" />
               </div>
               <span className="font-semibold text-slate-800 dark:text-slate-200 text-sm text-left rtl:text-right">
                 {t('publicCatalog') || 'View Online Shop'}
               </span>
             </div>
-            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 rtl:rotate-180 transition" />
+            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-primary-600 rtl:rotate-180 transition" />
           </button>
 
           <button
             onClick={() => navigate(`${ADMIN_BASE}/catalogs`)}
-            className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-gray-800 hover:border-indigo-500 dark:hover:border-indigo-500 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/30 group transition"
+            className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-gray-800 hover:border-promo-500 dark:hover:border-promo-500 hover:bg-promo-50/50 dark:hover:bg-promo-950/30 group transition"
           >
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-indigo-50 border border-indigo-100/80 dark:bg-indigo-950/60 dark:border-indigo-900/50 text-indigo-600 dark:text-indigo-400">
+              <div className="p-2.5 rounded-xl bg-promo-50 border border-promo-100/80 dark:bg-promo-950/60 dark:border-promo-900/50 text-promo-600 dark:text-promo-400">
                 <Layers className="w-5 h-5" />
               </div>
               <span className="font-semibold text-slate-800 dark:text-slate-200 text-sm text-left rtl:text-right">
                 {t('catalogs')}
               </span>
             </div>
-            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 rtl:rotate-180 transition" />
+            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-promo-600 rtl:rotate-180 transition" />
           </button>
 
           <button
             onClick={() => navigate(`${ADMIN_BASE}/products`)}
-            className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-gray-800 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/30 group transition"
+            className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-gray-800 hover:border-success-500 dark:hover:border-success-500 hover:bg-success-50/50 dark:hover:bg-success-950/30 group transition"
           >
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-100/80 dark:bg-emerald-950/60 dark:border-emerald-900/50 text-emerald-600 dark:text-emerald-400">
+              <div className="p-2.5 rounded-xl bg-success-50 border border-success-100/80 dark:bg-success-950/60 dark:border-success-900/50 text-success-600 dark:text-success-400">
                 <Package className="w-5 h-5" />
               </div>
               <span className="font-semibold text-slate-800 dark:text-slate-200 text-sm text-left rtl:text-right">
                 {t('addNewProduct')}
               </span>
             </div>
-            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 rtl:rotate-180 transition" />
+            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-success-600 rtl:rotate-180 transition" />
           </button>
 
           <button
             onClick={() => navigate(`${ADMIN_BASE}/orders`)}
-            className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-gray-800 hover:border-purple-500 dark:hover:border-purple-500 hover:bg-purple-50/50 dark:hover:bg-purple-950/30 group transition"
+            className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-gray-800 hover:border-promo-500 dark:hover:border-promo-500 hover:bg-promo-50/50 dark:hover:bg-promo-950/30 group transition"
           >
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-purple-50 border border-purple-100/80 dark:bg-purple-950/60 dark:border-purple-900/50 text-purple-600 dark:text-purple-400">
+              <div className="p-2.5 rounded-xl bg-promo-50 border border-promo-100/80 dark:bg-promo-950/60 dark:border-promo-900/50 text-promo-600 dark:text-promo-400">
                 <ShoppingCart className="w-5 h-5" />
               </div>
               <span className="font-semibold text-slate-800 dark:text-slate-200 text-sm text-left rtl:text-right">
                 {t('viewOrders')}
               </span>
             </div>
-            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-purple-600 rtl:rotate-180 transition" />
+            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-promo-600 rtl:rotate-180 transition" />
           </button>
 
           <button
             onClick={() => navigate(`${ADMIN_BASE}/driver`)}
-            className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-gray-800 hover:border-amber-500 dark:hover:border-amber-500 hover:bg-amber-50/50 dark:hover:bg-amber-950/30 group transition"
+            className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-gray-800 hover:border-warning-500 dark:hover:border-warning-500 hover:bg-warning-50/50 dark:hover:bg-warning-950/30 group transition"
           >
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-100/80 dark:bg-amber-950/60 dark:border-amber-900/50 text-amber-600 dark:text-amber-400">
+              <div className="p-2.5 rounded-xl bg-warning-50 border border-warning-100/80 dark:bg-warning-950/60 dark:border-warning-900/50 text-warning-600 dark:text-warning-400">
                 <Truck className="w-5 h-5" />
               </div>
               <span className="font-semibold text-slate-800 dark:text-slate-200 text-sm text-left rtl:text-right">
                 {language === 'ar' ? 'واجهة التوصيل للسائق' : 'Fahrer-Lieferansicht'}
               </span>
             </div>
-            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-amber-600 rtl:rotate-180 transition" />
+            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-warning-600 rtl:rotate-180 transition" />
           </button>
         </div>
       </div>
@@ -495,19 +495,19 @@ export const Dashboard = () => {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50/80 dark:bg-gray-950/60 border border-slate-200/60 dark:border-gray-800/80">
-            <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0">1</span>
+            <span className="w-6 h-6 rounded-full bg-primary-600 text-white text-xs font-bold flex items-center justify-center shrink-0">1</span>
             <p className="text-sm text-slate-700 dark:text-slate-300">{t('tip1')}</p>
           </div>
           <div className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50/80 dark:bg-gray-950/60 border border-slate-200/60 dark:border-gray-800/80">
-            <span className="w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center justify-center shrink-0">2</span>
+            <span className="w-6 h-6 rounded-full bg-success-600 text-white text-xs font-bold flex items-center justify-center shrink-0">2</span>
             <p className="text-sm text-slate-700 dark:text-slate-300">{t('tip2')}</p>
           </div>
           <div className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50/80 dark:bg-gray-950/60 border border-slate-200/60 dark:border-gray-800/80">
-            <span className="w-6 h-6 rounded-full bg-purple-600 text-white text-xs font-bold flex items-center justify-center shrink-0">3</span>
+            <span className="w-6 h-6 rounded-full bg-promo-600 text-white text-xs font-bold flex items-center justify-center shrink-0">3</span>
             <p className="text-sm text-slate-700 dark:text-slate-300">{t('tip3')}</p>
           </div>
           <div className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50/80 dark:bg-gray-950/60 border border-slate-200/60 dark:border-gray-800/80">
-            <span className="w-6 h-6 rounded-full bg-amber-600 text-white text-xs font-bold flex items-center justify-center shrink-0">4</span>
+            <span className="w-6 h-6 rounded-full bg-warning-600 text-white text-xs font-bold flex items-center justify-center shrink-0">4</span>
             <p className="text-sm text-slate-700 dark:text-slate-300">{t('tip4')}</p>
           </div>
         </div>

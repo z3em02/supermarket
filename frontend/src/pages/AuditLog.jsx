@@ -29,28 +29,28 @@ const ACTION_DEFINITIONS = {
     ar: 'تسجيل دخول المشرف (2FA)',
     category: 'auth',
     icon: ShieldCheck,
-    color: 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800'
+    color: 'text-success-700 dark:text-success-300 bg-success-50 dark:bg-success-950/60 border-success-200 dark:border-success-800'
   },
   ADMIN_CHANGE_PASSWORD: {
     de: 'Admin-Passwort geändert',
     ar: 'تم تغيير كلمة مرور المشرف',
     category: 'auth',
     icon: KeyRound,
-    color: 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border-amber-200 dark:border-amber-800'
+    color: 'text-warning-700 dark:text-warning-300 bg-warning-50 dark:bg-warning-950/60 border-warning-200 dark:border-warning-800'
   },
   SET_SECTION_PASSCODE: {
     de: 'Bereichs-PIN geändert',
     ar: 'تم تحديث رمز PIN للأقسام',
     category: 'security',
     icon: KeyRound,
-    color: 'text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 border-purple-200 dark:border-purple-800'
+    color: 'text-promo-700 dark:text-promo-300 bg-promo-50 dark:bg-promo-950/60 border-promo-200 dark:border-promo-800'
   },
   REMOVE_SECTION_PASSCODE: {
     de: 'Bereichs-PIN entfernt',
     ar: 'تمت إزالة رمز PIN للأقسام',
     category: 'security',
     icon: AlertTriangle,
-    color: 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800'
+    color: 'text-danger-700 dark:text-danger-300 bg-danger-50 dark:bg-danger-950/60 border-danger-200 dark:border-danger-800'
   },
 
   // Customers
@@ -59,14 +59,14 @@ const ACTION_DEFINITIONS = {
     ar: 'تم عرض قائمة العملاء',
     category: 'customers',
     icon: Eye,
-    color: 'text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800'
+    color: 'text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-950/60 border-primary-200 dark:border-primary-800'
   },
   DELETE_CUSTOMER: {
     de: 'Kundenkonto gelöscht',
     ar: 'تم حذف حساب العميل',
     category: 'customers',
     icon: UserX,
-    color: 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800'
+    color: 'text-danger-700 dark:text-danger-300 bg-danger-50 dark:bg-danger-950/60 border-danger-200 dark:border-danger-800'
   },
 
   // Orders
@@ -75,28 +75,28 @@ const ACTION_DEFINITIONS = {
     ar: 'تم إنشاء طلب بالنيابة عن العميل',
     category: 'orders',
     icon: ShoppingBag,
-    color: 'text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 border-indigo-200 dark:border-indigo-800'
+    color: 'text-promo-700 dark:text-promo-300 bg-promo-50 dark:bg-promo-950/60 border-promo-200 dark:border-promo-800'
   },
   UPDATE_ORDER_STATUS: {
     de: 'Bestellstatus geändert',
     ar: 'تم تغيير حالة الطلب',
     category: 'orders',
     icon: RefreshCw,
-    color: 'text-cyan-700 dark:text-cyan-300 bg-cyan-50 dark:bg-cyan-950/60 border-cyan-200 dark:border-cyan-800'
+    color: 'text-info-700 dark:text-info-300 bg-info-50 dark:bg-info-950/60 border-info-200 dark:border-info-800'
   },
   EDIT_ORDER: {
     de: 'Bestellung angepasst',
     ar: 'تم تعديل عناصر الطلب',
     category: 'orders',
     icon: FileEdit,
-    color: 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border-amber-200 dark:border-amber-800'
+    color: 'text-warning-700 dark:text-warning-300 bg-warning-50 dark:bg-warning-950/60 border-warning-200 dark:border-warning-800'
   },
   DELETE_ORDER_REJECTED: {
     de: 'Löschversuch abgewiesen (§ 132 BAO)',
     ar: 'محاولة حذف مرفوضة (متطلبات الاحتفاظ القانوني)',
     category: 'orders',
     icon: AlertTriangle,
-    color: 'text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/60 border-red-200 dark:border-red-800'
+    color: 'text-danger-700 dark:text-danger-300 bg-danger-50 dark:bg-danger-950/60 border-danger-200 dark:border-danger-800'
   },
 
   // Products & Inventory
@@ -105,7 +105,7 @@ const ACTION_DEFINITIONS = {
     ar: 'تمت إضافة منتج جديد',
     category: 'catalog',
     icon: Package,
-    color: 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800'
+    color: 'text-success-700 dark:text-success-300 bg-success-50 dark:bg-success-950/60 border-success-200 dark:border-success-800'
   },
   UPDATE_PRODUCT: {
     de: 'Produkt bearbeitet',
@@ -119,21 +119,21 @@ const ACTION_DEFINITIONS = {
     ar: 'تم تحديث كمية المخزون',
     category: 'catalog',
     icon: Layers,
-    color: 'text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 border-teal-200 dark:border-teal-800'
+    color: 'text-info-700 dark:text-info-300 bg-info-50 dark:bg-info-950/60 border-info-200 dark:border-info-800'
   },
   DELETE_PRODUCT: {
     de: 'Produkt entfernt',
     ar: 'تم حذف المنتج من النظام',
     category: 'catalog',
     icon: AlertTriangle,
-    color: 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800'
+    color: 'text-danger-700 dark:text-danger-300 bg-danger-50 dark:bg-danger-950/60 border-danger-200 dark:border-danger-800'
   },
   CREATE_CATEGORY: {
     de: 'Kategorie angelegt',
     ar: 'تمت إضافة فئة جديدة',
     category: 'catalog',
     icon: Layers,
-    color: 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800'
+    color: 'text-success-700 dark:text-success-300 bg-success-50 dark:bg-success-950/60 border-success-200 dark:border-success-800'
   },
   UPDATE_CATEGORY: {
     de: 'Kategorie bearbeitet',
@@ -147,7 +147,7 @@ const ACTION_DEFINITIONS = {
     ar: 'تم حذف الفئة',
     category: 'catalog',
     icon: AlertTriangle,
-    color: 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800'
+    color: 'text-danger-700 dark:text-danger-300 bg-danger-50 dark:bg-danger-950/60 border-danger-200 dark:border-danger-800'
   },
 
   // Coupons & Promotions
@@ -156,42 +156,42 @@ const ACTION_DEFINITIONS = {
     ar: 'تم إنشاء كود خصم جديد',
     category: 'promotions',
     icon: Tag,
-    color: 'text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/60 border-violet-200 dark:border-violet-800'
+    color: 'text-promo-700 dark:text-promo-300 bg-promo-50 dark:bg-promo-950/60 border-promo-200 dark:border-promo-800'
   },
   UPDATE_COUPON: {
     de: 'Gutscheincode bearbeitet',
     ar: 'تم تعديل كود الخصم',
     category: 'promotions',
     icon: Tag,
-    color: 'text-violet-700 dark:text-violet-300 bg-violet-50 dark:bg-violet-950/60 border-violet-200 dark:border-violet-800'
+    color: 'text-promo-700 dark:text-promo-300 bg-promo-50 dark:bg-promo-950/60 border-promo-200 dark:border-promo-800'
   },
   DELETE_COUPON: {
     de: 'Gutscheincode gelöscht',
     ar: 'تم حذف كود الخصم',
     category: 'promotions',
     icon: Tag,
-    color: 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800'
+    color: 'text-danger-700 dark:text-danger-300 bg-danger-50 dark:bg-danger-950/60 border-danger-200 dark:border-danger-800'
   },
   CREATE_PROMOTION: {
     de: 'Aktion / Angebot erstellt',
     ar: 'تم إنشاء عرض ترويجي',
     category: 'promotions',
     icon: Sparkles,
-    color: 'text-pink-700 dark:text-pink-300 bg-pink-50 dark:bg-pink-950/60 border-pink-200 dark:border-pink-800'
+    color: 'text-promo-700 dark:text-promo-300 bg-promo-50 dark:bg-promo-950/60 border-promo-200 dark:border-promo-800'
   },
   UPDATE_PROMOTION: {
     de: 'Aktion / Angebot bearbeitet',
     ar: 'تم تعديل العرض الترويجي',
     category: 'promotions',
     icon: Sparkles,
-    color: 'text-pink-700 dark:text-pink-300 bg-pink-50 dark:bg-pink-950/60 border-pink-200 dark:border-pink-800'
+    color: 'text-promo-700 dark:text-promo-300 bg-promo-50 dark:bg-promo-950/60 border-promo-200 dark:border-promo-800'
   },
   DELETE_PROMOTION: {
     de: 'Aktion / Angebot gelöscht',
     ar: 'تم حذف العرض الترويجي',
     category: 'promotions',
     icon: Sparkles,
-    color: 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800'
+    color: 'text-danger-700 dark:text-danger-300 bg-danger-50 dark:bg-danger-950/60 border-danger-200 dark:border-danger-800'
   },
 
   // Accounting & Settings
@@ -200,49 +200,49 @@ const ACTION_DEFINITIONS = {
     ar: 'تم تصدير سجل المحاسبة',
     category: 'accounting',
     icon: Download,
-    color: 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800'
+    color: 'text-success-700 dark:text-success-300 bg-success-50 dark:bg-success-950/60 border-success-200 dark:border-success-800'
   },
   UPDATE_SETTINGS: {
     de: 'Geschäftseinstellungen geändert',
     ar: 'تم تعديل إعدادات المتجر والتوصيل',
     category: 'settings',
     icon: FileEdit,
-    color: 'text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800'
+    color: 'text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-950/60 border-primary-200 dark:border-primary-800'
   },
   CREATE_DELIVERY_WINDOW: {
     de: 'Lieferfenster angelegt',
     ar: 'تمت إضافة فترة توصيل',
     category: 'settings',
     icon: Clock,
-    color: 'text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800'
+    color: 'text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-950/60 border-primary-200 dark:border-primary-800'
   },
   UPDATE_DELIVERY_WINDOW: {
     de: 'Lieferfenster bearbeitet',
     ar: 'تم تعديل فترة التوصيل',
     category: 'settings',
     icon: Clock,
-    color: 'text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800'
+    color: 'text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-950/60 border-primary-200 dark:border-primary-800'
   },
   DELETE_DELIVERY_WINDOW: {
     de: 'Lieferfenster gelöscht',
     ar: 'تم حذف فترة التوصيل',
     category: 'settings',
     icon: Clock,
-    color: 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800'
+    color: 'text-danger-700 dark:text-danger-300 bg-danger-50 dark:bg-danger-950/60 border-danger-200 dark:border-danger-800'
   },
   SYNC_GOOGLE_REVIEWS: {
     de: 'Google-Bewertungen synchronisiert',
     ar: 'تمت مزامنة تقييمات Google',
     category: 'settings',
     icon: RefreshCw,
-    color: 'text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800'
+    color: 'text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-950/60 border-primary-200 dark:border-primary-800'
   },
   DELETE_GOOGLE_REVIEW: {
     de: 'Google-Bewertung gelöscht',
     ar: 'تم حذف تقييم Google',
     category: 'settings',
     icon: AlertTriangle,
-    color: 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800'
+    color: 'text-danger-700 dark:text-danger-300 bg-danger-50 dark:bg-danger-950/60 border-danger-200 dark:border-danger-800'
   }
 };
 
@@ -331,11 +331,11 @@ export const AuditLog = () => {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-800 via-slate-900 to-indigo-950 text-white rounded-2xl p-5 sm:p-8 shadow-lg border border-slate-700/60 dark:border-gray-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-800 via-slate-900 to-promo-950 text-white rounded-2xl p-5 sm:p-8 shadow-lg border border-slate-700/60 dark:border-gray-800">
         <div>
           <div className="flex items-center gap-2.5">
             <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-md shrink-0">
-              <ScrollText className="w-5 h-5 text-indigo-300" />
+              <ScrollText className="w-5 h-5 text-promo-300" />
             </div>
             <h1 className="text-xl sm:text-2xl font-black tracking-tight">
               {isAr ? 'سجل العمليات والتدقيق الأمني' : 'Audit- & Zugriffsprotokoll'}
@@ -374,7 +374,7 @@ export const AuditLog = () => {
           <p className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">
             {isAr ? 'عمليات اليوم' : 'Aktionen heute'}
           </p>
-          <p className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
+          <p className="text-xl sm:text-2xl font-black text-success-600 dark:text-success-400 mt-1">
             {stats.today}
           </p>
         </div>
@@ -383,7 +383,7 @@ export const AuditLog = () => {
           <p className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">
             {isAr ? 'جلسات تسجيل الدخول' : 'Admin-Anmeldungen'}
           </p>
-          <p className="text-xl sm:text-2xl font-black text-blue-600 dark:text-blue-400 mt-1">
+          <p className="text-xl sm:text-2xl font-black text-primary-600 dark:text-primary-400 mt-1">
             {stats.logins}
           </p>
         </div>
@@ -392,7 +392,7 @@ export const AuditLog = () => {
           <p className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">
             {isAr ? 'تعديلات البيانات' : 'Datenänderungen'}
           </p>
-          <p className="text-xl sm:text-2xl font-black text-purple-600 dark:text-purple-400 mt-1">
+          <p className="text-xl sm:text-2xl font-black text-promo-600 dark:text-promo-400 mt-1">
             {stats.mutations}
           </p>
         </div>
@@ -409,7 +409,7 @@ export const AuditLog = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={isAr ? 'بحث في السجل بالمسؤول، الإجراء، أو التفاصيل...' : 'Im Protokoll suchen nach Admin, Aktion, Detail...'}
-              className="w-full ps-10 pe-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition"
+              className="w-full ps-10 pe-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:ring-2 focus:ring-promo-500 transition"
             />
           </div>
 
@@ -418,7 +418,7 @@ export const AuditLog = () => {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full appearance-none px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+              className="w-full appearance-none px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:ring-2 focus:ring-promo-500 cursor-pointer"
             >
               {CATEGORIES.map((cat) => (
                 <option key={cat.id} value={cat.id}>
@@ -441,7 +441,7 @@ export const AuditLog = () => {
                 onClick={() => setSelectedCategory(cat.id)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer touch-manipulation ${
                   isSelected
-                    ? 'bg-indigo-600 text-white shadow-2xs'
+                    ? 'bg-promo-600 text-white shadow-2xs'
                     : 'bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-750 text-slate-600 dark:text-gray-300'
                 }`}
               >
@@ -456,13 +456,13 @@ export const AuditLog = () => {
       <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-2xs overflow-hidden">
         {loading ? (
           <div className="flex flex-col items-center justify-center h-56 space-y-3">
-            <div className="animate-spin rounded-full h-9 w-9 border-b-2 border-indigo-600" />
+            <div className="animate-spin rounded-full h-9 w-9 border-b-2 border-promo-600" />
             <p className="text-xs text-slate-400">{isAr ? 'جارٍ تحميل السجلات...' : 'Protokolle werden geladen...'}</p>
           </div>
         ) : error ? (
           <div className="p-8 text-center">
-            <AlertTriangle className="w-8 h-8 text-rose-500 mx-auto mb-2" />
-            <p className="text-sm font-bold text-rose-600 dark:text-rose-400">{error}</p>
+            <AlertTriangle className="w-8 h-8 text-danger-500 mx-auto mb-2" />
+            <p className="text-sm font-bold text-danger-600 dark:text-danger-400">{error}</p>
           </div>
         ) : filteredEntries.length === 0 ? (
           <div className="p-12 text-center text-slate-400 space-y-2">

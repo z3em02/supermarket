@@ -11,10 +11,10 @@ export const VerifyContactModal = ({
   verifyingLoading,
   verifyingType
 }) => (
-    <div className="mb-6 p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 shadow-sm">
+    <div className="mb-6 p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-warning-50 dark:bg-warning-950/60 border border-warning-300 dark:border-warning-800 shadow-sm">
       <div className="flex items-center justify-between mb-3 gap-2">
         <h3 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 shrink-0" />
+          <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-warning-600 shrink-0" />
           <span>
             {isAr 
               ? `إدخال رمز التحقق لـ ${verifyingType === 'email' ? 'البريد الإلكتروني' : 'رقم الهاتف'}` 
@@ -30,13 +30,13 @@ export const VerifyContactModal = ({
       </div>
 
       {profileError && (
-        <div className="text-xs bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-300 px-3 py-1.5 rounded-lg mb-3">
+        <div className="text-xs bg-danger-50 dark:bg-danger-950/50 border border-danger-200 dark:border-danger-900/50 text-danger-700 dark:text-danger-300 px-3 py-1.5 rounded-lg mb-3">
           {profileError}
         </div>
       )}
 
       {verifyingType === 'phone' && !phoneCodeSent ? (
-        <p className="text-xs text-amber-700 dark:text-amber-300">
+        <p className="text-xs text-warning-700 dark:text-warning-300">
           {verifyingLoading
             ? (isAr ? 'جارٍ إرسال الرمز عبر واتساب...' : 'Code wird per WhatsApp gesendet...')
             : (isAr ? 'تعذر إرسال الرمز.' : 'Code konnte nicht gesendet werden.')}
@@ -49,13 +49,13 @@ export const VerifyContactModal = ({
             value={otpInput}
             onChange={(e) => setOtpInput(e.target.value)}
             placeholder="123456"
-            className="w-full sm:w-48 px-4 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-amber-300 dark:border-amber-700 font-mono tracking-widest text-center font-bold text-base outline-none focus:ring-2 focus:ring-amber-500"
+            className="w-full sm:w-48 px-4 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-warning-300 dark:border-warning-700 font-mono tracking-widest text-center font-bold text-base outline-none focus:ring-2 focus:ring-warning-500"
           />
           <button
             type="button"
             onClick={handleSubmitVerifyOtp}
             disabled={verifyingLoading || otpInput.length < 6}
-            className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition cursor-pointer disabled:opacity-50 touch-manipulation"
+            className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-warning-600 hover:bg-warning-700 text-white font-bold text-xs transition cursor-pointer disabled:opacity-50 touch-manipulation"
           >
             {verifyingLoading ? '...' : (isAr ? 'تأكيد الرمز' : 'Code bestätigen')}
           </button>

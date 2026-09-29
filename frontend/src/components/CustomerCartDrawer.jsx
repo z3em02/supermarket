@@ -385,7 +385,7 @@ export const CustomerCartDrawer = ({
         {/* Drawer Header */}
         <div className="px-4 sm:px-6 py-3.5 sm:py-5 border-b border-slate-100 dark:border-gray-800 flex items-center justify-between bg-slate-50/50 dark:bg-gray-950/50 shrink-0">
           <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200 dark:border-emerald-900/40 shrink-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-200 dark:border-brand-900/40 shrink-0">
               <Truck className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
@@ -403,7 +403,7 @@ export const CustomerCartDrawer = ({
               <button
                 type="button"
                 onClick={clearCart}
-                className="p-1.5 sm:p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer touch-manipulation"
+                className="p-1.5 sm:p-2 text-slate-400 hover:text-danger-600 dark:hover:text-danger-400 rounded-xl hover:bg-danger-50 dark:hover:bg-danger-950/40 transition cursor-pointer touch-manipulation"
                 title={isAr ? 'تفريغ السلة' : 'Warenkorb leeren'}
               >
                 <Trash2 className="w-4 h-4" />
@@ -447,13 +447,13 @@ export const CustomerCartDrawer = ({
               />
 
               {/* Zero-Payment note */}
-              <div className="flex items-center gap-2 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
+              <div className="flex items-center gap-2 text-[11px] font-semibold text-brand-700 dark:text-brand-400">
                 <Truck className="w-3.5 h-3.5 shrink-0" />
                 <span>{isAr ? 'الدفع عند الاستلام فقط (نقداً أو بالبطاقة)' : 'Zahlung erst bei Lieferung (Bar oder Karte)'}</span>
               </div>
 
               {error && (
-                <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2">
+                <div className="p-3.5 rounded-2xl bg-danger-50 dark:bg-danger-950/50 border border-danger-200 dark:border-danger-900/50 text-danger-700 dark:text-danger-300 text-xs flex items-start gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>{error}</span>
                 </div>

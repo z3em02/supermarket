@@ -195,7 +195,7 @@ export const Products = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div>
       </div>
     );
   }
@@ -217,7 +217,7 @@ export const Products = () => {
             to={`${ADMIN_BASE}/catalogs`}
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-slate-50 dark:hover:bg-gray-850 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-medium shadow-2xs transition touch-manipulation"
           >
-            <Layers className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+            <Layers className="w-4 h-4 text-primary-600 dark:text-primary-400 shrink-0" />
             <span>{t('catalogs')}</span>
           </Link>
 
@@ -225,14 +225,14 @@ export const Products = () => {
             to="/"
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-slate-50 dark:hover:bg-gray-850 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-medium shadow-2xs transition touch-manipulation"
           >
-            <Store className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+            <Store className="w-4 h-4 text-primary-600 dark:text-primary-400 shrink-0" />
             <span>{t('viewCatalog')}</span>
             <ArrowUpRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
           </Link>
 
           <button
             onClick={handleOpenAddModal}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 sm:py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs sm:text-sm rounded-xl shadow-sm transition touch-manipulation cursor-pointer"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 sm:py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium text-xs sm:text-sm rounded-xl shadow-sm transition touch-manipulation cursor-pointer"
           >
             <Plus className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
             <span>{t('addProduct')}</span>

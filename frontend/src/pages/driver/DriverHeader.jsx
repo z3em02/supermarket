@@ -40,7 +40,7 @@ export const DriverHeader = ({
               <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
             </Link>
           )}
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-emerald-600 flex items-center justify-center text-white shadow-md shadow-amber-500/20 shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-warning-500 to-success-600 flex items-center justify-center text-white shadow-md shadow-warning-500/20 shrink-0">
             <Truck className="w-5 h-5" />
           </div>
           <div className="min-w-0">
@@ -48,7 +48,7 @@ export const DriverHeader = ({
               <h1 className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white truncate">
                 {isAr ? 'واجهة التوصيل والسائق' : 'Fahrer- & Lieferansicht'}
               </h1>
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 uppercase">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-warning-100 text-warning-800 dark:bg-warning-900/60 dark:text-warning-300 uppercase">
                 {isAr ? 'سائق' : 'Driver'}
               </span>
             </div>
@@ -66,7 +66,7 @@ export const DriverHeader = ({
             className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-slate-600 dark:text-gray-300 transition"
             title={isAr ? 'تحديث الطلبات' : 'Aktualisieren'}
           >
-            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-emerald-600' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-success-600' : ''}`} />
           </button>
 
           <button
@@ -74,7 +74,7 @@ export const DriverHeader = ({
             className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-slate-600 dark:text-gray-300 transition"
             title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
           >
-            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
+            {theme === 'dark' ? <Sun className="w-4 h-4 text-warning-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
           </button>
 
           <button
@@ -88,7 +88,7 @@ export const DriverHeader = ({
           {driverUser && !adminUser && (
             <button
               onClick={handleDriverLogout}
-              className="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-950/60 text-rose-600 dark:text-rose-400 transition"
+              className="p-2 rounded-xl bg-danger-50 hover:bg-danger-100 dark:bg-danger-950/40 dark:hover:bg-danger-950/60 text-danger-600 dark:text-danger-400 transition"
               title={isAr ? 'تسجيل الخروج' : 'Abmelden'}
             >
               <LogOut className="w-4 h-4" />

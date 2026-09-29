@@ -338,7 +338,7 @@ export const Promotions = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
-            <Sparkles className="w-7 h-7 text-amber-500" />
+            <Sparkles className="w-7 h-7 text-warning-500" />
             {t('promotions')}
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
@@ -351,7 +351,7 @@ export const Promotions = () => {
           {activeTab === 'coupons' ? (
             <button
               onClick={handleOpenCreateCoupon}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm shadow-sm shadow-blue-600/30 transition"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-medium text-sm shadow-sm shadow-primary-600/30 transition"
             >
               <Plus className="w-4 h-4" />
               {t('createCoupon')}
@@ -359,7 +359,7 @@ export const Promotions = () => {
           ) : (
             <button
               onClick={handleOpenCreateOffer}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm shadow-sm shadow-emerald-600/30 transition"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-success-600 hover:bg-success-700 text-white font-medium text-sm shadow-sm shadow-success-600/30 transition"
             >
               <Plus className="w-4 h-4" />
               {t('createOffer')} (z.B. 2+1)
@@ -385,7 +385,7 @@ export const Promotions = () => {
             onClick={() => setActiveTab('coupons')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition ${
               activeTab === 'coupons'
-                ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/20'
+                ? 'bg-primary-600 text-white shadow-sm shadow-primary-600/20'
                 : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-800'
             }`}
           >
@@ -397,7 +397,7 @@ export const Promotions = () => {
             onClick={() => setActiveTab('offers')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition ${
               activeTab === 'offers'
-                ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20'
+                ? 'bg-success-600 text-white shadow-sm shadow-success-600/20'
                 : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-800'
             }`}
           >
@@ -414,7 +414,7 @@ export const Promotions = () => {
             placeholder={activeTab === 'coupons' ? 'Gutscheincode suchen...' : 'Produkt suchen...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white"
+            className="w-full pl-9 pr-4 py-2 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-primary-500 text-slate-900 dark:text-white"
           />
         </div>
       </div>

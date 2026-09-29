@@ -53,7 +53,7 @@ export const AGB = () => {
                 className="w-8 h-8 sm:w-10 sm:h-10 object-contain rounded-xl bg-slate-50 dark:bg-gray-850 p-1 border border-slate-200 dark:border-gray-750 shrink-0"
               />
             ) : (
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shrink-0">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-primary-600 flex items-center justify-center text-white shadow-md shrink-0">
                 <Store className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
             )}
@@ -61,7 +61,7 @@ export const AGB = () => {
               <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white block leading-tight truncate max-w-[120px] xs:max-w-[180px] sm:max-w-none">
                 {storeName}
               </span>
-              <span className="text-[10px] sm:text-[11px] text-blue-600 dark:text-blue-400 font-semibold block truncate">
+              <span className="text-[10px] sm:text-[11px] text-primary-600 dark:text-primary-400 font-semibold block truncate">
                 {language === 'ar' ? 'سوبرماركت وتوصيل منزلي' : 'Supermarkt & Lieferservice'}
               </span>
             </div>
@@ -86,7 +86,7 @@ export const AGB = () => {
 
         {/* Title */}
         <div className="text-center space-y-2.5 sm:space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/60 dark:border-indigo-800 text-indigo-700 dark:text-indigo-400 text-[11px] sm:text-xs font-bold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-promo-50 dark:bg-promo-950/60 border border-promo-200/60 dark:border-promo-800 text-promo-700 dark:text-promo-400 text-[11px] sm:text-xs font-bold uppercase tracking-wider">
             <Gavel className="w-3.5 h-3.5 shrink-0" />
             <span>{language === 'ar' ? 'وفقاً لقانون حماية المستهلك النمساوي (KSchG, FAGG)' : 'Gemäß KSchG & FAGG (Österreich)'}</span>
           </div>
@@ -107,7 +107,7 @@ export const AGB = () => {
             {/* 1. Scope */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                <FileText className="w-5 h-5 text-promo-600 dark:text-promo-400" />
                 <span>1. نطاق السريان</span>
               </h2>
               <p>
@@ -118,18 +118,18 @@ export const AGB = () => {
             {/* 2. Contract Partner */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <ShoppingCart className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <ShoppingCart className="w-5 h-5 text-primary-600 dark:text-primary-400" />
                 <span>2. الطرف المتعاقد</span>
               </h2>
               <p>
-                طرف العقد هو {storeName} (HAJAR Alasiri Casa)، {address}. لمزيد من البيانات القانونية والتواصل، يرجى مراجعة <Link to="/impressum" className="text-blue-600 underline">بيانات النشر (Impressum)</Link>.
+                طرف العقد هو {storeName} (HAJAR Alasiri Casa)، {address}. لمزيد من البيانات القانونية والتواصل، يرجى مراجعة <Link to="/impressum" className="text-primary-600 underline">بيانات النشر (Impressum)</Link>.
               </p>
             </div>
 
             {/* 3. Contract Formation */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <FileText className="w-5 h-5 text-brand-600 dark:text-brand-400" />
                 <span>3. إبرام العقد</span>
               </h2>
               <p>
@@ -143,7 +143,7 @@ export const AGB = () => {
             {/* 4. Prices & Payment */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                <CreditCard className="w-5 h-5 text-warning-600 dark:text-warning-400" />
                 <span>4. الأسعار وشروط الدفع</span>
               </h2>
               <p>
@@ -159,7 +159,7 @@ export const AGB = () => {
             {/* 5. Minimum Order & Delivery Area */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Truck className="w-5 h-5 text-rose-600 dark:text-rose-400" />
+                <Truck className="w-5 h-5 text-danger-600 dark:text-danger-400" />
                 <span>5. الحد الأدنى للطلب ومنطقة التوصيل</span>
               </h2>
               {minOrderValue > 0 && (
@@ -179,7 +179,7 @@ export const AGB = () => {
             {/* 6. Delivery Fee */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Truck className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <Truck className="w-5 h-5 text-primary-600 dark:text-primary-400" />
                 <span>6. رسوم التوصيل</span>
               </h2>
               <p>
@@ -196,14 +196,14 @@ export const AGB = () => {
             {/* 7. Right of Withdrawal */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <RotateCcw className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                <RotateCcw className="w-5 h-5 text-promo-600 dark:text-promo-400" />
                 <span>7. حق الرجوع عن الشراء (Widerrufsrecht)</span>
               </h2>
               <p>
                 يحق للمستهلكين بشكل عام الرجوع عن العقد خلال 14 يوماً دون إبداء أسباب، وفقاً لقانون العقود عن بُعد وخارج المحل التجاري (FAGG).
               </p>
-              <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-850 rounded-xl">
-                <p className="font-bold text-amber-900 dark:text-amber-300 mb-1">استثناء هام للمواد الغذائية سريعة التلف:</p>
+              <div className="p-3 bg-warning-50 dark:bg-warning-950/40 border border-warning-200 dark:border-warning-900/60 rounded-xl">
+                <p className="font-bold text-warning-900 dark:text-warning-300 mb-1">استثناء هام للمواد الغذائية سريعة التلف:</p>
                 <p className="text-xs">
                   وفقاً للمادة § 18 Abs. 1 Z 4 FAGG، لا يسري حق الرجوع على العقود الخاصة بتوريد سلع سريعة التلف أو التي ينتهي تاريخ صلاحيتها بسرعة (مثل الخضروات والفواكه الطازجة، منتجات الألبان، اللحوم، المخبوزات الطازجة). ونظراً لأن غالبية منتجاتنا من هذا النوع، فلا يمكن الرجوع عن شراء هذه الأصناف بعد استلامها.
                 </p>
@@ -212,14 +212,14 @@ export const AGB = () => {
                 بالنسبة للسلع الجافة طويلة الصلاحية والمعبأة أصلياً (مثل المعلبات، الأرز، المكسرات، المشروبات المعبأة)، يسري حق الرجوع القانوني، ما لم تُفتح العبوة الأصلية لأسباب صحية أو تتعلق بالنظافة بعد التسليم وتصبح غير صالحة للإرجاع (§ 18 Abs. 1 Z 5 FAGG).
               </p>
               <p>
-                لممارسة حق الرجوع، يرجى إبلاغنا بقرار واضح (عبر البريد الإلكتروني <a href={`mailto:${email}`} className="text-blue-600 underline">{email}</a> أو الهاتف <a href={`tel:${phone}`} className="text-blue-600 underline">{phone}</a>) خلال المهلة المذكورة. في حال الرجوع الصحيح، سنقوم برد جميع المبالغ المستلمة خلال 14 يوماً كحد أقصى.
+                لممارسة حق الرجوع، يرجى إبلاغنا بقرار واضح (عبر البريد الإلكتروني <a href={`mailto:${email}`} className="text-primary-600 underline">{email}</a> أو الهاتف <a href={`tel:${phone}`} className="text-primary-600 underline">{phone}</a>) خلال المهلة المذكورة. في حال الرجوع الصحيح، سنقوم برد جميع المبالغ المستلمة خلال 14 يوماً كحد أقصى.
               </p>
             </div>
 
             {/* 8. Warranty */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <ShieldCheck className="w-5 h-5 text-brand-600 dark:text-brand-400" />
                 <span>8. الضمان القانوني (Gewährleistung)</span>
               </h2>
               <p>
@@ -230,7 +230,7 @@ export const AGB = () => {
             {/* 9. Liability */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400" />
+                <AlertCircle className="w-5 h-5 text-danger-600 dark:text-danger-400" />
                 <span>9. المسؤولية</span>
               </h2>
               <p>
@@ -241,22 +241,22 @@ export const AGB = () => {
             {/* 10. Data Protection */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                <ShieldCheck className="w-5 h-5 text-promo-600 dark:text-promo-400" />
                 <span>10. حماية البيانات</span>
               </h2>
               <p>
-                لمعرفة كيفية جمع ومعالجة بياناتكم الشخصية، يرجى مراجعة <Link to="/datenschutz" className="text-blue-600 underline">سياسة الخصوصية</Link> الخاصة بنا.
+                لمعرفة كيفية جمع ومعالجة بياناتكم الشخصية، يرجى مراجعة <Link to="/datenschutz" className="text-primary-600 underline">سياسة الخصوصية</Link> الخاصة بنا.
               </p>
             </div>
 
             {/* 11. Dispute Resolution */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Scale className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <Scale className="w-5 h-5 text-primary-600 dark:text-primary-400" />
                 <span>11. تسوية النزاعات عبر الإنترنت</span>
               </h2>
               <p>
-                يمكن للمستهلكين تقديم شكوى عبر منصة تسوية النزاعات الإلكترونية التابعة للاتحاد الأوروبي: <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">https://ec.europa.eu/consumers/odr</a>. يمكنكم أيضاً التواصل معنا مباشرة عبر البريد الإلكتروني المذكور أعلاه.
+                يمكن للمستهلكين تقديم شكوى عبر منصة تسوية النزاعات الإلكترونية التابعة للاتحاد الأوروبي: <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener noreferrer" className="text-primary-600 underline">https://ec.europa.eu/consumers/odr</a>. يمكنكم أيضاً التواصل معنا مباشرة عبر البريد الإلكتروني المذكور أعلاه.
               </p>
             </div>
 
@@ -279,7 +279,7 @@ export const AGB = () => {
             {/* 1. Geltungsbereich */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                <FileText className="w-5 h-5 text-promo-600 dark:text-promo-400" />
                 <span>1. Geltungsbereich</span>
               </h2>
               <p>
@@ -290,18 +290,18 @@ export const AGB = () => {
             {/* 2. Vertragspartner */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <ShoppingCart className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <ShoppingCart className="w-5 h-5 text-primary-600 dark:text-primary-400" />
                 <span>2. Vertragspartner</span>
               </h2>
               <p>
-                Vertragspartner ist {storeName} (HAJAR Alasiri Casa), {address}. Alle weiteren rechtlichen Angaben und Kontaktmöglichkeiten finden Sie in unserem <Link to="/impressum" className="text-blue-600 underline">Impressum</Link>.
+                Vertragspartner ist {storeName} (HAJAR Alasiri Casa), {address}. Alle weiteren rechtlichen Angaben und Kontaktmöglichkeiten finden Sie in unserem <Link to="/impressum" className="text-primary-600 underline">Impressum</Link>.
               </p>
             </div>
 
             {/* 3. Vertragsabschluss */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <FileText className="w-5 h-5 text-brand-600 dark:text-brand-400" />
                 <span>3. Vertragsabschluss</span>
               </h2>
               <p>
@@ -315,7 +315,7 @@ export const AGB = () => {
             {/* 4. Preise & Zahlung */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                <CreditCard className="w-5 h-5 text-warning-600 dark:text-warning-400" />
                 <span>4. Preise und Zahlungsbedingungen</span>
               </h2>
               <p>
@@ -331,7 +331,7 @@ export const AGB = () => {
             {/* 5. Mindestbestellwert & Liefergebiet */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Truck className="w-5 h-5 text-rose-600 dark:text-rose-400" />
+                <Truck className="w-5 h-5 text-danger-600 dark:text-danger-400" />
                 <span>5. Mindestbestellwert und Liefergebiet</span>
               </h2>
               {minOrderValue > 0 && (
@@ -351,7 +351,7 @@ export const AGB = () => {
             {/* 6. Liefergebühr */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Truck className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <Truck className="w-5 h-5 text-primary-600 dark:text-primary-400" />
                 <span>6. Liefergebühr</span>
               </h2>
               <p>
@@ -368,14 +368,14 @@ export const AGB = () => {
             {/* 7. Widerrufsrecht */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <RotateCcw className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                <RotateCcw className="w-5 h-5 text-promo-600 dark:text-promo-400" />
                 <span>7. Widerrufsrecht</span>
               </h2>
               <p>
                 Verbrauchern steht grundsätzlich ein Widerrufsrecht binnen 14 Tagen ohne Angabe von Gründen zu, gemäß dem Fern- und Auswärtsgeschäfte-Gesetz (FAGG). Die Widerrufsfrist beträgt 14 Tage ab dem Tag, an dem Sie bzw. ein von Ihnen benannter Dritter die Ware in Besitz genommen hat.
               </p>
-              <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-850 rounded-xl">
-                <p className="font-bold text-amber-900 dark:text-amber-300 mb-1">Wichtige Ausnahme für schnell verderbliche Lebensmittel:</p>
+              <div className="p-3 bg-warning-50 dark:bg-warning-950/40 border border-warning-200 dark:border-warning-900/60 rounded-xl">
+                <p className="font-bold text-warning-900 dark:text-warning-300 mb-1">Wichtige Ausnahme für schnell verderbliche Lebensmittel:</p>
                 <p className="text-xs">
                   Gemäß § 18 Abs. 1 Z 4 FAGG besteht KEIN Widerrufsrecht bei Verträgen über die Lieferung von Waren, die schnell verderben können oder deren Verfallsdatum schnell überschritten würde (z. B. frisches Obst und Gemüse, Milchprodukte, Fleisch- und Wurstwaren, frische Backwaren). Da unser Sortiment überwiegend aus solchen Frischeprodukten besteht, ist ein Widerruf für diese Artikel nach Erhalt der Ware ausgeschlossen.
                 </p>
@@ -384,14 +384,14 @@ export const AGB = () => {
                 Für länger haltbare, originalverpackte Trockenwaren (z. B. Konserven, Reis, Nüsse, Getränke in Originalverpackung) besteht das gesetzliche Widerrufsrecht, sofern die Verpackung nicht aus Gründen des Gesundheitsschutzes oder der Hygiene nach der Lieferung geöffnet wurde und dadurch nicht mehr zur Rücksendung geeignet ist (§ 18 Abs. 1 Z 5 FAGG).
               </p>
               <p>
-                Um Ihr Widerrufsrecht auszuüben, informieren Sie uns bitte mittels einer eindeutigen Erklärung (z. B. per E-Mail an <a href={`mailto:${email}`} className="text-blue-600 underline">{email}</a> oder telefonisch unter <a href={`tel:${phone}`} className="text-blue-600 underline">{phone}</a>) über Ihren Entschluss, innerhalb der Frist. Im Falle eines wirksamen Widerrufs erstatten wir alle erhaltenen Zahlungen unverzüglich, spätestens binnen 14 Tagen.
+                Um Ihr Widerrufsrecht auszuüben, informieren Sie uns bitte mittels einer eindeutigen Erklärung (z. B. per E-Mail an <a href={`mailto:${email}`} className="text-primary-600 underline">{email}</a> oder telefonisch unter <a href={`tel:${phone}`} className="text-primary-600 underline">{phone}</a>) über Ihren Entschluss, innerhalb der Frist. Im Falle eines wirksamen Widerrufs erstatten wir alle erhaltenen Zahlungen unverzüglich, spätestens binnen 14 Tagen.
               </p>
             </div>
 
             {/* 8. Gewährleistung */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <ShieldCheck className="w-5 h-5 text-brand-600 dark:text-brand-400" />
                 <span>8. Gewährleistung</span>
               </h2>
               <p>
@@ -402,7 +402,7 @@ export const AGB = () => {
             {/* 9. Haftung */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400" />
+                <AlertCircle className="w-5 h-5 text-danger-600 dark:text-danger-400" />
                 <span>9. Haftung</span>
               </h2>
               <p>
@@ -413,22 +413,22 @@ export const AGB = () => {
             {/* 10. Datenschutz */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                <ShieldCheck className="w-5 h-5 text-promo-600 dark:text-promo-400" />
                 <span>10. Datenschutz</span>
               </h2>
               <p>
-                Informationen zur Erhebung und Verarbeitung Ihrer personenbezogenen Daten finden Sie in unserer <Link to="/datenschutz" className="text-blue-600 underline">Datenschutzerklärung</Link>.
+                Informationen zur Erhebung und Verarbeitung Ihrer personenbezogenen Daten finden Sie in unserer <Link to="/datenschutz" className="text-primary-600 underline">Datenschutzerklärung</Link>.
               </p>
             </div>
 
             {/* 11. Streitbeilegung */}
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Scale className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <Scale className="w-5 h-5 text-primary-600 dark:text-primary-400" />
                 <span>11. Online-Streitbeilegung</span>
               </h2>
               <p>
-                Verbraucher haben die Möglichkeit, Beschwerden an die Online-Streitbeilegungsplattform der EU zu richten: <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">https://ec.europa.eu/consumers/odr</a>. Sie können Ihre Beschwerde auch direkt an unsere oben genannte E-Mail-Adresse richten.
+                Verbraucher haben die Möglichkeit, Beschwerden an die Online-Streitbeilegungsplattform der EU zu richten: <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener noreferrer" className="text-primary-600 underline">https://ec.europa.eu/consumers/odr</a>. Sie können Ihre Beschwerde auch direkt an unsere oben genannte E-Mail-Adresse richten.
               </p>
             </div>
 
@@ -453,9 +453,9 @@ export const AGB = () => {
         <div className="max-w-4xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <span>© {new Date().getFullYear()} {storeName}. {language === 'ar' ? 'جميع الحقوق محفوظة.' : 'Alle Rechte vorbehalten.'}</span>
           <div className="flex items-center gap-4">
-            <Link to="/impressum" className="hover:text-blue-600 underline underline-offset-2">{t('impressum')}</Link>
-            <Link to="/datenschutz" className="hover:text-blue-600 underline underline-offset-2">{t('datenschutz')}</Link>
-            <Link to="/" className="hover:text-blue-600">{t('backToHome')}</Link>
+            <Link to="/impressum" className="hover:text-primary-600 underline underline-offset-2">{t('impressum')}</Link>
+            <Link to="/datenschutz" className="hover:text-primary-600 underline underline-offset-2">{t('datenschutz')}</Link>
+            <Link to="/" className="hover:text-primary-600">{t('backToHome')}</Link>
           </div>
         </div>
       </footer>

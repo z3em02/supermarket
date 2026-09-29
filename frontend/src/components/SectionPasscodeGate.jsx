@@ -95,7 +95,7 @@ export const SectionPasscodeGate = ({ children }) => {
   if (status === 'loading') {
     return (
       <div className="min-h-[50vh] flex items-center justify-center">
-        <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-3 border-primary-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -104,7 +104,7 @@ export const SectionPasscodeGate = ({ children }) => {
     <div className="min-h-[70vh] flex items-center justify-center px-4">
       <div className="w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-xl p-6 space-y-5">
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 mx-auto rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-200 dark:border-blue-900/40">
+          <div className="w-12 h-12 mx-auto rounded-2xl bg-primary-50 dark:bg-primary-950/60 text-primary-600 dark:text-primary-400 flex items-center justify-center border border-primary-200 dark:border-primary-900/40">
             <Lock className="w-6 h-6" />
           </div>
           <h2 className="font-black text-lg text-slate-900 dark:text-white">
@@ -129,7 +129,7 @@ export const SectionPasscodeGate = ({ children }) => {
             value={pin}
             onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
             placeholder="••••"
-            className="w-full px-4 py-3 text-center text-2xl tracking-[0.5em] font-mono bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-3 text-center text-2xl tracking-[0.5em] font-mono bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500"
           />
           {status === 'setup' && (
             <input
@@ -140,11 +140,11 @@ export const SectionPasscodeGate = ({ children }) => {
               value={confirmPin}
               onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))}
               placeholder={isAr ? 'تأكيد الرمز' : 'PIN bestätigen'}
-              className="w-full px-4 py-3 text-center text-lg tracking-[0.4em] font-mono bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 text-center text-lg tracking-[0.4em] font-mono bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500"
             />
           )}
           {error && (
-            <p className="text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1.5 justify-center">
+            <p className="text-xs text-danger-600 dark:text-danger-400 flex items-center gap-1.5 justify-center">
               <AlertCircle className="w-3.5 h-3.5 shrink-0" />
               <span>{error}</span>
             </p>
@@ -152,7 +152,7 @@ export const SectionPasscodeGate = ({ children }) => {
           <button
             type="submit"
             disabled={submitting || pin.length < 4}
-            className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-sm shadow-sm transition cursor-pointer"
+            className="w-full py-3 rounded-xl bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white font-bold text-sm shadow-sm transition cursor-pointer"
           >
             {submitting
               ? '...'

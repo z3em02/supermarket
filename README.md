@@ -20,6 +20,7 @@ architecture notes for Claude Code live in [`CLAUDE.md`](CLAUDE.md).
 7. [Security](#7-security)
 8. [Roadmap](#8-roadmap)
 9. [Feature history](#9-feature-history)
+10. [Design system](#10-design-system)
 
 ---
 
@@ -591,3 +592,45 @@ entry before changing a hardening measure.
 - **Maintenance mode**: blocks new customer orders server-side; admins keep full access.
 - **Money handling**: amounts stored as `DECIMAL(10,2)` and rounded half-up to the cent.
 - **Orders list pagination**: the admin Orders list (`GET /api/orders`) is server-paginated (`page`, `limit` — default 50, max 100) with server-side `status` and `search` filters, so only one page of orders is loaded at a time instead of the whole book. Measured on 400 orders, this cut the list load from ~180 ms / 1 MB to ~30 ms / 125 KB, and it stays flat as the order count grows. The status metric bar reads `GET /api/orders/summary` (a DB `groupBy`) so it reflects every order, not just the page. Two request shapes are preserved for backward compatibility: a `?updatedSince=` poll and the driver view still return a flat array; the paginated browse returns `{ data, total, page, limit, totalPages }`. **Search caveat**: customer name/phone/address are encrypted at rest, so the server `search` param matches the order number and the (plaintext) assigned driver name only. The Orders page additionally narrows the *loaded page* by customer name client-side on the already-decrypted rows — so a customer-name search spans the current page, not the whole history. Frontend: `pages/orders/useOrders.js` owns the paged fetch + polling; `pages/Orders.jsx` renders the pager.
+
+## 10. Design system
+
+Frontend UI rules (React + Tailwind + Cairo font, dark mode via `class`, DE/AR + RTL).
+
+### Colour tokens
+
+Defined in `frontend/tailwind.config.js`; each maps to a full Tailwind palette, so every
+shade works (`bg-primary-600`, `dark:text-danger-300`, `border-warning-200/60`, ...).
+Use these names, never the raw palette names:
+
+| Token | Palette | Use |
+|---|---|---|
+| `primary` | blue | Admin back-office primary (buttons, links, active states) |
+| `brand` | emerald | Customer storefront primary |
+| `success` | emerald | Success / completed / money in (admin side) |
+| `warning` | amber | Waiting, attention, low stock |
+| `danger` | rose | Destructive actions, errors, declined |
+| `info` | sky | Informational, in transit |
+| `promo` | purple | Promotions and coupons, "preparing" status |
+| `slate` / `gray` | slate / gray | Neutral text and surfaces (`gray-650/750/850/950` are extra dark-mode shades) |
+
+**One primary per surface**: storefront, customer account, cart, login and legal pages use
+`brand`; admin pages and the driver view use `primary`. `red`, `indigo`, `violet`, `pink`,
+`teal` and `cyan` are no longer used — use the matching token.
+
+### Order status colours
+
+One source of truth: `frontend/src/utils/orderStatusBadge.js` (tested in
+`frontend/tests/orderStatusBadge.test.js`), used through `useStatusBadge(audience)` and
+`<OrderStatusBadge status audience />`. The colour is the same everywhere; only the wording
+changes by audience (`admin`, `customer` — who is told what *they* need to do — and `driver`).
+
+| Status | Tone |
+|---|---|
+| pending | `warning` |
+| pending_customer_approval | `warning`, stronger border, pulses |
+| accepted / confirmed | `primary` |
+| preparing | `promo` |
+| out_for_delivery / shipped | `info`, pulses |
+| delivered / completed | `success` |
+| declined / rejected / cancelled | `danger` |

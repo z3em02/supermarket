@@ -31,7 +31,7 @@ export const EditOrderModal = ({
         <div className="flex items-start justify-between pb-3 sm:pb-4 border-b border-slate-100 dark:border-gray-800 mb-4 sm:mb-5">
           <div>
             <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Edit className="w-4 sm:w-5 h-4 sm:h-5 text-amber-600 shrink-0" />
+              <Edit className="w-4 sm:w-5 h-4 sm:h-5 text-warning-600 shrink-0" />
               <span>{language === 'ar' ? 'تعديل المنتجات بالطلب (غير متوفرة بالمخزن)' : 'Bestellung anpassen (Artikel nicht vorrätig)'}</span>
             </h3>
             <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
@@ -49,8 +49,8 @@ export const EditOrderModal = ({
 
         <form onSubmit={handleSaveOrderEdit} className="space-y-5">
           {/* Notice banner */}
-          <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/80 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-2.5">
-            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+          <div className="p-3.5 rounded-xl bg-warning-50 dark:bg-warning-950/40 border border-warning-300 dark:border-warning-800/80 text-warning-900 dark:text-warning-200 text-xs flex items-start gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-warning-600 shrink-0 mt-0.5" />
             <p className="leading-relaxed">
               {language === 'ar'
                 ? 'عند تعديل الطلب، سيتم إشعار العميل فوراً بالبريد الإلكتروني، وسينتقل الطلب إلى حالة "بانتظار موافقة العميل" حتى يؤكد التعديل أو يلغي الطلب.'
@@ -121,7 +121,7 @@ export const EditOrderModal = ({
                       type="button"
                       onClick={() => handleRemoveItemFromEdit(index)}
                       title={language === 'ar' ? 'حذف هذا المنتج (غير متوفر)' : 'Diesen Artikel als nicht vorrätig entfernen'}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition shrink-0"
+                      className="p-1.5 text-slate-400 hover:text-danger-600 dark:hover:text-danger-400 rounded-lg hover:bg-danger-50 dark:hover:bg-danger-950/40 transition shrink-0"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -148,7 +148,7 @@ export const EditOrderModal = ({
               value={editReason}
               onChange={(e) => setEditReason(e.target.value)}
               placeholder={language === 'ar' ? 'مثال: نعتذر، الحليب غير متوفر حالياً بالمخزن وتم تقليل الكمية.' : 'z.B. Milch war leider ausverkauft. Wir haben die Menge angepasst.'}
-              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-amber-500 transition text-xs"
+              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-warning-500 transition text-xs"
             />
           </div>
 
@@ -166,8 +166,8 @@ export const EditOrderModal = ({
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-slate-700 dark:text-gray-300">{language === 'ar' ? 'المبلغ الجديد بعد التعديل:' : 'Neuer Betrag:'}</span>
-                  <span className="font-mono font-black text-base text-emerald-600 dark:text-emerald-400">€{newTotal.toFixed(2)}</span>
-                  <span className={`text-[11px] font-mono font-semibold px-2 py-0.5 rounded ${diff < 0 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-slate-200 text-slate-700 dark:bg-gray-700 dark:text-gray-300'}`}>
+                  <span className="font-mono font-black text-base text-success-600 dark:text-success-400">€{newTotal.toFixed(2)}</span>
+                  <span className={`text-[11px] font-mono font-semibold px-2 py-0.5 rounded ${diff < 0 ? 'bg-success-100 text-success-800 dark:bg-success-950/60 dark:text-success-300' : 'bg-slate-200 text-slate-700 dark:bg-gray-700 dark:text-gray-300'}`}>
                     {diff < 0 ? `-€${Math.abs(diff).toFixed(2)}` : `+€${diff.toFixed(2)}`}
                   </span>
                 </div>
@@ -187,7 +187,7 @@ export const EditOrderModal = ({
             <button
               type="submit"
               disabled={savingEdit || editItems.length === 0}
-              className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation"
+              className="px-5 py-2.5 bg-warning-600 hover:bg-warning-700 text-white text-xs font-bold rounded-xl shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation"
             >
               {savingEdit ? '...' : (language === 'ar' ? 'حفظ التعديل وإرسال إشعار للعميل' : 'Änderung speichern & Bestätigung anfordern')}
             </button>

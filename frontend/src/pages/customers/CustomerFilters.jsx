@@ -20,7 +20,7 @@ export const CustomerFilters = ({
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder={language === 'ar' ? 'البحث بالاسم، الهاتف، البريد أو المدينة...' : 'Name, Telefon, E-Mail, Adresse oder Stadt suchen...'}
-          className="w-full ps-10 pe-9 py-2 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/30 transition"
+          className="w-full ps-10 pe-9 py-2 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-success-500/30 transition"
         />
         {searchTerm && (
           <button
@@ -37,7 +37,7 @@ export const CustomerFilters = ({
         <select
           value={verificationFilter}
           onChange={(e) => setVerificationFilter(e.target.value)}
-          className="w-full md:w-auto px-3 py-2 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/30 cursor-pointer"
+          className="w-full md:w-auto px-3 py-2 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-success-500/30 cursor-pointer"
         >
           <option value="all">{language === 'ar' ? 'كل حالات التحقق' : 'Alle Verifizierungen'}</option>
           <option value="both">{language === 'ar' ? 'موثق بالكامل (هاتف + بريد)' : 'Voll verifiziert (Handy + E-Mail)'}</option>
@@ -50,7 +50,7 @@ export const CustomerFilters = ({
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value)}
-          className="w-full md:w-auto px-3 py-2 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500/30 cursor-pointer"
+          className="w-full md:w-auto px-3 py-2 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-success-500/30 cursor-pointer"
         >
           <option value="newest">{language === 'ar' ? 'الأحدث تسجيلاً' : 'Neueste zuerst'}</option>
           <option value="orders">{language === 'ar' ? 'الأعلى طلباً' : 'Meiste Bestellungen'}</option>
