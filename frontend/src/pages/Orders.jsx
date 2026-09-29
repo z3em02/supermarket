@@ -262,8 +262,8 @@ export const Orders = () => {
         </select>
       </div>
 
-      {/* Orders List */}
-      <div className="space-y-3">
+      {/* Orders grid: 1 column on phones, 2 on tablets, 3 on desktop */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
         {orders.map((order) => (
           <OrderCard
             key={order.id}
@@ -282,7 +282,7 @@ export const Orders = () => {
         ))}
 
         {orders.length === 0 && (
-          <EmptyState icon={Package} title={t('noOrdersFound')} />
+          <EmptyState className="col-span-full" icon={Package} title={t('noOrdersFound')} />
         )}
       </div>
 
