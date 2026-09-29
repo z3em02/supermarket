@@ -659,8 +659,11 @@ changes by audience (`admin`, `customer` — who is told what *they* need to do 
   without also closing a drawer underneath.
 - **Shared primitives** live in `frontend/src/components/ui/` (import from `components/ui`):
   `Button` / `IconButton` (icon-only buttons require a `label`), `Card`, `Badge`, `Input`,
-  `Textarea`, `Select`, `Modal`, `Drawer` (Escape, focus trap, scroll lock, opens from the
-  inline-end side so it flips in Arabic), `EmptyState`, `Skeleton*` and `Pagination`.
+  `Textarea`, `Select`, `Switch` (on/off toggle, `role="switch"`, mirrors in Arabic), `Modal`,
+  `Drawer` (Escape, focus trap, scroll lock, opens from the inline-end side so it flips in
+  Arabic), `EmptyState`, `Skeleton*` and `Pagination`. Every admin page and dialog uses them;
+  a form inside a `Modal` puts its submit button in the `footer` and links it with
+  `<Button type="submit" form={formId}>` (the footer sits outside the `<form>`).
 - **Loading**: list pages show `SkeletonList` placeholders shaped like the content, not a spinner.
 - **Empty lists**: `EmptyState` (icon + message + optional action).
 
@@ -676,13 +679,18 @@ changes by audience (`admin`, `customer` — who is told what *they* need to do 
   title), `text-heading-md` (card title), `text-body-muted`, `text-caption`. Table cells get
   `tabular-nums` globally; use it on any other money/count.
 - **Tables**: long lists (Customers, Accounting, Promotions) scroll inside the card with a
-  sticky header and zebra rows; Customers and Accounting switch to cards below `md`.
+  sticky header and zebra rows; below `md` they switch to one card per row (Promotions renders
+  the same cell pieces in both layouts, so they can't drift apart).
 - **Contrast**: muted text is `text-slate-500` (light, 4.8:1 on white) and `dark:text-slate-400`
   (7.6:1 on `gray-950`). `text-slate-400` / `dark:text-gray-500` fail WCAG AA for text — only
   for decorative icons.
 - **Keyboard & motion**: a global `:focus-visible` ring; `prefers-reduced-motion` stops
   pulsing/transitions (spinners keep turning). Icon-only buttons need an `aria-label`
-  (`IconButton` enforces it). Tap targets are at least 44px (`min-h-11`).
+  (`IconButton` enforces it). Tap targets are at least 44px (`min-h-11`). Dense controls
+  (order-card footers, `Button size="sm"`, the storefront chips) may stay 36px for the mouse
+  but must grow on touch screens with the `coarse:` variant (`@media (pointer: coarse)`,
+  defined in `tailwind.config.js`), e.g. `min-h-9 coarse:min-h-11`. For a small inline link that
+  mustn't move the layout, grow only the hit area: `coarse:py-3.5 coarse:-my-3.5`.
 - **Tailwind 3 only**: this project is on Tailwind 3.4. v4-only classes (`shadow-2xs`,
   `shadow-xs`, `backdrop-blur-xs`, `outline-hidden`, `border-3`, `animate-in fade-in`) silently do
   nothing — use `shadow-sm`, `backdrop-blur-sm`, `outline-none`, `border-[3px]`, `animate-fade-in`.
@@ -705,10 +713,14 @@ Status of the design/UX plan (formerly `DESIGN_TODO.md`).
   (checked with screenshots, no horizontal overflow at 390px).
 - [x] P3 — storefront CTAs use the brand colour, product images have one 4:3 ratio and lazy-load,
   category label moved off the image so it no longer collides with the stock badge.
+- [x] Older admin pages migrated to `components/ui`: every hand-built dialog (product, restock,
+  catalog, coupon, offer, customer, create/accept/print order) is now a `Modal`; buttons,
+  inputs, selects and toggles use the shared parts. Tab bars, filter chips and the coupon/offer
+  type pickers stay custom (`aria-pressed`) but meet the tap-target rule.
+- [x] Promotions tables: card view on phones.
+- [x] 44px tap-target audit: every admin page, dialog and settings tab plus the storefront,
+  login and registration measured at 390px on a touch device — no target under 44px (logo
+  links aside, 36px).
 
 **Still open**
-- [ ] Migrate the remaining hand-rolled buttons/cards/inputs in older pages to `components/ui`
-  (new and refactored UI already uses them).
-- [ ] Promotions tables: card view on phones (they scroll horizontally today).
-- [ ] Full 44px tap-target audit of older pages (new components and the flagged icon buttons meet it).
 - [ ] Storefront trust signals: the reviews widget is empty until Google reviews are synced.

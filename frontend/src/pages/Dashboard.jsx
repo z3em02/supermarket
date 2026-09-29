@@ -4,6 +4,7 @@ import { getApiUrl } from '../utils/api';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { ADMIN_BASE } from '../config/adminPath';
+import { Button } from '../components/ui';
 import {
   Users,
   Package,
@@ -226,7 +227,7 @@ export const Dashboard = () => {
 
       {/* Drivers — always visible (not just when there's something pending)
           so this is discoverable even before any driver has ever logged in. */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-850 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-sm overflow-hidden">
         <div className="flex items-center gap-2.5 px-4 sm:px-5 py-3 bg-slate-50 dark:bg-gray-950/50 border-b border-slate-100 dark:border-gray-850">
           <Truck className="w-4 h-4 text-slate-500 dark:text-gray-400 shrink-0" />
           <h3 className="font-bold text-slate-800 dark:text-white text-xs sm:text-sm">
@@ -261,24 +262,24 @@ export const Dashboard = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      type="button"
+                    <Button
+                      variant="brand"
+                      size="sm"
+                      icon={UserCheck}
                       disabled={resolvingRequestId === reqItem.id}
                       onClick={() => handleResolveDriverRequest(reqItem.id, 'approve')}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-success-600 hover:bg-success-700 text-white text-xs font-bold transition disabled:opacity-50 cursor-pointer"
                     >
-                      <UserCheck className="w-3.5 h-3.5" />
-                      <span>{language === 'ar' ? 'قبول' : 'Zulassen'}</span>
-                    </button>
-                    <button
-                      type="button"
+                      {language === 'ar' ? 'قبول' : 'Zulassen'}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      icon={X}
                       disabled={resolvingRequestId === reqItem.id}
                       onClick={() => handleResolveDriverRequest(reqItem.id, 'reject')}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-gray-800 hover:bg-danger-50 dark:hover:bg-danger-950/40 text-slate-600 dark:text-gray-300 hover:text-danger-600 dark:hover:text-danger-400 text-xs font-bold transition disabled:opacity-50 cursor-pointer"
                     >
-                      <X className="w-3.5 h-3.5" />
-                      <span>{language === 'ar' ? 'رفض' : 'Ablehnen'}</span>
-                    </button>
+                      {language === 'ar' ? 'رفض' : 'Ablehnen'}
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -313,15 +314,16 @@ export const Dashboard = () => {
                       </p>
                     </div>
                   </div>
-                  <button
-                    type="button"
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    icon={LogOut}
+                    className="shrink-0 !text-danger-600 dark:!text-danger-400"
                     disabled={loggingOutSessionId === session.id}
                     onClick={() => handleLogoutDriver(session.id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-danger-50 hover:bg-danger-100 dark:bg-danger-950/40 dark:hover:bg-danger-950/60 text-danger-600 dark:text-danger-400 text-xs font-bold transition disabled:opacity-50 cursor-pointer shrink-0"
                   >
-                    <LogOut className="w-3.5 h-3.5" />
-                    <span>{language === 'ar' ? 'تسجيل خروج' : 'Abmelden'}</span>
-                  </button>
+                    {language === 'ar' ? 'تسجيل خروج' : 'Abmelden'}
+                  </Button>
                 </div>
               ))}
             </div>
@@ -360,14 +362,14 @@ export const Dashboard = () => {
               </p>
             </div>
           </div>
-          <button
-            type="button"
+          <Button
+            variant="warning"
+            className="self-start sm:self-auto shrink-0"
             onClick={() => navigate(`${ADMIN_BASE}/products?stock=low`)}
-            className="self-start sm:self-auto px-4 py-2 rounded-xl bg-warning-600 hover:bg-warning-700 text-white font-bold text-xs transition shadow-sm shrink-0 cursor-pointer touch-manipulation flex items-center gap-1.5"
           >
             <span>{language === 'ar' ? 'عرض المنتجات وإعادة التزويد' : 'Artikel ansehen & auffüllen'}</span>
-            <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
-          </button>
+            <ArrowRight className="w-4 h-4 rtl:rotate-180" aria-hidden="true" />
+          </Button>
         </div>
       )}
 
@@ -407,7 +409,7 @@ export const Dashboard = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-800 shadow-sm">
         <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white mb-3 sm:mb-4">
           {t('quickActions')}
         </h2>
@@ -490,7 +492,7 @@ export const Dashboard = () => {
       </div>
 
       {/* Getting Started Guide */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 border border-slate-200/80 dark:border-gray-800 shadow-sm">
         <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
           {t('gettingStarted')}
         </h2>

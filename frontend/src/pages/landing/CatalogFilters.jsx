@@ -40,7 +40,7 @@ export const CatalogFilters = ({
             <button
               type="button"
               onClick={() => setStockFilter('all')}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+              className={`px-3 py-1.5 coarse:min-h-11 rounded-lg transition-all cursor-pointer ${
                 stockFilter === 'all'
                   ? 'bg-white dark:bg-gray-850 text-brand-600 dark:text-brand-400 shadow-sm border border-slate-200/60 dark:border-gray-750'
                   : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
@@ -51,7 +51,7 @@ export const CatalogFilters = ({
             <button
               type="button"
               onClick={() => setStockFilter('inStock')}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+              className={`px-3 py-1.5 coarse:min-h-11 rounded-lg transition-all cursor-pointer ${
                 stockFilter === 'inStock'
                   ? 'bg-white dark:bg-gray-850 text-brand-600 dark:text-brand-400 shadow-sm border border-slate-200/60 dark:border-gray-750'
                   : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
@@ -62,7 +62,7 @@ export const CatalogFilters = ({
             <button
               type="button"
               onClick={() => setStockFilter('lowStock')}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+              className={`px-3 py-1.5 coarse:min-h-11 rounded-lg transition-all cursor-pointer ${
                 stockFilter === 'lowStock'
                   ? 'bg-white dark:bg-gray-850 text-warning-600 dark:text-warning-400 shadow-sm border border-slate-200/60 dark:border-gray-750'
                   : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
@@ -78,7 +78,7 @@ export const CatalogFilters = ({
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 focus:outline-none"
+              className="bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl px-3 py-2 coarse:min-h-11 text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 focus:outline-none"
             >
               <option value="name-asc">{t('sortNameAsc')}</option>
               <option value="name-desc">{t('sortNameDesc')}</option>
@@ -107,7 +107,7 @@ export const CatalogFilters = ({
         <button
           type="button"
           onClick={() => setSelectedCategory('all')}
-          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+          className={`px-3.5 py-1.5 coarse:min-h-11 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
             selectedCategory === 'all'
               ? 'bg-brand-600 text-white shadow-sm'
               : 'bg-slate-100 dark:bg-gray-950 text-slate-700 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-gray-850 border border-transparent dark:border-gray-850'
@@ -123,7 +123,7 @@ export const CatalogFilters = ({
               key={cat.id}
               type="button"
               onClick={() => setSelectedCategory(cat.id)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+              className={`px-3.5 py-1.5 coarse:min-h-11 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                 isActive
                   ? 'bg-brand-600 text-white shadow-sm'
                   : 'bg-slate-100 dark:bg-gray-950 text-slate-700 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-gray-850 border border-transparent dark:border-gray-850'

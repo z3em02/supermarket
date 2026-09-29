@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { resolveImageUrl } from '../../utils/api';
+import { Card, CardHeader, Input, Switch } from '../../components/ui';
 import { SectionPasscodeCard } from './SectionPasscodeCard';
 import { DriverAccountsCard } from './DriverAccountsCard';
 
@@ -24,7 +25,7 @@ export const GeneralTab = ({
   sectionPasscode,
   setLogoPreviewError
 }) => {
-  const { language, direction, t } = useLanguage();
+  const { language, t } = useLanguage();
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -33,25 +34,21 @@ export const GeneralTab = ({
           fields) since flipping it takes the whole storefront offline
           for customers. Applies immediately, independent of the
           "Speichern" button below. */}
-      <div className={`rounded-2xl sm:rounded-2xl border p-4 sm:p-6 shadow-sm transition-colors ${
-        formData.maintenanceMode
-          ? 'bg-danger-50 dark:bg-danger-950/30 border-danger-300 dark:border-danger-800'
-          : 'bg-white dark:bg-gray-900 border-slate-200/80 dark:border-gray-850'
-      }`}>
+      <Card className={formData.maintenanceMode ? '!bg-danger-50 dark:!bg-danger-950/30 !border-danger-300 dark:!border-danger-800' : ''}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
           <div className="flex items-center gap-3">
             <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
               formData.maintenanceMode
                 ? 'bg-danger-100 dark:bg-danger-950/60 text-danger-600 dark:text-danger-400'
-                : 'bg-slate-100 dark:bg-gray-800 text-slate-500 dark:text-gray-400'
+                : 'bg-slate-100 dark:bg-gray-800 text-slate-500 dark:text-slate-400'
             }`}>
-              <AlertCircle className="w-4 h-4" />
+              <AlertCircle className="w-4 h-4" aria-hidden="true" />
             </div>
             <div>
-              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+              <h2 className="text-heading-md">
                 {language === 'ar' ? 'وضع الصيانة' : 'Wartungsmodus'}
               </h2>
-              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-gray-400 max-w-md">
+              <p className="text-caption max-w-md">
                 {language === 'ar'
                   ? 'عند التفعيل، يرى العملاء صفحة صيانة ولا يمكن تقديم طلبات جديدة. لوحة التحكم للمشرفين وواجهة السائق تبقى تعمل.'
                   : 'Wenn aktiv, sehen Kunden eine Wartungsseite und können keine neuen Bestellungen aufgeben. Admin-Dashboard und Fahrerportal bleiben erreichbar.'}
@@ -59,28 +56,19 @@ export const GeneralTab = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0 self-start sm:self-auto">
-            <span className={`text-xs font-bold ${formData.maintenanceMode ? 'text-danger-700 dark:text-danger-400' : 'text-slate-500 dark:text-gray-400'}`}>
+          <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+            <span className={`text-xs font-bold ${formData.maintenanceMode ? 'text-danger-700 dark:text-danger-400' : 'text-slate-500 dark:text-slate-400'}`}>
               {formData.maintenanceMode
                 ? (language === 'ar' ? 'مفعّل' : 'Aktiv')
                 : (language === 'ar' ? 'غير مفعّل' : 'Inaktiv')}
             </span>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={formData.maintenanceMode}
+            <Switch
+              checked={formData.maintenanceMode}
+              onChange={handleToggleMaintenanceMode}
               disabled={savingMaintenanceMode}
-              onClick={handleToggleMaintenanceMode}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none touch-manipulation disabled:opacity-50 ${
-                formData.maintenanceMode ? 'bg-danger-600' : 'bg-slate-300 dark:bg-gray-700'
-              }`}
-            >
-              <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition duration-200 ease-in-out ${
-                  formData.maintenanceMode ? (direction === 'rtl' ? '-translate-x-5' : 'translate-x-5') : 'translate-x-0'
-                }`}
-              />
-            </button>
+              tone="danger"
+              label={language === 'ar' ? 'وضع الصيانة' : 'Wartungsmodus'}
+            />
           </div>
         </div>
         {maintenanceMessage && (
@@ -88,94 +76,54 @@ export const GeneralTab = ({
             {maintenanceMessage}
           </p>
         )}
-      </div>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Store Name & Language */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl border border-slate-200/80 dark:border-gray-850 p-5 sm:p-6 shadow-sm space-y-4">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100 dark:border-gray-800">
-            <div className="w-8 h-8 rounded-lg bg-promo-50 dark:bg-promo-950/50 text-promo-600 dark:text-promo-400 flex items-center justify-center shrink-0">
-              <Building2 className="w-4 h-4" />
-            </div>
-            <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-              {t('storeName')}
-            </h2>
-          </div>
-
+        <Card>
+          <CardHeader icon={Building2} title={t('storeName')} />
           <div className="space-y-3.5">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-gray-300 mb-1.5">
-                {t('storeName')} (Standard) *
-              </label>
-              <input
-                type="text"
-                value={formData.storeName}
-                onChange={(e) => handleChange('storeName', e.target.value)}
-                placeholder="Hajar Supermarkt"
-                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none transition"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-gray-300 mb-1.5">
-                {t('storeNameDe')} <span className="text-[10px] font-normal text-slate-500">(Deutsch)</span>
-              </label>
-              <input
-                type="text"
-                value={formData.storeNameDe}
-                onChange={(e) => handleChange('storeNameDe', e.target.value)}
-                placeholder="Hajar Supermarkt Großhandel"
-                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none transition"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-gray-300 mb-1.5">
-                {t('storeNameAr')} <span className="text-[10px] font-normal text-slate-500">(العربية)</span>
-              </label>
-              <input
-                type="text"
-                dir="rtl"
-                value={formData.storeNameAr}
-                onChange={(e) => handleChange('storeNameAr', e.target.value)}
-                placeholder="سوبرماركت هاجر"
-                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none transition text-right"
-              />
-            </div>
+            <Input
+              label={`${t('storeName')} (Standard) *`}
+              type="text"
+              value={formData.storeName}
+              onChange={(e) => handleChange('storeName', e.target.value)}
+              placeholder="Hajar Supermarkt"
+              required
+            />
+            <Input
+              label={`${t('storeNameDe')} (Deutsch)`}
+              type="text"
+              value={formData.storeNameDe}
+              onChange={(e) => handleChange('storeNameDe', e.target.value)}
+              placeholder="Hajar Supermarkt Großhandel"
+            />
+            <Input
+              label={`${t('storeNameAr')} (العربية)`}
+              type="text"
+              dir="rtl"
+              value={formData.storeNameAr}
+              onChange={(e) => handleChange('storeNameAr', e.target.value)}
+              placeholder="سوبرماركت هاجر"
+            />
           </div>
-        </div>
+        </Card>
 
         {/* Logo & Branding */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl border border-slate-200/80 dark:border-gray-850 p-5 sm:p-6 shadow-sm space-y-4">
-          <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100 dark:border-gray-800">
-            <div className="w-8 h-8 rounded-lg bg-promo-50 dark:bg-promo-950/50 text-promo-600 dark:text-promo-400 flex items-center justify-center shrink-0">
-              <ImageIcon className="w-4 h-4" />
-            </div>
-            <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-              {t('storeLogo')}
-            </h2>
-          </div>
-
+        <Card>
+          <CardHeader icon={ImageIcon} title={t('storeLogo')} />
           <div className="space-y-3.5">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-gray-300 mb-1.5">
-                {t('logoUrl')}
-              </label>
-              <input
-                type="text"
-                value={formData.logoUrl}
-                onChange={(e) => handleChange('logoUrl', e.target.value)}
-                placeholder={t('logoUrlPlaceholder')}
-                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none transition"
-              />
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                Link zu Ihrem Logo (PNG, JPG, SVG oder WebP).
-              </p>
-            </div>
+            <Input
+              label={t('logoUrl')}
+              hint="Link zu Ihrem Logo (PNG, JPG, SVG oder WebP)."
+              type="text"
+              value={formData.logoUrl}
+              onChange={(e) => handleChange('logoUrl', e.target.value)}
+              placeholder={t('logoUrlPlaceholder')}
+            />
 
-            <div>
-              <span className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-gray-300 mb-1.5">
+            <div className="space-y-1.5">
+              <span className="block text-xs font-bold text-slate-600 dark:text-slate-300">
                 {t('logoPreview')}
               </span>
               <div className="h-24 rounded-xl bg-slate-50 dark:bg-gray-950 border border-dashed border-slate-200 dark:border-gray-800 flex items-center justify-center p-3">
@@ -188,93 +136,64 @@ export const GeneralTab = ({
                   />
                 ) : (
                   <div className="text-center text-slate-500 flex flex-col items-center gap-1">
-                    <Store className="w-6 h-6 text-slate-300 dark:text-slate-400" />
-                    <span className="text-[11px]">{t('noLogoProvided')}</span>
+                    <Store className="w-6 h-6 text-slate-300 dark:text-slate-400" aria-hidden="true" />
+                    <span className="text-caption">{t('noLogoProvided')}</span>
                   </div>
                 )}
               </div>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Contact Details Card */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl border border-slate-200/80 dark:border-gray-850 p-5 sm:p-6 shadow-sm space-y-4">
-        <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100 dark:border-gray-800">
-          <div className="w-8 h-8 rounded-lg bg-success-50 dark:bg-success-950/50 text-success-600 dark:text-success-400 flex items-center justify-center shrink-0">
-            <Phone className="w-4 h-4" />
-          </div>
-          <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-            {t('contactInfo')}
-          </h2>
-        </div>
-
+      <Card>
+        <CardHeader icon={Phone} title={t('contactInfo')} />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-gray-300 mb-1.5">
-              {t('phoneNumber')} *
-            </label>
-            <div className="relative">
-              <Phone className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => handleChange('phone', e.target.value)}
-                placeholder={t('phonePlaceholder')}
-                className="w-full ps-10 pe-4 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none transition"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-gray-300 mb-1.5">
-              {t('emailAddressContact')} *
-            </label>
-            <div className="relative">
-              <Mail className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleChange('email', e.target.value)}
-                placeholder={t('emailPlaceholder')}
-                className="w-full ps-10 pe-4 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none transition"
-              />
-            </div>
-          </div>
-
+          <Input
+            label={`${t('phoneNumber')} *`}
+            icon={Phone}
+            type="tel"
+            value={formData.phone}
+            onChange={(e) => handleChange('phone', e.target.value)}
+            placeholder={t('phonePlaceholder')}
+          />
+          <Input
+            label={`${t('emailAddressContact')} *`}
+            icon={Mail}
+            type="email"
+            value={formData.email}
+            onChange={(e) => handleChange('email', e.target.value)}
+            placeholder={t('emailPlaceholder')}
+          />
           <div className="sm:col-span-2">
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-gray-300 mb-1.5">
-              {t('physicalAddress')}
-            </label>
-            <div className="relative">
-              <MapPin className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-              <input
-                type="text"
-                value={formData.address}
-                onChange={(e) => handleChange('address', e.target.value)}
-                placeholder={t('addressPlaceholder')}
-                className="w-full ps-10 pe-4 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none transition"
-              />
-            </div>
+            <Input
+              label={t('physicalAddress')}
+              icon={MapPin}
+              type="text"
+              value={formData.address}
+              onChange={(e) => handleChange('address', e.target.value)}
+              placeholder={t('addressPlaceholder')}
+            />
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Live Website Preview Banner */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-850 to-promo-950 text-white rounded-2xl sm:rounded-2xl p-5 sm:p-6 shadow-md border border-slate-800 space-y-4">
+      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-primary-950 text-white rounded-2xl p-5 sm:p-6 shadow-md border border-slate-800 space-y-4">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-warning-400 shrink-0" />
+            <Sparkles className="w-4 h-4 text-warning-400 shrink-0" aria-hidden="true" />
             <h3 className="text-sm font-bold truncate">
               {t('livePreview')} (Header & Brand)
             </h3>
           </div>
-          <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-white/10 text-slate-300 font-mono">
+          <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-white/10 text-slate-300 font-mono">
             Live Mockup
           </span>
         </div>
 
-        <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="bg-white/10 rounded-xl p-4 border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             {formData.logoUrl && !logoPreviewError ? (
               <img
@@ -283,15 +202,15 @@ export const GeneralTab = ({
                 className="w-9 h-9 object-contain rounded-xl bg-white p-1 shadow-sm shrink-0"
               />
             ) : (
-              <div className="w-9 h-9 rounded-xl bg-primary-600 flex items-center justify-center text-white shadow-sm shrink-0">
-                <Store className="w-4 h-4" />
+              <div className="w-9 h-9 rounded-xl bg-brand-600 flex items-center justify-center text-white shadow-sm shrink-0">
+                <Store className="w-4 h-4" aria-hidden="true" />
               </div>
             )}
             <div className="min-w-0">
               <h4 className="text-sm sm:text-base font-black tracking-tight truncate">
                 {(language === 'ar' ? formData.storeNameAr : formData.storeNameDe) || formData.storeName || 'Hajar Supermarkt'}
               </h4>
-              <p className="text-[11px] text-primary-200 font-medium truncate">
+              <p className="text-xs text-slate-300 font-medium truncate">
                 {language === 'ar' ? 'سوبرماركت وتوصيل منزلي' : 'Supermarkt & Lieferservice'}
               </p>
             </div>
@@ -299,14 +218,14 @@ export const GeneralTab = ({
 
           <div className="flex flex-wrap items-center gap-2 text-xs">
             {formData.phone && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/15 text-white font-medium text-[11px]">
-                <Phone className="w-3 h-3 text-success-400" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/15 text-white font-medium">
+                <Phone className="w-3 h-3 text-success-400" aria-hidden="true" />
                 <span>{formData.phone}</span>
               </span>
             )}
             {formData.email && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/15 text-white font-medium text-[11px]">
-                <Mail className="w-3 h-3 text-primary-300" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/15 text-white font-medium">
+                <Mail className="w-3 h-3 text-primary-300" aria-hidden="true" />
                 <span>{formData.email}</span>
               </span>
             )}

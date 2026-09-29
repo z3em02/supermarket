@@ -1,11 +1,10 @@
 import {
-  Printer,
   FileText,
   Receipt,
-  X,
   Truck,
   Lock
 } from 'lucide-react';
+import { Button, Modal } from '../../components/ui';
 import { useLanguage } from '../../context/LanguageContext';
 import { useStatusBadge } from './useStatusBadge';
 import { formatDeliverySlot } from '../../utils/deliverySlot';
@@ -19,49 +18,25 @@ export const PrintOrderModal = ({
   const getStatusBadge = useStatusBadge();
 
   return (
-    <div className="bg-white dark:bg-gray-900 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-gray-800 rounded-2xl w-full max-w-2xl max-h-[92dvh] overflow-y-auto shadow-2xl flex flex-col">
-      {/* Modal toolbar */}
-      <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 dark:border-gray-800 shrink-0">
-        <div className="flex items-center gap-2 sm:gap-2.5">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-primary-50 dark:bg-primary-950/60 border border-primary-200/80 dark:border-primary-900/40 flex items-center justify-center text-primary-600 dark:text-primary-400 shrink-0">
-            <Printer className="w-4 h-4" />
-          </div>
-          <div>
-            <h3 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">{t('printInvoice')}</h3>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">INV-{printOrder.id.slice(0,8).toUpperCase()}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          <button
-            type="button"
-            onClick={() => printReceipt(printOrder, 'a4')}
-            title={language === 'ar' ? 'طباعة A4' : 'A4 drucken'}
-            className="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs font-semibold shadow-sm transition touch-manipulation cursor-pointer"
-          >
-            <FileText className="w-3.5 h-3.5" />
-            <span className="hidden xs:inline">A4</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => printReceipt(printOrder, 'thermal')}
-            title={language === 'ar' ? 'طباعة على طابعة الإيصالات' : 'Auf Bon-Drucker drucken'}
-            className="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-slate-800 hover:bg-slate-900 dark:bg-gray-800 dark:hover:bg-gray-700 text-white rounded-xl text-xs font-semibold shadow-sm transition touch-manipulation cursor-pointer"
-          >
-            <Receipt className="w-3.5 h-3.5" />
-            <span className="hidden xs:inline">{language === 'ar' ? 'بون' : 'Bon'}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowPrintModal(false)}
-            className="p-2 rounded-xl border border-slate-200 dark:border-gray-800 hover:bg-slate-100 dark:hover:bg-gray-800 text-slate-500 dark:text-slate-400 touch-manipulation cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
+    <Modal
+      isOpen
+      onClose={() => setShowPrintModal(false)}
+      size="lg"
+      title={t('printInvoice')}
+      description={<span className="font-mono">INV-{printOrder.id.slice(0,8).toUpperCase()}</span>}
+      footer={(
+        <>
+          <Button variant="secondary" icon={Receipt} onClick={() => printReceipt(printOrder, 'thermal')}>
+            {language === 'ar' ? 'طباعة على طابعة الإيصالات' : 'Bon drucken'}
+          </Button>
+          <Button icon={FileText} onClick={() => printReceipt(printOrder, 'a4')}>
+            {language === 'ar' ? 'طباعة A4' : 'A4 drucken'}
+          </Button>
+        </>
+      )}
+    >
       {/* Receipt Preview */}
-      <div className="p-4 sm:p-6 overflow-y-auto space-y-4 sm:space-y-5">
+      <div className="space-y-4 sm:space-y-5 text-slate-900 dark:text-slate-100">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-4 sm:pb-5 border-b-2 border-primary-600 dark:border-primary-500">
           <div>
@@ -219,6 +194,6 @@ export const PrintOrderModal = ({
           Supermarkt Lieferservice &bull; INV-{printOrder.id.slice(0,8).toUpperCase()} &bull; {new Date(printOrder.createdAt).toLocaleDateString()}
         </div>
       </div>
-    </div>
+    </Modal>
   );
 };

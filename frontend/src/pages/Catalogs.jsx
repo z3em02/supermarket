@@ -14,10 +14,10 @@ import {
   FolderOpen
 } from 'lucide-react';
 import { useToast, useConfirm } from '../context/FeedbackContext';
-import { EmptyState, SkeletonList } from '../components/ui';
+import { Button, EmptyState, IconButton, Input, Modal, SkeletonList, Textarea } from '../components/ui';
 
 export const Catalogs = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const toast = useToast();
   const confirm = useConfirm();
   const [categories, setCategories] = useState([]);
@@ -139,18 +139,14 @@ export const Catalogs = () => {
           </p>
         </div>
 
-        <button
-          onClick={handleOpenAddModal}
-          className="w-full sm:w-auto justify-center flex items-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-sm transition cursor-pointer touch-manipulation"
-        >
-          <Plus className="w-4 sm:w-5 h-4 sm:h-5" />
-          <span>{t('addCatalog')}</span>
-        </button>
+        <Button icon={Plus} onClick={handleOpenAddModal} className="w-full sm:w-auto">
+          {t('addCatalog')}
+        </Button>
       </div>
 
       {/* Stats summary banner */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-        <div className="bg-white dark:bg-gray-900 p-3.5 sm:p-4 rounded-xl border border-slate-200/80 dark:border-gray-850 shadow-sm flex items-center gap-3.5">
+        <div className="bg-white dark:bg-gray-900 p-3.5 sm:p-4 rounded-xl border border-slate-200/80 dark:border-gray-800 shadow-sm flex items-center gap-3.5">
           <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-primary-50 dark:bg-primary-950/70 text-primary-600 dark:text-primary-400 border border-primary-100 dark:border-primary-900/50 flex items-center justify-center shrink-0">
             <Layers className="w-5 h-5" />
           </div>
@@ -164,7 +160,7 @@ export const Catalogs = () => {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-900 p-3.5 sm:p-4 rounded-xl border border-slate-200/80 dark:border-gray-850 shadow-sm flex items-center gap-3.5">
+        <div className="bg-white dark:bg-gray-900 p-3.5 sm:p-4 rounded-xl border border-slate-200/80 dark:border-gray-800 shadow-sm flex items-center gap-3.5">
           <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-success-50 dark:bg-success-950/70 text-success-600 dark:text-success-400 border border-success-100 dark:border-success-900/50 flex items-center justify-center shrink-0">
             <Package className="w-5 h-5" />
           </div>
@@ -181,21 +177,17 @@ export const Catalogs = () => {
 
       {/* Search Input */}
       <div className="relative">
-        <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 text-slate-500 w-4 sm:w-5 h-4 sm:h-5 pointer-events-none" />
-        <input
+        <Input
+          icon={Search}
           type="text"
+          aria-label={t('search')}
           placeholder={`${t('search')} (Deutsch / العربية)...`}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full ps-10 pe-9 py-2.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition text-xs sm:text-sm"
+          className="pe-11"
         />
         {searchTerm && (
-          <button
-            onClick={() => setSearchTerm('')}
-            className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <IconButton icon={X} label={language === 'ar' ? 'مسح البحث' : 'Suche leeren'} onClick={() => setSearchTerm('')} className="absolute end-0 top-0" />
         )}
       </div>
 
@@ -207,7 +199,7 @@ export const Catalogs = () => {
           {filteredCategories.map((cat) => (
             <div
               key={cat.id}
-              className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-850 p-4 sm:p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+              className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 p-4 sm:p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
             >
               <div className="space-y-3">
                 <div className="flex items-start justify-between gap-3">
@@ -257,22 +249,13 @@ export const Catalogs = () => {
 
               {/* Action Buttons */}
               <div className="flex items-center justify-end gap-2 pt-3.5 sm:pt-4 mt-3.5 sm:mt-4 border-t border-slate-100 dark:border-gray-850">
-                <button
-                  type="button"
-                  onClick={() => handleOpenEditModal(cat)}
-                  className="flex-1 sm:flex-none justify-center flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-gray-800 hover:bg-slate-100 dark:hover:bg-gray-750 border border-slate-200 dark:border-gray-700 rounded-lg transition cursor-pointer touch-manipulation"
-                >
-                  <Edit className="w-3.5 h-3.5 text-primary-600 dark:text-primary-400" />
-                  <span>{t('edit')}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleDelete(cat)}
-                  className="flex-1 sm:flex-none justify-center flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-danger-600 dark:text-danger-400 bg-danger-50 dark:bg-danger-950/40 hover:bg-danger-100 dark:hover:bg-danger-950/80 border border-danger-200/80 dark:border-danger-900/50 rounded-lg transition cursor-pointer touch-manipulation"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span>{t('delete')}</span>
-                </button>
+                <Button variant="secondary" size="sm" icon={Edit} onClick={() => handleOpenEditModal(cat)} className="flex-1 sm:flex-none">
+                  {t('edit')}
+                </Button>
+                <Button variant="secondary" size="sm" icon={Trash2} onClick={() => handleDelete(cat)}
+                  className="flex-1 sm:flex-none !text-danger-600 dark:!text-danger-400 hover:!bg-danger-50 dark:hover:!bg-danger-950/40">
+                  {t('delete')}
+                </Button>
               </div>
             </div>
           ))}
@@ -280,107 +263,56 @@ export const Catalogs = () => {
       )}
 
       {/* Add / Edit Category Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 animate-fade-in">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-7 w-full max-w-lg max-h-[90dvh] overflow-y-auto border border-slate-200 dark:border-gray-800 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 sm:pb-4 mb-4 sm:mb-5 border-b border-slate-100 dark:border-gray-800">
-              <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Layers className="w-5 h-5 text-primary-600 dark:text-primary-400 shrink-0" />
-                <span>{editingCategory ? t('editCatalog') : t('addCatalog')}</span>
-              </h2>
-              <button
-                onClick={() => setShowModal(false)}
-                className="p-1.5 rounded-lg text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-gray-800 transition cursor-pointer touch-manipulation"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* German Name */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                  {t('catalogNameDe')} *
-                </label>
-                <input
-                  type="text"
-                  required
-                  dir="ltr"
-                  value={formData.nameDe}
-                  onChange={(e) => setFormData({ ...formData, nameDe: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 transition"
-                  placeholder="z. B. Trockenwaren, Getränke..."
-                />
-              </div>
-
-              {/* Arabic Name */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                  {t('catalogNameAr')} *
-                </label>
-                <input
-                  type="text"
-                  required
-                  dir="rtl"
-                  value={formData.nameAr}
-                  onChange={(e) => setFormData({ ...formData, nameAr: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 transition text-right"
-                  placeholder="مثال: بضائع جافة، مشروبات..."
-                />
-              </div>
-
-              {/* German Description */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                  {t('catalogDescDe')}
-                </label>
-                <textarea
-                  rows="2"
-                  dir="ltr"
-                  value={formData.descriptionDe}
-                  onChange={(e) => setFormData({ ...formData, descriptionDe: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 transition text-xs sm:text-sm"
-                  placeholder="Optionale Beschreibung auf Deutsch..."
-                />
-              </div>
-
-              {/* Arabic Description */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                  {t('catalogDescAr')}
-                </label>
-                <textarea
-                  rows="2"
-                  dir="rtl"
-                  value={formData.descriptionAr}
-                  onChange={(e) => setFormData({ ...formData, descriptionAr: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-750 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 transition text-xs sm:text-sm text-right"
-                  placeholder="وصف اختياري بالعربية..."
-                />
-              </div>
-
-              {/* Modal Actions */}
-              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3 pt-3.5 sm:pt-4 border-t border-slate-100 dark:border-gray-800">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-xl transition cursor-pointer touch-manipulation text-center"
-                >
-                  {t('cancel')}
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-5 py-2 sm:py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-xs sm:text-sm font-medium rounded-xl shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer touch-manipulation"
-                >
-                  <Check className="w-4 h-4" />
-                  <span>{editingCategory ? t('update') : t('create')}</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <Modal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title={editingCategory ? t('editCatalog') : t('addCatalog')}
+        footer={(
+          <>
+            <Button variant="secondary" onClick={() => setShowModal(false)}>{t('cancel')}</Button>
+            <Button type="submit" form="catalog-form" icon={Check} loading={submitting}>
+              {editingCategory ? t('update') : t('create')}
+            </Button>
+          </>
+        )}
+      >
+        <form id="catalog-form" onSubmit={handleSubmit} className="space-y-4">
+          <Input
+            label={`${t('catalogNameDe')} *`}
+            type="text"
+            required
+            dir="ltr"
+            value={formData.nameDe}
+            onChange={(e) => setFormData({ ...formData, nameDe: e.target.value })}
+            placeholder="z. B. Trockenwaren, Getränke..."
+          />
+          <Input
+            label={`${t('catalogNameAr')} *`}
+            type="text"
+            required
+            dir="rtl"
+            value={formData.nameAr}
+            onChange={(e) => setFormData({ ...formData, nameAr: e.target.value })}
+            placeholder="مثال: بضائع جافة، مشروبات..."
+          />
+          <Textarea
+            label={t('catalogDescDe')}
+            rows="2"
+            dir="ltr"
+            value={formData.descriptionDe}
+            onChange={(e) => setFormData({ ...formData, descriptionDe: e.target.value })}
+            placeholder="Optionale Beschreibung auf Deutsch..."
+          />
+          <Textarea
+            label={t('catalogDescAr')}
+            rows="2"
+            dir="rtl"
+            value={formData.descriptionAr}
+            onChange={(e) => setFormData({ ...formData, descriptionAr: e.target.value })}
+            placeholder="وصف اختياري بالعربية..."
+          />
+        </form>
+      </Modal>
     </div>
   );
 };

@@ -24,7 +24,7 @@ import {
   Phone
 } from 'lucide-react';
 import { useToast } from '../context/FeedbackContext';
-import { SkeletonList } from '../components/ui';
+import { Button, Card, Input, SkeletonList } from '../components/ui';
 
 export const Accounting = () => {
   const { t, language } = useLanguage();
@@ -108,17 +108,13 @@ export const Accounting = () => {
             {t('financialOverview')}
           </p>
         </div>
-        <button
-          onClick={handleExport}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-success-600 hover:bg-success-700 active:bg-success-800 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-sm transition cursor-pointer touch-manipulation"
-        >
-          <FileSpreadsheet className="w-4 sm:w-5 h-4 sm:h-5" />
-          <span>{t('exportCSV')}</span>
-        </button>
+        <Button variant="secondary" icon={FileSpreadsheet} onClick={handleExport} className="w-full sm:w-auto">
+          {t('exportCSV')}
+        </Button>
       </div>
 
       {/* Date Filter Bar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white dark:bg-gray-900 p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-gray-850 shadow-sm">
+      <Card padding="p-3.5 sm:p-4" className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
           <Calendar className="w-4 sm:w-5 h-4 sm:h-5 text-primary-600 dark:text-primary-400 shrink-0" />
           <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-gray-300">
@@ -126,31 +122,26 @@ export const Accounting = () => {
           </span>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-wrap">
-          <input
+          <Input
             type="date"
+            aria-label={t('dateFilter')}
             value={dateRange.start}
             onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-            className="px-3 py-2 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition"
           />
           <span className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm text-center">{t('to')}</span>
-          <input
+          <Input
             type="date"
+            aria-label={t('to')}
             value={dateRange.end}
             onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-            className="px-3 py-2 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition"
           />
-          <button
-            onClick={fetchAccountingData}
-            className="px-4 py-2 bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer shadow-sm touch-manipulation text-center"
-          >
-            {t('applyFilter')}
-          </button>
+          <Button onClick={fetchAccountingData}>{t('applyFilter')}</Button>
         </div>
-      </div>
+      </Card>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm hover:border-slate-300 dark:hover:border-gray-750 transition">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-800 shadow-sm hover:border-slate-300 dark:hover:border-gray-750 transition">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">
@@ -170,7 +161,7 @@ export const Accounting = () => {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm hover:border-slate-300 dark:hover:border-gray-750 transition">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-800 shadow-sm hover:border-slate-300 dark:hover:border-gray-750 transition">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">
@@ -189,7 +180,7 @@ export const Accounting = () => {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm hover:border-slate-300 dark:hover:border-gray-750 transition">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-800 shadow-sm hover:border-slate-300 dark:hover:border-gray-750 transition">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">
@@ -208,7 +199,7 @@ export const Accounting = () => {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm hover:border-slate-300 dark:hover:border-gray-750 transition">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-800 shadow-sm hover:border-slate-300 dark:hover:border-gray-750 transition">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">
@@ -231,7 +222,7 @@ export const Accounting = () => {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Monthly Revenue Chart */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-800 shadow-sm">
           <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white mb-3 sm:mb-4">
             {t('monthlyRevenue')}
           </h2>
@@ -272,7 +263,7 @@ export const Accounting = () => {
         </div>
 
         {/* Top Customers List */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm flex flex-col justify-between">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-800 shadow-sm flex flex-col justify-between">
           <div>
             <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white mb-3 sm:mb-4">
               {t('topCustomers') || 'Top Customers'}
@@ -316,7 +307,7 @@ export const Accounting = () => {
       </div>
 
       {/* Recent Transactions Section */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-850 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-sm overflow-hidden">
         <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-gray-800">
           <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
             {t('recentTransactions')}

@@ -10,6 +10,7 @@ import {
   Minus
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
+import { Button, FIELD_CLASSES, IconButton } from '../../components/ui';
 
 export const ProductPicker = ({
   editItems,
@@ -114,7 +115,8 @@ export const ProductPicker = ({
         <button
           type="button"
           onClick={() => setShowProductPicker((prev) => !prev)}
-          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary-50 hover:bg-primary-100 dark:bg-primary-950/50 dark:hover:bg-primary-900/60 text-primary-700 dark:text-primary-300 text-xs font-bold border border-primary-200 dark:border-primary-800/80 shadow-sm transition shrink-0 cursor-pointer"
+          aria-expanded={showProductPicker}
+          className="inline-flex items-center justify-center gap-1.5 min-h-11 px-3.5 rounded-xl bg-primary-50 hover:bg-primary-100 dark:bg-primary-950/50 dark:hover:bg-primary-900/60 text-primary-700 dark:text-primary-300 text-xs font-bold border border-primary-200 dark:border-primary-800/80 shadow-sm transition shrink-0 cursor-pointer"
         >
           <SlidersHorizontal className="w-3.5 h-3.5 text-primary-600 dark:text-primary-400" />
           <span>
@@ -140,7 +142,8 @@ export const ProductPicker = ({
           <select
             value={addSelectedProductId}
             onChange={(e) => setAddSelectedProductId(e.target.value)}
-            className="flex-1 px-3 py-2 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500"
+            aria-label={language === 'ar' ? 'اختيار سريع لمنتج' : 'Schnellauswahl Produkt'}
+            className={`${FIELD_CLASSES} flex-1 min-w-0 cursor-pointer`}
           >
             <option value="">-- {language === 'ar' ? 'اختيار سريع لمنتج' : 'Schnellauswahl Produkt'} --</option>
             {products.map((p) => (
@@ -149,14 +152,9 @@ export const ProductPicker = ({
               </option>
             ))}
           </select>
-          <button
-            type="button"
-            onClick={handleAddProductToEdit}
-            disabled={!addSelectedProductId}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-900 dark:bg-gray-800 dark:hover:bg-gray-700 text-white rounded-xl text-xs font-bold disabled:opacity-40 transition cursor-pointer"
-          >
+          <Button icon={Plus} onClick={handleAddProductToEdit} disabled={!addSelectedProductId}>
             {language === 'ar' ? 'إضافة' : 'Hinzufügen'}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -167,22 +165,17 @@ export const ProductPicker = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
             {/* 1. Search filter */}
             <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 rtl:right-2.5 rtl:left-auto top-1/2 -translate-y-1/2 text-slate-500" />
+              <Search className="w-4 h-4 absolute start-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" aria-hidden="true" />
               <input
                 type="text"
                 value={pickerSearch}
                 onChange={(e) => setPickerSearch(e.target.value)}
                 placeholder={language === 'ar' ? 'بحث بالاسم، رقم الصنف...' : 'Name, Art.-Nr., EAN...'}
-                className="w-full pl-8 pr-7 rtl:pr-8 rtl:pl-7 py-1.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500"
+                aria-label={language === 'ar' ? 'بحث' : 'Suche'}
+                className={`${FIELD_CLASSES} ps-10 pe-11`}
               />
               {pickerSearch && (
-                <button
-                  type="button"
-                  onClick={() => setPickerSearch('')}
-                  className="absolute right-2.5 rtl:left-2.5 rtl:right-auto top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-                >
-                  <X className="w-3 h-3" />
-                </button>
+                <IconButton icon={X} label={language === 'ar' ? 'مسح البحث' : 'Suche leeren'} onClick={() => setPickerSearch('')} className="absolute end-0 top-0" />
               )}
             </div>
 
@@ -191,7 +184,7 @@ export const ProductPicker = ({
               <select
                 value={pickerCategory}
                 onChange={(e) => setPickerCategory(e.target.value)}
-                className="w-full px-2.5 py-1.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer"
+                className={`${FIELD_CLASSES} cursor-pointer`}
               >
                 <option value="all">
                   {language === 'ar' ? 'جميع الفئات' : 'Alle Kategorien'} ({products.length})
@@ -209,7 +202,7 @@ export const ProductPicker = ({
               <select
                 value={pickerStockFilter}
                 onChange={(e) => setPickerStockFilter(e.target.value)}
-                className="w-full px-2.5 py-1.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer"
+                className={`${FIELD_CLASSES} cursor-pointer`}
               >
                 <option value="all">{language === 'ar' ? 'جميع المخازن' : 'Alle Bestände'}</option>
                 <option value="in_stock">{language === 'ar' ? 'متوفر بالمخزن فقط (> 0)' : 'Nur vorrätig (> 0)'}</option>
@@ -223,7 +216,7 @@ export const ProductPicker = ({
               <select
                 value={pickerSort}
                 onChange={(e) => setPickerSort(e.target.value)}
-                className="w-full px-2.5 py-1.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer"
+                className={`${FIELD_CLASSES} cursor-pointer`}
               >
                 <option value="default">{language === 'ar' ? 'الترتيب: الافتراضي' : 'Sortierung: Standard'}</option>
                 <option value="name_asc">{language === 'ar' ? 'الاسم (أ – ي)' : 'Name (A → Z)'}</option>
@@ -251,7 +244,7 @@ export const ProductPicker = ({
                   setPickerStockFilter('all');
                   setPickerSort('default');
                 }}
-                className="flex items-center gap-1 text-danger-600 dark:text-danger-400 hover:underline font-semibold cursor-pointer"
+                className="flex items-center gap-1 min-h-11 text-danger-600 dark:text-danger-400 hover:underline font-semibold cursor-pointer"
               >
                 <RotateCcw className="w-3 h-3" />
                 <span>{language === 'ar' ? 'إعادة ضبط الفلاتر' : 'Filter zurücksetzen'}</span>
@@ -360,11 +353,12 @@ export const ProductPicker = ({
                               [p.id]: Math.max(1, (prev[p.id] || 1) - 1)
                             }))
                           }
-                          className="w-6 h-6 flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-gray-800 transition cursor-pointer"
+                          aria-label={isAr ? 'تقليل الكمية' : 'Menge verringern'}
+                          className="w-11 h-11 flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-gray-800 transition cursor-pointer touch-manipulation"
                         >
-                          <Minus className="w-2.5 h-2.5" />
+                          <Minus className="w-3.5 h-3.5" aria-hidden="true" />
                         </button>
-                        <span className="w-6 text-center font-bold text-xs font-mono text-slate-800 dark:text-slate-200">
+                        <span className="w-8 text-center font-bold text-sm tabular-nums text-slate-800 dark:text-slate-200">
                           {chosenQty}
                         </span>
                         <button
@@ -375,9 +369,10 @@ export const ProductPicker = ({
                               [p.id]: (prev[p.id] || 1) + 1
                             }))
                           }
-                          className="w-6 h-6 flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-gray-800 transition cursor-pointer"
+                          aria-label={isAr ? 'زيادة الكمية' : 'Menge erhöhen'}
+                          className="w-11 h-11 flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-gray-800 transition cursor-pointer touch-manipulation"
                         >
-                          <Plus className="w-2.5 h-2.5" />
+                          <Plus className="w-3.5 h-3.5" aria-hidden="true" />
                         </button>
                       </div>
 
@@ -388,7 +383,7 @@ export const ProductPicker = ({
                           handleAddProductWithQty(p, chosenQty);
                           setPickerQuantities((prev) => ({ ...prev, [p.id]: 1 }));
                         }}
-                        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm cursor-pointer ${
+                        className={`flex items-center gap-1 min-h-11 px-3 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer touch-manipulation ${
                           existingItem
                             ? 'bg-primary-600 hover:bg-primary-700 text-white'
                             : 'bg-success-600 hover:bg-success-700 text-white'

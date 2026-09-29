@@ -21,6 +21,7 @@ import { GoogleTab } from './settings/GoogleTab';
 import { DeliveryTab } from './settings/DeliveryTab';
 import { GeneralTab } from './settings/GeneralTab';
 import { useConfirm } from '../context/FeedbackContext';
+import { Button } from '../components/ui';
 
 export const Settings = () => {
   const { t, language } = useLanguage();
@@ -303,19 +304,9 @@ export const Settings = () => {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={saving}
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-primary-600 hover:bg-primary-700 active:bg-primary-800 disabled:opacity-50 shadow-md shadow-primary-500/20 transition cursor-pointer shrink-0 touch-manipulation"
-        >
-          {saving ? (
-            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-          ) : (
-            <Save className="w-4 h-4" />
-          )}
-          <span>{saving ? t('loading') : t('saveSettings')}</span>
-        </button>
+        <Button icon={Save} loading={saving} onClick={handleSubmit} className="w-full sm:w-auto shrink-0">
+          {saving ? t('loading') : t('saveSettings')}
+        </Button>
       </div>
 
       {/* Notifications */}
@@ -343,7 +334,7 @@ export const Settings = () => {
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition cursor-pointer whitespace-nowrap ${
+              className={`flex items-center gap-2 min-h-11 px-4 rounded-xl font-bold text-xs sm:text-sm transition cursor-pointer whitespace-nowrap touch-manipulation ${
                 isActive
                   ? 'bg-white dark:bg-gray-900 text-slate-900 dark:text-white shadow-sm'
                   : 'text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
@@ -420,18 +411,9 @@ export const Settings = () => {
 
         {/* Global Save Button at bottom of active section */}
         <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200/80 dark:border-gray-850">
-          <button
-            type="submit"
-            disabled={saving}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-primary-600 hover:bg-primary-700 active:bg-primary-800 disabled:opacity-50 shadow-md shadow-primary-500/20 transition cursor-pointer touch-manipulation"
-          >
-            {saving ? (
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <Save className="w-4 h-4" />
-            )}
-            <span>{saving ? t('loading') : t('saveSettings')}</span>
-          </button>
+          <Button type="submit" icon={Save} loading={saving} className="w-full sm:w-auto">
+            {saving ? t('loading') : t('saveSettings')}
+          </Button>
         </div>
       </form>
     </div>

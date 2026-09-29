@@ -107,7 +107,7 @@ export const ProductCompactView = ({
                         addToCart(product);
                       }}
                       disabled={product.stock <= 0}
-                      className="p-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 disabled:opacity-40 text-white transition-colors cursor-pointer"
+                      className="p-1.5 coarse:min-h-11 coarse:min-w-11 inline-flex items-center justify-center rounded-lg bg-brand-600 hover:bg-brand-700 disabled:opacity-40 text-white transition-colors cursor-pointer"
                       title={language === 'ar' ? 'أضف للسلة' : 'In den Warenkorb'}
                     >
                       <ShoppingCart className="w-4 h-4" />

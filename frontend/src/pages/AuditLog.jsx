@@ -18,10 +18,9 @@ import {
   AlertTriangle,
   UserX,
   FileEdit,
-  Clock,
-  ChevronDown
+  Clock
 } from 'lucide-react';
-import { EmptyState, SkeletonList } from '../components/ui';
+import { EmptyState, Input, Select, SkeletonList } from '../components/ui';
 
 const ACTION_DEFINITIONS = {
   // Authentication & Security
@@ -353,7 +352,7 @@ export const AuditLog = () => {
           type="button"
           onClick={fetchEntries}
           disabled={loading}
-          className="flex items-center justify-center gap-2 self-start sm:self-auto bg-white/15 hover:bg-white/25 active:bg-white/30 backdrop-blur px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer disabled:opacity-50 touch-manipulation"
+          className="flex items-center justify-center gap-2 self-start sm:self-auto bg-white/15 hover:bg-white/25 active:bg-white/30 min-h-11 px-4 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer disabled:opacity-50 touch-manipulation"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           <span>{isAr ? 'تحديث السجل' : 'Aktualisieren'}</span>
@@ -403,31 +402,25 @@ export const AuditLog = () => {
       <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-5 border border-slate-200/80 dark:border-gray-800 shadow-sm space-y-3.5">
         <div className="flex flex-col sm:flex-row gap-3">
           {/* Search Input */}
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 text-slate-500 absolute start-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
+          <div className="flex-1">
+            <Input
+              icon={Search}
               type="text"
+              aria-label={isAr ? 'بحث' : 'Suche'}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={isAr ? 'بحث في السجل بالمسؤول، الإجراء، أو التفاصيل...' : 'Im Protokoll suchen nach Admin, Aktion, Detail...'}
-              className="w-full ps-10 pe-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:ring-2 focus:ring-promo-500 transition"
             />
           </div>
 
           {/* Category Dropdown */}
-          <div className="sm:w-64 relative">
-            <select
+          <div className="sm:w-64">
+            <Select
+              aria-label={isAr ? 'الفئة' : 'Kategorie'}
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full appearance-none px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-xs sm:text-sm outline-none focus:ring-2 focus:ring-promo-500 cursor-pointer"
-            >
-              {CATEGORIES.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {isAr ? cat.ar : cat.de}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="w-4 h-4 text-slate-500 absolute end-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              options={CATEGORIES.map((cat) => ({ value: cat.id, label: isAr ? cat.ar : cat.de }))}
+            />
           </div>
         </div>
 
@@ -440,7 +433,8 @@ export const AuditLog = () => {
                 key={cat.id}
                 type="button"
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer touch-manipulation ${
+                aria-pressed={isSelected}
+                className={`min-h-11 px-3 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer touch-manipulation ${
                   isSelected
                     ? 'bg-promo-600 text-white shadow-sm'
                     : 'bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-750 text-slate-600 dark:text-gray-300'

@@ -11,7 +11,7 @@ import { RestockModal } from './products/RestockModal';
 import { ProductCardGrid } from './products/ProductCardGrid';
 import { ProductFilters } from './products/ProductFilters';
 import { useToast, useConfirm } from '../context/FeedbackContext';
-import { SkeletonList } from '../components/ui';
+import { Button, SkeletonList } from '../components/ui';
 
 export const Products = () => {
   const { t } = useLanguage();
@@ -216,7 +216,7 @@ export const Products = () => {
         <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
           <Link
             to={`${ADMIN_BASE}/catalogs`}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-slate-50 dark:hover:bg-gray-850 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-medium shadow-sm transition touch-manipulation"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 sm:px-3.5 min-h-11 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-slate-50 dark:hover:bg-gray-850 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-medium shadow-sm transition touch-manipulation"
           >
             <Layers className="w-4 h-4 text-primary-600 dark:text-primary-400 shrink-0" />
             <span>{t('catalogs')}</span>
@@ -224,20 +224,16 @@ export const Products = () => {
 
           <Link
             to="/"
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-slate-50 dark:hover:bg-gray-850 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-medium shadow-sm transition touch-manipulation"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 sm:px-3.5 min-h-11 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-slate-50 dark:hover:bg-gray-850 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-medium shadow-sm transition touch-manipulation"
           >
             <Store className="w-4 h-4 text-primary-600 dark:text-primary-400 shrink-0" />
             <span>{t('viewCatalog')}</span>
             <ArrowUpRight className="w-3.5 h-3.5 text-slate-500 shrink-0" />
           </Link>
 
-          <button
-            onClick={handleOpenAddModal}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 sm:py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium text-xs sm:text-sm rounded-xl shadow-sm transition touch-manipulation cursor-pointer"
-          >
-            <Plus className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-            <span>{t('addProduct')}</span>
-          </button>
+          <Button icon={Plus} onClick={handleOpenAddModal} className="w-full sm:w-auto">
+            {t('addProduct')}
+          </Button>
         </div>
       </div>
 

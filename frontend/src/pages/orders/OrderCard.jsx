@@ -51,8 +51,8 @@ export const OrderCard = ({
   const itemName = (it) => (isAr ? it.product?.nameAr : it.product?.nameDe) || it.product?.name || it.productId;
   const openAccept = () => { setAcceptModalOrder(order); setAcceptModalDriver(order.assignedDriverName || ''); };
 
-  const quickBtn = 'inline-flex items-center justify-center gap-1 min-h-9 px-3 rounded-lg font-bold text-xs text-white shadow-sm transition cursor-pointer touch-manipulation disabled:opacity-50';
-  const iconBtn = 'inline-flex items-center justify-center min-w-9 min-h-9 rounded-lg border border-slate-200 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-850 text-slate-500 dark:text-slate-400 transition cursor-pointer touch-manipulation';
+  const quickBtn = 'inline-flex items-center justify-center gap-1 min-h-9 coarse:min-h-11 px-3 rounded-lg font-bold text-xs text-white shadow-sm transition cursor-pointer touch-manipulation disabled:opacity-50';
+  const iconBtn = 'inline-flex items-center justify-center min-w-9 min-h-9 coarse:min-w-11 coarse:min-h-11 rounded-lg border border-slate-200 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-850 text-slate-500 dark:text-slate-400 transition cursor-pointer touch-manipulation';
 
   return (
     <article className="flex flex-col h-full bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/90 dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow overflow-hidden text-xs">
@@ -86,7 +86,7 @@ export const OrderCard = ({
           </span>
           {phone && (
             <a href={`tel:${phone}`} dir="ltr"
-              className="inline-flex items-center gap-1 font-mono text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 shrink-0">
+              className="inline-flex items-center gap-1 coarse:py-3.5 coarse:-my-3.5 font-mono text-slate-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 shrink-0">
               <Phone className="w-3 h-3" aria-hidden="true" />
               <span>{phone}</span>
             </a>
@@ -174,7 +174,7 @@ export const OrderCard = ({
           type="button"
           onClick={() => toggleOrderItemsExpand(order.id)}
           aria-expanded={isExpanded}
-          className="w-full flex items-center justify-between gap-2 text-start text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+          className="w-full flex items-center justify-between gap-2 coarse:py-3.5 coarse:-my-3.5 text-start text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
         >
           <span className="truncate">{items.map((it) => `${itemName(it)} ×${it.quantity}`).join(', ')}</span>
           <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''}`} aria-hidden="true" />
@@ -196,7 +196,7 @@ export const OrderCard = ({
       <div className="mt-auto flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-slate-50/80 dark:bg-gray-950/50 border-t border-slate-100 dark:border-gray-850">
         <div className="flex items-center gap-1">
           <button type="button" onClick={() => handleViewDetails(order)}
-            className="min-h-9 px-2.5 rounded-lg border border-slate-200 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-850 text-slate-700 dark:text-slate-300 font-semibold transition cursor-pointer touch-manipulation">
+            className="min-h-9 coarse:min-h-11 px-2.5 rounded-lg border border-slate-200 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-850 text-slate-700 dark:text-slate-300 font-semibold transition cursor-pointer touch-manipulation">
             {isAr ? 'التفاصيل' : 'Details'}
           </button>
           <button type="button" onClick={() => handleOpenPrintModal(order)} title={t('printInvoice')} aria-label={t('printInvoice')} className={iconBtn}>
@@ -216,7 +216,7 @@ export const OrderCard = ({
             <>
               <button type="button" onClick={() => openStatusModal(order, 'declined')} disabled={updating}
                 title={t('decline')} aria-label={t('decline')}
-                className="inline-flex items-center justify-center min-w-9 min-h-9 rounded-lg bg-danger-50 hover:bg-danger-100 dark:bg-danger-950/40 text-danger-700 dark:text-danger-300 border border-danger-200 dark:border-danger-900/50 transition cursor-pointer touch-manipulation disabled:opacity-50">
+                className="inline-flex items-center justify-center min-w-9 min-h-9 coarse:min-w-11 coarse:min-h-11 rounded-lg bg-danger-50 hover:bg-danger-100 dark:bg-danger-950/40 text-danger-700 dark:text-danger-300 border border-danger-200 dark:border-danger-900/50 transition cursor-pointer touch-manipulation disabled:opacity-50">
                 <XCircle className="w-4 h-4" aria-hidden="true" />
               </button>
               <button type="button" onClick={openAccept} disabled={updating} className={`${quickBtn} bg-success-600 hover:bg-success-700`}>
@@ -243,7 +243,7 @@ export const OrderCard = ({
           )}
           {currentStatus === 'declined' && (
             <button type="button" onClick={openAccept} disabled={updating}
-              className="min-h-9 px-2.5 rounded-lg border border-success-300 dark:border-success-700 text-success-700 dark:text-success-300 hover:bg-success-50 dark:hover:bg-success-950/30 font-bold transition cursor-pointer touch-manipulation">
+              className="min-h-9 coarse:min-h-11 px-2.5 rounded-lg border border-success-300 dark:border-success-700 text-success-700 dark:text-success-300 hover:bg-success-50 dark:hover:bg-success-950/30 font-bold transition cursor-pointer touch-manipulation">
               {t('accept')}
             </button>
           )}

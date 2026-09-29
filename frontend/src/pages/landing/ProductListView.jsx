@@ -106,7 +106,7 @@ export const ProductListView = ({
                   addToCart(product);
                 }}
                 disabled={product.stock <= 0}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-brand-600 hover:bg-brand-700 disabled:opacity-40 text-white transition-all cursor-pointer shadow-sm"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 coarse:min-h-11 rounded-xl text-xs font-bold bg-brand-600 hover:bg-brand-700 disabled:opacity-40 text-white transition-all cursor-pointer shadow-sm"
               >
                 <ShoppingCart className="w-4 h-4" />
                 <span>{product.stock <= 0 ? t('outOfStock') : (language === 'ar' ? 'أضف للسلة' : 'In den Warenkorb')}</span>

@@ -8,3 +8,4 @@ export { Drawer } from './Drawer';
 export { EmptyState } from './EmptyState';
 export { Skeleton, SkeletonCard, SkeletonTable, SkeletonList } from './Skeleton';
 export { Pagination } from './Pagination';
+export { Switch } from './Switch';

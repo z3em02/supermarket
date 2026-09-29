@@ -126,7 +126,7 @@ export const ProductGridView = ({
                       addToCart(product);
                     }}
                     disabled={product.stock <= 0}
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-brand-600 hover:bg-brand-700 disabled:opacity-40 text-white transition-all shadow-sm cursor-pointer"
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 coarse:min-h-11 coarse:px-3.5 rounded-lg text-xs font-bold bg-brand-600 hover:bg-brand-700 disabled:opacity-40 text-white transition-all shadow-sm cursor-pointer"
                     title={product.stock <= 0 ? t('outOfStock') : (language === 'ar' ? 'أضف للسلة' : 'In den Warenkorb')}
                   >
                     <ShoppingCart className="w-3.5 h-3.5" />
