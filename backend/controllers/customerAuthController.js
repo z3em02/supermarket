@@ -5,7 +5,7 @@ const prisma = require('../lib/prisma');
 const { sendCustomerVerificationEmail } = require('../utils/emailService');
 const { sendWhatsAppOtp } = require('../utils/whatsappService');
 const { JWT_SECRET, SECURE_COOKIES } = require('../lib/config');
-const { isValidEmail, isValidPhone, isValidPostalCode, normalizeAustrianPhone, isStrongPassword, STRONG_PASSWORD_HINT, secureCompare } = require('../utils/validation');
+const { isValidEmail, isValidPhone, isValidPostalCode, normalizeAustrianPhone, isStrongPassword, STRONG_PASSWORD_HINT, secureCompare, isString, firstNonStringField, clampText, FIELD_MAX } = require('../utils/validation');
 const { encrypt, decrypt, hashLookup, decryptCustomerPII } = require('../utils/piiCrypto');
 const { generateCsrfToken, setCsrfCookie } = require('../middleware/csrf');
 
@@ -33,6 +33,12 @@ const register = async (req, res) => {
 
     if (!name || !email || !phone || !password) {
       return res.status(400).json({ error: 'Name, email, phone number, and password are required' });
+    }
+
+    // Reject non-string fields before any .trim()/Prisma call (clean 400, not 500).
+    const badField = firstNonStringField(req.body, ['name', 'email', 'phone', 'password', 'street', 'houseNumber', 'postalCode', 'city', 'floorApartment', 'deliveryNotes']);
+    if (badField) {
+      return res.status(400).json({ error: `Invalid value for "${badField}"` });
     }
 
     if (!isValidEmail(email)) {
@@ -86,7 +92,7 @@ const register = async (req, res) => {
 
     const customer = await prisma.customer.create({
       data: {
-        name: name.trim(),
+        name: clampText(name, FIELD_MAX.name),
         email: encrypt(trimmedEmail),
         emailHash,
         emailVerified: false,
@@ -96,12 +102,12 @@ const register = async (req, res) => {
         phoneHash,
         phoneVerified: false,
         password: hashedPassword,
-        street: encrypt(street.trim()),
-        houseNumber: encrypt(houseNumber.trim()),
-        postalCode: encrypt(postalCode.trim()),
-        city: encrypt(city.trim()),
-        floorApartment: encrypt(floorApartment.trim()),
-        deliveryNotes: encrypt(deliveryNotes.trim()),
+        street: encrypt(clampText(street, FIELD_MAX.street)),
+        houseNumber: encrypt(clampText(houseNumber, FIELD_MAX.houseNumber)),
+        postalCode: encrypt(clampText(postalCode, FIELD_MAX.postalCode)),
+        city: encrypt(clampText(city, FIELD_MAX.city)),
+        floorApartment: encrypt(clampText(floorApartment, FIELD_MAX.floorApartment)),
+        deliveryNotes: encrypt(clampText(deliveryNotes, FIELD_MAX.deliveryNotes)),
         preferredLanguage: cleanLang
       }
     });
@@ -138,9 +144,9 @@ const register = async (req, res) => {
     // #4 fix: issue the CSRF cookie alongside the session cookie.
     setCsrfCookie(res, generateCsrfToken(), 7 * 24 * 60 * 60 * 1000);
 
+    // Session set as the HttpOnly customer_token cookie above; not echoed here.
     res.status(201).json({
       message: 'Registration successful. Verification codes have been generated.',
-      token,
       customerId: customer.id,
       customer: {
         id: customer.id,
@@ -442,6 +448,12 @@ const login = async (req, res) => {
       return res.status(400).json({ error: 'Email or phone number, and password are required' });
     }
 
+    // Reject non-string credentials up front — otherwise an object/array would
+    // reach .trim()/Prisma and surface as a 500 instead of a clean 400.
+    if (!isString(identifier) || !isString(password)) {
+      return res.status(400).json({ error: 'Email or phone number, and password are required' });
+    }
+
     const trimmed = identifier.trim();
 
     // Match either email or phone (phones are stored normalized to E.164,
@@ -483,8 +495,8 @@ const login = async (req, res) => {
     // #4 fix: issue the CSRF cookie alongside the session cookie.
     setCsrfCookie(res, generateCsrfToken(), 7 * 24 * 60 * 60 * 1000);
 
+    // Session set as the HttpOnly customer_token cookie above; not echoed here.
     res.json({
-      token,
       customer: {
         id: customer.id,
         name: customer.name,

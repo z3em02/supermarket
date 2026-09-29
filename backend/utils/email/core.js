@@ -98,9 +98,15 @@ const emailWrapper = ({ lang = 'de', title, subtitle, contentHtml, settings }) =
     ? "'Segoe UI', Tahoma, 'Noto Sans Arabic', Arial, sans-serif" 
     : "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
   const align = isAr ? 'right' : 'left';
-  const localizedStoreName = settings 
-    ? (isAr ? settings.storeNameAr : settings.storeNameDe) || settings.storeName 
-    : 'Hajar Supermarkt';
+  // Store-settings text is admin-controlled but still interpolated into HTML
+  // below, so escape it the same way customer-supplied values are — an admin
+  // must not be able to inject markup into every customer's inbox.
+  const localizedStoreName = escapeHtml(settings
+    ? (isAr ? settings.storeNameAr : settings.storeNameDe) || settings.storeName
+    : 'Hajar Supermarkt');
+  const safePhone = escapeHtml(settings?.phone);
+  const safeEmail = escapeHtml(settings?.email);
+  const safeAddress = escapeHtml(settings?.address);
   const brandSub = isAr ? 'منصة تجارة وتوزيع الجملة B2B' : 'B2B Großhandel Distributionszentrum';
   const footerNotice = isAr 
     ? `هذه رسالة تلقائية من ${localizedStoreName} &bull; جميع الحقوق محفوظة © ${new Date().getFullYear()}`
@@ -108,9 +114,9 @@ const emailWrapper = ({ lang = 'de', title, subtitle, contentHtml, settings }) =
 
   const contactHtml = settings?.phone || settings?.email || settings?.address ? `
     <div style="margin-top: 14px; font-size: 11px; color: #64748b; line-height: 1.8;">
-      ${settings.phone ? `<span class="contact-pill" style="display: inline-block; margin: 2px 6px;">📞 <a href="tel:${settings.phone}" style="color: #64748b; text-decoration: none;">${settings.phone}</a></span>` : ''}
-      ${settings.email ? `<span class="contact-pill" style="display: inline-block; margin: 2px 6px;">✉️ <a href="mailto:${settings.email}" style="color: #64748b; text-decoration: none;">${settings.email}</a></span>` : ''}
-      ${settings.address ? `<div style="margin-top: 4px; color: #94a3b8;">📍 ${settings.address}</div>` : ''}
+      ${settings.phone ? `<span class="contact-pill" style="display: inline-block; margin: 2px 6px;">📞 <a href="tel:${encodeURIComponent(settings.phone)}" style="color: #64748b; text-decoration: none;">${safePhone}</a></span>` : ''}
+      ${settings.email ? `<span class="contact-pill" style="display: inline-block; margin: 2px 6px;">✉️ <a href="mailto:${encodeURIComponent(settings.email)}" style="color: #64748b; text-decoration: none;">${safeEmail}</a></span>` : ''}
+      ${settings.address ? `<div style="margin-top: 4px; color: #94a3b8;">📍 ${safeAddress}</div>` : ''}
     </div>
   ` : '';
 

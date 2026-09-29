@@ -33,7 +33,7 @@ test('buildOrderLine rounds line subtotals half-up', () => {
 test('parseQuantity accepts only positive integers', () => {
   assert.strictEqual(parseQuantity(3), 3);
   assert.strictEqual(parseQuantity('2'), 2);
-  for (const bad of [0, '0', '0.5', -1, 'abc', null, undefined, '']) {
+  for (const bad of [0, '0', '0.5', 2.5, '2.5', '3abc', -1, 'abc', null, undefined, '']) {
     assert.strictEqual(parseQuantity(bad), null, `expected ${JSON.stringify(bad)} to be rejected`);
   }
 });
