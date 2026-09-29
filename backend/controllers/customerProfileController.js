@@ -161,6 +161,7 @@ const updateProfile = async (req, res) => {
       updateData.phoneVerified = false;
       updateData.phoneOtp = null;
       updateData.phoneOtpExpiry = null;
+      updateData.phoneOtpAttempts = 0;
     }
 
     // Password change (already validated to be >= 8 chars above, if provided)

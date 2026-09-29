@@ -10,7 +10,7 @@ storefront, customer accounts with email/phone OTP verification, and an
 admin back office for products, orders, customers, accounting and store
 settings. There's also a driver-facing delivery view.
 
-- **Backend**: Node.js, Express 5, Prisma ORM on PostgreSQL, JWT auth (HttpOnly cookies), Nodemailer, Firebase Admin (push), Redis (ioredis, rate limiting)
+- **Backend**: Node.js, Express 5, Prisma ORM on PostgreSQL, JWT auth (HttpOnly cookies), Nodemailer, WhatsApp Cloud API (phone OTP), Redis (ioredis, rate limiting)
 - **Frontend**: React 19, Vite, Tailwind CSS, React Router 7
 - **Deployment**: nginx (reverse proxy + static hosting) + PM2 (cluster mode)
 
@@ -88,7 +88,7 @@ the StoreSettings defaults in `settingsShared.js`. Shared logic lives in `utils/
 - `utils/piiCrypto.js` — field-level encryption for customer/order PII (policy: README §6 "Personal data & GDPR"); `scripts/encryptCustomerPii.js` and `scripts/encryptOrderSnapshotPii.js` are one-off migration scripts for encrypting existing rows.
 - `utils/emailService.js` — Nodemailer wrapper for OTPs, order status emails, password reset; it re-exports `utils/email/` (`core.js`: transport, HTML layout, helpers; `orderEmails.js`; `accountEmails.js`). If SMTP env vars are left as placeholders, emails are skipped and logged to console instead of failing the request.
 - `utils/pushService.js` — Web Push via the `web-push` library with VAPID keys (`routes/push.js`, `PushSubscription` model).
-- `utils/firebaseAdmin.js` — verifies Firebase ID tokens for phone-number OTP verification (not used for push).
+- `utils/whatsappService.js` — sends phone-verification codes through Meta's WhatsApp Cloud API (authentication template in production, plain text elsewhere — README §4.4); `resendOtp` with `type: 'phone'` sends, `verifyPhone` checks the code. Without `WHATSAPP_*` config it logs the code in dev and throws in production.
 - `utils/googleScraper.js` — feeds the `GoogleReview` model (shown via `TrustindexWidget` on the frontend).
 - `utils/imageProxy.js`, `utils/serialize.js`, `utils/validation.js` — image proxying, response serialization helpers, shared input validation.
 

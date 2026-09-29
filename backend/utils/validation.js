@@ -16,9 +16,9 @@ const secureCompare = (a, b) => {
 
 // Normalizes an Austrian phone number to E.164 (+43...), accepting a leading
 // +43, 0043, or a local 0-prefixed number (e.g. "0660 1234567" -> "+436601234567").
-// Firebase Phone Auth requires E.164, and storing customers' numbers in this
-// single canonical form lets us compare against the phone_number claim on the
-// verified Firebase ID token with a plain string match.
+// Storing customers' numbers in this single canonical form makes lookups a
+// plain hash match, and it's what the WhatsApp Cloud API expects as the
+// recipient (minus the "+", see utils/whatsappService.js).
 const normalizeAustrianPhone = (phone) => {
   let trimmed = String(phone || '').trim().replace(/[\s\-()]/g, '');
   if (trimmed.startsWith('0043')) trimmed = `+43${trimmed.slice(4)}`;

@@ -17,8 +17,7 @@ const { JWT_SECRET, SECURE_COOKIES } = require('../lib/config');
 // Public customer auth & verification endpoints (protected by authLimiter against brute-force)
 router.post('/register', authLimiter, customerAuthController.register);
 router.post('/verify-email', authLimiter, customerAuthMiddleware, customerAuthController.verifyEmail);
-// Requires the customer's own JWT: the Firebase ID token proves phone possession,
-// customerAuthMiddleware proves which account it should be applied to.
+// Checks the code sent to the account's phone via WhatsApp (resend-otp, type 'phone').
 router.post('/verify-phone', authLimiter, customerAuthMiddleware, customerAuthController.verifyPhone);
 router.post('/resend-otp', authLimiter, customerAuthMiddleware, customerAuthController.resendOtp);
 router.post('/login', authLimiter, customerAuthController.login);
