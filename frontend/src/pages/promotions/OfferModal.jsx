@@ -99,7 +99,7 @@ export const OfferModal = ({
             <p className="text-xs font-semibold text-promo-800 dark:text-promo-300">
               Formel: Kaufe X Einheiten und erhalte Y Einheiten kostenlos (z.B. 2+1 Gratis = Kaufe 2, erhalte 1 gratis)
             </p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 items-end">
               <Input
                 label="Kaufmenge (X)"
                 type="number"
@@ -130,7 +130,7 @@ export const OfferModal = ({
 
         {offerForm.type === 'PRODUCT_DISCOUNT' && (
           <div className="p-4 rounded-xl bg-primary-50/60 dark:bg-primary-950/30 border border-primary-200 dark:border-primary-800">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 items-end">
               <Input
                 label="Fester Aktionspreis (€)"
                 type="number"
@@ -157,7 +157,7 @@ export const OfferModal = ({
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 items-end">
           <Input
             label="Badge Deutsch"
             type="text"
@@ -175,7 +175,7 @@ export const OfferModal = ({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 items-end">
           <Input
             label={t('validFrom')}
             type="date"

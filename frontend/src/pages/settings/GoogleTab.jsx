@@ -16,7 +16,7 @@ const PreviewLink = ({ href }) => (href ? (
     href={href}
     target="_blank"
     rel="noopener noreferrer"
-    className="inline-flex items-center gap-1 min-h-9 text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400 font-semibold"
+    className="inline-flex items-center gap-1 min-h-9 coarse:min-h-11 text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400 font-semibold"
   >
     <span>Vorschau</span>
     <ExternalLink className="w-3 h-3" aria-hidden="true" />

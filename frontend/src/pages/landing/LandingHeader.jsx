@@ -32,7 +32,7 @@ export const LandingHeader = ({
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-20 flex items-center justify-between gap-2 sm:gap-4">
 
         {/* Logo & Brand */}
-        <Link to="/" className="flex items-center gap-2 sm:gap-3 group min-w-0 shrink lg:shrink-0">
+        <Link to="/" className="flex items-center gap-2 sm:gap-3 coarse:min-h-11 group min-w-0 shrink lg:shrink-0">
           {settings?.logoUrl ? (
             <img
               src={settings.logoUrl}
@@ -79,7 +79,7 @@ export const LandingHeader = ({
           <button
             type="button"
             onClick={() => setCartOpen(true)}
-            className="relative inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-bold shadow-sm shadow-brand-600/20 transition cursor-pointer touch-manipulation shrink-0"
+            className="relative inline-flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 coarse:min-h-11 coarse:min-w-11 justify-center rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-bold shadow-sm shadow-brand-600/20 transition cursor-pointer touch-manipulation shrink-0"
             aria-label={language === 'ar' ? 'سلة المشتريات' : 'Warenkorb'}
           >
             <ShoppingCart className="w-4 h-4" />
@@ -96,7 +96,7 @@ export const LandingHeader = ({
             {isCustomerLoggedIn ? (
               <Link
                 to="/account"
-                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-750 text-slate-800 dark:text-gray-100 text-xs sm:text-sm font-bold transition touch-manipulation"
+                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 coarse:min-h-11 coarse:min-w-11 justify-center rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-750 text-slate-800 dark:text-gray-100 text-xs sm:text-sm font-bold transition touch-manipulation"
               >
                 <User className="w-4 h-4 text-brand-600 dark:text-brand-400" />
                 <span className="hidden md:inline">{customer?.name || (language === 'ar' ? 'حسابي' : 'Mein Konto')}</span>
@@ -105,7 +105,7 @@ export const LandingHeader = ({
               <div className="flex items-center gap-1">
                 <Link
                   to="/customer/login"
-                  className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-750 text-slate-800 dark:text-gray-100 text-xs sm:text-sm font-bold transition touch-manipulation"
+                  className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 coarse:min-h-11 coarse:min-w-11 justify-center rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-750 text-slate-800 dark:text-gray-100 text-xs sm:text-sm font-bold transition touch-manipulation"
                 >
                   <LogIn className="w-4 h-4" />
                   <span className="hidden md:inline">{language === 'ar' ? 'دخول' : 'Anmelden'}</span>
@@ -126,7 +126,7 @@ export const LandingHeader = ({
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 rounded-xl text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-gray-800 border border-slate-200/80 dark:border-gray-800 touch-manipulation cursor-pointer transition shrink-0"
+            className="lg:hidden p-2 coarse:min-h-11 coarse:min-w-11 inline-flex items-center justify-center rounded-xl text-slate-700 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-gray-800 border border-slate-200/80 dark:border-gray-800 touch-manipulation cursor-pointer transition shrink-0"
             aria-label="Toggle navigation menu"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -168,7 +168,7 @@ export const LandingHeader = ({
                 <Link
                   to="/account"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="px-3.5 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold transition shrink-0 touch-manipulation shadow-sm"
+                  className="px-3.5 py-1.5 coarse:min-h-11 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold transition shrink-0 touch-manipulation shadow-sm"
                 >
                   {language === 'ar' ? 'حسابي' : 'Mein Konto'}
                 </Link>
@@ -182,7 +182,7 @@ export const LandingHeader = ({
                   <Link
                     to="/customer/login"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="px-3 py-2 rounded-xl bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-900 dark:text-white font-bold text-xs flex items-center justify-center gap-1.5 transition touch-manipulation shadow-sm"
+                    className="px-3 py-2 coarse:min-h-11 rounded-xl bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-900 dark:text-white font-bold text-xs flex items-center justify-center gap-1.5 transition touch-manipulation shadow-sm"
                   >
                     <LogIn className="w-3.5 h-3.5" />
                     <span>{language === 'ar' ? 'تسجيل الدخول' : 'Anmelden'}</span>
@@ -190,7 +190,7 @@ export const LandingHeader = ({
                   <Link
                     to="/customer/register"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition touch-manipulation shadow-sm"
+                    className="px-3 py-2 coarse:min-h-11 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition touch-manipulation shadow-sm"
                   >
                     <UserPlus className="w-3.5 h-3.5" />
                     <span>{language === 'ar' ? 'حساب جديد' : 'Registrieren'}</span>

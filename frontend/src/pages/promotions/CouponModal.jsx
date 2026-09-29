@@ -79,7 +79,7 @@ export const CouponModal = ({
           ))}
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 items-end">
           <Input
             label={`${couponForm.discountType === 'PERCENTAGE' ? 'Rabatt in %' : 'Rabatt in €'} *`}
             type="number"
@@ -119,7 +119,7 @@ export const CouponModal = ({
           </div>
         </label>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 items-end">
           <Input
             label={`${t('usageLimit')} (Gesamt)`}
             type="number"
@@ -137,7 +137,7 @@ export const CouponModal = ({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 items-end">
           <Input
             label={t('validFrom')}
             type="date"

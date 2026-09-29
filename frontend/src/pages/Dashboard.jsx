@@ -266,7 +266,6 @@ export const Dashboard = () => {
                       variant="brand"
                       size="sm"
                       icon={UserCheck}
-                      className="min-h-11"
                       disabled={resolvingRequestId === reqItem.id}
                       onClick={() => handleResolveDriverRequest(reqItem.id, 'approve')}
                     >
@@ -276,7 +275,6 @@ export const Dashboard = () => {
                       variant="secondary"
                       size="sm"
                       icon={X}
-                      className="min-h-11"
                       disabled={resolvingRequestId === reqItem.id}
                       onClick={() => handleResolveDriverRequest(reqItem.id, 'reject')}
                     >
@@ -320,7 +318,7 @@ export const Dashboard = () => {
                     variant="secondary"
                     size="sm"
                     icon={LogOut}
-                    className="min-h-11 shrink-0 !text-danger-600 dark:!text-danger-400"
+                    className="shrink-0 !text-danger-600 dark:!text-danger-400"
                     disabled={loggingOutSessionId === session.id}
                     onClick={() => handleLogoutDriver(session.id)}
                   >

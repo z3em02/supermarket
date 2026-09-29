@@ -47,7 +47,7 @@ export const ContactSection = () => {
               <Phone className="w-5 h-5 text-brand-500 shrink-0 mt-0.5" />
               <div>
                 <span className="block font-bold text-slate-900 dark:text-white">{t('phoneLabel')}</span>
-                <a href={`tel:${settings?.phone || '0681 20800852'}`} className="hover:text-brand-600">
+                <a href={`tel:${settings?.phone || '0681 20800852'}`} className="inline-flex items-center coarse:min-h-11 hover:text-brand-600">
                   {settings?.phone || '0681 20800852'}
                 </a>
               </div>
@@ -57,7 +57,7 @@ export const ContactSection = () => {
               <Mail className="w-5 h-5 text-promo-500 shrink-0 mt-0.5" />
               <div>
                 <span className="block font-bold text-slate-900 dark:text-white">{t('emailLabel')}</span>
-                <a href={`mailto:${settings?.email || 'info@hajar-supermarkt.at'}`} className="hover:text-brand-600">
+                <a href={`mailto:${settings?.email || 'info@hajar-supermarkt.at'}`} className="inline-flex items-center coarse:min-h-11 hover:text-brand-600">
                   {settings?.email || 'info@hajar-supermarkt.at'}
                 </a>
               </div>
@@ -77,7 +77,7 @@ export const ContactSection = () => {
               href={settings.mapUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-750 text-slate-800 dark:text-white text-xs font-bold transition-all"
+              className="w-full inline-flex items-center justify-center gap-2 py-3 min-h-11 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-750 text-slate-800 dark:text-white text-xs font-bold transition-all"
             >
               <MapPin className="w-4 h-4 text-danger-500" />
               <span>{t('viewOnMap')}</span>
@@ -104,7 +104,7 @@ export const ContactSection = () => {
                   href={settings.mapUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-sm transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 coarse:min-h-11 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-sm transition-colors"
                 >
                   <MapPin className="w-3.5 h-3.5" />
                   <span>{t('viewOnMap')}</span>

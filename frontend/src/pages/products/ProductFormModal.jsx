@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { ADMIN_BASE } from '../../config/adminPath';
 import { Button, Input, Modal, Select, Textarea } from '../../components/ui';
 
-const LINK_CLASSES = 'inline-flex items-center gap-1 min-h-9 text-xs font-semibold text-primary-600 dark:text-primary-400 hover:underline cursor-pointer';
+const LINK_CLASSES = 'inline-flex items-center gap-1 min-h-9 coarse:min-h-11 text-xs font-semibold text-primary-600 dark:text-primary-400 hover:underline cursor-pointer';
 
 export const ProductFormModal = ({
   categories,

@@ -61,7 +61,7 @@ export const DriverAccountsCard = ({
               </span>
             </p>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => setRevealedPin(null)} className="shrink-0 min-h-11 !text-warning-800 dark:!text-warning-300">
+          <Button variant="ghost" size="sm" onClick={() => setRevealedPin(null)} className="shrink-0 !text-warning-800 dark:!text-warning-300">
             {language === 'ar' ? 'إغلاق' : 'Schließen'}
           </Button>
         </div>

@@ -13,7 +13,7 @@ import { AcceptOrderModal } from './orders/AcceptOrderModal';
 import { OrderCard } from './orders/OrderCard';
 import { OrderStatusSummary } from './orders/OrderStatusSummary';
 import { useConfirm, useToast } from '../context/FeedbackContext';
-import { EmptyState, Pagination, SkeletonList } from '../components/ui';
+import { Button, EmptyState, Input, Pagination, Select, SkeletonList } from '../components/ui';
 
 export const Orders = () => {
   const { t, language } = useLanguage();
@@ -214,18 +214,14 @@ export const Orders = () => {
         <div className="w-full sm:w-auto flex items-center gap-2">
           <Link
             to={`${ADMIN_BASE}/driver`}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 py-2 sm:py-2.5 bg-warning-500 hover:bg-warning-600 text-white font-medium text-xs sm:text-sm rounded-xl shadow-sm transition touch-manipulation cursor-pointer"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 min-h-11 bg-warning-600 hover:bg-warning-600 text-white font-medium text-xs sm:text-sm rounded-xl shadow-sm transition touch-manipulation cursor-pointer"
           >
             <Truck className="w-4 h-4 sm:w-5 sm:h-5" />
             <span>{language === 'ar' ? 'واجهة التوصيل للسائق' : 'Fahreransicht'}</span>
           </Link>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2 sm:py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium text-xs sm:text-sm rounded-xl shadow-sm transition touch-manipulation cursor-pointer"
-          >
-            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span>{t('createOrder')}</span>
-          </button>
+          <Button icon={Plus} onClick={() => setShowCreateModal(true)} className="flex-1 sm:flex-initial">
+            {t('createOrder')}
+          </Button>
         </div>
       </div>
 
@@ -234,32 +230,34 @@ export const Orders = () => {
 
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute start-3.5 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4 sm:w-5 sm:h-5" />
-          <input
+        <div className="flex-1">
+          <Input
+            icon={Search}
             type="text"
+            aria-label={t('searchOrders')}
             placeholder={t('searchOrders')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full ps-10 sm:ps-11 pe-4 py-2.5 sm:py-3 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition"
           />
         </div>
-        <select
+        <div className="sm:w-64">
+        <Select
+          aria-label={t('allStatus')}
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 sm:px-4 py-2.5 sm:py-3 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500 text-xs sm:text-sm transition"
         >
-          <option value="all" className="dark:bg-gray-900 dark:text-white">{t('allStatus')}</option>
-          <option value="pending" className="dark:bg-gray-900 dark:text-white">{t('pending')}</option>
-          <option value="pending_customer_approval" className="dark:bg-gray-900 dark:text-white">
+          <option value="all">{t('allStatus')}</option>
+          <option value="pending">{t('pending')}</option>
+          <option value="pending_customer_approval">
             {language === 'ar' ? 'بانتظار موافقة العميل' : 'Wartet auf Kundenbestätigung'}
           </option>
-          <option value="accepted" className="dark:bg-gray-900 dark:text-white">{t('accepted')}</option>
-          <option value="preparing" className="dark:bg-gray-900 dark:text-white">{t('preparing')}</option>
-          <option value="shipped" className="dark:bg-gray-900 dark:text-white">{t('shipped')}</option>
-          <option value="delivered" className="dark:bg-gray-900 dark:text-white">{t('delivered')}</option>
-          <option value="declined" className="dark:bg-gray-900 dark:text-white">{t('declined')}</option>
-        </select>
+          <option value="accepted">{t('accepted')}</option>
+          <option value="preparing">{t('preparing')}</option>
+          <option value="shipped">{t('shipped')}</option>
+          <option value="delivered">{t('delivered')}</option>
+          <option value="declined">{t('declined')}</option>
+        </Select>
+        </div>
       </div>
 
       {/* Orders grid: 1 column on phones, 2 on tablets, 3 on desktop */}

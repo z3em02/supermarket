@@ -1,5 +1,6 @@
 import colors from 'tailwindcss/colors';
 import defaultTheme from 'tailwindcss/defaultTheme';
+import plugin from 'tailwindcss/plugin';
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -46,5 +47,9 @@ export default {
       }
     },
   },
-  plugins: [],
+  plugins: [
+    // `coarse:` = touch screens. Compact controls (36px) grow to the 44px
+    // tap-target minimum there, while mouse users keep the dense layout.
+    plugin(({ addVariant }) => addVariant('coarse', '@media (pointer: coarse)'))
+  ],
 }

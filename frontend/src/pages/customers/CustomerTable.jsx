@@ -80,7 +80,7 @@ export const CustomerTable = ({
 
                     <div className="flex items-center gap-1 shrink-0">
                       <Button variant="secondary" size="sm" icon={ExternalLink} onClick={() => setSelectedCustomer(cust)}
-                        className="min-h-11" title={language === 'ar' ? 'عرض الطلبات' : 'Bestellungen ansehen'}>
+                        title={language === 'ar' ? 'عرض الطلبات' : 'Bestellungen ansehen'}>
                         {language === 'ar' ? 'عرض' : 'Details'}
                       </Button>
                       <IconButton
@@ -155,7 +155,7 @@ export const CustomerTable = ({
 
                   {/* Stats Footer */}
                   <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-gray-800">
-                    <Button variant="secondary" size="sm" icon={ShoppingBag} onClick={() => setSelectedCustomer(cust)} className="min-h-11">
+                    <Button variant="secondary" size="sm" icon={ShoppingBag} onClick={() => setSelectedCustomer(cust)}>
                       {cust.totalOrders} {language === 'ar' ? 'طلبات' : 'Bestellungen'}
                     </Button>
                     <div className="text-end font-mono">
@@ -303,7 +303,7 @@ export const CustomerTable = ({
                       <td className="px-5 py-4 text-end">
                         <div className="flex items-center justify-end gap-2">
                           <Button variant="secondary" size="sm" icon={ExternalLink} onClick={() => setSelectedCustomer(cust)}
-                            className="min-h-11" title={language === 'ar' ? 'عرض الطلبات' : 'Bestellungen ansehen'}>
+                            title={language === 'ar' ? 'عرض الطلبات' : 'Bestellungen ansehen'}>
                             {language === 'ar' ? 'عرض' : 'Details'}
                           </Button>
                           <IconButton

@@ -124,7 +124,7 @@ export const CustomerLogin = () => {
                 </label>
                 <Link
                   to="/forgot-password"
-                  className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline"
+                  className="inline-flex items-center coarse:min-h-11 text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline"
                 >
                   {isAr ? 'نسيت كلمة المرور؟' : 'Passwort vergessen?'}
                 </Link>
@@ -164,7 +164,7 @@ export const CustomerLogin = () => {
             </p>
             <Link
               to="/register"
-              className="inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-750 text-slate-800 dark:text-gray-200 font-bold text-xs transition w-full touch-manipulation"
+              className="inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 min-h-11 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-750 text-slate-800 dark:text-gray-200 font-bold text-xs transition w-full touch-manipulation"
             >
               <UserPlus className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />
               <span>{isAr ? 'إنشاء حساب عميل جديد مجاناً' : 'Kostenloses Kundenkonto erstellen'}</span>

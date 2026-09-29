@@ -83,7 +83,7 @@ export const Layout = () => {
         </div>
         <button 
           onClick={() => setSidebarOpen(false)}
-          className="lg:hidden p-1.5 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-gray-850"
+          className="lg:hidden inline-flex items-center justify-center min-w-11 min-h-11 rounded-xl text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-gray-850"
           aria-label="Close sidebar"
         >
           <X className="w-5 h-5" />
@@ -133,14 +133,14 @@ export const Layout = () => {
         </div>
         <button
           onClick={handleLockSections}
-          className="flex items-center justify-center gap-2 w-full px-3 py-2 mb-1.5 text-sm font-medium text-warning-600 dark:text-warning-400 hover:bg-warning-50 dark:hover:bg-warning-950/40 rounded-lg transition cursor-pointer"
+          className="flex items-center justify-center gap-2 w-full px-3 min-h-11 mb-1.5 text-sm font-medium text-warning-600 dark:text-warning-400 hover:bg-warning-50 dark:hover:bg-warning-950/40 rounded-lg transition cursor-pointer"
         >
           <Lock className="w-4 h-4" />
           <span>{language === 'ar' ? 'الأقسام الحساسة قفل' : 'Bereiche sperren'}</span>
         </button>
         <button
           onClick={handleLogout}
-          className="flex items-center justify-center gap-2 w-full px-3 py-2 text-sm font-medium text-danger-600 dark:text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-950/40 rounded-lg transition"
+          className="flex items-center justify-center gap-2 w-full px-3 min-h-11 text-sm font-medium text-danger-600 dark:text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-950/40 rounded-lg transition"
         >
           <LogOut className="w-4 h-4" />
           <span>{t('logout')}</span>
@@ -183,7 +183,7 @@ export const Layout = () => {
               <button
                 type="button"
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-gray-850 shrink-0 touch-manipulation"
+                className="lg:hidden inline-flex items-center justify-center min-w-11 min-h-11 rounded-xl text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-gray-850 shrink-0 touch-manipulation"
                 aria-label="Open sidebar menu"
               >
                 <Menu className="w-5 h-5 sm:w-6 sm:h-6" />

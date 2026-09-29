@@ -24,12 +24,12 @@ export const LandingFooter = () => {
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-semibold text-slate-500 dark:text-gray-400">
-          <a href="#catalog" className="hover:text-brand-600">{t('catalog')}</a>
-          <a href="#reviews" className="hover:text-brand-600">{t('googleReviewsTitle')}</a>
-          <Link to="/impressum" className="hover:text-brand-600">{t('impressum')}</Link>
-          <Link to="/datenschutz" className="hover:text-brand-600">{t('datenschutz')}</Link>
-          <Link to="/agb" className="hover:text-brand-600">{t('agb')}</Link>
-          <Link to={isCustomerLoggedIn ? "/account" : "/customer/login"} className="hover:text-brand-600">
+          <a href="#catalog" className="inline-flex items-center coarse:min-h-11 hover:text-brand-600">{t('catalog')}</a>
+          <a href="#reviews" className="inline-flex items-center coarse:min-h-11 hover:text-brand-600">{t('googleReviewsTitle')}</a>
+          <Link to="/impressum" className="inline-flex items-center coarse:min-h-11 hover:text-brand-600">{t('impressum')}</Link>
+          <Link to="/datenschutz" className="inline-flex items-center coarse:min-h-11 hover:text-brand-600">{t('datenschutz')}</Link>
+          <Link to="/agb" className="inline-flex items-center coarse:min-h-11 hover:text-brand-600">{t('agb')}</Link>
+          <Link to={isCustomerLoggedIn ? "/account" : "/customer/login"} className="inline-flex items-center coarse:min-h-11 hover:text-brand-600">
             {isCustomerLoggedIn ? (language === 'ar' ? 'حسابي' : 'Mein Konto') : (language === 'ar' ? 'دخول العملاء' : 'Kunden-Login')}
           </Link>
         </div>

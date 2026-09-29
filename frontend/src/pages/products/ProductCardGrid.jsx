@@ -90,7 +90,7 @@ export const ProductCardGrid = ({
           {/* Card Action Footer */}
           <div className="px-4 py-1 bg-slate-50/70 dark:bg-gray-950/60 border-t border-slate-100 dark:border-gray-850 flex items-center justify-between gap-2">
             <Button variant="ghost" size="sm" icon={Plus} onClick={() => setRestockProduct(product)}
-              className="min-h-11 -ms-3 !text-success-700 dark:!text-success-400">
+              className="-ms-3 !text-success-700 dark:!text-success-400">
               {t('quickRestock')}
             </Button>
 

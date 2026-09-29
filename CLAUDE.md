@@ -134,7 +134,7 @@ dashboard (no separate admin build). Structure:
 - `config/adminPath.js` — the admin login is served at an obscured path (`ADMIN_BASE`, currently `/console-eb68a2f3/...`) rather than `/admin`; change this constant before deploying a fork. This is not real secrecy on its own — see the comment in that file.
 - `components/ProtectedRoute.jsx` — route guarding based on the relevant auth context.
 - `components/SectionPasscodeGate.jsx` — pairs with backend `middleware/sectionUnlock.js`.
-- `components/ui/` — shared primitives (`Button`, `IconButton`, `Card`, `Badge`, `Input`, `Select`, `Modal`, `Drawer`, `EmptyState`, `Skeleton*`, `Pagination`); use them for new UI. `context/FeedbackContext.jsx` provides `useToast()` / `useConfirm()` — never `alert()`/`window.confirm()`.
+- `components/ui/` — shared primitives (`Button`, `IconButton`, `Card`, `Badge`, `Input`, `Select`, `Switch`, `Modal`, `Drawer`, `EmptyState`, `Skeleton*`, `Pagination`); use them for new UI. Tap targets are 44px; compact controls use the custom `coarse:` variant (touch screens) to grow, e.g. `min-h-9 coarse:min-h-11`. `context/FeedbackContext.jsx` provides `useToast()` / `useConfirm()` — never `alert()`/`window.confirm()`.
 - Colours are semantic Tailwind tokens (`primary`, `brand`, `success`, `warning`, `danger`, `info`, `promo`), not palette names; order-status styling comes only from `utils/orderStatusBadge.js`. Tailwind is v3.4 — v4-only classes silently do nothing. Rules: README §10 "Design system".
 - `pages/orders/OrderDrawer.jsx` is the single per-order view (tabs in `Order*Tab.jsx`); its writes send `expectedUpdatedAt` so the backend can answer 409 on stale edits.
 

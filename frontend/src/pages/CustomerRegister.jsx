@@ -313,7 +313,7 @@ export const CustomerRegister = () => {
                       value={formData.street}
                       onChange={handleChange}
                       placeholder={isAr ? 'مثال: شارع المحطة' : 'z.B. Hauptstraße'}
-                      className="w-full px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-500"
+                      className="w-full min-h-11 px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-500"
                     />
                   </div>
 
@@ -327,7 +327,7 @@ export const CustomerRegister = () => {
                       value={formData.houseNumber}
                       onChange={handleChange}
                       placeholder="z.B. 12A"
-                      className="w-full px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-500"
+                      className="w-full min-h-11 px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-500"
                     />
                   </div>
 
@@ -341,7 +341,7 @@ export const CustomerRegister = () => {
                       value={formData.postalCode}
                       onChange={handleChange}
                       placeholder="z.B. 1010"
-                      className="w-full px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-500"
+                      className="w-full min-h-11 px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-500"
                     />
                   </div>
 
@@ -355,7 +355,7 @@ export const CustomerRegister = () => {
                       value={formData.city}
                       onChange={handleChange}
                       placeholder="z.B. Wien"
-                      className="w-full px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-500"
+                      className="w-full min-h-11 px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-500"
                     />
                   </div>
 
@@ -369,7 +369,7 @@ export const CustomerRegister = () => {
                       value={formData.floorApartment}
                       onChange={handleChange}
                       placeholder="z.B. 2. Stock / Tür 14"
-                      className="w-full px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-500"
+                      className="w-full min-h-11 px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-500"
                     />
                   </div>
 
@@ -383,7 +383,7 @@ export const CustomerRegister = () => {
                       value={formData.deliveryNotes}
                       onChange={handleChange}
                       placeholder={isAr ? 'مثال: يرجى الاتصال عند الوصول، الجرس لا يعمل' : 'z.B. Bitte bei Müller klingeln, 3. Stock'}
-                      className="w-full px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-500"
+                      className="w-full min-h-11 px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-slate-900 dark:text-white text-sm outline-none focus:ring-2 focus:ring-brand-500"
                     />
                   </div>
                 </div>
@@ -421,7 +421,7 @@ export const CustomerRegister = () => {
 
               <div className="text-center text-xs text-slate-500 dark:text-gray-400 pt-1 sm:pt-2">
                 <span>{isAr ? 'لديك حساب بالفعل؟ ' : 'Bereits registriert? '}</span>
-                <Link to="/customer/login" className="font-bold text-brand-600 hover:underline touch-manipulation">
+                <Link to="/customer/login" className="inline-flex items-center coarse:min-h-11 font-bold text-brand-600 hover:underline touch-manipulation">
                   {isAr ? 'تسجيل الدخول' : 'Jetzt anmelden'}
                 </Link>
               </div>

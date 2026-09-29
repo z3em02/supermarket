@@ -134,7 +134,7 @@ export const CreateOrderModal = ({
             variant="ghost"
             size="sm"
             icon={Plus}
-            className="min-h-11 !text-primary-600 dark:!text-primary-400"
+            className="!text-primary-600 dark:!text-primary-400"
             onClick={() => setOrderForm({
               ...orderForm,
               items: [...orderForm.items, { productId: '', quantity: 1 }]

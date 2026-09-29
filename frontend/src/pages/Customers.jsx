@@ -182,7 +182,7 @@ export const Customers = () => {
             <AlertCircle className="w-5 h-5 shrink-0" />
             <span>{error}</span>
           </div>
-          <Button variant="danger" size="sm" onClick={fetchCustomers} className="min-h-11 self-end sm:self-auto">
+          <Button variant="danger" size="sm" onClick={fetchCustomers} className="self-end sm:self-auto">
             {language === 'ar' ? 'إعادة المحاولة' : 'Erneut versuchen'}
           </Button>
         </div>

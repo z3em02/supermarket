@@ -249,11 +249,11 @@ export const Catalogs = () => {
 
               {/* Action Buttons */}
               <div className="flex items-center justify-end gap-2 pt-3.5 sm:pt-4 mt-3.5 sm:mt-4 border-t border-slate-100 dark:border-gray-850">
-                <Button variant="secondary" size="sm" icon={Edit} onClick={() => handleOpenEditModal(cat)} className="min-h-11 flex-1 sm:flex-none">
+                <Button variant="secondary" size="sm" icon={Edit} onClick={() => handleOpenEditModal(cat)} className="flex-1 sm:flex-none">
                   {t('edit')}
                 </Button>
                 <Button variant="secondary" size="sm" icon={Trash2} onClick={() => handleDelete(cat)}
-                  className="min-h-11 flex-1 sm:flex-none !text-danger-600 dark:!text-danger-400 hover:!bg-danger-50 dark:hover:!bg-danger-950/40">
+                  className="flex-1 sm:flex-none !text-danger-600 dark:!text-danger-400 hover:!bg-danger-50 dark:hover:!bg-danger-950/40">
                   {t('delete')}
                 </Button>
               </div>
