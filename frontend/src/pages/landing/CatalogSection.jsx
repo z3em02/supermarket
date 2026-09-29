@@ -41,7 +41,7 @@ export const CatalogSection = ({
       {/* Section Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200/60 dark:border-blue-800 text-blue-700 dark:text-blue-400 text-xs font-bold tracking-wide uppercase mb-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 dark:bg-brand-950/60 border border-brand-200/60 dark:border-brand-800 text-brand-700 dark:text-brand-400 text-xs font-bold tracking-wide uppercase mb-2">
             <span>{t('catalog')}</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -56,14 +56,14 @@ export const CatalogSection = ({
           </span>
 
           {/* VIEW SWITCHER BUTTONS */}
-          <div className="inline-flex items-center bg-white dark:bg-gray-900 p-1 rounded-xl border border-slate-200 dark:border-gray-800 shadow-2xs">
+          <div className="inline-flex items-center bg-white dark:bg-gray-900 p-1 rounded-xl border border-slate-200 dark:border-gray-800 shadow-sm">
             <button
               type="button"
               onClick={() => handleViewChange('grid')}
               title={t('gridView')}
               className={`p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
                 viewMode === 'grid'
-                  ? 'bg-blue-600 text-white shadow-xs'
+                  ? 'bg-brand-600 text-white shadow-sm'
                   : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
@@ -77,7 +77,7 @@ export const CatalogSection = ({
               title={t('listView')}
               className={`p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
                 viewMode === 'list'
-                  ? 'bg-blue-600 text-white shadow-xs'
+                  ? 'bg-brand-600 text-white shadow-sm'
                   : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
@@ -91,7 +91,7 @@ export const CatalogSection = ({
               title={t('compactView')}
               className={`p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
                 viewMode === 'compact'
-                  ? 'bg-blue-600 text-white shadow-xs'
+                  ? 'bg-brand-600 text-white shadow-sm'
                   : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
@@ -102,7 +102,7 @@ export const CatalogSection = ({
         </div>
       </div>
 
-      <p className="text-[11px] text-slate-400 dark:text-gray-500 -mt-2">
+      <p className="text-[11px] text-slate-500 dark:text-slate-400 -mt-2">
         {t('pricesInclVatNotice')}
       </p>
 
@@ -124,19 +124,19 @@ export const CatalogSection = ({
       {/* Loading State */}
       {loading && (
         <div className="flex flex-col items-center justify-center py-20">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-brand-600 border-t-transparent rounded-full animate-spin"></div>
           <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">{t('loading')}</p>
         </div>
       )}
 
       {/* Error State */}
       {!loading && error && (
-        <div className="p-6 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-xl text-center space-y-3">
-          <AlertTriangle className="w-8 h-8 text-rose-600 dark:text-rose-400 mx-auto" />
-          <p className="text-sm text-rose-700 dark:text-rose-300 font-medium">{error}</p>
+        <div className="p-6 bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800 rounded-xl text-center space-y-3">
+          <AlertTriangle className="w-8 h-8 text-danger-600 dark:text-danger-400 mx-auto" />
+          <p className="text-sm text-danger-700 dark:text-danger-300 font-medium">{error}</p>
           <button
             onClick={fetchCatalog}
-            className="px-4 py-2 bg-rose-600 text-white text-xs font-semibold rounded-lg hover:bg-rose-700 transition-colors"
+            className="px-4 py-2 bg-danger-600 text-white text-xs font-semibold rounded-lg hover:bg-danger-700 transition-colors"
           >
             {t('retry')}
           </button>
@@ -145,8 +145,8 @@ export const CatalogSection = ({
 
       {/* Empty State */}
       {!loading && !error && filteredProducts.length === 0 && (
-        <div className="text-center py-16 bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-850 p-8 shadow-2xs">
-          <Package className="w-12 h-12 text-slate-400 dark:text-gray-500 mx-auto mb-3" />
+        <div className="text-center py-16 bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-850 p-8 shadow-sm">
+          <Package className="w-12 h-12 text-slate-500 dark:text-slate-400 mx-auto mb-3" />
           <h3 className="text-base font-semibold text-slate-900 dark:text-white">
             {t('noProductsFound')}
           </h3>

@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { getApiUrl } from '../../utils/api';
 import axios from '../../utils/adminAxios';
 import { useLanguage } from '../../context/LanguageContext';
+import { useConfirm } from '../../context/FeedbackContext';
 
 // Driver accounts (each courier has their own name + PIN), managed on the
 // Settings page.
 export const useDriverAccounts = () => {
   const { language } = useLanguage();
+  const confirm = useConfirm();
 
   // Driver accounts (each courier now has their own name + PIN, instead of
   // one PIN shared by everyone) — managed from this page.
@@ -100,7 +102,7 @@ export const useDriverAccounts = () => {
     const confirmText = language === 'ar'
       ? `هل تريد حذف السائق "${driver.name}"؟`
       : `Fahrer "${driver.name}" wirklich löschen?`;
-    if (!window.confirm(confirmText)) return;
+    if (!(await confirm({ message: confirmText, confirmText: language === 'ar' ? 'حذف' : 'Löschen', variant: 'danger' }))) return;
     setDriverError('');
     setDriverMessage('');
     try {

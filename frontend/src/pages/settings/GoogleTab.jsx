@@ -22,11 +22,11 @@ export const GoogleTab = ({
   const { settings, reviews, reviewsLoading } = useStoreSettings();
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
+    <div className="space-y-6 animate-fade-in">
       {/* Google Integration & Scraper Settings */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-gray-850 p-5 sm:p-7 shadow-xs space-y-5">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl border border-slate-200/80 dark:border-gray-850 p-5 sm:p-7 shadow-sm space-y-5">
         <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100 dark:border-gray-800">
-          <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-warning-50 dark:bg-warning-950/50 text-warning-600 dark:text-warning-400 flex items-center justify-center shrink-0">
             <Navigation className="w-4 h-4" />
           </div>
           <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
@@ -45,7 +45,7 @@ export const GoogleTab = ({
                   href={formData.mapUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 inline-flex items-center gap-1 font-semibold"
+                  className="text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400 inline-flex items-center gap-1 font-semibold"
                 >
                   <span>Vorschau</span>
                   <ExternalLink className="w-3 h-3" />
@@ -57,7 +57,7 @@ export const GoogleTab = ({
               value={formData.mapUrl}
               onChange={(e) => handleChange('mapUrl', e.target.value)}
               placeholder={t('mapsUrlPlaceholder')}
-              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:outline-none transition"
+              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none transition"
             />
           </div>
 
@@ -70,7 +70,7 @@ export const GoogleTab = ({
               value={formData.mapEmbedUrl}
               onChange={(e) => handleChange('mapEmbedUrl', e.target.value)}
               placeholder={t('mapsEmbedUrlPlaceholder')}
-              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:outline-none transition"
+              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none transition"
             />
           </div>
 
@@ -84,7 +84,7 @@ export const GoogleTab = ({
                   href={formData.googleReviewsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-amber-600 hover:text-amber-700 dark:text-amber-400 inline-flex items-center gap-1 font-semibold"
+                  className="text-xs text-warning-600 hover:text-warning-700 dark:text-warning-400 inline-flex items-center gap-1 font-semibold"
                 >
                   <span>Vorschau</span>
                   <ExternalLink className="w-3 h-3" />
@@ -96,22 +96,22 @@ export const GoogleTab = ({
               value={formData.googleReviewsUrl}
               onChange={(e) => handleChange('googleReviewsUrl', e.target.value)}
               placeholder={t('googleReviewsUrlPlaceholder')}
-              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 focus:outline-none transition"
+              className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 focus:outline-none transition"
             />
           </div>
 
           {/* Scraper Metric Card */}
-          <div className="p-4 rounded-2xl bg-amber-500/5 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 flex items-center justify-between gap-3">
+          <div className="p-4 rounded-2xl bg-warning-500/5 dark:bg-warning-950/20 border border-warning-200/60 dark:border-warning-900/40 flex items-center justify-between gap-3">
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 block mb-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-warning-700 dark:text-warning-400 block mb-1">
                 {language === 'ar' ? 'التقييم الحالي في Google' : 'Aktuelle Google-Bewertung'}
               </span>
               <div className="flex items-center gap-2">
-                <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                <Star className="w-4 h-4 fill-warning-400 text-warning-400" />
                 <span className="text-lg font-black text-slate-900 dark:text-white">
                   {settings?.googleRating ? Number(settings.googleRating).toFixed(1) : '5.0'}
                 </span>
-                <span className="text-xs text-slate-400">•</span>
+                <span className="text-xs text-slate-500">•</span>
                 <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
                   {settings?.googleReviewCount || 0} {language === 'ar' ? 'تقييم' : 'Bewertungen'}
                 </span>
@@ -122,7 +122,7 @@ export const GoogleTab = ({
               type="button"
               onClick={handleSyncGoogle}
               disabled={syncing}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-50 shadow-xs transition cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs text-white bg-success-600 hover:bg-success-700 active:bg-success-800 disabled:opacity-50 shadow-sm transition cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
               <span>{syncing ? (language === 'ar' ? 'جارٍ الجلب...' : 'Wird abgerufen...') : (language === 'ar' ? 'تحديث الآن' : 'Jetzt synchronisieren')}</span>
@@ -132,8 +132,8 @@ export const GoogleTab = ({
           {syncFeedback && (
             <div className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
               syncFeedback.type === 'success'
-                ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
-                : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
+                ? 'bg-success-50 dark:bg-success-950/40 text-success-700 dark:text-success-300 border border-success-200 dark:border-success-800'
+                : 'bg-danger-50 dark:bg-danger-950/40 text-danger-700 dark:text-danger-300 border border-danger-200 dark:border-danger-800'
             }`}>
               {syncFeedback.type === 'success' ? (
                 <CheckCircle2 className="w-4 h-4 shrink-0" />
@@ -147,11 +147,11 @@ export const GoogleTab = ({
       </div>
 
       {/* Google Reviews Management */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-gray-850 p-5 sm:p-7 shadow-xs space-y-5">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl border border-slate-200/80 dark:border-gray-850 p-5 sm:p-7 shadow-sm space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-gray-800">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-              <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+            <div className="w-9 h-9 rounded-xl bg-warning-50 dark:bg-warning-950/50 text-warning-600 dark:text-warning-400 flex items-center justify-center shrink-0">
+              <Star className="w-4 h-4 fill-warning-400 text-warning-400" />
             </div>
             <div>
               <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
@@ -173,11 +173,11 @@ export const GoogleTab = ({
               aria-checked={formData.showGoogleReviews}
               onClick={() => handleChange('showGoogleReviews', !formData.showGoogleReviews)}
               className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none touch-manipulation ${
-                formData.showGoogleReviews ? 'bg-blue-600' : 'bg-slate-300 dark:bg-gray-700'
+                formData.showGoogleReviews ? 'bg-primary-600' : 'bg-slate-300 dark:bg-gray-700'
               }`}
             >
               <span
-                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out ${
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition duration-200 ease-in-out ${
                   formData.showGoogleReviews ? (direction === 'rtl' ? '-translate-x-5' : 'translate-x-5') : 'translate-x-0'
                 }`}
               />
@@ -186,12 +186,12 @@ export const GoogleTab = ({
         </div>
 
         {reviewsLoading ? (
-          <div className="py-8 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
-            <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+          <div className="py-8 text-center text-slate-500 text-xs flex items-center justify-center gap-2">
+            <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
             <span>{t('loading')}</span>
           </div>
         ) : reviews.length === 0 ? (
-          <div className="py-8 text-center text-slate-400 text-xs bg-slate-50 dark:bg-gray-950 rounded-2xl border border-dashed border-slate-200 dark:border-gray-800 p-4">
+          <div className="py-8 text-center text-slate-500 text-xs bg-slate-50 dark:bg-gray-950 rounded-2xl border border-dashed border-slate-200 dark:border-gray-800 p-4">
             <p>{language === 'ar' ? 'لا توجد تقييمات حالياً.' : 'Keine Rezensionen vorhanden.'}</p>
           </div>
         ) : (
@@ -218,7 +218,7 @@ export const GoogleTab = ({
                             }}
                           />
                         ) : (
-                          <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                          <div className="w-7 h-7 rounded-full bg-primary-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
                             {rev.authorName ? rev.authorName.slice(0, 2).toUpperCase() : 'G'}
                           </div>
                         )}
@@ -226,7 +226,7 @@ export const GoogleTab = ({
                           <h4 className="text-xs font-bold text-slate-900 dark:text-white leading-tight truncate">
                             {rev.authorName}
                           </h4>
-                          <span className="text-[10px] text-slate-400">
+                          <span className="text-[10px] text-slate-500">
                             {rev.relativeTime || 'Kürzlich'}
                           </span>
                         </div>
@@ -234,7 +234,7 @@ export const GoogleTab = ({
                       <button
                         type="button"
                         onClick={() => handleDeleteReview(rev.id)}
-                        className="text-slate-300 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
+                        className="text-slate-300 hover:text-danger-600 p-1 rounded-lg hover:bg-danger-50 dark:hover:bg-danger-950/40 transition cursor-pointer"
                         title={t('deleteReview')}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -247,7 +247,7 @@ export const GoogleTab = ({
                           key={i}
                           className={`w-3 h-3 ${
                             i < ratingNum
-                              ? 'fill-amber-400 text-amber-400'
+                              ? 'fill-warning-400 text-warning-400'
                               : 'text-slate-300 dark:text-gray-700'
                           }`}
                         />

@@ -17,9 +17,12 @@ import { DriverConfirmModal } from './driver/DriverConfirmModal';
 import { DriverOrderCard } from './driver/DriverOrderCard';
 import { DriverLoginScreen } from './driver/DriverLoginScreen';
 import { DriverHeader } from './driver/DriverHeader';
+import { useStatusBadge } from './orders/useStatusBadge';
+import { useToast } from '../context/FeedbackContext';
 
 export const DriverDeliveryView = () => {
   const { language, direction } = useLanguage();
+  const toast = useToast();
   const isAr = language === 'ar';
 
   const { user: adminUser } = useAuth();
@@ -254,7 +257,7 @@ export const DriverDeliveryView = () => {
       if ((err.response?.status === 401 || err.response?.status === 403) && !adminUser) {
         handleDriverLogout();
       } else {
-        alert(err.response?.data?.error || (isAr ? 'فشل تحديث الحالة' : 'Statusaktualisierung fehlgeschlagen'));
+        toast.error(err.response?.data?.error || (isAr ? 'فشل تحديث الحالة' : 'Statusaktualisierung fehlgeschlagen'));
       }
     } finally {
       setUpdatingId(null);
@@ -326,33 +329,8 @@ export const DriverDeliveryView = () => {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
-  const getStatusBadge = (status) => {
-    const s = (status || '').toLowerCase();
-    switch (s) {
-      case 'out_for_delivery':
-      case 'shipped':
-        return {
-          bg: 'bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border-amber-300 dark:border-amber-800',
-          label: isAr ? 'في الطريق إليك' : 'Auf dem Weg'
-        };
-      case 'delivered':
-        return {
-          bg: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800',
-          label: isAr ? 'تم التسليم' : 'Zugestellt'
-        };
-      case 'preparing':
-        return {
-          bg: 'bg-blue-100 text-blue-800 dark:bg-blue-950/70 dark:text-blue-300 border-blue-300 dark:border-blue-800',
-          label: isAr ? 'قيد التجهيز بالمحل' : 'Wird vorbereitet'
-        };
-      case 'accepted':
-      default:
-        return {
-          bg: 'bg-purple-100 text-purple-800 dark:bg-purple-950/70 dark:text-purple-300 border-purple-300 dark:border-purple-800',
-          label: isAr ? 'طلب جديد مؤكد' : 'Bestätigt'
-        };
-    }
-  };
+  const getStatusBadge = useStatusBadge('driver');
+
 
   if (!isAuthenticated) {
     return (
@@ -390,9 +368,9 @@ export const DriverDeliveryView = () => {
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
           <button
             onClick={() => setActiveTab('active')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap transition-all shadow-xs ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap transition-all shadow-sm ${
               activeTab === 'active'
-                ? 'bg-emerald-600 text-white shadow-emerald-600/20'
+                ? 'bg-success-600 text-white shadow-success-600/20'
                 : 'bg-white dark:bg-gray-900 text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-800 border border-slate-200 dark:border-gray-800'
             }`}
           >
@@ -407,9 +385,9 @@ export const DriverDeliveryView = () => {
 
           <button
             onClick={() => setActiveTab('on_route')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap transition-all shadow-xs ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap transition-all shadow-sm ${
               activeTab === 'on_route'
-                ? 'bg-amber-600 text-white shadow-amber-600/20'
+                ? 'bg-warning-600 text-white shadow-warning-600/20'
                 : 'bg-white dark:bg-gray-900 text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-800 border border-slate-200 dark:border-gray-800'
             }`}
           >
@@ -424,9 +402,9 @@ export const DriverDeliveryView = () => {
 
           <button
             onClick={() => setActiveTab('delivered')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap transition-all shadow-xs ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap transition-all shadow-sm ${
               activeTab === 'delivered'
-                ? 'bg-blue-600 text-white shadow-blue-600/20'
+                ? 'bg-primary-600 text-white shadow-primary-600/20'
                 : 'bg-white dark:bg-gray-900 text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-800 border border-slate-200 dark:border-gray-800'
             }`}
           >
@@ -441,7 +419,7 @@ export const DriverDeliveryView = () => {
 
           <button
             onClick={() => setActiveTab('all')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap transition-all shadow-xs ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap transition-all shadow-sm ${
               activeTab === 'all'
                 ? 'bg-slate-800 dark:bg-gray-700 text-white'
                 : 'bg-white dark:bg-gray-900 text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-800 border border-slate-200 dark:border-gray-800'
@@ -453,20 +431,20 @@ export const DriverDeliveryView = () => {
         </div>
 
         {/* Filter Toolbar: Search & Today only toggle */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-3 sm:p-4 border border-slate-200/80 dark:border-gray-800 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-3 sm:p-4 border border-slate-200/80 dark:border-gray-800 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute top-1/2 -translate-y-1/2 start-3 text-slate-400" />
+            <Search className="w-4 h-4 absolute top-1/2 -translate-y-1/2 start-3 text-slate-500" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={isAr ? 'بحث برقم الطلب، اسم العميل، الهاتف، العنوان...' : 'Suche nach Bestell-Nr., Name, Tel, Adresse...'}
-              className="w-full ps-9 pe-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-800 text-slate-900 dark:text-gray-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full ps-9 pe-4 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-800 text-slate-900 dark:text-gray-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-success-500"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute top-1/2 -translate-y-1/2 end-3 text-slate-400 hover:text-slate-600 dark:hover:text-gray-200 text-xs font-bold"
+                className="absolute top-1/2 -translate-y-1/2 end-3 text-slate-500 hover:text-slate-600 dark:hover:text-gray-200 text-xs font-bold"
               >
                 ✕
               </button>
@@ -477,33 +455,33 @@ export const DriverDeliveryView = () => {
             onClick={() => setFilterTodayOnly(prev => !prev)}
             className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold border transition ${
               filterTodayOnly
-                ? 'bg-emerald-50 border-emerald-300 text-emerald-800 dark:bg-emerald-950/60 dark:border-emerald-800 dark:text-emerald-300'
+                ? 'bg-success-50 border-success-300 text-success-800 dark:bg-success-950/60 dark:border-success-800 dark:text-success-300'
                 : 'bg-slate-50 dark:bg-gray-800 border-slate-200 dark:border-gray-700 text-slate-700 dark:text-gray-300 hover:bg-slate-100'
             }`}
           >
-            <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <Calendar className="w-4 h-4 text-success-600 dark:text-success-400" />
             <span>{isAr ? 'طلبات موعد اليوم فقط' : 'Nur heutige Liefertermine'}</span>
-            {filterTodayOnly && <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
+            {filterTodayOnly && <Check className="w-3.5 h-3.5 text-success-600 dark:text-success-400" />}
           </button>
         </div>
 
         {/* Orders List */}
         {loading ? (
           <div className="py-16 flex flex-col items-center justify-center gap-3">
-            <div className="w-10 h-10 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-[3px] border-success-600 border-t-transparent rounded-full animate-spin" />
             <p className="text-sm font-semibold text-slate-500 dark:text-gray-400">
               {isAr ? 'جاري تحميل جولة التوصيل...' : 'Lade Lieferaufträge...'}
             </p>
           </div>
         ) : filteredOrders.length === 0 ? (
-          <div className="bg-white dark:bg-gray-900 rounded-3xl p-10 text-center border border-slate-200/80 dark:border-gray-800 shadow-xs space-y-3">
-            <div className="w-14 h-14 mx-auto rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl p-10 text-center border border-slate-200/80 dark:border-gray-800 shadow-sm space-y-3">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-success-50 dark:bg-success-950/50 flex items-center justify-center text-success-600 dark:text-success-400">
               <CheckCircle2 className="w-8 h-8" />
             </div>
             <h3 className="text-base font-bold text-slate-800 dark:text-white">
               {isAr ? 'لا توجد طلبات توصيل هنا حالياً' : 'Keine Lieferungen in diesem Bereich'}
             </h3>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-gray-400 max-w-sm mx-auto">
+            <p className="text-body-muted max-w-sm mx-auto">
               {isAr 
                 ? 'جميع الطلبات المسندة إما تم تسليمها أو لا توجد نتائج مطابقة لبحثك الحالي.'
                 : 'Alle Aufträge sind bereits erledigt oder entsprechen nicht dem gewählten Filter.'}

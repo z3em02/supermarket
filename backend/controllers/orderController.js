@@ -1,7 +1,7 @@
 const prisma = require('../lib/prisma');
 const { sendCustomerOrderConfirmationEmail } = require('../utils/emailService');
 const { CUSTOMER_PUBLIC_SELECT } = require('../utils/serialize');
-const { decryptCustomerPII, encrypt } = require('../utils/piiCrypto');
+const { decryptCustomerPII, encrypt, decrypt } = require('../utils/piiCrypto');
 const { sendPushToCustomer } = require('../utils/pushService');
 const { logAudit } = require('../lib/auditLog');
 const { validateAndCalculateCoupon, selectApplicablePromotions } = require('../utils/pricingService');
@@ -16,7 +16,8 @@ const {
 } = require('../utils/orderPricing');
 const { isValidDeliverySlot } = require('../utils/deliverySlot');
 const { calculateDeliveryDistance } = require('../utils/distanceService');
-const { parseValidDate } = require('../utils/validation');
+const { parseValidDate, isCompleteDeliveryAddress } = require('../utils/validation');
+const { orderMatchesSearch } = require('../utils/orderSearch');
 const {
   withDecryptedCustomer,
   withDecryptedCustomers,
@@ -39,25 +40,39 @@ const ORDER_INCLUDE = {
   orderItems: { include: { product: true } }
 };
 
-// Builds the where-clause for the admin browse view from the status filter and
-// the free-text search. NOTE: customerName/phone/email/address are encrypted at
-// rest, so a substring search can't run in SQL against them — server-side search
-// therefore covers the order number and the (plaintext) assigned driver name.
-// The frontend still narrows the *current page* by customer name client-side on
-// the already-decrypted rows.
-const buildBrowseWhere = ({ status, search }) => {
-  const where = {};
-  if (status && status !== 'all') {
-    where.status = status === 'declined' ? { in: DECLINED_STATUSES } : status;
-  }
-  const q = typeof search === 'string' ? search.trim() : '';
-  if (q) {
-    where.OR = [
-      { id: { contains: q, mode: 'insensitive' } },
-      { assignedDriverName: { contains: q, mode: 'insensitive' } }
-    ];
-  }
-  return where;
+// Where-clause for the admin browse view's status filter. The free-text
+// search is applied separately (see searchOrderIds): customer name, phone and
+// address are encrypted at rest, so SQL can't match them.
+const buildStatusWhere = (status) => {
+  if (!status || status === 'all') return {};
+  return { status: status === 'declined' ? { in: DECLINED_STATUSES } : status };
+};
+
+// Ids (newest first) of the orders matching `search` within `where`. Loads
+// only the searchable columns, decrypts them in memory and matches with
+// orderMatchesSearch — so a customer-name/phone/address search covers the
+// whole order history, not just one page.
+const searchOrderIds = async (where, search) => {
+  const rows = await prisma.order.findMany({
+    where,
+    select: {
+      id: true,
+      assignedDriverName: true,
+      customerName: true,
+      customerPhone: true,
+      deliveryAddress: true,
+      customer: { select: { name: true } }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+  return rows
+    .filter((row) => orderMatchesSearch({
+      ...row,
+      customerName: decrypt(row.customerName),
+      customerPhone: decrypt(row.customerPhone),
+      deliveryAddress: decrypt(row.deliveryAddress)
+    }, search))
+    .map((row) => row.id);
 };
 
 const getOrders = async (req, res) => {
@@ -98,21 +113,46 @@ const getOrders = async (req, res) => {
       return res.json(withDecryptedCustomers(orders));
     }
 
-    // --- Admin browse: server-side pagination + status/search filtering ---
+    // --- Admin browse without paging (e.g. an admin using the driver view):
+    // the full list as a flat array, like before pagination existed. ---
+    if (req.query.page === undefined) {
+      const orders = await prisma.order.findMany({
+        where: buildStatusWhere(req.query.status),
+        include: ORDER_INCLUDE,
+        orderBy: { createdAt: 'desc' }
+      });
+      return res.json(withDecryptedCustomers(orders));
+    }
+
+    // --- Admin browse, paginated: status filter + search over the whole history ---
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
     const limit = Math.min(ORDERS_PAGE_MAX, Math.max(1, parseInt(req.query.limit, 10) || ORDERS_PAGE_SIZE));
-    const where = buildBrowseWhere({ status: req.query.status, search: req.query.search });
+    const where = buildStatusWhere(req.query.status);
+    const search = typeof req.query.search === 'string' ? req.query.search.trim().slice(0, 100) : '';
 
-    const [total, orders] = await Promise.all([
-      prisma.order.count({ where }),
-      prisma.order.findMany({
-        where,
-        include: ORDER_INCLUDE,
-        orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * limit,
-        take: limit
-      })
-    ]);
+    let total;
+    let orders;
+    if (search) {
+      const ids = await searchOrderIds(where, search);
+      total = ids.length;
+      const pageIds = ids.slice((page - 1) * limit, page * limit);
+      const rows = pageIds.length
+        ? await prisma.order.findMany({ where: { id: { in: pageIds } }, include: ORDER_INCLUDE })
+        : [];
+      const byId = new Map(rows.map((o) => [o.id, o]));
+      orders = pageIds.map((id) => byId.get(id)).filter(Boolean);
+    } else {
+      [total, orders] = await Promise.all([
+        prisma.order.count({ where }),
+        prisma.order.findMany({
+          where,
+          include: ORDER_INCLUDE,
+          orderBy: { createdAt: 'desc' },
+          skip: (page - 1) * limit,
+          take: limit
+        })
+      ]);
+    }
 
     res.json({
       data: withDecryptedCustomers(orders),
@@ -137,6 +177,35 @@ const getOrderSummary = async (req, res) => {
     res.json({ total, byStatus });
   } catch (error) {
     console.error('Get order summary error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Audit actions that describe a single order; their detail text carries the
+// order's short number ("#3F2A9C10"). ADMIN_CREATE_ORDER is logged per
+// customer, not per order, so the drawer uses the order's createdAt for that.
+const ORDER_HISTORY_ACTIONS = ['UPDATE_ORDER_STATUS', 'EDIT_ORDER', 'ASSIGN_ORDER_DRIVER'];
+
+// GET /api/orders/:id/history — the order's own audit entries for the admin
+// order drawer's "Verlauf" tab. Only order actions, so it doesn't need the
+// passcode that guards the full audit log (logins, settings, ...).
+const getOrderHistory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const order = await prisma.order.findUnique({ where: { id }, select: { id: true, createdAt: true } });
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    const entries = await prisma.auditLog.findMany({
+      where: {
+        action: { in: ORDER_HISTORY_ACTIONS },
+        detail: { contains: `#${id.slice(0, 8).toUpperCase()}` }
+      },
+      select: { id: true, action: true, adminEmail: true, detail: true, createdAt: true },
+      orderBy: { createdAt: 'desc' },
+      take: 100
+    });
+    res.json({ createdAt: order.createdAt, entries });
+  } catch (error) {
+    console.error('Get order history error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -303,8 +372,16 @@ const createOrder = async (req, res) => {
       customer.floorApartment && `Apt/Floor: ${customer.floorApartment}`
     ].filter(Boolean);
 
-    const deliveryAddress = req.body.deliveryAddress || addressParts.join(', ') || 'Home Delivery Address';
+    const deliveryAddress = String(req.body.deliveryAddress || addressParts.join(', ')).trim();
     const deliveryNotes = req.body.deliveryNotes || customer.deliveryNotes || notes || null;
+
+    // No placeholder address: an order must say where it goes.
+    if (!isCompleteDeliveryAddress(deliveryAddress)) {
+      return res.status(400).json({
+        code: 'ADDRESS_REQUIRED',
+        error: 'Bitte geben Sie eine vollständige Lieferadresse mit Straße, Hausnummer und Postleitzahl an. / Please enter a complete delivery address with street, house number and postal code.'
+      });
+    }
 
     // Delivery rules: minimum order value, service area and distance-based delivery fee
     const storeSettings = await prisma.storeSettings.findUnique({ where: { id: 'default' } });
@@ -602,6 +679,7 @@ const getCustomerOrders = async (req, res) => {
 module.exports = {
   getOrders,
   getOrderSummary,
+  getOrderHistory,
   getOrderById,
   createOrder,
   deleteOrder,

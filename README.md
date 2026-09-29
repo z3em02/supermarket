@@ -20,6 +20,7 @@ architecture notes for Claude Code live in [`CLAUDE.md`](CLAUDE.md).
 7. [Security](#7-security)
 8. [Roadmap](#8-roadmap)
 9. [Feature history](#9-feature-history)
+10. [Design system](#10-design-system)
 
 ---
 
@@ -99,6 +100,8 @@ Never commit `.env` files.
 | `REDIS_URL` | Recommended in production; shares rate-limit counters across processes/servers. Without it each PM2 worker counts on its own, so every limit is multiplied by the worker count (the server warns at startup). |
 | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | Optional; Web Push for order-status notifications. Generate the pair with `npx web-push generate-vapid-keys`. |
 | `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` | Optional; admin created by the seed script. Without a password a one-time random one is printed. |
+| `PRISMA_LOG_QUERIES` | Optional; `true` prints every SQL query Prisma runs (debugging only, very noisy). Off by default. |
+| `TEST_CUSTOMER_EMAIL` / `TEST_CUSTOMER_PHONE` / `TEST_CUSTOMER_NAME` / `TEST_CUSTOMER_PASSWORD` | Optional; the verified test customer created by `node scripts/createTestCustomer.js`. Without a password a random one is printed once. |
 
 **`frontend/.env`**
 
@@ -590,4 +593,110 @@ entry before changing a hardening measure.
 - **Distance-based delivery fees and delivery time windows** ([5](#5-distance-based-delivery-fee)).
 - **Maintenance mode**: blocks new customer orders server-side; admins keep full access.
 - **Money handling**: amounts stored as `DECIMAL(10,2)` and rounded half-up to the cent.
-- **Orders list pagination**: the admin Orders list (`GET /api/orders`) is server-paginated (`page`, `limit` — default 50, max 100) with server-side `status` and `search` filters, so only one page of orders is loaded at a time instead of the whole book. Measured on 400 orders, this cut the list load from ~180 ms / 1 MB to ~30 ms / 125 KB, and it stays flat as the order count grows. The status metric bar reads `GET /api/orders/summary` (a DB `groupBy`) so it reflects every order, not just the page. Two request shapes are preserved for backward compatibility: a `?updatedSince=` poll and the driver view still return a flat array; the paginated browse returns `{ data, total, page, limit, totalPages }`. **Search caveat**: customer name/phone/address are encrypted at rest, so the server `search` param matches the order number and the (plaintext) assigned driver name only. The Orders page additionally narrows the *loaded page* by customer name client-side on the already-decrypted rows — so a customer-name search spans the current page, not the whole history. Frontend: `pages/orders/useOrders.js` owns the paged fetch + polling; `pages/Orders.jsx` renders the pager.
+- **Orders list pagination and search**: the admin Orders list (`GET /api/orders?page=`) is server-paginated (`page`, `limit` — default 50, max 100) with server-side `status` and `search` filters, so only one page of orders is loaded at a time. Measured on 400 orders this cut the list load from ~180 ms / 1 MB to ~30 ms / 125 KB. `search` covers the whole history: order number, driver, customer name, phone and address. Because the name/phone/address snapshots are encrypted at rest, a search loads just those columns, decrypts them in memory and matches with `utils/orderSearch.js` before paging. The status bar reads `GET /api/orders/summary` (a DB `groupBy`) so it counts every order. Without `page` (the driver view, `?updatedSince=` polls) the endpoint returns a flat array as before; with `page` it returns `{ data, total, page, limit, totalPages }`. Frontend: `pages/orders/useOrders.js` owns the paged fetch + polling (ignoring out-of-order responses while typing); `pages/Orders.jsx` renders the list and pager.
+- **Order drawer**: clicking an order opens one side drawer (`pages/orders/OrderDrawer.jsx`) with tabs *Übersicht* (status, driver, delivery slot, internal note, totals — each saved inline), *Artikel* (item changes: a separate mode with its own warning and confirm, since saving emails the customer and moves the order to `pending_customer_approval`), *Kunde & Lieferung* (tap-to-call, map link, customer-visible note) and *Verlauf* (`GET /api/orders/:id/history`: the order's own audit entries, no section passcode needed). The list cards keep one-click triage (accept with driver, decline with confirm, next status). **Stale edits**: every drawer write sends the `updatedAt` it is showing as `expectedUpdatedAt`; the status, assign-driver and edit endpoints answer `409 { code: 'STALE_ORDER' }` if the order changed since, and the drawer shows a "changed — reload" banner instead of overwriting the other change. The driver choice lists active driver accounts (`GET /api/settings/drivers/names`, names only) plus online drivers.
+
+## 10. Design system
+
+Frontend UI rules (React + Tailwind + Cairo font, dark mode via `class`, DE/AR + RTL).
+
+### Colour tokens
+
+Defined in `frontend/tailwind.config.js`; each maps to a full Tailwind palette, so every
+shade works (`bg-primary-600`, `dark:text-danger-300`, `border-warning-200/60`, ...).
+Use these names, never the raw palette names:
+
+| Token | Palette | Use |
+|---|---|---|
+| `primary` | blue | Admin back-office primary (buttons, links, active states) |
+| `brand` | emerald | Customer storefront primary |
+| `success` | emerald | Success / completed / money in (admin side) |
+| `warning` | amber | Waiting, attention, low stock |
+| `danger` | rose | Destructive actions, errors, declined |
+| `info` | sky | Informational, in transit |
+| `promo` | purple | Promotions and coupons, "preparing" status |
+| `slate` / `gray` | slate / gray | Neutral text and surfaces (`gray-650/750/850/950` are extra dark-mode shades) |
+
+**One primary per surface**: storefront, customer account, cart, login and legal pages use
+`brand`; admin pages and the driver view use `primary`. `red`, `indigo`, `violet`, `pink`,
+`teal` and `cyan` are no longer used — use the matching token.
+
+### Order status colours
+
+One source of truth: `frontend/src/utils/orderStatusBadge.js` (tested in
+`frontend/tests/orderStatusBadge.test.js`), used through `useStatusBadge(audience)` and
+`<OrderStatusBadge status audience />`. The colour is the same everywhere; only the wording
+changes by audience (`admin`, `customer` — who is told what *they* need to do — and `driver`).
+
+| Status | Tone |
+|---|---|
+| pending | `warning` |
+| pending_customer_approval | `warning`, stronger border, pulses |
+| accepted / confirmed | `primary` |
+| preparing | `promo` |
+| out_for_delivery / shipped | `info`, pulses |
+| delivered / completed | `success` |
+| declined / rejected / cancelled | `danger` |
+
+### Feedback and shared components
+
+- **Never use `alert()` / `window.confirm()`.** Use `useToast()` (`toast.success/error/warning/info`)
+  and `await useConfirm()({ message, variant })` from `context/FeedbackContext.jsx`. Toasts are
+  non-blocking and announced to screen readers; the confirm dialog is themed, RTL-aware, and
+  focuses *Cancel* for `variant: 'danger'` so Enter never deletes by accident. Escape cancels it
+  without also closing a drawer underneath.
+- **Shared primitives** live in `frontend/src/components/ui/` (import from `components/ui`):
+  `Button` / `IconButton` (icon-only buttons require a `label`), `Card`, `Badge`, `Input`,
+  `Textarea`, `Select`, `Modal`, `Drawer` (Escape, focus trap, scroll lock, opens from the
+  inline-end side so it flips in Arabic), `EmptyState`, `Skeleton*` and `Pagination`.
+- **Loading**: list pages show `SkeletonList` placeholders shaped like the content, not a spinner.
+- **Empty lists**: `EmptyState` (icon + message + optional action).
+
+### Layout, type and accessibility rules
+
+- **Radius**: `rounded-xl` for controls (inputs, buttons, chips), `rounded-2xl` for cards,
+  drawers and dialogs. No `rounded-3xl`.
+- **Shadow**: `shadow-sm` resting cards, `shadow-md` hover, `shadow-lg` floating (toasts,
+  menus), `shadow-2xl` dialogs/drawers.
+- **Page shell**: the admin `Layout` sets max width (`max-w-7xl`) and gutters for every page;
+  pages don't add their own. Page roots use `space-y-4 sm:space-y-6`.
+- **Type scale** (`index.css`): `text-heading-xl` (page title), `text-heading-lg` (dialog/drawer
+  title), `text-heading-md` (card title), `text-body-muted`, `text-caption`. Table cells get
+  `tabular-nums` globally; use it on any other money/count.
+- **Tables**: long lists (Customers, Accounting, Promotions) scroll inside the card with a
+  sticky header and zebra rows; Customers and Accounting switch to cards below `md`.
+- **Contrast**: muted text is `text-slate-500` (light, 4.8:1 on white) and `dark:text-slate-400`
+  (7.6:1 on `gray-950`). `text-slate-400` / `dark:text-gray-500` fail WCAG AA for text — only
+  for decorative icons.
+- **Keyboard & motion**: a global `:focus-visible` ring; `prefers-reduced-motion` stops
+  pulsing/transitions (spinners keep turning). Icon-only buttons need an `aria-label`
+  (`IconButton` enforces it). Tap targets are at least 44px (`min-h-11`).
+- **Tailwind 3 only**: this project is on Tailwind 3.4. v4-only classes (`shadow-2xs`,
+  `shadow-xs`, `backdrop-blur-xs`, `outline-hidden`, `border-3`, `animate-in fade-in`) silently do
+  nothing — use `shadow-sm`, `backdrop-blur-sm`, `outline-none`, `border-[3px]`, `animate-fade-in`.
+  The `xs:` breakpoint (480px) is defined in `tailwind.config.js`.
+
+### Design roadmap
+
+Status of the design/UX plan (formerly `DESIGN_TODO.md`).
+
+**Done**
+- [x] P0 — semantic colour tokens; one primary per surface (brand on the storefront, primary in
+  admin); 11 accents collapsed to the token roles; one order-status style everywhere.
+- [x] P1 — order drawer (tabs, inline admin edits, separate confirmed item editing, list quick
+  actions kept, stale-edit 409 banner).
+- [x] P1 — toast + confirm system replaces every `alert()`/`window.confirm()`; shared primitives;
+  skeleton loaders and `EmptyState` on the list pages.
+- [x] P1 — one radius/shadow scale, consistent page shell and spacing rhythm, sticky zebra tables.
+- [x] P2 — type-scale tokens, `tabular-nums` on tables/totals, dark-mode contrast fix, focus ring,
+  reduced motion, labels on icon-only buttons, dark-mode walk-through of every admin page
+  (checked with screenshots, no horizontal overflow at 390px).
+- [x] P3 — storefront CTAs use the brand colour, product images have one 4:3 ratio and lazy-load,
+  category label moved off the image so it no longer collides with the stock badge.
+
+**Still open**
+- [ ] Migrate the remaining hand-rolled buttons/cards/inputs in older pages to `components/ui`
+  (new and refactored UI already uses them).
+- [ ] Promotions tables: card view on phones (they scroll horizontally today).
+- [ ] Full 44px tap-target audit of older pages (new components and the flagged icon buttons meet it).
+- [ ] Storefront trust signals: the reviews widget is empty until Google reviews are synced.

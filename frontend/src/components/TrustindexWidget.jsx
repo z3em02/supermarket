@@ -20,7 +20,7 @@ export default function TrustindexWidget({
     <div className="w-full space-y-10">
       {/* Google Trust Badge Header */}
       <div className="text-center max-w-3xl mx-auto">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200/60 dark:border-blue-800 text-blue-700 dark:text-blue-400 text-xs font-bold tracking-wide uppercase mb-4 shadow-xs">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-50 dark:bg-brand-950/60 border border-brand-200/60 dark:border-brand-800 text-brand-700 dark:text-brand-400 text-xs font-bold tracking-wide uppercase mb-4 shadow-sm">
           <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -46,13 +46,13 @@ export default function TrustindexWidget({
           <div className="mt-5 sm:mt-6 inline-flex flex-wrap items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl bg-white dark:bg-gray-850 border border-slate-200 dark:border-gray-800 shadow-sm max-w-full">
             <div className="flex items-center gap-0.5 sm:gap-1">
               {[...Array(5)].map((_, i) => (
-                <Star key={i} className="w-4 h-4 sm:w-5 sm:h-5 fill-amber-400 text-amber-400" />
+                <Star key={i} className="w-4 h-4 sm:w-5 sm:h-5 fill-warning-400 text-warning-400" />
               ))}
             </div>
             <span className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
               {ratingNum.toFixed(1)} / 5.0
             </span>
-            <span className="text-xs text-slate-400 dark:text-slate-500 hidden xs:inline">•</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 hidden xs:inline">•</span>
             <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
               {countNum === 1
                 ? (language === 'ar' ? 'تقييم حقيقي واحد' : '1 echte Bewertung')
@@ -63,7 +63,7 @@ export default function TrustindexWidget({
                 href={settings.googleReviewsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 underline underline-offset-2"
+                className="inline-flex items-center gap-1 text-xs font-bold text-brand-600 hover:text-brand-700 dark:text-brand-400 underline underline-offset-2"
               >
                 <span>{t('writeGoogleReview')}</span>
                 <ExternalLink className="w-3 h-3" />
@@ -80,7 +80,7 @@ export default function TrustindexWidget({
                 href={settings.googleReviewsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 underline underline-offset-2"
+                className="inline-flex items-center gap-1 text-xs font-bold text-brand-600 hover:text-brand-700 dark:text-brand-400 underline underline-offset-2"
               >
                 <span>{t('writeGoogleReview')}</span>
                 <ExternalLink className="w-3 h-3" />
@@ -102,7 +102,7 @@ export default function TrustindexWidget({
             return (
               <div
                 key={review.id}
-                className="bg-white dark:bg-gray-850 rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-xs hover:shadow-md transition flex flex-col justify-between group"
+                className="bg-white dark:bg-gray-850 rounded-2xl sm:rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm hover:shadow-md transition flex flex-col justify-between group"
               >
                 <div className="space-y-4">
                   {/* Author Row */}
@@ -119,7 +119,7 @@ export default function TrustindexWidget({
                           }}
                         />
                       ) : (
-                        <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
+                        <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-brand-600 to-promo-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
                           {review.authorName ? review.authorName.slice(0, 2).toUpperCase() : 'G'}
                         </div>
                       )}
@@ -129,13 +129,13 @@ export default function TrustindexWidget({
                             {review.authorName}
                           </h4>
                           <span 
-                            className="w-4 h-4 rounded-full bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center" 
+                            className="w-4 h-4 rounded-full bg-brand-100 dark:bg-brand-950/80 text-brand-600 dark:text-brand-400 flex items-center justify-center" 
                             title="Google Verifiziert"
                           >
                             <CheckCircle2 className="w-3 h-3" />
                           </span>
                         </div>
-                        <span className="text-xs text-slate-400 dark:text-slate-500">
+                        <span className="text-xs text-slate-500 dark:text-slate-400">
                           {review.relativeTime || (language === 'ar' ? 'عميل موثق' : 'Verifizierter Kunde')}
                         </span>
                       </div>
@@ -153,7 +153,7 @@ export default function TrustindexWidget({
                   {/* Stars */}
                   <div className="flex items-center gap-1">
                     {[...Array(stars)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                      <Star key={i} className="w-4 h-4 fill-warning-400 text-warning-400" />
                     ))}
                   </div>
 
@@ -164,8 +164,8 @@ export default function TrustindexWidget({
                 </div>
 
                 {/* Bottom Google Badge */}
-                <div className="mt-5 pt-3 border-t border-slate-100 dark:border-gray-800 flex items-center justify-between text-xs text-slate-400">
-                  <span className="flex items-center gap-1 font-medium text-blue-600 dark:text-blue-400">
+                <div className="mt-5 pt-3 border-t border-slate-100 dark:border-gray-800 flex items-center justify-between text-xs text-slate-500">
+                  <span className="flex items-center gap-1 font-medium text-brand-600 dark:text-brand-400">
                     <ShieldCheck className="w-3.5 h-3.5" />
                     <span>Google Rezension</span>
                   </span>
@@ -174,7 +174,7 @@ export default function TrustindexWidget({
                       href={review.reviewUrl || settings?.googleReviewsUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 flex items-center gap-1"
+                      className="font-bold text-brand-600 hover:text-brand-700 dark:text-brand-400 flex items-center gap-1"
                     >
                       <span>Google Maps</span>
                       <ExternalLink className="w-3 h-3" />
@@ -186,7 +186,7 @@ export default function TrustindexWidget({
           })}
         </div>
       ) : (
-        <div className="py-12 px-4 text-center bg-white dark:bg-gray-850 rounded-3xl border border-dashed border-slate-200 dark:border-gray-800 max-w-2xl mx-auto">
+        <div className="py-12 px-4 text-center bg-white dark:bg-gray-850 rounded-2xl border border-dashed border-slate-200 dark:border-gray-800 max-w-2xl mx-auto">
           <p className="text-sm text-slate-500 dark:text-slate-400">
             {language === 'ar'
               ? 'لا توجد تقييمات معروضة حالياً. يمكنك مزامنتها مباشرة من لوحة التحكم.'

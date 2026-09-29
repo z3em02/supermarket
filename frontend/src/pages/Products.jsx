@@ -10,9 +10,13 @@ import { ProductFormModal } from './products/ProductFormModal';
 import { RestockModal } from './products/RestockModal';
 import { ProductCardGrid } from './products/ProductCardGrid';
 import { ProductFilters } from './products/ProductFilters';
+import { useToast, useConfirm } from '../context/FeedbackContext';
+import { SkeletonList } from '../components/ui';
 
 export const Products = () => {
   const { t } = useLanguage();
+  const toast = useToast();
+  const confirm = useConfirm();
   const [searchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -92,10 +96,11 @@ export const Products = () => {
 
       setShowModal(false);
       setEditingProduct(null);
+      toast.success(t('saved'));
       fetchData();
     } catch (error) {
       console.error('Error saving product:', error);
-      alert(error.response?.data?.error || t('saveProductError'));
+      toast.error(error.response?.data?.error || t('saveProductError'));
     }
   };
 
@@ -132,7 +137,7 @@ export const Products = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm(t('confirmDeleteProduct'))) return;
+    if (!(await confirm({ message: t('confirmDeleteProduct'), confirmText: t('delete'), variant: 'danger' }))) return;
 
     try {
       const apiUrl = getApiUrl();
@@ -140,7 +145,7 @@ export const Products = () => {
       fetchData();
     } catch (error) {
       console.error('Error deleting product:', error);
-      alert(error.response?.data?.error || t('deleteProductError'));
+      toast.error(error.response?.data?.error || t('deleteProductError'));
     }
   };
 
@@ -151,7 +156,7 @@ export const Products = () => {
 
     const qtyToAdd = parseInt(restockAmount, 10);
     if (isNaN(qtyToAdd) || qtyToAdd <= 0) {
-      alert('Please enter a valid quantity');
+      toast.warning(t('invalidQuantity'));
       return;
     }
 
@@ -168,7 +173,7 @@ export const Products = () => {
       await fetchData();
     } catch (error) {
       console.error('Error updating stock:', error);
-      alert(error.response?.data?.error || 'Failed to update stock');
+      toast.error(error.response?.data?.error || t('error'));
     } finally {
       setIsRestocking(false);
     }
@@ -193,11 +198,7 @@ export const Products = () => {
   });
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <SkeletonList count={8} />;
   }
 
   return (
@@ -205,34 +206,34 @@ export const Products = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+          <h1 className="text-heading-xl">
             {t('products')}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1">
+          <p className="text-body-muted mt-0.5 sm:mt-1">
             {t('manageCatalog')}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
           <Link
             to={`${ADMIN_BASE}/catalogs`}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-slate-50 dark:hover:bg-gray-850 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-medium shadow-2xs transition touch-manipulation"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-slate-50 dark:hover:bg-gray-850 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-medium shadow-sm transition touch-manipulation"
           >
-            <Layers className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+            <Layers className="w-4 h-4 text-primary-600 dark:text-primary-400 shrink-0" />
             <span>{t('catalogs')}</span>
           </Link>
 
           <Link
             to="/"
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-slate-50 dark:hover:bg-gray-850 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-medium shadow-2xs transition touch-manipulation"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-slate-50 dark:hover:bg-gray-850 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-medium shadow-sm transition touch-manipulation"
           >
-            <Store className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+            <Store className="w-4 h-4 text-primary-600 dark:text-primary-400 shrink-0" />
             <span>{t('viewCatalog')}</span>
-            <ArrowUpRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <ArrowUpRight className="w-3.5 h-3.5 text-slate-500 shrink-0" />
           </Link>
 
           <button
             onClick={handleOpenAddModal}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 sm:py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs sm:text-sm rounded-xl shadow-sm transition touch-manipulation cursor-pointer"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 sm:py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium text-xs sm:text-sm rounded-xl shadow-sm transition touch-manipulation cursor-pointer"
           >
             <Plus className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
             <span>{t('addProduct')}</span>

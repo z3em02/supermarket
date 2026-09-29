@@ -28,7 +28,7 @@ export const MaintenancePage = () => {
         <LanguageSelector />
       </div>
 
-      <div className="w-16 h-16 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-6">
+      <div className="w-16 h-16 rounded-2xl bg-warning-100 dark:bg-warning-950/60 text-warning-600 dark:text-warning-400 flex items-center justify-center mb-6">
         <Wrench className="w-8 h-8" />
       </div>
 
@@ -49,13 +49,13 @@ export const MaintenancePage = () => {
       {(phone || email) && (
         <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-xs sm:text-sm text-slate-600 dark:text-gray-300">
           {phone && (
-            <a href={`tel:${phone}`} className="inline-flex items-center gap-1.5 hover:text-emerald-600 dark:hover:text-emerald-400 transition">
+            <a href={`tel:${phone}`} className="inline-flex items-center gap-1.5 hover:text-brand-600 dark:hover:text-brand-400 transition">
               <Phone className="w-3.5 h-3.5" />
               <span>{phone}</span>
             </a>
           )}
           {email && (
-            <a href={`mailto:${email}`} className="inline-flex items-center gap-1.5 hover:text-emerald-600 dark:hover:text-emerald-400 transition">
+            <a href={`mailto:${email}`} className="inline-flex items-center gap-1.5 hover:text-brand-600 dark:hover:text-brand-400 transition">
               <Mail className="w-3.5 h-3.5" />
               <span>{email}</span>
             </a>

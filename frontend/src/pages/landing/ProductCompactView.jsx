@@ -12,7 +12,7 @@ export const ProductCompactView = ({
   const { t, language } = useLanguage();
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-850 shadow-2xs overflow-hidden">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-850 shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-start text-xs sm:text-sm">
           <thead>
@@ -34,7 +34,7 @@ export const ProductCompactView = ({
                 <tr
                   key={product.id}
                   onClick={() => setSelectedProduct(product)}
-                  className="hover:bg-blue-50/40 dark:hover:bg-gray-800/40 transition-colors cursor-pointer"
+                  className="hover:bg-brand-50/40 dark:hover:bg-gray-800/40 transition-colors cursor-pointer"
                 >
                   {/* Product Title + Thumbnail */}
                   <td className="py-3 px-4">
@@ -43,12 +43,14 @@ export const ProductCompactView = ({
                         {product.imageUrl ? (
                           <img
                             src={product.imageUrl}
+                            loading="lazy"
+                            decoding="async"
                             alt={localizedName}
                             className="w-full h-full object-cover"
                             onError={(e) => { e.target.style.display = 'none'; }}
                           />
                         ) : (
-                          <Package className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                          <Package className="w-4 h-4 text-brand-600 dark:text-brand-400" />
                         )}
                       </div>
                       <div className="flex items-center gap-2">
@@ -66,7 +68,7 @@ export const ProductCompactView = ({
                   </td>
 
                   {/* SKU */}
-                  <td className="py-3 px-4 font-mono text-xs text-slate-400 dark:text-gray-500">
+                  <td className="py-3 px-4 font-mono text-xs text-slate-500 dark:text-slate-400">
                     {product.sku}
                   </td>
 
@@ -81,15 +83,15 @@ export const ProductCompactView = ({
                       const priceInfo = getProductPrices(product);
                       return priceInfo.promoPrice != null ? (
                         <div className="flex items-baseline gap-1.5">
-                          <span className="font-black text-rose-600 dark:text-rose-400">
+                          <span className="font-black text-danger-600 dark:text-danger-400">
                             €{priceInfo.promoPrice.toFixed(2)}
                           </span>
-                          <span className="line-through text-xs text-slate-400">
+                          <span className="line-through text-xs text-slate-500">
                             €{priceInfo.basePrice.toFixed(2)}
                           </span>
                         </div>
                       ) : (
-                        <span className="font-black text-emerald-600 dark:text-emerald-400">
+                        <span className="font-black text-brand-600 dark:text-brand-400">
                           €{priceInfo.basePrice.toFixed(2)}
                         </span>
                       );
@@ -105,7 +107,7 @@ export const ProductCompactView = ({
                         addToCart(product);
                       }}
                       disabled={product.stock <= 0}
-                      className="p-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white transition-colors cursor-pointer"
+                      className="p-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 disabled:opacity-40 text-white transition-colors cursor-pointer"
                       title={language === 'ar' ? 'أضف للسلة' : 'In den Warenkorb'}
                     >
                       <ShoppingCart className="w-4 h-4" />

@@ -6,7 +6,7 @@ export const LoginToCheckoutPrompt = ({
   onClose
 }) => (
     <div className="p-5 rounded-2xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 text-center space-y-3">
-      <div className="w-10 h-10 mx-auto rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center">
+      <div className="w-10 h-10 mx-auto rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-600 flex items-center justify-center">
         <ShieldCheck className="w-5 h-5" />
       </div>
       <div>
@@ -24,7 +24,7 @@ export const LoginToCheckoutPrompt = ({
         <button
           type="button"
           onClick={() => { onClose(); navigate('/customer/login'); }}
-          className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition cursor-pointer"
+          className="flex-1 py-2.5 px-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-sm transition cursor-pointer"
         >
           {isAr ? 'تسجيل الدخول' : 'Anmelden'}
         </button>

@@ -9,9 +9,12 @@ import { CouponModal } from './promotions/CouponModal';
 import { OffersTab } from './promotions/OffersTab';
 import { CouponsTab } from './promotions/CouponsTab';
 import { PromotionStats } from './promotions/PromotionStats';
+import { useToast, useConfirm } from '../context/FeedbackContext';
 
 export const Promotions = () => {
   const { t } = useLanguage();
+  const toast = useToast();
+  const confirm = useConfirm();
   const [activeTab, setActiveTab] = useState('coupons'); // 'coupons' or 'offers'
 
   // Data
@@ -188,17 +191,19 @@ export const Promotions = () => {
       setCoupons(prev => prev.map(c => (c.id === coup.id ? { ...c, isActive: !c.isActive } : c)));
     } catch (err) {
       console.error('Toggle coupon status error:', err);
+      toast.error(err.response?.data?.error || t('error'));
     }
   };
 
   const handleDeleteCoupon = async (id) => {
-    if (!window.confirm('Möchten Sie diesen Gutschein wirklich löschen?')) return;
+    if (!(await confirm({ message: t('confirmDeleteCoupon'), confirmText: t('delete'), variant: 'danger' }))) return;
     try {
       const apiUrl = getApiUrl();
       await axios.delete(`${apiUrl}/api/coupons/${id}`);
       setCoupons(prev => prev.filter(c => c.id !== id));
     } catch (err) {
       console.error('Delete coupon error:', err);
+      toast.error(err.response?.data?.error || t('error'));
     }
   };
 
@@ -294,17 +299,19 @@ export const Promotions = () => {
       setPromotions(prev => prev.map(p => (p.id === off.id ? { ...p, isActive: !p.isActive } : p)));
     } catch (err) {
       console.error('Toggle offer status error:', err);
+      toast.error(err.response?.data?.error || t('error'));
     }
   };
 
   const handleDeleteOffer = async (id) => {
-    if (!window.confirm('Möchten Sie dieses Angebot wirklich löschen?')) return;
+    if (!(await confirm({ message: t('confirmDeleteOffer'), confirmText: t('delete'), variant: 'danger' }))) return;
     try {
       const apiUrl = getApiUrl();
       await axios.delete(`${apiUrl}/api/promotions/${id}`);
       setPromotions(prev => prev.filter(p => p.id !== id));
     } catch (err) {
       console.error('Delete promotion error:', err);
+      toast.error(err.response?.data?.error || t('error'));
     }
   };
 
@@ -333,12 +340,12 @@ export const Promotions = () => {
   const twoPlusOneOffersCount = promotions.filter(p => p.type === 'BUY_X_GET_Y').length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5">
-            <Sparkles className="w-7 h-7 text-amber-500" />
+          <h1 className="text-heading-xl flex items-center gap-2.5">
+            <Sparkles className="w-7 h-7 text-warning-500" />
             {t('promotions')}
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
@@ -351,7 +358,7 @@ export const Promotions = () => {
           {activeTab === 'coupons' ? (
             <button
               onClick={handleOpenCreateCoupon}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm shadow-sm shadow-blue-600/30 transition"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-medium text-sm shadow-sm shadow-primary-600/30 transition"
             >
               <Plus className="w-4 h-4" />
               {t('createCoupon')}
@@ -359,7 +366,7 @@ export const Promotions = () => {
           ) : (
             <button
               onClick={handleOpenCreateOffer}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm shadow-sm shadow-emerald-600/30 transition"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-success-600 hover:bg-success-700 text-white font-medium text-sm shadow-sm shadow-success-600/30 transition"
             >
               <Plus className="w-4 h-4" />
               {t('createOffer')} (z.B. 2+1)
@@ -385,7 +392,7 @@ export const Promotions = () => {
             onClick={() => setActiveTab('coupons')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition ${
               activeTab === 'coupons'
-                ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/20'
+                ? 'bg-primary-600 text-white shadow-sm shadow-primary-600/20'
                 : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-800'
             }`}
           >
@@ -397,7 +404,7 @@ export const Promotions = () => {
             onClick={() => setActiveTab('offers')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition ${
               activeTab === 'offers'
-                ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20'
+                ? 'bg-success-600 text-white shadow-sm shadow-success-600/20'
                 : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-800'
             }`}
           >
@@ -408,13 +415,13 @@ export const Promotions = () => {
 
         {/* Search */}
         <div className="relative w-full sm:w-64">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
           <input
             type="text"
             placeholder={activeTab === 'coupons' ? 'Gutscheincode suchen...' : 'Produkt suchen...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white"
+            className="w-full pl-9 pr-4 py-2 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 text-slate-900 dark:text-white"
           />
         </div>
       </div>

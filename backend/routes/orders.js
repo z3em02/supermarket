@@ -5,6 +5,7 @@ const { customerAuthMiddleware } = require('../middleware/customerAuth');
 const {
   getOrders,
   getOrderSummary,
+  getOrderHistory,
   getOrderById,
   createOrder,
   getCustomerOrders,
@@ -22,6 +23,7 @@ router.put('/:id/customer-response', customerAuthMiddleware, customerRespondToMo
 // Admin & Driver routes
 router.get('/', driverOrAdminAuthMiddleware, getOrders);
 router.get('/summary', authMiddleware, getOrderSummary); // before /:id
+router.get('/:id/history', authMiddleware, getOrderHistory);
 router.get('/:id', driverOrAdminAuthMiddleware, getOrderById);
 router.put('/:id/status', driverOrAdminAuthMiddleware, updateOrderStatus);
 router.put('/:id/assign-driver', authMiddleware, assignOrderDriver);

@@ -30,7 +30,7 @@ export const Datenschutz = () => {
     <div className={`min-h-screen bg-slate-50 dark:bg-gray-950 text-slate-900 dark:text-gray-100 transition-colors duration-200 font-sans ${direction === 'rtl' ? 'rtl' : 'ltr'}`}>
       
       {/* Top Header */}
-      <header className="sticky top-0 z-40 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-gray-800 shadow-2xs">
+      <header className="sticky top-0 z-40 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-gray-800 shadow-sm">
         <div className="max-w-5xl mx-auto px-3 xs:px-4 sm:px-6 lg:px-8 h-14 sm:h-20 flex items-center justify-between gap-2 sm:gap-4">
           <Link to="/" className="flex items-center gap-2 sm:gap-3 group min-w-0">
             {settings?.logoUrl ? (
@@ -40,7 +40,7 @@ export const Datenschutz = () => {
                 className="w-8 h-8 sm:w-10 sm:h-10 object-contain rounded-xl bg-slate-50 dark:bg-gray-850 p-1 border border-slate-200 dark:border-gray-750 shrink-0"
               />
             ) : (
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shrink-0">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-brand-600 flex items-center justify-center text-white shadow-md shrink-0">
                 <Store className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
             )}
@@ -48,7 +48,7 @@ export const Datenschutz = () => {
               <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white block leading-tight truncate max-w-[120px] xs:max-w-[180px] sm:max-w-none">
                 {storeName}
               </span>
-              <span className="text-[10px] sm:text-[11px] text-blue-600 dark:text-blue-400 font-semibold block truncate">
+              <span className="text-[10px] sm:text-[11px] text-brand-600 dark:text-brand-400 font-semibold block truncate">
                 {language === 'ar' ? 'سوبرماركت وتوصيل منزلي' : 'Supermarkt & Lieferservice'}
               </span>
             </div>
@@ -73,14 +73,14 @@ export const Datenschutz = () => {
         
         {/* Title */}
         <div className="text-center space-y-2.5 sm:space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-[11px] sm:text-xs font-bold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 dark:bg-brand-950/60 border border-brand-200/60 dark:border-brand-800 text-brand-700 dark:text-brand-400 text-[11px] sm:text-xs font-bold uppercase tracking-wider">
             <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
             <span>{language === 'ar' ? 'الامتثال للائحة الأوروبية العامة لحماية البيانات (DSGVO)' : 'DSGVO & TKG 2021 Konform (Österreich)'}</span>
           </div>
           <h1 className="text-2xl xs:text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
             {t('datenschutz')}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-body-muted max-w-2xl mx-auto leading-relaxed">
             {language === 'ar'
               ? 'نولي حماية بياناتكم الشخصية أهمية بالغة. نوضح هنا كيفية جمع ومعالجة بياناتكم وفقاً للائحة العامة لحماية البيانات (GDPR/DSGVO) والقوانين النمساوية.'
               : 'Der Schutz Ihrer persönlichen Daten ist uns ein besonderes Anliegen. Wir verarbeiten Ihre Daten ausschließlich auf Grundlage der gesetzlichen Bestimmungen (DSGVO, TKG 2021, DSG).'}
@@ -92,9 +92,9 @@ export const Datenschutz = () => {
           <div className="space-y-6 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
             
             {/* 1. Controller */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Lock className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <Lock className="w-5 h-5 text-brand-600 dark:text-brand-400" />
                 <span>1. الجهة المسؤولة عن معالجة البيانات</span>
               </h2>
               <p>المسؤول عن معالجة البيانات على هذا الموقع وفقاً للمادة 4 الفقرة 7 من اللائحة العامة لحماية البيانات (DSGVO):</p>
@@ -107,9 +107,9 @@ export const Datenschutz = () => {
             </div>
 
             {/* 2. Server Logs */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Database className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <Database className="w-5 h-5 text-brand-600 dark:text-brand-400" />
                 <span>2. ملفات تسجيل الخادم (Server-Logfiles)</span>
               </h2>
               <p>
@@ -119,9 +119,9 @@ export const Datenschutz = () => {
             </div>
 
             {/* 3. Customer Accounts & Home Delivery */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <UserCheck className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                <UserCheck className="w-5 h-5 text-promo-600 dark:text-promo-400" />
                 <span>3. بيانات حسابات العملاء وخدمة التوصيل المنزلي</span>
               </h2>
               <p>
@@ -134,9 +134,9 @@ export const Datenschutz = () => {
             </div>
 
             {/* 4. Local Storage */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <FileText className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                <FileText className="w-5 h-5 text-warning-600 dark:text-warning-400" />
                 <span>4. ملفات تعريف الارتباط والتخزين المحلي (Local Storage)</span>
               </h2>
               <p>
@@ -150,9 +150,9 @@ export const Datenschutz = () => {
             </div>
 
             {/* 5. Google Maps & Reviews */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-rose-600 dark:text-rose-400" />
+                <MapPin className="w-5 h-5 text-danger-600 dark:text-danger-400" />
                 <span>5. خرائط جوجل وتقييمات Google</span>
               </h2>
               <p>
@@ -165,9 +165,9 @@ export const Datenschutz = () => {
             </div>
 
             {/* 6. User Rights */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <ShieldCheck className="w-5 h-5 text-brand-600 dark:text-brand-400" />
                 <span>6. حقوقك القانونية بموجب اللائحة العامة لحماية البيانات</span>
               </h2>
               <p>يحق لك في أي وقت ممارسة الحقوق التالية مجاناً بمجرد مراسلتنا:</p>
@@ -181,9 +181,9 @@ export const Datenschutz = () => {
             </div>
 
             {/* 7. Supervisory Authority Austria */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <AlertCircle className="w-5 h-5 text-brand-600 dark:text-brand-400" />
                 <span>7. حق تقديم شكوى إلى الهيئة الرقابية في النمسا</span>
               </h2>
               <p>
@@ -193,8 +193,8 @@ export const Datenschutz = () => {
                 <p className="font-bold text-slate-900 dark:text-white">الهيئة النمساوية لحماية البيانات (Österreichische Datenschutzbehörde - DSB)</p>
                 <p>العنوان: Barichgasse 40-42, 1030 Wien</p>
                 <p>الهاتف: +43 1 52 152-0</p>
-                <p>البريد الإلكتروني: <a href="mailto:dsb@dsb.gv.at" className="text-blue-600 underline">dsb@dsb.gv.at</a></p>
-                <p>الموقع: <a href="https://www.dsb.gv.at" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">www.dsb.gv.at</a></p>
+                <p>البريد الإلكتروني: <a href="mailto:dsb@dsb.gv.at" className="text-brand-600 underline">dsb@dsb.gv.at</a></p>
+                <p>الموقع: <a href="https://www.dsb.gv.at" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">www.dsb.gv.at</a></p>
               </div>
             </div>
 
@@ -204,9 +204,9 @@ export const Datenschutz = () => {
           <div className="space-y-6 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
             
             {/* 1. Verantwortlicher */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Lock className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <Lock className="w-5 h-5 text-brand-600 dark:text-brand-400" />
                 <span>1. Verantwortlicher für die Datenverarbeitung</span>
               </h2>
               <p>Verantwortlicher im Sinne von Art. 4 Z 7 DSGVO für diese Website ist:</p>
@@ -219,9 +219,9 @@ export const Datenschutz = () => {
             </div>
 
             {/* 2. Server Logfiles */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Database className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <Database className="w-5 h-5 text-brand-600 dark:text-brand-400" />
                 <span>2. Erhebung von Zugriffsdaten und Server-Logfiles</span>
               </h2>
               <p>
@@ -238,9 +238,9 @@ export const Datenschutz = () => {
             </div>
 
             {/* 3. Kundenkonto & Hauszustellung */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <UserCheck className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                <UserCheck className="w-5 h-5 text-promo-600 dark:text-promo-400" />
                 <span>3. Kundenkonto, Verifizierung & Hauszustellung</span>
               </h2>
               <p>
@@ -253,9 +253,9 @@ export const Datenschutz = () => {
             </div>
 
             {/* 4. Local Storage / Cookies */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <FileText className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                <FileText className="w-5 h-5 text-warning-600 dark:text-warning-400" />
                 <span>4. Lokale Speicherung (Local Storage)</span>
               </h2>
               <p>
@@ -270,16 +270,16 @@ export const Datenschutz = () => {
             </div>
 
             {/* 5. Google Maps & Google Reviews */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-rose-600 dark:text-rose-400" />
+                <MapPin className="w-5 h-5 text-danger-600 dark:text-danger-400" />
                 <span>5. Google Maps & Google Reviews</span>
               </h2>
               <p>
                 Diese Website nutzt Google Maps zur visuellen Darstellung von Kartenmaterial und unseres Firmenstandorts. Dienstanbieter ist die Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland.
               </p>
               <p>
-                Bei der Nutzung von Google Maps können Informationen über die Benutzung dieser Website einschließlich Ihrer IP-Adresse an einen Server von Google übertragen werden. Weitere Informationen finden Sie in der Datenschutzerklärung von Google: <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">https://policies.google.com/privacy</a>.
+                Bei der Nutzung von Google Maps können Informationen über die Benutzung dieser Website einschließlich Ihrer IP-Adresse an einen Server von Google übertragen werden. Weitere Informationen finden Sie in der Datenschutzerklärung von Google: <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">https://policies.google.com/privacy</a>.
               </p>
               <p>
                 Die auf der Seite dargestellten Google-Bewertungen werden über ein geschütztes Backend synchronisiert. Es findet keine Übermittlung persönlicher Trackingdaten unserer Websitebesucher an Dritte statt.
@@ -288,9 +288,9 @@ export const Datenschutz = () => {
             </div>
 
             {/* 6. Rechte der betroffenen Person */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <ShieldCheck className="w-5 h-5 text-brand-600 dark:text-brand-400" />
                 <span>6. Ihre Rechte laut DSGVO</span>
               </h2>
               <p>Sie haben gegenüber uns bezüglich der Sie betreffenden personenbezogenen Daten folgende Rechte:</p>
@@ -302,13 +302,13 @@ export const Datenschutz = () => {
                 <li><strong>Recht auf Datenübertragbarkeit (Art. 20 DSGVO)</strong> in einem gängigen Format.</li>
                 <li><strong>Widerspruchsrecht (Art. 21 DSGVO)</strong> gegen die Verarbeitung aus Gründen Ihrer besonderen Situation.</li>
               </ul>
-              <p className="pt-1">Zur Geltendmachung Ihrer Rechte wenden Sie sich bitte einfach per E-Mail an uns: <a href={`mailto:${email}`} className="text-blue-600 underline">{email}</a>.</p>
+              <p className="pt-1">Zur Geltendmachung Ihrer Rechte wenden Sie sich bitte einfach per E-Mail an uns: <a href={`mailto:${email}`} className="text-brand-600 underline">{email}</a>.</p>
             </div>
 
             {/* 7. Aufsichtsbehörde Österreich */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-2xs space-y-3">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <AlertCircle className="w-5 h-5 text-brand-600 dark:text-brand-400" />
                 <span>7. Beschwerderecht bei der Aufsichtsbehörde</span>
               </h2>
               <p>
@@ -318,8 +318,8 @@ export const Datenschutz = () => {
                 <p className="font-bold text-slate-900 dark:text-white">Österreichische Datenschutzbehörde (DSB)</p>
                 <p>Barichgasse 40-42, 1030 Wien</p>
                 <p>Telefon: +43 1 52 152-0</p>
-                <p>E-Mail: <a href="mailto:dsb@dsb.gv.at" className="text-blue-600 underline">dsb@dsb.gv.at</a></p>
-                <p>Website: <a href="https://www.dsb.gv.at" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">www.dsb.gv.at</a></p>
+                <p>E-Mail: <a href="mailto:dsb@dsb.gv.at" className="text-brand-600 underline">dsb@dsb.gv.at</a></p>
+                <p>Website: <a href="https://www.dsb.gv.at" target="_blank" rel="noopener noreferrer" className="text-brand-600 underline">www.dsb.gv.at</a></p>
               </div>
             </div>
 
@@ -333,9 +333,9 @@ export const Datenschutz = () => {
         <div className="max-w-4xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <span>© {new Date().getFullYear()} {storeName}. {language === 'ar' ? 'جميع الحقوق محفوظة.' : 'Alle Rechte vorbehalten.'}</span>
           <div className="flex items-center gap-4">
-            <Link to="/impressum" className="hover:text-blue-600 underline underline-offset-2">{t('impressum')}</Link>
-            <Link to="/agb" className="hover:text-blue-600 underline underline-offset-2">{t('agb')}</Link>
-            <Link to="/" className="hover:text-blue-600">{t('backToHome')}</Link>
+            <Link to="/impressum" className="hover:text-brand-600 underline underline-offset-2">{t('impressum')}</Link>
+            <Link to="/agb" className="hover:text-brand-600 underline underline-offset-2">{t('agb')}</Link>
+            <Link to="/" className="hover:text-brand-600">{t('backToHome')}</Link>
           </div>
         </div>
       </footer>

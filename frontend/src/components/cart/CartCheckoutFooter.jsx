@@ -12,6 +12,7 @@ export const CartCheckoutFooter = ({
   ArrowIcon,
   amountUntilFreeDelivery,
   baseServiceFee,
+  addressMissing,
   belowMinOrder,
   coupon,
   couponDiscount,
@@ -49,14 +50,14 @@ export const CartCheckoutFooter = ({
           showCouponField ? (
             <form onSubmit={handleApplyCoupon} className="flex gap-2">
               <div className="relative flex-1">
-                <Tag className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Tag className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                 <input
                   autoFocus
                   type="text"
                   placeholder={isAr ? 'أدخل رمز الكوبون...' : 'Gutscheincode eingeben...'}
                   value={couponInput}
                   onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                  className="w-full pl-8 pr-3 py-2 text-xs font-mono font-bold uppercase bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white placeholder:normal-case placeholder:font-normal placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+                  className="w-full pl-8 pr-3 py-2 text-xs font-mono font-bold uppercase bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-xl text-slate-900 dark:text-white placeholder:normal-case placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
               <button
@@ -71,21 +72,21 @@ export const CartCheckoutFooter = ({
             <button
               type="button"
               onClick={() => setShowCouponField(true)}
-              className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
+              className="flex items-center gap-1.5 text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
             >
               <Tag className="w-3.5 h-3.5" />
               <span>{isAr ? 'لديك رمز كوبون؟' : 'Gutscheincode hinzufügen'}</span>
             </button>
           )
         ) : (
-          <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs">
+          <div className="flex items-center justify-between p-2.5 rounded-xl bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-800 text-xs">
             <div className="flex items-center gap-2 min-w-0">
-              <Tag className="w-4 h-4 text-emerald-600 shrink-0" />
+              <Tag className="w-4 h-4 text-brand-600 shrink-0" />
               <div className="min-w-0 truncate">
-                <span className="font-mono font-bold text-emerald-900 dark:text-emerald-300">
+                <span className="font-mono font-bold text-brand-900 dark:text-brand-300">
                   {appliedCoupon.code}
                 </span>
-                <span className="text-[11px] text-emerald-700 dark:text-emerald-400 ml-1.5">
+                <span className="text-[11px] text-brand-700 dark:text-brand-400 ml-1.5">
                   (-€{Number(appliedCoupon.discountAmount).toFixed(2)})
                   {appliedCoupon.isFreeShipping && ` + ${isAr ? 'شحن مجاني' : 'Gratis Lieferung'}`}
                 </span>
@@ -94,8 +95,9 @@ export const CartCheckoutFooter = ({
             <button
               type="button"
               onClick={handleRemoveCoupon}
-              className="p-1 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 rounded-lg text-emerald-800 dark:text-emerald-300 transition cursor-pointer shrink-0"
+              className="p-1 hover:bg-brand-100 dark:hover:bg-brand-900/50 rounded-lg text-brand-800 dark:text-brand-300 transition cursor-pointer shrink-0"
               title={isAr ? 'إزالة الكوبون' : 'Gutschein entfernen'}
+              aria-label={isAr ? 'إزالة الكوبون' : 'Gutschein entfernen'}
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -103,7 +105,7 @@ export const CartCheckoutFooter = ({
         )}
 
         {couponError && (
-          <p className="text-[11px] text-rose-600 dark:text-rose-400 flex items-center gap-1 font-medium">
+          <p className="text-[11px] text-danger-600 dark:text-danger-400 flex items-center gap-1 font-medium">
             <AlertCircle className="w-3 h-3 shrink-0" />
             <span>{couponError}</span>
           </p>
@@ -111,15 +113,21 @@ export const CartCheckoutFooter = ({
       </div>
 
       {amountUntilFreeDelivery > 0 && (
-        <div className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/40 rounded-xl px-3 py-1.5 text-center">
+        <div className="text-[11px] font-semibold text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-900/40 rounded-xl px-3 py-1.5 text-center">
           {isAr
             ? `أضف منتجات بقيمة €${amountUntilFreeDelivery.toFixed(2)} أخرى للحصول على توصيل مجاني!`
             : `Noch €${amountUntilFreeDelivery.toFixed(2)} bis zur kostenlosen Lieferung!`}
         </div>
       )}
 
+      {addressMissing && (
+        <div role="alert" className="text-[11px] font-semibold text-danger-800 dark:text-danger-300 bg-danger-50 dark:bg-danger-950/40 border border-danger-200 dark:border-danger-900/40 rounded-xl px-3 py-1.5 text-center">
+          {isAr ? 'أدخل عنوان التوصيل للمتابعة.' : 'Bitte Lieferadresse eingeben, um zu bestellen.'}
+        </div>
+      )}
+
       {belowMinOrder && (
-        <div className="text-[11px] font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/40 rounded-xl px-3 py-1.5 text-center">
+        <div className="text-[11px] font-semibold text-warning-800 dark:text-warning-300 bg-warning-50 dark:bg-warning-950/40 border border-warning-200 dark:border-warning-900/40 rounded-xl px-3 py-1.5 text-center">
           {isAr
             ? `الحد الأدنى للطلب هو €${minOrderValue.toFixed(2)}.`
             : `Der Mindestbestellwert beträgt €${minOrderValue.toFixed(2)}.`}
@@ -136,7 +144,7 @@ export const CartCheckoutFooter = ({
         </div>
 
         {totalPromoSavings > 0 && (
-          <div className="flex items-center justify-between text-purple-600 dark:text-purple-400 font-medium">
+          <div className="flex items-center justify-between text-promo-600 dark:text-promo-400 font-medium">
             <span className="flex items-center gap-1">
               <Gift className="w-3 h-3" />
               {isAr ? 'توفير العروض (2+1 / تخفيضات)' : 'Aktions-Ersparnis (2+1 / Rabatt)'}
@@ -146,7 +154,7 @@ export const CartCheckoutFooter = ({
         )}
 
         {couponDiscount > 0 && (
-          <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400 font-medium">
+          <div className="flex items-center justify-between text-brand-600 dark:text-brand-400 font-medium">
             <span className="flex items-center gap-1">
               <Tag className="w-3 h-3" />
               {isAr ? `خصم الكوبون (${appliedCoupon.code})` : `Gutschein-Rabatt (${appliedCoupon.code})`}
@@ -164,7 +172,7 @@ export const CartCheckoutFooter = ({
             </div>
             <div className="flex items-center justify-between text-slate-500 dark:text-gray-400">
               <span className="flex items-center gap-1">
-                <MapPin className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                <MapPin className="w-3 h-3 text-brand-600 dark:text-brand-400" />
                 {isAr
                   ? `رسوم المسافة (${distanceInfo.distanceKm} كم × €${(distanceInfo.perKmRate || 0.10).toFixed(2)}/كم)`
                   : `Entfernungsgebühr (${distanceInfo.distanceKm} km × €${(distanceInfo.perKmRate || 0.10).toFixed(2)}/km)`}
@@ -176,9 +184,9 @@ export const CartCheckoutFooter = ({
 
         <div className="flex items-center justify-between">
           <span className="font-semibold text-slate-700 dark:text-gray-300">{isAr ? 'رسوم التوصيل الإجمالية' : 'Liefergebühr gesamt'}</span>
-          <span className="font-bold text-emerald-600 dark:text-emerald-400">
+          <span className="font-bold text-brand-600 dark:text-brand-400">
             {distanceLoading ? (
-              <span className="text-xs text-slate-400 animate-pulse">{isAr ? 'جارٍ الحساب...' : 'Berechne...'}</span>
+              <span className="text-xs text-slate-500 animate-pulse">{isAr ? 'جارٍ الحساب...' : 'Berechne...'}</span>
             ) : deliveryFee > 0 ? (
               `€${deliveryFee.toFixed(2)}`
             ) : isFreeDeliveryApplied ? (
@@ -195,19 +203,19 @@ export const CartCheckoutFooter = ({
 
       <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 dark:border-gray-800 text-base font-extrabold text-slate-900 dark:text-white">
         <span>{isAr ? 'الإجمالي عند الاستلام' : 'Gesamtbetrag bei Erhalt'}</span>
-        <span className="font-mono text-xl text-emerald-600 dark:text-emerald-400">
+        <span className="font-mono text-xl text-brand-600 dark:text-brand-400">
           €{Number(totalAmount).toFixed(2)}
         </span>
       </div>
-      <p className="text-[10px] text-slate-400 dark:text-gray-500 text-end -mt-1.5">
+      <p className="text-[10px] text-slate-500 dark:text-slate-400 text-end -mt-1.5">
         {isAr ? 'شامل الضريبة، والدفع نقداً أو بالبطاقة عند الباب' : 'inkl. MwSt., Zahlung bar oder mit Karte beim Fahrer'}
       </p>
 
       <button
         type="button"
         onClick={handlePlaceOrder}
-        disabled={submitting || (isAuthenticated && (!isVerified || belowMinOrder))}
-        className="w-full py-4 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-black text-sm shadow-xl shadow-emerald-600/25 transition flex items-center justify-center gap-2 cursor-pointer"
+        disabled={submitting || (isAuthenticated && (!isVerified || belowMinOrder || addressMissing))}
+        className="w-full py-4 px-6 rounded-2xl bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-black text-sm shadow-lg shadow-brand-600/25 transition flex items-center justify-center gap-2 cursor-pointer"
       >
         {submitting ? (
           <span>{isAr ? 'جارٍ إرسال الطلب...' : 'Bestellung wird gesendet...'}</span>

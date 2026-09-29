@@ -22,6 +22,7 @@ const {
   decrementStockOrThrow,
   concurrentUpdateError
 } = require('./orderShared');
+const { isStaleOrderVersion, STALE_ORDER_MESSAGE } = require('../utils/orderSearch');
 
 /**
  * Admin: Edit an existing order when products are unavailable
@@ -51,6 +52,10 @@ const editOrder = async (req, res) => {
 
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
+    }
+
+    if (isStaleOrderVersion(order.updatedAt, req.body.expectedUpdatedAt)) {
+      return res.status(409).json({ error: STALE_ORDER_MESSAGE, code: 'STALE_ORDER' });
     }
 
     if (order.status === 'delivered') {

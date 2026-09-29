@@ -11,13 +11,13 @@ export const DriverConfirmModal = ({
   setDriverNote,
   updatingId
 }) => (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-      <div className="bg-white dark:bg-gray-900 rounded-3xl max-w-md w-full p-6 border border-slate-200 dark:border-gray-800 shadow-2xl space-y-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-md w-full p-6 border border-slate-200 dark:border-gray-800 shadow-2xl space-y-4">
         <div className="flex items-center gap-3">
           <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
             confirmModal.action === 'deliver' 
-              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' 
-              : 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
+              ? 'bg-success-100 text-success-700 dark:bg-success-950 dark:text-success-300' 
+              : 'bg-warning-100 text-warning-700 dark:bg-warning-950 dark:text-warning-300'
           }`}>
             {confirmModal.action === 'deliver' ? <CheckCircle2 className="w-6 h-6" /> : <Truck className="w-6 h-6" />}
           </div>
@@ -43,20 +43,20 @@ export const DriverConfirmModal = ({
 
             {/* Cash collection checkbox for Cash On Delivery orders */}
             {(confirmModal.order.paymentMethod === 'cash_on_delivery' || !confirmModal.order.paymentMethod) && (
-              <label className="flex items-center gap-3 p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 cursor-pointer">
+              <label className="flex items-center gap-3 p-3 rounded-2xl bg-warning-50 dark:bg-warning-950/50 border border-warning-200 dark:border-warning-800 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={deliveredCashCollected}
                   onChange={(e) => setDeliveredCashCollected(e.target.checked)}
-                  className="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500"
+                  className="w-5 h-5 rounded text-success-600 focus:ring-success-500"
                 />
                 <div className="text-xs">
-                  <span className="font-extrabold text-amber-900 dark:text-amber-200 block">
+                  <span className="font-extrabold text-warning-900 dark:text-warning-200 block">
                     {isAr 
                       ? `تم استلام المبلغ نقداً (€${(confirmModal.order.totalAmount || 0).toFixed(2)})` 
                       : `Barbetrag (€${(confirmModal.order.totalAmount || 0).toFixed(2)}) erfolgreich kassiert`}
                   </span>
-                  <span className="text-amber-700 dark:text-amber-400">
+                  <span className="text-warning-700 dark:text-warning-400">
                     {isAr ? 'يرجى التأكد من عد المبلغ قبل المغادرة' : 'Bitte Geld vor der Abfahrt nachzählen'}
                   </span>
                 </div>
@@ -108,8 +108,8 @@ export const DriverConfirmModal = ({
             }}
             className={`px-5 py-2.5 rounded-xl text-white font-bold text-xs sm:text-sm shadow-md transition ${
               confirmModal.action === 'deliver' 
-                ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20' 
-                : 'bg-amber-600 hover:bg-amber-700 shadow-amber-600/20'
+                ? 'bg-success-600 hover:bg-success-700 shadow-success-600/20' 
+                : 'bg-warning-600 hover:bg-warning-700 shadow-warning-600/20'
             }`}
           >
             {confirmModal.action === 'deliver' 

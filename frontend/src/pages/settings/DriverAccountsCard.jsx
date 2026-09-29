@@ -30,9 +30,9 @@ export const DriverAccountsCard = ({
   } = driverAccounts;
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-gray-850 p-4 sm:p-8 shadow-sm space-y-5">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-2xl border border-slate-200/80 dark:border-gray-850 p-4 sm:p-8 shadow-sm space-y-5">
       <div className="flex items-center gap-2.5 sm:gap-3 pb-4 border-b border-slate-100 dark:border-gray-800">
-        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-warning-50 dark:bg-warning-950/50 text-warning-600 dark:text-warning-400 flex items-center justify-center shrink-0">
           <Truck className="w-4 sm:w-5 h-4 sm:h-5" />
         </div>
         <div>
@@ -48,22 +48,22 @@ export const DriverAccountsCard = ({
       </div>
 
       {driverMessage && (
-        <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">{driverMessage}</p>
+        <p className="text-xs text-success-600 dark:text-success-400 font-semibold">{driverMessage}</p>
       )}
       {driverError && (
-        <p className="text-xs text-rose-600 dark:text-rose-400 font-semibold">{driverError}</p>
+        <p className="text-xs text-danger-600 dark:text-danger-400 font-semibold">{driverError}</p>
       )}
 
       {/* Freshly generated/reset PIN — shown exactly once, never stored in plaintext. */}
       {revealedPin && (
-        <div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60">
+        <div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-warning-50 dark:bg-warning-950/40 border border-warning-200 dark:border-warning-900/60">
           <div className="flex items-center gap-2.5 min-w-0">
-            <Lock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-            <p className="text-xs text-amber-900 dark:text-amber-200">
+            <Lock className="w-4 h-4 text-warning-600 dark:text-warning-400 shrink-0" />
+            <p className="text-xs text-warning-900 dark:text-warning-200">
               <span className="font-bold">{revealedPin.name}</span>
               {': '}
               <span className="font-mono text-sm font-extrabold tracking-widest">{revealedPin.pin}</span>
-              <span className="block text-[10px] font-semibold mt-0.5 text-amber-700 dark:text-amber-400">
+              <span className="block text-[10px] font-semibold mt-0.5 text-warning-700 dark:text-warning-400">
                 {language === 'ar' ? 'انسخه الآن، لن يظهر مرة أخرى' : 'Jetzt notieren — wird nicht erneut angezeigt'}
               </span>
             </p>
@@ -71,7 +71,7 @@ export const DriverAccountsCard = ({
           <button
             type="button"
             onClick={() => setRevealedPin(null)}
-            className="shrink-0 text-[10px] font-bold text-amber-700 dark:text-amber-400 hover:underline cursor-pointer"
+            className="shrink-0 text-[10px] font-bold text-warning-700 dark:text-warning-400 hover:underline cursor-pointer"
           >
             {language === 'ar' ? 'إغلاق' : 'Schließen'}
           </button>
@@ -89,14 +89,14 @@ export const DriverAccountsCard = ({
             value={newDriverName}
             onChange={(e) => setNewDriverName(e.target.value)}
             placeholder={language === 'ar' ? 'مثال: أحمد' : 'z.B. Ahmed'}
-            className="w-full px-3 py-2 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 focus:outline-none transition"
+            className="w-full px-3 py-2 bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 rounded-xl text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-warning-500/30 focus:border-warning-500 focus:outline-none transition"
           />
         </div>
         <button
           type="button"
           disabled={creatingDriver}
           onClick={handleCreateDriver}
-          className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-xs font-bold cursor-pointer transition shadow-xs flex items-center gap-1.5"
+          className="px-4 py-2 rounded-xl bg-warning-600 hover:bg-warning-700 disabled:opacity-50 text-white text-xs font-bold cursor-pointer transition shadow-sm flex items-center gap-1.5"
         >
           <Plus className="w-3.5 h-3.5" />
           {creatingDriver ? '...' : (language === 'ar' ? 'إضافة سائق' : 'Fahrer hinzufügen')}
@@ -105,9 +105,9 @@ export const DriverAccountsCard = ({
 
       {/* Driver list */}
       {driversLoading ? (
-        <p className="text-xs text-slate-400">{language === 'ar' ? 'جارٍ التحميل...' : 'Wird geladen...'}</p>
+        <p className="text-xs text-slate-500">{language === 'ar' ? 'جارٍ التحميل...' : 'Wird geladen...'}</p>
       ) : drivers.length === 0 ? (
-        <p className="text-xs text-slate-400">{language === 'ar' ? 'لا يوجد سائقون بعد.' : 'Noch keine Fahrer angelegt.'}</p>
+        <p className="text-xs text-slate-500">{language === 'ar' ? 'لا يوجد سائقون بعد.' : 'Noch keine Fahrer angelegt.'}</p>
       ) : (
         <div className="divide-y divide-slate-100 dark:divide-gray-800 rounded-xl border border-slate-200/70 dark:border-gray-800 overflow-hidden">
           {drivers.map((driver) => (
@@ -117,7 +117,7 @@ export const DriverAccountsCard = ({
                   <span className="text-xs font-bold text-slate-900 dark:text-white truncate">{driver.name}</span>
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                     driver.active
-                      ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                      ? 'bg-success-100 text-success-800 dark:bg-success-950/60 dark:text-success-300'
                       : 'bg-slate-100 text-slate-500 dark:bg-gray-800 dark:text-gray-400'
                   }`}>
                     {driver.active
@@ -143,8 +143,8 @@ export const DriverAccountsCard = ({
                   title={driver.active ? (language === 'ar' ? 'تعطيل' : 'Deaktivieren') : (language === 'ar' ? 'تفعيل' : 'Aktivieren')}
                   className={`p-2 rounded-lg disabled:opacity-50 cursor-pointer transition ${
                     driver.active
-                      ? 'bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-950/60 text-amber-600 dark:text-amber-400'
-                      : 'bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400'
+                      ? 'bg-warning-50 hover:bg-warning-100 dark:bg-warning-950/40 dark:hover:bg-warning-950/60 text-warning-600 dark:text-warning-400'
+                      : 'bg-success-50 hover:bg-success-100 dark:bg-success-950/40 dark:hover:bg-success-950/60 text-success-600 dark:text-success-400'
                   }`}
                 >
                   <Power className="w-3.5 h-3.5" />
@@ -155,7 +155,7 @@ export const DriverAccountsCard = ({
                     disabled={busyDriverId === driver.id}
                     onClick={() => handleDeleteDriver(driver)}
                     title={language === 'ar' ? 'حذف' : 'Löschen'}
-                    className="p-2 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-950/60 text-rose-600 dark:text-rose-400 disabled:opacity-50 cursor-pointer transition"
+                    className="p-2 rounded-lg bg-danger-50 hover:bg-danger-100 dark:bg-danger-950/40 dark:hover:bg-danger-950/60 text-danger-600 dark:text-danger-400 disabled:opacity-50 cursor-pointer transition"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>

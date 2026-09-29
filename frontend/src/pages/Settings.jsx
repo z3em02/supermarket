@@ -20,9 +20,11 @@ import { LegalTab } from './settings/LegalTab';
 import { GoogleTab } from './settings/GoogleTab';
 import { DeliveryTab } from './settings/DeliveryTab';
 import { GeneralTab } from './settings/GeneralTab';
+import { useConfirm } from '../context/FeedbackContext';
 
 export const Settings = () => {
   const { t, language } = useLanguage();
+  const confirm = useConfirm();
   const {
     settings,
     updateStoreSettings,
@@ -249,7 +251,7 @@ export const Settings = () => {
   };
 
   const handleDeleteReview = async (id) => {
-    if (window.confirm(t('confirmDeleteReview'))) {
+    if (await confirm({ message: t('confirmDeleteReview'), confirmText: t('delete'), variant: 'danger' })) {
       const res = await deleteReview(id);
       if (res.success) {
         setSuccessMessage(t('reviewDeletedSuccess'));
@@ -284,19 +286,19 @@ export const Settings = () => {
   ];
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-12">
+    <div className="space-y-4 sm:space-y-6 pb-12">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 dark:border-gray-800 pb-5">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <div className="w-10 h-10 rounded-xl bg-blue-600/10 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-primary-600/10 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 flex items-center justify-center font-bold shrink-0">
               <Store className="w-5 h-5" />
             </div>
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+            <h1 className="text-heading-xl">
               {t('storeSettings')}
             </h1>
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-gray-400">
+          <p className="text-body-muted">
             {t('storeSettingsDesc')}
           </p>
         </div>
@@ -305,7 +307,7 @@ export const Settings = () => {
           type="button"
           onClick={handleSubmit}
           disabled={saving}
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 shadow-md shadow-blue-500/20 transition cursor-pointer shrink-0 touch-manipulation"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-primary-600 hover:bg-primary-700 active:bg-primary-800 disabled:opacity-50 shadow-md shadow-primary-500/20 transition cursor-pointer shrink-0 touch-manipulation"
         >
           {saving ? (
             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -318,21 +320,21 @@ export const Settings = () => {
 
       {/* Notifications */}
       {successMessage && (
-        <div className="flex items-center gap-2.5 p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/80 dark:border-emerald-900/60 text-emerald-800 dark:text-emerald-200 shadow-xs animate-in fade-in duration-200 text-xs sm:text-sm">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+        <div className="flex items-center gap-2.5 p-3.5 rounded-2xl bg-success-50 dark:bg-success-950/50 border border-success-200/80 dark:border-success-900/60 text-success-800 dark:text-success-200 shadow-sm animate-fade-in text-xs sm:text-sm">
+          <CheckCircle2 className="w-4 h-4 text-success-600 dark:text-success-400 shrink-0" />
           <span className="font-semibold">{successMessage}</span>
         </div>
       )}
 
       {errorMessage && (
-        <div className="flex items-center gap-2.5 p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200/80 dark:border-rose-900/60 text-rose-800 dark:text-rose-200 shadow-xs animate-in fade-in duration-200 text-xs sm:text-sm">
-          <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+        <div className="flex items-center gap-2.5 p-3.5 rounded-2xl bg-danger-50 dark:bg-danger-950/50 border border-danger-200/80 dark:border-danger-900/60 text-danger-800 dark:text-danger-200 shadow-sm animate-fade-in text-xs sm:text-sm">
+          <AlertCircle className="w-4 h-4 text-danger-600 dark:text-danger-400 shrink-0" />
           <span className="font-semibold">{errorMessage}</span>
         </div>
       )}
 
       {/* Clean Category Tabs */}
-      <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-gray-800/70 rounded-2xl overflow-x-auto border border-slate-200/80 dark:border-gray-700/80 shadow-xs">
+      <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-gray-800/70 rounded-2xl overflow-x-auto border border-slate-200/80 dark:border-gray-700/80 shadow-sm">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -347,12 +349,12 @@ export const Settings = () => {
                   : 'text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <Icon className={`w-4 h-4 ${isActive ? 'text-blue-600 dark:text-blue-400' : ''}`} />
+              <Icon className={`w-4 h-4 ${isActive ? 'text-primary-600 dark:text-primary-400' : ''}`} />
               <span>{tab.label}</span>
               {tab.badge != null && (
                 <span className={`px-2 py-0.5 text-[10px] rounded-full font-bold ${
                   isActive
-                    ? 'bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300'
+                    ? 'bg-primary-100 dark:bg-primary-950/70 text-primary-700 dark:text-primary-300'
                     : 'bg-slate-200/70 dark:bg-gray-700 text-slate-600 dark:text-gray-300'
                 }`}>
                   {tab.badge}
@@ -421,7 +423,7 @@ export const Settings = () => {
           <button
             type="submit"
             disabled={saving}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 shadow-md shadow-blue-500/20 transition cursor-pointer touch-manipulation"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-primary-600 hover:bg-primary-700 active:bg-primary-800 disabled:opacity-50 shadow-md shadow-primary-500/20 transition cursor-pointer touch-manipulation"
           >
             {saving ? (
               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />

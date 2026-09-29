@@ -32,6 +32,24 @@ const listDrivers = async (req, res) => {
   }
 };
 
+// GET /api/settings/drivers/names - Admin only, no section PIN: just the
+// names of active drivers, for the Orders page's "assign driver" choice.
+// Nothing here is more sensitive than the online-driver list the Orders page
+// already reads (no ids, PINs or timestamps).
+const listActiveDriverNames = async (req, res) => {
+  try {
+    const drivers = await prisma.driver.findMany({
+      where: { active: true },
+      select: { name: true },
+      orderBy: { name: 'asc' }
+    });
+    res.json(drivers.map((d) => d.name));
+  } catch (error) {
+    console.error('List driver names error:', error);
+    res.status(500).json({ error: 'Failed to load drivers' });
+  }
+};
+
 // POST /api/settings/drivers - Admin only. Creates a driver with either an
 // admin-supplied PIN or a randomly generated one, returned once in the
 // response — same pattern as the seed script's generated admin password:
@@ -468,6 +486,7 @@ const driverLogout = async (req, res) => {
 
 module.exports = {
   listDrivers,
+  listActiveDriverNames,
   createDriver,
   updateDriver,
   resetDriverPin,

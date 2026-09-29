@@ -9,13 +9,9 @@ import { printHtmlInHiddenIframe } from '../utils/printDocument';
 import { buildCustomerOrderReportHtml } from '../utils/customerOrderReport';
 import {
   Package,
-  MapPin,
-  AlertTriangle,
-  Clock,
-  Truck,
-  CheckCircle2,
-  XCircle
+  MapPin
 } from 'lucide-react';
+import { OrderStatusBadge } from '../components/OrderStatusBadge';
 import { OrderReportModal } from './account/OrderReportModal';
 import { ProfileTab } from './account/ProfileTab';
 import { OrdersTab } from './account/OrdersTab';
@@ -324,63 +320,8 @@ export const CustomerAccount = () => {
     printHtmlInHiddenIframe(buildCustomerOrderReportHtml(order, { language, storeName: getStoreName(), customer }));
   };
 
-  const getStatusBadge = (status) => {
-    const normalized = (status || '').toLowerCase();
-    switch (normalized) {
-      case 'pending':
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-850">
-            <Clock className="w-3.5 h-3.5" />
-            {isAr ? 'قيد المراجعة والتحضير' : 'In Bearbeitung'}
-          </span>
-        );
-      case 'pending_customer_approval':
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-200 border border-amber-400 dark:border-amber-700 animate-pulse">
-            <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-            {isAr ? 'تعديل يتطلب موافقتك' : 'Änderung prüfen & bestätigen'}
-          </span>
-        );
-      case 'confirmed':
-      case 'accepted':
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-850">
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            {isAr ? 'تم تأكيد الطلب' : 'Bestätigt'}
-          </span>
-        );
-      case 'out_for_delivery':
-      case 'shipped':
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-850 animate-pulse">
-            <Truck className="w-3.5 h-3.5" />
-            {isAr ? 'جاري التوصيل للمنزل' : 'In Zustellung'}
-          </span>
-        );
-      case 'delivered':
-      case 'completed':
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-850">
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            {isAr ? 'تم التوصيل بنجاح' : 'Zugestellt'}
-          </span>
-        );
-      case 'declined':
-      case 'cancelled':
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-850">
-            <XCircle className="w-3.5 h-3.5" />
-            {isAr ? 'ملغي / مرفوض' : 'Storniert'}
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 dark:bg-gray-800 dark:text-gray-300">
-            {status}
-          </span>
-        );
-    }
-  };
+  const getStatusBadge = (status) => <OrderStatusBadge status={status} audience="customer" />;
+
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-gray-950 text-slate-800 dark:text-gray-100 transition-colors">
@@ -414,7 +355,7 @@ export const CustomerAccount = () => {
             onClick={() => setActiveTab('orders')}
             className={`pb-3 px-3 sm:px-4 font-bold text-xs sm:text-sm transition border-b-2 cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 touch-manipulation ${
               activeTab === 'orders'
-                ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400'
+                ? 'border-brand-600 text-brand-600 dark:text-brand-400'
                 : 'border-transparent text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-200'
             }`}
           >
@@ -429,7 +370,7 @@ export const CustomerAccount = () => {
             onClick={() => setActiveTab('profile')}
             className={`pb-3 px-3 sm:px-4 font-bold text-xs sm:text-sm transition border-b-2 cursor-pointer flex items-center gap-2 whitespace-nowrap shrink-0 touch-manipulation ${
               activeTab === 'profile'
-                ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400'
+                ? 'border-brand-600 text-brand-600 dark:text-brand-400'
                 : 'border-transparent text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-200'
             }`}
           >

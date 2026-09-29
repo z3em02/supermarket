@@ -7,9 +7,13 @@ import { CustomerDetailModal } from './customers/CustomerDetailModal';
 import { CustomerTable } from './customers/CustomerTable';
 import { CustomerFilters } from './customers/CustomerFilters';
 import { CustomerStats } from './customers/CustomerStats';
+import { useStatusBadge } from './orders/useStatusBadge';
+import { useToast, useConfirm } from '../context/FeedbackContext';
 
 export const Customers = () => {
   const { t, language } = useLanguage();
+  const toast = useToast();
+  const confirm = useConfirm();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -58,7 +62,7 @@ export const Customers = () => {
     const confirmMsg = language === 'ar'
       ? `هل أنت متأكد من رغبتك في حذف العميل "${name}"؟`
       : `Möchten Sie den Kunden "${name}" wirklich löschen?`;
-    if (!window.confirm(confirmMsg)) return;
+    if (!(await confirm({ message: confirmMsg, confirmText: t('delete'), variant: 'danger' }))) return;
 
     try {
       setDeletingId(id);
@@ -70,7 +74,7 @@ export const Customers = () => {
       }
     } catch (error) {
       console.error('Error deleting customer:', error);
-      alert(error.response?.data?.error || t('error'));
+      toast.error(error.response?.data?.error || t('error'));
     } finally {
       setDeletingId(null);
     }
@@ -140,40 +144,23 @@ export const Customers = () => {
     });
   }, [customers, searchTerm, verificationFilter, sortBy]);
 
-  const getOrderStatusBadge = (status) => {
-    const s = status?.toLowerCase();
-    switch (s) {
-      case 'accepted':
-        return { label: language === 'ar' ? 'مقبول' : 'Angenommen', classes: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300' };
-      case 'preparing':
-        return { label: language === 'ar' ? 'قيد التحضير' : 'In Vorbereitung', classes: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300' };
-      case 'shipped':
-      case 'out_for_delivery':
-        return { label: language === 'ar' ? 'في الطريق' : 'In Zustellung', classes: 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300' };
-      case 'delivered':
-        return { label: language === 'ar' ? 'تم التوصيل' : 'Geliefert', classes: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300' };
-      case 'declined':
-      case 'rejected':
-        return { label: language === 'ar' ? 'مرفوض' : 'Abgelehnt', classes: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300' };
-      default:
-        return { label: language === 'ar' ? 'قيد الانتظار' : 'Ausstehend', classes: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-gray-800 dark:text-slate-300' };
-    }
-  };
+  const getOrderStatusBadge = useStatusBadge();
+
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
+    <div className="space-y-4 sm:space-y-6 animate-fade-in">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-600 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-success-600 to-info-600 flex items-center justify-center text-white shadow-md shadow-success-500/20 shrink-0">
               <Users className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+              <h1 className="text-heading-xl">
                 {language === 'ar' ? 'إدارة العملاء' : 'Kundenverwaltung'}
               </h1>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-gray-400">
+              <p className="text-body-muted">
                 {language === 'ar' 
                   ? 'قائمة العملاء المسجلين، التحقق من الهاتف والبريد، وعناوين التوصيل المنزلي' 
                   : 'Registrierte Privatkunden, Verifizierungsstatus & Lieferadressen für Hauszustellung'}
@@ -192,14 +179,14 @@ export const Customers = () => {
 
       {/* Error Alert */}
       {error && (
-        <div className="p-3.5 sm:p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 dark:bg-rose-950/40 dark:border-rose-900/60 dark:text-rose-300 text-xs sm:text-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
+        <div className="p-3.5 sm:p-4 rounded-xl bg-danger-50 border border-danger-200 text-danger-700 dark:bg-danger-950/40 dark:border-danger-900/60 dark:text-danger-300 text-xs sm:text-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
           <div className="flex items-center gap-2">
             <AlertCircle className="w-5 h-5 shrink-0" />
             <span>{error}</span>
           </div>
           <button
             onClick={fetchCustomers}
-            className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition cursor-pointer touch-manipulation self-end sm:self-auto"
+            className="px-3 py-1.5 rounded-lg bg-danger-600 hover:bg-danger-700 text-white text-xs font-bold transition cursor-pointer touch-manipulation self-end sm:self-auto"
           >
             {language === 'ar' ? 'إعادة المحاولة' : 'Erneut versuchen'}
           </button>
