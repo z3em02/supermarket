@@ -32,6 +32,14 @@ export const Orders = () => {
     activeDrivers,
     knownDriverNames,
     metrics,
+    page,
+    setPage,
+    totalPages,
+    total,
+    statusFilter,
+    setStatusFilter,
+    searchTerm,
+    setSearchTerm,
     reloadFormData,
     fetchOrderById,
     assignDriver,
@@ -46,8 +54,6 @@ export const Orders = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [printOrder, setPrintOrder] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
   const [updating, setUpdating] = useState(false);
   const [expandedOrders, setExpandedOrders] = useState({});
   const [editingDeliverySlot, setEditingDeliverySlot] = useState(false);
@@ -333,25 +339,21 @@ export const Orders = () => {
       : buildA4ReceiptHtml(order, language));
   };
 
-  const filteredOrders = orders.filter((order) => {
-    const matchesSearch =
-      order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (order.customer?.name && order.customer.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (order.customerName && order.customerName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (order.customerPhone && order.customerPhone.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (order.deliveryAddress && order.deliveryAddress.toLowerCase().includes(searchTerm.toLowerCase()));
-
-    let matchesStatus = true;
-    if (statusFilter !== 'all') {
-      const orderStatus = order.status?.toLowerCase();
-      if (statusFilter === 'declined') {
-        matchesStatus = orderStatus === 'declined' || orderStatus === 'rejected' || orderStatus === 'decline';
-      } else {
-        matchesStatus = orderStatus === statusFilter;
-      }
-    }
-    return matchesSearch && matchesStatus;
-  });
+  // The server already applied the status filter and matched the search
+  // against order number + driver name across all pages. This only *additionally*
+  // narrows the loaded page by customer name/phone/address — which the server
+  // can't match because those columns are encrypted at rest. It keeps any order
+  // whose number or driver matched server-side, so server results are never
+  // dropped here. (Customer-name search therefore only spans the current page.)
+  const q = searchTerm.trim().toLowerCase();
+  const filteredOrders = !q ? orders : orders.filter((order) =>
+    order.id.toLowerCase().includes(q) ||
+    (order.assignedDriverName && order.assignedDriverName.toLowerCase().includes(q)) ||
+    (order.customer?.name && order.customer.name.toLowerCase().includes(q)) ||
+    (order.customerName && order.customerName.toLowerCase().includes(q)) ||
+    (order.customerPhone && order.customerPhone.toLowerCase().includes(q)) ||
+    (order.deliveryAddress && order.deliveryAddress.toLowerCase().includes(q))
+  );
 
   if (loading) {
     return (
@@ -450,6 +452,36 @@ export const Orders = () => {
           </div>
         )}
       </div>
+
+      {/* Pagination — the list is server-paginated (page/status/search sent to
+          the API), so only one page of orders is ever loaded at a time. */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between gap-3 pt-1">
+          <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+            {language === 'ar'
+              ? `صفحة ${page} من ${totalPages} · ${total} طلب`
+              : `Seite ${page} von ${totalPages} · ${total} ${total === 1 ? 'Bestellung' : 'Bestellungen'}`}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPage(Math.max(1, page - 1))}
+              disabled={page <= 1}
+              className="px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 text-xs sm:text-sm font-medium text-slate-700 dark:text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-gray-800 transition cursor-pointer touch-manipulation"
+            >
+              {language === 'ar' ? 'التالي' : 'Zurück'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setPage(Math.min(totalPages, page + 1))}
+              disabled={page >= totalPages}
+              className="px-3 py-2 rounded-xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 text-xs sm:text-sm font-medium text-slate-700 dark:text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-gray-800 transition cursor-pointer touch-manipulation"
+            >
+              {language === 'ar' ? 'السابق' : 'Weiter'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Accept Order — requires choosing a driver, since a driver only ever
           sees orders assigned to them; an order accepted with nobody chosen
