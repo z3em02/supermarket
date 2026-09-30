@@ -40,6 +40,20 @@ const ORDER_INCLUDE = {
   orderItems: { include: { product: true } }
 };
 
+// What the delivery view (DriverDeliveryView) lists: nothing declined, and
+// delivered orders only for the last DRIVER_DELIVERED_HISTORY_DAYS. Pass a
+// driver name for a driver's own orders; without one (an admin using the
+// view) it covers every driver — still bounded, since the view re-fetches
+// every few seconds and the order book only grows.
+const deliveryViewWhere = (driverName) => ({
+  ...(driverName ? { assignedDriverName: driverName } : {}),
+  status: { notIn: DECLINED_STATUSES },
+  OR: [
+    { status: { not: 'delivered' } },
+    { updatedAt: { gte: new Date(Date.now() - DRIVER_DELIVERED_HISTORY_DAYS * 24 * 60 * 60 * 1000) } }
+  ]
+});
+
 // Where-clause for the admin browse view's status filter. The free-text
 // search is applied separately (see searchOrderIds): customer name, phone and
 // address are encrypted at rest, so SQL can't match them.
@@ -86,14 +100,7 @@ const getOrders = async (req, res) => {
     // --- Driver view: scoped list, not paginated (a driver's book is small) ---
     if (req.driver) {
       const orders = await prisma.order.findMany({
-        where: {
-          assignedDriverName: req.driver.name,
-          status: { notIn: DECLINED_STATUSES },
-          OR: [
-            { status: { not: 'delivered' } },
-            { updatedAt: { gte: new Date(Date.now() - DRIVER_DELIVERED_HISTORY_DAYS * 24 * 60 * 60 * 1000) } }
-          ]
-        },
+        where: deliveryViewWhere(req.driver.name),
         include: ORDER_INCLUDE,
         orderBy: { createdAt: 'desc' }
       });
@@ -113,11 +120,12 @@ const getOrders = async (req, res) => {
       return res.json(withDecryptedCustomers(orders));
     }
 
-    // --- Admin browse without paging (e.g. an admin using the driver view):
-    // the full list as a flat array, like before pagination existed. ---
+    // --- Admin without paging = an admin using the delivery view: the same
+    // scope a driver gets, across all drivers, as a flat array. The whole
+    // history stays on the paginated Orders page below. ---
     if (req.query.page === undefined) {
       const orders = await prisma.order.findMany({
-        where: buildStatusWhere(req.query.status),
+        where: deliveryViewWhere(),
         include: ORDER_INCLUDE,
         orderBy: { createdAt: 'desc' }
       });
