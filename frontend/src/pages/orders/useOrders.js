@@ -18,7 +18,8 @@ const EMPTY_METRICS = {
  *
  * The list is server-paginated because loading every order at once grows
  * linearly (measured: ~1MB / 180ms at 400 orders). page/status/search are sent
- * to the server; polling just re-fetches the current page, which is cheap.
+ * to the server; polling re-fetches the current page, which is cheap — except
+ * while searching (see poll below).
  *
  * The server `search` covers the whole order history: order number, driver,
  * customer name, phone and address (it decrypts those columns to match).
@@ -67,6 +68,9 @@ export const useOrders = () => {
   // Only the newest request may set the list, so a slow response for an
   // older search term can't overwrite the results of the current one.
   const requestSeqRef = useRef(0);
+  // Server clock of the last list response (X-Server-Time): the cursor for
+  // poll()'s "what changed since" request.
+  const cursorRef = useRef(null);
 
   // Fetches the current page (server-side filtered) plus the summary metrics.
   const refresh = useCallback(async () => {
@@ -82,6 +86,7 @@ export const useOrders = () => {
         fetchMetrics()
       ]);
       if (seq !== requestSeqRef.current) return;
+      cursorRef.current = listRes.headers?.['x-server-time'] || null;
       const body = listRes.data;
       // Envelope { data, total, page, totalPages } for the browse view; fall
       // back to a bare array if an older backend answers.
@@ -98,6 +103,31 @@ export const useOrders = () => {
       setLoading(false);
     }
   }, [fetchMetrics]);
+
+  // The 20s poll. Without a search it re-fetches the current page. With one,
+  // that would make the server decrypt the whole order history again every
+  // 20s, so it only asks for orders changed since the last response and
+  // updates the ones already on screen. New matches appear when the search,
+  // filter or page changes, or after an action here (those call refresh()).
+  const poll = useCallback(async () => {
+    const since = cursorRef.current;
+    if (!queryRef.current.search.trim() || !since) return refresh();
+    const seq = requestSeqRef.current;
+    try {
+      const apiUrl = getApiUrl();
+      const [changedRes] = await Promise.all([
+        axios.get(`${apiUrl}/api/orders`, { params: { updatedSince: since } }),
+        fetchMetrics()
+      ]);
+      // A refresh started meanwhile (new search, page, action) wins.
+      if (seq !== requestSeqRef.current) return;
+      cursorRef.current = changedRes.headers?.['x-server-time'] || since;
+      const changed = new Map((Array.isArray(changedRes.data) ? changedRes.data : []).map((o) => [o.id, o]));
+      if (changed.size > 0) setOrders((prev) => prev.map((o) => changed.get(o.id) || o));
+    } catch (error) {
+      console.error('Error polling orders:', error);
+    }
+  }, [refresh, fetchMetrics]);
 
   const reloadFormData = useCallback(async () => {
     try {
@@ -129,13 +159,12 @@ export const useOrders = () => {
     }
   }, []);
 
-  // Reference data once on mount, and a 20s poll that re-fetches the current
-  // page (cheap now that it's paginated) so new/changed orders show up.
+  // Reference data once on mount, and a 20s poll so new/changed orders show up.
   useEffect(() => {
     reloadFormData();
-    const pollId = setInterval(refresh, 20000);
+    const pollId = setInterval(poll, 20000);
     return () => clearInterval(pollId);
-  }, [refresh, reloadFormData]);
+  }, [poll, reloadFormData]);
 
   // Refetch whenever the page or status filter changes immediately, and the
   // search term after a short debounce (so typing doesn't fire a request per
