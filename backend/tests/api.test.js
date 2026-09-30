@@ -87,6 +87,25 @@ test('unknown API routes get a JSON 404', async () => {
   assert.strictEqual((await json(res)).error, 'Endpoint not found');
 });
 
+// Customer auth lives only under /api/customer and the admin's customer
+// management only under /api/customers; the old aliases (/api/customer-auth,
+// the customer router under /api/customers) are gone, so nginx's rate limits
+// only have one prefix to cover.
+test('the old customer route prefixes are gone (404)', async () => {
+  for (const [method, urlPath] of [
+    ['POST', '/api/customer-auth/login'],
+    ['POST', '/api/customer-auth/register'],
+    ['POST', '/api/customers/login'],
+    ['POST', '/api/customers/resend-otp'],
+    ['GET', '/api/customer-auth/customers'],
+    ['GET', '/api/customer/customers'],
+    ['GET', '/api/customers/customers']
+  ]) {
+    const res = await request(method, urlPath, { body: method === 'GET' ? undefined : '{}' });
+    assert.strictEqual(res.status, 404, `${method} ${urlPath}`);
+  }
+});
+
 test('every response carries its own X-Request-Id', async () => {
   const ids = [];
   for (const urlPath of ['/api/does-not-exist', '/api/does-not-exist', '/uploads/none.png']) {
@@ -125,9 +144,9 @@ test('admin endpoints require an admin login', async () => {
     ['GET', '/api/settings/driver-sessions'],
     ['DELETE', '/api/settings/reviews/some-id'],
     ['POST', '/api/settings/sync-google-reviews'],
-    ['GET', '/api/customer-auth/customers'],
-    ['GET', '/api/customer-auth/customers/count'],
-    ['DELETE', '/api/customers/customers/some-id'],
+    ['GET', '/api/customers'],
+    ['GET', '/api/customers/count'],
+    ['DELETE', '/api/customers/some-id'],
     ['POST', '/api/categories'],
     ['POST', '/api/delivery-windows']
   ];

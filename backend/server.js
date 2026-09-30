@@ -19,6 +19,7 @@ const categoryRoutes = require('./routes/categories');
 const orderRoutes = require('./routes/orders');
 const accountingRoutes = require('./routes/accounting');
 const customerAuthRoutes = require('./routes/customerAuth');
+const customerAdminRoutes = require('./routes/customerAdmin');
 const pushRoutes = require('./routes/push');
 const settingsRoutes = require('./routes/settings');
 const auditLogRoutes = require('./routes/auditLog');
@@ -117,9 +118,11 @@ app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/accounting', accountingRoutes);
+// One prefix each: a customer's own account, and the admin's customer
+// management. (The customer router used to be mounted under three prefixes,
+// so every nginx rate-limit rule had to name all three.)
 app.use('/api/customer', customerAuthRoutes);
-app.use('/api/customer-auth', customerAuthRoutes);
-app.use('/api/customers', customerAuthRoutes);
+app.use('/api/customers', customerAdminRoutes);
 app.use('/api/push', pushRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/audit-log', auditLogRoutes);

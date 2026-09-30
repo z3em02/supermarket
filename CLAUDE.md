@@ -119,7 +119,7 @@ the StoreSettings defaults in `settingsShared.js`. Shared logic lives in `utils/
 
 **Two separate auth systems**, each with its own middleware and JWT cookie:
 - Admin/staff: `middleware/auth.js` + `controllers/authController.js` (`routes/auth.js`).
-- Customers: `middleware/customerAuth.js` + `controllers/customerAuthController.js` (register, OTP verification, login), `customerProfileController.js`, `customerAdminController.js` (Kunden page) and `passwordResetController.js`, all on `routes/customerAuth.js`, mounted at **three** route prefixes (`/api/customer`, `/api/customer-auth`, `/api/customers` — all the same router, kept for backward compatibility).
+- Customers: `middleware/customerAuth.js` + `controllers/customerAuthController.js` (register, OTP verification, login), `customerProfileController.js` and `passwordResetController.js` on `routes/customerAuth.js`, mounted only at `/api/customer`. The admin's customer management (`customerAdminController.js`, Kunden page) is `routes/customerAdmin.js` at `/api/customers`. `tests/nginxRateLimits.test.js` checks that every route using a guessing limiter (`rl:auth`, `rl:admin-2fa`, `rl:driver-login`) has an nginx `limit_req` rule in `deployment/nginx.conf`; a new sensitive route needs one there too.
 - `middleware/anyAuth.js` accepts either token type where an endpoint is shared.
 - `middleware/csrf.js` — CSRF protection for cookie-based auth.
 - `middleware/sectionUnlock.js` — passcode-gated sections (see `SectionPasscodeGate.jsx` on the frontend).

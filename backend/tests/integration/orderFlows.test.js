@@ -229,6 +229,30 @@ describe('order flows (database)', { skip: h.skipReason || false }, () => {
     });
   });
 
+  describe('admin customer management (/api/customers)', () => {
+    test('lists and counts customers; deleting one keeps their orders, unlinked (§ 132 BAO)', async () => {
+      const milk = await h.createProduct({ name: 'Milch 1L', price: 2.5, stock: 10 });
+      const keep = await h.createCustomer();
+      const gone = await h.createCustomer();
+      const placed = await placeOrder(h.customerToken(gone), [[milk, 1]]);
+
+      const list = await api('GET', '/api/customers', { token: adminAuth });
+      assert.strictEqual(list.status, 200, JSON.stringify(list.body));
+      assert.deepStrictEqual(list.body.map((c) => c.id).sort(), [keep.id, gone.id].sort());
+      assert.deepStrictEqual((await api('GET', '/api/customers/count', { token: adminAuth })).body, { total: 2 });
+
+      assert.strictEqual((await api('GET', '/api/customers', { token: h.customerToken(keep) })).status, 403, 'customers cannot list customers');
+
+      const del = await api('DELETE', `/api/customers/${gone.id}`, { token: adminAuth });
+      assert.strictEqual(del.status, 200, JSON.stringify(del.body));
+      assert.strictEqual(await h.prisma.customer.count({ where: { id: gone.id } }), 0);
+      const order = await orderById(placed.body.id);
+      assert.ok(order, 'the order stays for the tax records');
+      assert.strictEqual(order.customerId, null);
+      assert.ok(order.customerName.startsWith('enc:v1:'), 'its encrypted order-time snapshot stays');
+    });
+  });
+
   describe('editing an order and the customer answer', () => {
     // Milk ×3, bread ×1 → admin edit: milk ×1, bread removed, eggs ×2.
     const placeAndEdit = async ({ coupon = false } = {}) => {

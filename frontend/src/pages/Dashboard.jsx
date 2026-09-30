@@ -120,7 +120,7 @@ export const Dashboard = () => {
       const LOCKED = { locked: true };
       // Counts only — the full customer and order lists aren't needed here.
       const [customersRes, productsRes, ordersRes, accountingRes] = await Promise.all([
-        axios.get(`${apiUrl}/api/customer-auth/customers/count`).catch(() => LOCKED),
+        axios.get(`${apiUrl}/api/customers/count`).catch(() => LOCKED),
         axios.get(`${apiUrl}/api/products`),
         axios.get(`${apiUrl}/api/orders/summary`),
         axios.get(`${apiUrl}/api/accounting/summary`).catch(() => LOCKED)
