@@ -122,7 +122,7 @@ npm install
 npx prisma db push      # sync the schema (this project doesn't use `prisma migrate`)
 npm run prisma:seed     # optional: default admin + sample categories/products/delivery windows
 npm run dev             # API on http://localhost:5000, restarts on file changes
-npm test                # unit tests (Node's built-in test runner)
+npm test                # unit tests, plus the database tests if TEST_DATABASE_URL is set (below)
 
 # Frontend (second terminal)
 cd frontend
@@ -153,8 +153,39 @@ refuses to run with `NODE_ENV=production` unless `--allow-production` is passed.
 **Schema changes**: edit `backend/prisma/schema.prisma`, then run
 `npx prisma db push`. There is no migrations directory.
 
-**CI**: `.github/workflows/ci.yml` runs the backend tests plus frontend lint and
-build on every pull request and every push to `main`.
+### Database tests
+
+`backend/tests/integration/orderFlows.test.js` runs the order flows against a
+real Postgres database, through the real server: placing an order (stock,
+totals, coupons, the race for the last items, maintenance mode, unverified
+customers), status changes (decline and reactivate, stale edits, what drivers
+may do) and admin edits with the customer's accept or decline. After each step
+it checks the database itself: stock, totals, coupon usage.
+
+They run as part of `npm test` when `TEST_DATABASE_URL` is set (in the
+environment or `backend/.env`), and are skipped otherwise:
+
+```env
+TEST_DATABASE_URL=postgresql://postgres:<password>@localhost:5432/supermarket_test
+```
+
+**Every test empties every table**, so:
+
+- the database name must end in `_test`, and it must not be the
+  `DATABASE_URL` / `DIRECT_URL` database; the tests refuse to run otherwise;
+- use a separate database on your local Postgres (same user and password as your
+  development database is fine). The tests create it and push the schema
+  themselves (`prisma db push`), so there's nothing to set up by hand.
+
+The server they start gets no real secrets or credentials from `backend/.env`,
+and can't reach the internet (`tests/integration/offline.cjs`): geocoding
+falls back to postal-code centroids, and no email, WhatsApp message or push is
+sent. The whole file takes about 6 s. Keep database tests in that one file:
+`node --test` runs files in parallel, and they would empty each other's tables.
+
+**CI**: `.github/workflows/ci.yml` runs the backend tests (with a throwaway
+Postgres 17 for the database tests) plus frontend lint and build on every pull
+request and every push to `main`.
 
 ---
 

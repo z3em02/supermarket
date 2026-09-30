@@ -53,6 +53,18 @@ before the database: routing, body limits, auth/CSRF rejections, logout
 cookies, CORS. Put pure logic in `utils/` rather than inline in controllers
 so it can be tested this way.
 
+Database tests: `tests/integration/orderFlows.test.js` runs the order flows
+(place, status changes, edit + customer answer) through the real server on a
+real Postgres and checks stock, totals and coupon usage in the database. It
+runs only when `TEST_DATABASE_URL` is set (a database named `*_test`, never the
+`DATABASE_URL` one; the harness refuses otherwise) and is skipped otherwise;
+CI provides a Postgres service. `tests/integration/harness.cjs` (`.cjs` so the
+test glob skips it) pushes the schema, starts `server.js` with `.env` blanked
+and `offline.cjs` preloaded (no outbound fetch), empties all tables before each
+test, and has helpers to create data and sign logins. Add DB-backed tests to
+that one file: test files run in parallel and each test empties the tables.
+README "Database tests".
+
 Frontend tests (`frontend/tests/`) also use `node:test` and import plain
 `.js` modules directly (note parsing, masking, dates, DE/AR translation key
 parity) — only modules without JSX or `import.meta.env`.
