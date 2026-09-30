@@ -11,8 +11,8 @@ datasource db {
   // their own connection pool; going through the pooler avoids exhausting
   // Supabase's direct-connection limit.
   // DIRECT_URL: Supabase's direct connection (port 5432, no pgbouncer) —
-  // used only for schema changes (`prisma db push`). The transaction-mode
-  // pooler doesn't support the operations `db push` needs.
+  // used by migrations (`prisma migrate`) and backups (pg_dump). The
+  // transaction-mode pooler doesn't support what they need.
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }

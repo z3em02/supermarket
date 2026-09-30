@@ -87,7 +87,7 @@ Never commit `.env` files.
 | `PORT` | API port (default `5000`). |
 | `HOST` | Interface to listen on. `127.0.0.1` in production (also set in `deployment/ecosystem.config.js`) so the API is reachable only through nginx; leave unset in local development. |
 | `DATABASE_URL` | PostgreSQL connection string. On Supabase use the pooled connection (Transaction mode, port 6543) with `?pgbouncer=true`. PM2 cluster mode runs several processes, each with its own Prisma pool, and the pooler keeps them within the connection limit. |
-| `DIRECT_URL` | Direct connection (port 5432, no pgbouncer), used by `prisma db push` and the backup scripts ([4.7](#47-backups-and-the-encryption-key)). Without a pooler, set it to the same value as `DATABASE_URL` (Prisma requires the variable to exist). |
+| `DIRECT_URL` | Direct connection (port 5432, no pgbouncer), used by migrations (`prisma migrate`) and the backup scripts ([4.7](#47-backups-and-the-encryption-key)). Without a pooler, set it to the same value as `DATABASE_URL` (Prisma requires the variable to exist). |
 | `JWT_SECRET` | Random secret, at least 32 characters (`openssl rand -hex 32`). Required; the server won't start without it. |
 | `SECTION_UNLOCK_SECRET` | Random secret, at least 32 characters, **different from `JWT_SECRET`**. Required. |
 | `ENCRYPTION_KEY` | 64 hex characters (`openssl rand -hex 32`); AES key for PII at rest. Required in production. Outside production, a missing key stores PII unencrypted (with a startup warning). |
@@ -119,7 +119,7 @@ Never commit `.env` files.
 # Backend
 cd backend
 npm install
-npx prisma db push      # sync the schema (this project doesn't use `prisma migrate`)
+npm run migrate:deploy  # create/update the tables from prisma/migrations
 npm run prisma:seed     # optional: default admin + sample categories/products/delivery windows
 npm run dev             # API on http://localhost:5000, restarts on file changes
 npm test                # unit tests, plus the database tests if TEST_DATABASE_URL is set (below)
@@ -150,8 +150,29 @@ Demo orders are guest orders tagged `[Demo-Bestellung]` in their internal note;
 `--delete` only removes orders with that tag. Stock is not changed. The script
 refuses to run with `NODE_ENV=production` unless `--allow-production` is passed.
 
-**Schema changes**: edit `backend/prisma/schema.prisma`, then run
-`npx prisma db push`. There is no migrations directory.
+### Schema changes (migrations)
+
+The database schema lives in `backend/prisma/schema.prisma`; every change to it
+ships as a **migration**, a SQL file in `backend/prisma/migrations/` (Prisma
+Migrate). `0_init` is the baseline: the schema as it was when the project
+switched from `prisma db push` to migrations.
+
+1. Edit `schema.prisma`.
+2. `npm run migrate:dev -- --name add_something` (from `backend/`). This writes
+   `prisma/migrations/<timestamp>_add_something/migration.sql`, applies it to
+   your development database and regenerates the Prisma client.
+3. Read the generated SQL. For a rename, or when existing data has to be
+   converted, create it with `-- --create-only`, edit the SQL (e.g. an
+   `UPDATE` that fills a new column), then run `npm run migrate:dev` again to
+   apply it.
+4. Commit the migration folder together with the schema change.
+
+On servers, `npm run migrate:deploy` applies the migrations that database
+hasn't had yet (see [4.2](#42-server-and-database) and
+[4.8](#48-monitoring-and-logs)). Never edit a migration that has already been
+applied anywhere; add a new one. The database tests rebuild their database from
+the migrations and fail when `schema.prisma` has a change that no migration
+contains. `npm run migrate:status` shows what a database has applied.
 
 ### Database tests
 
@@ -174,8 +195,9 @@ TEST_DATABASE_URL=postgresql://postgres:<password>@localhost:5432/supermarket_te
 - the database name must end in `_test`, and it must not be the
   `DATABASE_URL` / `DIRECT_URL` database; the tests refuse to run otherwise;
 - use a separate database on your local Postgres (same user and password as your
-  development database is fine). The tests create it and push the schema
-  themselves (`prisma db push`), so there's nothing to set up by hand.
+  development database is fine). The tests create it and rebuild it from the
+  migrations on every run (`prisma migrate reset`), so there's nothing to set
+  up by hand. They also fail if `schema.prisma` has a change without a migration.
 
 The server they start gets no real secrets or credentials from `backend/.env`,
 and can't reach the internet (`tests/integration/offline.cjs`): geocoding
@@ -211,7 +233,7 @@ sudo npm install -g pm2
 git clone <your-repo-url> /var/www/supermarket
 cd /var/www/supermarket/backend
 npm install
-npx prisma db push
+npm run migrate:deploy   # creates/updates the tables from prisma/migrations
 ```
 
 - **Supabase / pooled Postgres**: take both connection strings from Project
@@ -220,7 +242,30 @@ npx prisma db push
 - **Self-hosted Postgres**: set `DATABASE_URL`, and set `DIRECT_URL` to the
   same value.
 
-#### One-time: money columns Float → Decimal (existing databases only)
+#### One-time: databases created before migrations
+
+A database set up with `prisma db push`, before `prisma/migrations/` existed,
+already has the tables but no record of the baseline migration (`0_init`), so
+`migrate deploy` would try to create them again and fail. After deploying this
+version, record the baseline once, before the first `migrate deploy`:
+
+```bash
+cd /var/www/supermarket/backend
+npm run backup                                     # 1. back up first (4.7)
+npx prisma migrate diff --from-schema-datasource prisma/schema.prisma \
+  --to-schema-datamodel prisma/schema.prisma --exit-code   # 2. must print "No difference detected."
+npx prisma migrate resolve --applied 0_init        # 3. mark the baseline as already applied
+npm run migrate:status                             # 4. "Database schema is up to date!"
+```
+
+Step 2 only compares the live database with `schema.prisma`; it changes
+nothing. If it lists differences, the database is behind the code (for
+example the money change below). Bring it up to date once with
+`npx prisma db push`, reading its warnings, then repeat step 2. Step 3 only
+writes Prisma's bookkeeping table `_prisma_migrations`. From then on, deploys
+use `npm run migrate:deploy` only.
+
+#### One-time: money columns Float → Decimal (databases older than that change)
 
 All euro amounts (prices, discounts, fees, order totals, accounting) are
 `DECIMAL(10,2)`. On a database created before this change, `prisma db push`
@@ -481,8 +526,8 @@ example one on your own computer), copy a backup file there, and pass its path:
 1. Set up the new server as in 4.2–4.5, but put the **saved** `ENCRYPTION_KEY`
    in `backend/.env`, not a new one.
 2. Create a new, empty database (a new Supabase project, or `createdb`) and
-   set `DATABASE_URL` / `DIRECT_URL`. Don't run `prisma db push` first: the
-   backup creates the tables.
+   set `DATABASE_URL` / `DIRECT_URL`. Don't run `migrate deploy` first: the
+   backup creates the tables, including Prisma's migration history.
 3. Restore the newest backup. `--clean` removes whatever the target already
    contains, so only restore into the new, empty database:
 
@@ -491,8 +536,11 @@ example one on your own computer), copy a backup file there, and pass its path:
      --dbname="$DIRECT_URL" /var/backups/supermarket/supermarket-<time>.dump
    ```
 
-4. `npm run key:check` must say `OK`. `npx prisma db push` should then report
-   that the database is already in sync.
+4. `npm run key:check` must say `OK`. Then `npm run migrate:deploy` applies
+   any migrations newer than the backup, and `npm run migrate:status` must say
+   "Database schema is up to date!". A backup taken before the switch to
+   migrations has no migration history: do the one-time baseline from
+   [4.2](#42-server-and-database) instead.
 5. Start the app (`pm2 start ../deployment/ecosystem.config.js`), then
    re-delete any customers who asked for deletion after that backup was taken
    ([6](#retention)).
@@ -535,6 +583,15 @@ pm2 set pm2-logrotate:compress true
 
 That rotates daily, or at 10 MB, and keeps the last 14 files. nginx's logs in
 `/var/log/nginx/` are already rotated by Ubuntu.
+
+**Deploying an update.** Database migrations first, then the new code:
+
+```bash
+cd /var/www/supermarket && git pull
+cd backend && npm ci && npm run migrate:deploy    # applies new migrations, if any
+cd ../frontend && npm ci && npm run build
+pm2 reload supermarket-backend
+```
 
 **Deploys without dropped requests.** Use `pm2 reload supermarket-backend`, not
 `restart`. It starts new workers first; each old worker stops taking new
@@ -582,6 +639,7 @@ Without Sentry, errors are only in the PM2 logs.
 ### 4.9 Go-live checklist
 
 - [ ] `.env` files not committed; secrets freshly generated for this deployment
+- [ ] `npm run migrate:status` says "Database schema is up to date!" (a database created with `db push`: one-time baseline first, [4.2](#42-server-and-database))
 - [ ] Uptime monitor on `https://<your domain>/api/health` with alerts, and `pm2-logrotate` installed ([4.8](#48-monitoring-and-logs))
 - [ ] If using Sentry: EU region, processing agreement accepted, IP storage off, the `/datenschutz` paragraph checked ([4.8](#48-monitoring-and-logs))
 - [ ] `ENCRYPTION_KEY` (or the whole `.env`) saved in a password manager with its fingerprint; `npm run key:check -- --prompt` says `OK` ([4.7](#47-backups-and-the-encryption-key))

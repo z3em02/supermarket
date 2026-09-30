@@ -6,9 +6,12 @@
 //   Its name must end in _test and it must not be the DATABASE_URL /
 //   DIRECT_URL database: every test empties every table. Unset -> the
 //   database tests are skipped.
-// - The schema is pushed with `prisma db push`, run from a temp folder on a
-//   copy of schema.prisma so Prisma can't pick up backend/.env; it also
-//   creates the database if it doesn't exist yet.
+// - The test database is rebuilt from prisma/migrations on every run
+//   (`prisma migrate reset`: drop everything, apply every migration; creates
+//   the database if needed), so CI proves the migrations work from empty.
+//   Then it's compared with schema.prisma: a schema change without a
+//   migration fails the tests. Prisma runs from a temp folder on copies of
+//   schema.prisma and migrations/, so it can't pick up backend/.env.
 // - The real server.js runs as a child process on that database, from a temp
 //   folder with every backend/.env variable blanked (no real SMTP, WhatsApp,
 //   Redis or secrets) and offline.cjs preloaded (no outbound fetch).
@@ -73,22 +76,35 @@ if (!skipReason) {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const pushSchema = () => {
+const prismaCli = (dir, args) => {
+  const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !(key in dotenvValues)));
+  const result = spawnSync(
+    process.execPath,
+    [require.resolve('prisma/build/index.js', { paths: [BACKEND] }), ...args],
+    { cwd: dir, env: { ...env, DATABASE_URL: TEST_DATABASE_URL, DIRECT_URL: TEST_DATABASE_URL }, encoding: 'utf8' }
+  );
+  return { status: result.status, output: `${result.stdout}\n${result.stderr}` };
+};
+
+const migrateDatabase = () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'db-test-schema-'));
   try {
     const schema = path.join(dir, 'schema.prisma');
     fs.copyFileSync(path.join(BACKEND, 'prisma', 'schema.prisma'), schema);
-    const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !(key in dotenvValues)));
-    const result = spawnSync(
-      process.execPath,
-      [require.resolve('prisma/build/index.js', { paths: [BACKEND] }), 'db', 'push', '--skip-generate', '--accept-data-loss', '--schema', schema],
-      { cwd: dir, env: { ...env, DATABASE_URL: TEST_DATABASE_URL, DIRECT_URL: TEST_DATABASE_URL }, encoding: 'utf8' }
-    );
-    const output = `${result.stdout}\n${result.stderr}`;
-    if (result.status !== 0) throw new Error(`prisma db push failed:\n${output}`);
-    if (!output.includes(`database "${databaseName(TEST_DATABASE_URL)}"`)) {
-      throw new Error(`prisma db push didn't report the test database:\n${output}`);
+    fs.cpSync(path.join(BACKEND, 'prisma', 'migrations'), path.join(dir, 'migrations'), { recursive: true });
+
+    const reset = prismaCli(dir, ['migrate', 'reset', '--force', '--skip-generate', '--skip-seed', '--schema', schema]);
+    if (reset.status !== 0) throw new Error(`prisma migrate reset failed:\n${reset.output}`);
+    if (!reset.output.includes(`database "${databaseName(TEST_DATABASE_URL)}"`)) {
+      throw new Error(`prisma migrate reset didn't report the test database:\n${reset.output}`);
     }
+
+    // --exit-code: 0 = no difference, 2 = the migrated database differs.
+    const drift = prismaCli(dir, ['migrate', 'diff', '--from-url', TEST_DATABASE_URL, '--to-schema-datamodel', schema, '--exit-code']);
+    if (drift.status === 2) {
+      throw new Error(`schema.prisma has changes that no migration contains. Create one: npm run migrate:dev -- --name <what_changed>\n${drift.output}`);
+    }
+    if (drift.status !== 0) throw new Error(`prisma migrate diff failed:\n${drift.output}`);
   } finally {
     try { fs.rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }); } catch { /* Windows file lock; temp folder */ }
   }
@@ -207,7 +223,7 @@ const client = (base) => async (method, urlPath, { token, body } = {}) => {
 module.exports = {
   skipReason,
   prisma,
-  pushSchema,
+  migrateDatabase,
   startServer,
   resetDatabase,
   seedStore,

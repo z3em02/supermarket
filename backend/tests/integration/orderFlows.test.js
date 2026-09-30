@@ -25,7 +25,7 @@ describe('order flows (database)', { skip: h.skipReason || false }, () => {
     api('PUT', `/api/orders/${id}/status`, { token, body: { status, ...extra } });
 
   before(async () => {
-    h.pushSchema();
+    h.migrateDatabase();
     server = await h.startServer();
     api = h.client(server.base);
   });

@@ -19,7 +19,8 @@ settings. There's also a driver-facing delivery view.
 ```bash
 # Backend (from backend/)
 npm install
-npx prisma db push       # sync schema to DB — this project uses `db push`, NOT `prisma migrate`
+npm run migrate:deploy   # create/update tables from prisma/migrations (Prisma Migrate; `db push` is no longer used)
+npm run migrate:dev -- --name add_x   # after editing schema.prisma: new migration, applied to the dev DB
 npm run prisma:seed      # seed admin (SEED_ADMIN_EMAIL, default admin@hajar.local; SEED_ADMIN_PASSWORD or a printed random one) + sample data
 npm run dev               # start API on :5000 with `node --watch` (restarts on file changes)
 npm test                  # all backend unit tests (`node --test "tests/**/*.js"`)
@@ -59,7 +60,8 @@ real Postgres and checks stock, totals and coupon usage in the database. It
 runs only when `TEST_DATABASE_URL` is set (a database named `*_test`, never the
 `DATABASE_URL` one; the harness refuses otherwise) and is skipped otherwise;
 CI provides a Postgres service. `tests/integration/harness.cjs` (`.cjs` so the
-test glob skips it) pushes the schema, starts `server.js` with `.env` blanked
+test glob skips it) rebuilds the test database from `prisma/migrations`
+(`migrate reset`) and fails on schema drift, starts `server.js` with `.env` blanked
 and `offline.cjs` preloaded (no outbound fetch), empties all tables before each
 test, and has helpers to create data and sign logins. Add DB-backed tests to
 that one file: test files run in parallel and each test empties the tables.
@@ -143,9 +145,15 @@ Non-money floats (km, coordinates, percentages, rating) stay `Float`.
 Key models: `Admin`, `Customer`, `Product`, `Category`, `Order`/`OrderItem`,
 `Accounting`, `StoreSettings`, `Coupon`/`CouponUsage`, `Promotion`,
 `DeliveryWindow`, `DriverLoginRequest`/`DriverSession`, `PushSubscription`,
-`GoogleReview`, `AuditLog`. Schema changes: edit `schema.prisma`, then
-`npx prisma db push` (not `prisma migrate` — there's no migrations directory
-to keep in sync).
+`GoogleReview`, `AuditLog`. Schema changes go through Prisma Migrate: edit
+`schema.prisma`, then `npm run migrate:dev -- --name <what_changed>`, read the
+generated `prisma/migrations/<timestamp>_<name>/migration.sql` (data
+conversions: `-- --create-only`, edit the SQL, apply), and commit it with the
+schema. `0_init` is the baseline from when the project left `db push`; never
+edit an applied migration. The database tests rebuild from the migrations and
+fail if `schema.prisma` has changes no migration contains. README "Schema
+changes (migrations)", and §4.2 for baselining a database created with
+`db push`.
 
 ### Frontend
 
