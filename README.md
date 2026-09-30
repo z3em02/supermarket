@@ -87,7 +87,7 @@ Never commit `.env` files.
 | `PORT` | API port (default `5000`). |
 | `HOST` | Interface to listen on. `127.0.0.1` in production (also set in `deployment/ecosystem.config.js`) so the API is reachable only through nginx; leave unset in local development. |
 | `DATABASE_URL` | PostgreSQL connection string. On Supabase use the pooled connection (Transaction mode, port 6543) with `?pgbouncer=true`. PM2 cluster mode runs several processes, each with its own Prisma pool, and the pooler keeps them within the connection limit. |
-| `DIRECT_URL` | Direct connection (port 5432, no pgbouncer), used only by `prisma db push`. Without a pooler, set it to the same value as `DATABASE_URL` (Prisma requires the variable to exist). |
+| `DIRECT_URL` | Direct connection (port 5432, no pgbouncer), used by `prisma db push` and the backup scripts ([4.7](#47-backups-and-the-encryption-key)). Without a pooler, set it to the same value as `DATABASE_URL` (Prisma requires the variable to exist). |
 | `JWT_SECRET` | Random secret, at least 32 characters (`openssl rand -hex 32`). Required; the server won't start without it. |
 | `SECTION_UNLOCK_SECRET` | Random secret, at least 32 characters, **different from `JWT_SECRET`**. Required. |
 | `ENCRYPTION_KEY` | 64 hex characters (`openssl rand -hex 32`); AES key for PII at rest. Required in production. Outside production, a missing key stores PII unencrypted (with a startup warning). |
@@ -102,6 +102,10 @@ Never commit `.env` files.
 | `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` | Optional; admin created by the seed script. Without a password a one-time random one is printed. |
 | `PRISMA_LOG_QUERIES` | Optional; `true` prints every SQL query Prisma runs (debugging only, very noisy). Off by default. |
 | `TEST_CUSTOMER_EMAIL` / `TEST_CUSTOMER_PHONE` / `TEST_CUSTOMER_NAME` / `TEST_CUSTOMER_PASSWORD` | Optional; the verified test customer created by `node scripts/createTestCustomer.js`. Without a password a random one is printed once. |
+| `BACKUP_DIR` / `BACKUP_KEEP_DAYS` / `BACKUP_KEEP_MONTHS` | Backups ([4.7](#47-backups-and-the-encryption-key)): where `npm run backup` writes (default `backups/` at the repo root, gitignored), and how long they're kept (default: every backup of the last 14 days, plus the newest of each of the last 3 months). |
+| `BACKUP_COPY_COMMAND` | Command run after each backup to copy it off the server; the file path is in `$BACKUP_FILE`. Unset → the backup stays only on the server (with a warning). |
+| `RESTORE_TEST_URL` | Optional; Postgres server for `npm run backup:restore-test` to create its scratch database on. Defaults to `DIRECT_URL`. |
+| `PG_BIN_DIR` | Optional; folder with `pg_dump` / `pg_restore` / `psql` when they aren't on `PATH` (e.g. `C:\Program Files\PostgreSQL\17\bin`). |
 
 **`frontend/.env`**
 
@@ -338,9 +342,134 @@ Point DNS at the server and get a certificate (e.g. Certbot).
 After each deploy that adds `tokenVersion` checks, every user is logged out
 once. This is expected.
 
-### 4.7 Go-live checklist
+### 4.7 Backups and the encryption key
+
+Two things must survive losing the server: the **database** and the
+**`ENCRYPTION_KEY`**. Customer contact details and the order snapshots (name,
+phone, email, address) are encrypted with that key ([6](#6-personal-data--gdpr)),
+and orders must be kept for 7 years (§ 132 BAO). A backup without the key
+can't be read, and the key alone has nothing to open. Keep them in
+**different places**: a key stored next to the backups defeats the encryption.
+
+#### The encryption key
+
+1. As soon as `ENCRYPTION_KEY` is generated, save it in a password manager
+   (Bitwarden, 1Password, …) in an entry the business owner controls, not only
+   on the server. A printed copy in a safe is a good second copy. Saving the
+   whole `backend/.env` there is simplest.
+2. Save the key's fingerprint in the same entry. `cd backend && npm run key:check`
+   prints it (`Key fingerprint: …`); it identifies the key without revealing it.
+3. Check that the saved copy works: `npm run key:check -- --prompt`, then paste
+   the key from the password manager (the input is hidden). `OK` means the copy
+   opens the data. `FAIL` means it isn't the key the data was encrypted with.
+4. Never replace `ENCRYPTION_KEY` on a server that has data. There's no key
+   rotation, so values encrypted with the old key would become unreadable.
+   When rebuilding a server, use the saved copy, never a new key.
+
+The other secrets can be replaced if lost: a new `JWT_SECRET` or
+`SECTION_UNLOCK_SECRET` only logs everyone out, new VAPID keys mean customers
+re-enable push, and SMTP/WhatsApp credentials can be re-issued.
+
+#### Nightly backup
+
+`npm run backup` (`backend/scripts/backupDatabase.js`) dumps the app's schema
+with `pg_dump` (compressed custom format), checks the file with
+`pg_restore --list`, deletes old backups (see `BACKUP_KEEP_*` in
+[3](#environment-variables)), and runs `BACKUP_COPY_COMMAND` to copy the new
+file off the server. It connects with `DIRECT_URL`; Supabase's pooler can't
+run `pg_dump`.
+
+`pg_dump` must be the **same major version as the database server, or newer**.
+Ubuntu's `postgresql-client` may be older, so install the matching version from
+the [PostgreSQL apt repository](https://wiki.postgresql.org/wiki/Apt), e.g.
+`sudo apt install -y postgresql-client-17`.
+
+```bash
+sudo mkdir -p /var/backups/supermarket
+sudo chown "$USER" /var/backups/supermarket && chmod 700 /var/backups/supermarket
+# in backend/.env: BACKUP_DIR=/var/backups/supermarket (+ BACKUP_COPY_COMMAND, below)
+cd /var/www/supermarket/backend && npm run backup   # first run by hand
+```
+
+Then run it every night from the deploy user's crontab (`crontab -e`):
+
+```cron
+MAILTO=you@example.com
+30 3 * * * cd /var/www/supermarket/backend && node scripts/backupDatabase.js >> /var/backups/supermarket/backup.log 2>&1 || echo "Hajar backup FAILED, see /var/backups/supermarket/backup.log"
+```
+
+A failed backup logs `BACKUP FAILED: …` and exits with code 1, so cron emails
+the echo line (when the server can send mail). Otherwise, look at the end of
+`backup.log` once a week.
+
+**Off-site copy.** A backup on the same server is lost with the server. The
+dump contains customer names in plain text and all order data, so the
+off-site copy must be **encrypted and private**. One way is
+[rclone](https://rclone.org) with a `crypt` remote in front of any storage
+(Hetzner Storage Box, Backblaze B2, S3, …):
+
+```bash
+rclone config        # add the storage remote, then a "crypt" remote on top of it, e.g. "offsite-crypt"
+# in backend/.env:
+BACKUP_COPY_COMMAND=rclone copy "$BACKUP_FILE" offsite-crypt:hajar-backups
+```
+
+Save the crypt remote's passwords in the password manager too. `rclone copy`
+never deletes, so trim the remote now and then, e.g.
+`rclone delete --min-age 100d offsite-crypt:hajar-backups`.
+
+On Supabase, the platform's own backups depend on your plan; this dump is a
+copy you control either way.
+
+Not in the backup: `backend/.env` (keep it in the password manager),
+`backend/uploads/` (the cached store logo; save it again in Settings), and
+Redis (only rate-limit counters).
+
+#### Monthly restore test
+
+A backup counts only once it has been restored. Once a month, and after
+changing anything about backups:
+
+```bash
+cd /var/www/supermarket/backend
+npm run backup:restore-test -- --prompt    # paste the key from the password manager
+```
+
+It restores the newest backup into a new scratch database
+(`supermarket_restore_test_<time>`), prints the row counts, checks that the
+pasted key opens the restored data, and drops the scratch database again. It
+never drops any other database. `RESTORE TEST PASSED` means both the backup and
+your key copy work. The database user needs permission to create databases. If
+it doesn't have it, set `RESTORE_TEST_URL` to another Postgres server (for
+example one on your own computer), copy a backup file there, and pass its path:
+`npm run backup:restore-test -- --prompt path/to/file.dump`.
+
+#### Restoring after a disaster
+
+1. Set up the new server as in 4.2–4.5, but put the **saved** `ENCRYPTION_KEY`
+   in `backend/.env`, not a new one.
+2. Create a new, empty database (a new Supabase project, or `createdb`) and
+   set `DATABASE_URL` / `DIRECT_URL`. Don't run `prisma db push` first: the
+   backup creates the tables.
+3. Restore the newest backup. `--clean` removes whatever the target already
+   contains, so only restore into the new, empty database:
+
+   ```bash
+   pg_restore --no-owner --no-privileges --clean --if-exists --exit-on-error \
+     --dbname="$DIRECT_URL" /var/backups/supermarket/supermarket-<time>.dump
+   ```
+
+4. `npm run key:check` must say `OK`. `npx prisma db push` should then report
+   that the database is already in sync.
+5. Start the app (`pm2 start ../deployment/ecosystem.config.js`), then
+   re-delete any customers who asked for deletion after that backup was taken
+   ([6](#retention)).
+
+### 4.8 Go-live checklist
 
 - [ ] `.env` files not committed; secrets freshly generated for this deployment
+- [ ] `ENCRYPTION_KEY` (or the whole `.env`) saved in a password manager with its fingerprint; `npm run key:check -- --prompt` says `OK` ([4.7](#47-backups-and-the-encryption-key))
+- [ ] Nightly backup in cron, `BACKUP_COPY_COMMAND` copies it off the server encrypted, and one `npm run backup:restore-test -- --prompt` has passed
 - [ ] `FRONTEND_URL` is the real production domain, not `localhost`
 - [ ] `HOST=127.0.0.1` and `REDIS_URL` set; port 5000 not reachable from outside
 - [ ] nginx serves HTTPS only; HTTP redirects to HTTPS; `nginx -t` passes
@@ -456,6 +585,14 @@ encryption was introduced are backfilled by
   (`onDelete: SetNull`) rather than deleting the orders. Deleting an order is
   blocked (403, audit-logged).
 - **OTP codes / reset tokens**: 15–60 minutes, cleared on use or expiry.
+- **Database backups** ([4.7](#47-backups-and-the-encryption-key)): every
+  nightly backup of the last 14 days, plus the newest of each of the last 3
+  months (`BACKUP_KEEP_DAYS`, `BACKUP_KEEP_MONTHS`, and the same for the
+  off-site copy). A deleted customer disappears from the backups when the last
+  backup that still contains them expires. Backups are only used to restore
+  the shop. If one is ever restored, delete again every customer whose
+  deletion request came after that backup was taken, so keep those requests
+  (the emails) until the backups have expired.
 
 ### Handling a "delete my data" request
 

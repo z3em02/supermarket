@@ -11,6 +11,9 @@
     "prisma:studio": "prisma studio",
     "prisma:seed": "node prisma/seed.js",
     "postinstall": "prisma generate",
+    "backup": "node scripts/backupDatabase.js",
+    "backup:restore-test": "node scripts/restoreTest.js",
+    "key:check": "node scripts/checkEncryptionKey.js",
     "test": "node --test \"tests/**/*.js\""
   },
   "prisma": {

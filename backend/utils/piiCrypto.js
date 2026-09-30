@@ -29,6 +29,15 @@ const encrypt = (plaintext) => {
   return `${PREFIX}${iv.toString('hex')}:${authTag.toString('hex')}:${ciphertext.toString('hex')}`;
 };
 
+// Throws if the value wasn't encrypted with KEY (GCM auth check).
+const decryptOrThrow = (value) => {
+  const [ivHex, authTagHex, dataHex] = value.slice(PREFIX.length).split(':');
+  const decipher = crypto.createDecipheriv(ALGO, KEY, Buffer.from(ivHex, 'hex'));
+  decipher.setAuthTag(Buffer.from(authTagHex, 'hex'));
+  const plaintext = Buffer.concat([decipher.update(Buffer.from(dataHex, 'hex')), decipher.final()]);
+  return plaintext.toString('utf8');
+};
+
 // Returns the value unchanged if it isn't in our encrypted format (covers
 // legacy plaintext rows and the no-KEY dev fallback above).
 const decrypt = (value) => {
@@ -36,16 +45,30 @@ const decrypt = (value) => {
   if (typeof value !== 'string' || !value.startsWith(PREFIX)) return value;
   if (!KEY) return value; // can't decrypt without the key; return the stored value as-is
   try {
-    const [ivHex, authTagHex, dataHex] = value.slice(PREFIX.length).split(':');
-    const decipher = crypto.createDecipheriv(ALGO, KEY, Buffer.from(ivHex, 'hex'));
-    decipher.setAuthTag(Buffer.from(authTagHex, 'hex'));
-    const plaintext = Buffer.concat([decipher.update(Buffer.from(dataHex, 'hex')), decipher.final()]);
-    return plaintext.toString('utf8');
+    return decryptOrThrow(value);
   } catch (err) {
     console.error('PII decrypt failed:', err.message);
     return value;
   }
 };
+
+// For the key check (scripts/checkEncryptionKey.js): does this stored value
+// decrypt with the configured key? Never logs or returns the plaintext.
+const canDecrypt = (value) => {
+  if (!KEY || KEY.length !== 32 || typeof value !== 'string' || !value.startsWith(PREFIX)) return false;
+  try {
+    decryptOrThrow(value);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+// Short, stable identifier of the configured key (SHA-256 of the key bytes,
+// first 16 hex chars). Safe to write down next to the key's backup copy: it
+// tells two keys apart without revealing anything about the key.
+const keyFingerprint = () =>
+  (KEY && KEY.length === 32 ? crypto.createHash('sha256').update(KEY).digest('hex').slice(0, 16) : null);
 
 // Deterministic lookup hash for fields we need exact-match queries on
 // (email, phone) — normalize first so lookups are consistent regardless of
@@ -74,4 +97,4 @@ const decryptCustomerPII = (customer) => {
   return out;
 };
 
-module.exports = { encrypt, decrypt, hashLookup, decryptCustomerPII, CUSTOMER_PII_FIELDS };
+module.exports = { encrypt, decrypt, canDecrypt, keyFingerprint, hashLookup, decryptCustomerPII, CUSTOMER_PII_FIELDS };
