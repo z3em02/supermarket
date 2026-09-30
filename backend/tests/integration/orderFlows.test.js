@@ -191,6 +191,25 @@ describe('order flows (database)', { skip: h.skipReason || false }, () => {
       assert.strictEqual((await orderById(placed.body.id)).status, 'pending');
     });
 
+    test('only allowed status changes go through (a delivered order stays delivered)', async () => {
+      const milk = await h.createProduct({ name: 'Milch 1L', price: 2.5, stock: 10 });
+      const customer = await h.createCustomer();
+      const placed = await placeOrder(h.customerToken(customer), [[milk, 1]]);
+      await h.prisma.order.update({ where: { id: placed.body.id }, data: { status: 'delivered' } });
+
+      const back = await setStatus(placed.body.id, 'pending');
+      assert.strictEqual(back.status, 400);
+      assert.strictEqual(back.body.code, 'INVALID_STATUS_CHANGE');
+      const synonym = await setStatus(placed.body.id, 'shipped');
+      assert.strictEqual(synonym.status, 400, 'old synonyms no longer exist');
+      assert.strictEqual((await orderById(placed.body.id)).status, 'delivered');
+      assert.strictEqual(await stockOf(milk), 9);
+      // Correcting a mis-click one step back is allowed.
+      assert.strictEqual((await setStatus(placed.body.id, 'out_for_delivery')).status, 200);
+      // A status filter that doesn't exist is a 400, not a server error.
+      assert.strictEqual((await api('GET', '/api/orders?page=1&status=shipped', { token: adminAuth })).status, 400);
+    });
+
     test('a driver can only move their own orders forward', async () => {
       const milk = await h.createProduct({ name: 'Milch 1L', price: 2.5, stock: 10 });
       const customer = await h.createCustomer();

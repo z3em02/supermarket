@@ -2,6 +2,7 @@
 // orderStatusController, orderModificationController).
 const { decryptCustomerPII, decrypt } = require('../utils/piiCrypto');
 const { sendPushToCustomer } = require('../utils/pushService');
+const { ORDER_STATUSES } = require('../utils/orderStatus');
 
 // Orders carry their own encrypted customer* snapshot columns (a copy taken
 // at creation time, kept separate from the Customer row so invoices stay
@@ -48,19 +49,14 @@ const pushOrderStatusUpdate = (order, status, lang) => {
   }).catch((err) => console.error('Order status push failed:', err.message));
 };
 
-// Stock is deducted for every order from creation onward and only ever restored
-// once an order reaches one of these terminal decline states.
-const DECLINED_STATUSES = ['declined', 'rejected', 'canceled', 'cancelled'];
+// Stock is deducted for every order from creation onward and only ever
+// restored once an order is declined. A list because it's used in
+// Prisma { in } / { notIn } filters.
+const DECLINED_STATUSES = ['declined'];
 
-// The complete order-status vocabulary accepted by updateOrderStatus. Kept
-// here (not inline in the controller) so every place that reasons about
-// statuses shares one source of truth. #34 fix: an unknown status must be
-// rejected rather than silently corrupting stock/accounting state.
-const VALID_ORDER_STATUSES = [
-  'pending', 'accepted', 'preparing', 'shipped', 'out_for_delivery',
-  'delivered', 'declined', 'rejected', 'canceled', 'cancelled',
-  'pending_customer_approval'
-];
+// #34 fix: only these statuses exist (utils/orderStatus.js is the source,
+// the database enforces the same list as enum OrderStatus).
+const VALID_ORDER_STATUSES = ORDER_STATUSES;
 
 // Atomically decrements stock only if enough is available (guards against two
 // concurrent orders overselling the same product); throws if not. Must run

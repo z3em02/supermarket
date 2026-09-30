@@ -42,7 +42,12 @@ const hostPortDb = (url) => {
 // null when the tests can run, else why they're skipped. A misconfigured
 // URL throws instead: silently skipping could hide that it points somewhere real.
 const skipReason = (() => {
-  if (!TEST_DATABASE_URL) return 'TEST_DATABASE_URL is not set (README "Database tests")';
+  if (!TEST_DATABASE_URL) {
+    // CI sets REQUIRE_DB_TESTS so a missing database fails the run
+    // instead of skipping the database tests unnoticed.
+    if (process.env.REQUIRE_DB_TESTS) throw new Error('REQUIRE_DB_TESTS is set but TEST_DATABASE_URL is not.');
+    return 'TEST_DATABASE_URL is not set (README "Database tests")';
+  }
   if (!databaseName(TEST_DATABASE_URL).endsWith('_test')) {
     throw new Error(`TEST_DATABASE_URL must name a database ending in _test (got "${databaseName(TEST_DATABASE_URL)}"); the tests empty every table.`);
   }

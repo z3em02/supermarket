@@ -6,7 +6,7 @@ import { buildDeliverySlot, fetchActiveDeliveryWindows } from '../../utils/deliv
 const PAGE_SIZE = 50;
 const EMPTY_METRICS = {
   total: 0, pending: 0, pending_customer_approval: 0, accepted: 0,
-  preparing: 0, shipped: 0, delivered: 0, declined: 0
+  preparing: 0, out_for_delivery: 0, delivered: 0, declined: 0
 };
 
 /**
@@ -49,16 +49,15 @@ export const useOrders = () => {
       const apiUrl = getApiUrl();
       const res = await axios.get(`${apiUrl}/api/orders/summary`);
       const byStatus = res.data?.byStatus || {};
-      const declined = (byStatus.declined || 0) + (byStatus.rejected || 0) + (byStatus.canceled || 0) + (byStatus.cancelled || 0);
       setMetrics({
         total: res.data?.total || 0,
         pending: byStatus.pending || 0,
         pending_customer_approval: byStatus.pending_customer_approval || 0,
         accepted: byStatus.accepted || 0,
         preparing: byStatus.preparing || 0,
-        shipped: byStatus.shipped || 0,
+        out_for_delivery: byStatus.out_for_delivery || 0,
         delivered: byStatus.delivered || 0,
-        declined
+        declined: byStatus.declined || 0
       });
     } catch (error) {
       console.error('Error fetching order metrics:', error);

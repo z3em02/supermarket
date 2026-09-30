@@ -37,10 +37,8 @@ export const buildCustomerOrderReportHtml = (order, { language, storeName, custo
     accepted:                  { de: 'Bestätigt & In Vorbereitung', ar: 'تم تأكيد الطلب' },
     preparing:                 { de: 'In Vorbereitung', ar: 'جاري التجهيز' },
     out_for_delivery:          { de: 'Unterwegs zur Haustür', ar: 'في طريق التوصيل' },
-    shipped:                   { de: 'Versendet', ar: 'تم الشحن' },
     delivered:                 { de: 'Zugestellt', ar: 'تم التوصيل' },
     declined:                  { de: 'Storniert', ar: 'ملغي' },
-    cancelled:                 { de: 'Storniert', ar: 'ملغي' },
     pending_customer_approval: { de: 'Änderung offen', ar: 'بانتظار الموافقة' }
   };
 

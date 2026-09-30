@@ -5,22 +5,9 @@ import { getOrderStatusLabel } from './orderStatus.js';
 // so it's unit-tested in tests/orderStatusBadge.test.js; the React side is
 // pages/orders/useStatusBadge.js and components/OrderStatusBadge.jsx.
 
-// Folds legacy/alias spellings onto the canonical status keys.
-export const normalizeOrderStatus = (status) => {
-  const s = (status || '').toString().toLowerCase().trim();
-  switch (s) {
-    case 'confirmed': return 'accepted';
-    case 'shipped': return 'out_for_delivery';
-    case 'completed': return 'delivered';
-    case 'rejected':
-    case 'decline':
-    case 'canceled':
-    case 'cancelled':
-      return 'declined';
-    default:
-      return s;
-  }
-};
+// Status key as stored (the database only holds the seven statuses in
+// utils/orderStatus.js; the old synonyms were merged by a migration).
+export const normalizeOrderStatus = (status) => (status || '').toString().toLowerCase().trim();
 
 // Status -> semantic tone (the design-token colour roles, README "Design system").
 export const STATUS_TONES = {
@@ -95,8 +82,8 @@ const AUDIENCE_LABELS = {
 };
 
 // Admin labels that come from the translation files (so they match the rest
-// of the admin UI); keyed by the *raw* status so 'shipped' still reads "Versandt".
-const ADMIN_TRANSLATION_KEYS = new Set(['pending', 'accepted', 'preparing', 'shipped', 'delivered', 'declined']);
+// of the admin UI).
+const ADMIN_TRANSLATION_KEYS = new Set(['pending', 'accepted', 'preparing', 'delivered', 'declined']);
 
 /**
  * @param {string} status raw order status
@@ -116,7 +103,7 @@ export const getOrderStatusMeta = (status, options = {}) => {
     const translated = t(raw);
     if (translated && translated !== raw) label = translated;
   }
-  if (!label && audienceEntry && !(audience === 'admin' && raw === 'shipped')) {
+  if (!label && audienceEntry) {
     label = audienceEntry[language];
   }
   if (!label) label = getOrderStatusLabel(rawStatus, language) || rawStatus;

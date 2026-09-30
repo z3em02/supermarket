@@ -43,19 +43,9 @@ const serializeOrder = (order) => {
   };
 };
 
-const serializeAccounting = (record) => {
-  if (!record) return record;
-  return {
-    ...record,
-    amount: toNumber(record.amount),
-    order: record.order ? serializeOrder(record.order) : record.order
-  };
-};
-
 module.exports = {
   toNumber,
   CUSTOMER_PUBLIC_SELECT,
   serializeProduct,
-  serializeOrder,
-  serializeAccounting
+  serializeOrder
 };

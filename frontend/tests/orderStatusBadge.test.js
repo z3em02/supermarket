@@ -2,14 +2,11 @@ import { test } from 'node:test';
 import assert from 'node:assert';
 import { getOrderStatusMeta, normalizeOrderStatus, STATUS_TONES } from '../src/utils/orderStatusBadge.js';
 
-test('aliases fold onto canonical statuses', () => {
-  assert.strictEqual(normalizeOrderStatus('Confirmed'), 'accepted');
-  assert.strictEqual(normalizeOrderStatus('shipped'), 'out_for_delivery');
-  assert.strictEqual(normalizeOrderStatus('completed'), 'delivered');
-  for (const s of ['rejected', 'decline', 'canceled', 'cancelled']) {
-    assert.strictEqual(normalizeOrderStatus(s), 'declined');
-  }
+test('statuses are used as stored (the old synonyms were merged by a migration)', () => {
+  assert.strictEqual(normalizeOrderStatus(' Out_For_Delivery '), 'out_for_delivery');
   assert.strictEqual(normalizeOrderStatus(null), '');
+  // A synonym from before the migration is just an unknown status now.
+  assert.strictEqual(getOrderStatusMeta('shipped').tone, 'neutral');
 });
 
 test('each status has one colour, the same for every audience', () => {
@@ -20,9 +17,8 @@ test('each status has one colour, the same for every audience', () => {
     assert.strictEqual(admin.classes, customer.classes, status);
     assert.strictEqual(admin.classes, driver.classes, status);
   }
-  assert.strictEqual(getOrderStatusMeta('shipped').classes, getOrderStatusMeta('out_for_delivery').classes);
   assert.strictEqual(getOrderStatusMeta('delivered').tone, 'success');
-  assert.strictEqual(getOrderStatusMeta('cancelled').tone, 'danger');
+  assert.strictEqual(getOrderStatusMeta('declined').tone, 'danger');
   assert.match(getOrderStatusMeta('accepted').classes, /bg-primary-50/);
 });
 
@@ -33,9 +29,8 @@ test('customers are asked to act, admins see who is waiting', () => {
   assert.strictEqual(getOrderStatusMeta('pending_customer_approval').pulse, true);
 });
 
-test('admin labels come from translations, keyed by the raw status', () => {
-  const t = (k) => ({ shipped: 'Versandt', delivered: 'Geliefert' }[k] || k);
-  assert.strictEqual(getOrderStatusMeta('shipped', { t }).label, 'Versandt');
+test('admin labels come from translations where the admin UI has them', () => {
+  const t = (k) => ({ delivered: 'Geliefert' }[k] || k);
   assert.strictEqual(getOrderStatusMeta('out_for_delivery', { t }).label, 'In Zustellung');
   assert.strictEqual(getOrderStatusMeta('delivered', { t }).label, 'Geliefert');
 });

@@ -39,7 +39,14 @@ architecture notes for Claude Code live in [`CLAUDE.md`](CLAUDE.md).
 - **Drivers**: mobile `/driver` portal. Every driver has an individual account
   and PIN; a login only becomes a session after an admin approves it on the
   Dashboard. Drivers see only orders assigned to them and can only set
-  `out_for_delivery` / `shipped` / `delivered`.
+  `out_for_delivery` / `delivered`.
+- **Order statuses**: `pending` → `accepted` → `preparing` → `out_for_delivery`
+  → `delivered`, plus `pending_customer_approval` (an admin changed the items;
+  the customer accepts or declines) and `declined`. The database only accepts
+  these seven (enum `OrderStatus`). The server only allows the changes listed
+  in `backend/utils/orderStatus.js`: forward jumps, one step back to fix a
+  mis-click, decline any open order, reactivate a declined one. A delivered
+  order can only go back to `out_for_delivery`.
 - **Store operations**: distance-based delivery fees, delivery time windows,
   postal-code allow-list, minimum order value, free-delivery threshold,
   maintenance mode, low-stock alerts, Google reviews widget.
@@ -173,6 +180,14 @@ hasn't had yet (see [4.2](#42-server-and-database) and
 applied anywhere; add a new one. The database tests rebuild their database from
 the migrations and fail when `schema.prisma` has a change that no migration
 contains. `npm run migrate:status` shows what a database has applied.
+
+**If `migrate:deploy` stops with an error**, the migration it names is marked
+as failed and later deploys refuse to run. The status migration
+(`…_order_status_enum`) stops on purpose if an order has a status it doesn't
+know, and changes nothing. To recover: fix the data it names (e.g. set those
+orders to one of the seven statuses), then
+`npx prisma migrate resolve --rolled-back <migration folder name>` and
+`npm run migrate:deploy` again. Take a backup first (4.7).
 
 ### Database tests
 
@@ -956,11 +971,11 @@ changes by audience (`admin`, `customer` — who is told what *they* need to do 
 |---|---|
 | pending | `warning` |
 | pending_customer_approval | `warning`, stronger border, pulses |
-| accepted / confirmed | `primary` |
+| accepted | `primary` |
 | preparing | `promo` |
-| out_for_delivery / shipped | `info`, pulses |
-| delivered / completed | `success` |
-| declined / rejected / cancelled | `danger` |
+| out_for_delivery | `info`, pulses |
+| delivered | `success` |
+| declined | `danger` |
 
 ### Feedback and shared components
 

@@ -135,15 +135,21 @@ that pattern when adding new admin write endpoints.
 
 ### Database (`backend/prisma/schema.prisma`)
 
-Money columns (prices, discounts, fees, totals, `Accounting.amount`) are
+Money columns (prices, discounts, fees, totals) are
 `Decimal @db.Decimal(10, 2)`. `lib/prisma.js` extends the client so every
 query result has those converted back to plain JS numbers — controllers and
 the frontend never see `Prisma.Decimal`. Round any money arithmetic with
 `roundMoney` from `utils/money.js`, not `toFixed(2)` (which rounds 6.015 down).
 Non-money floats (km, coordinates, percentages, rating) stay `Float`.
 
+Order status is the enum `OrderStatus` (seven values); the allowed changes
+between them are in `utils/orderStatus.js`, copied in
+`frontend/src/utils/orderStatus.js` (`tests/orderStatus.test.js` fails if the
+enum, the backend list or the frontend copy drift apart). There's no
+`Accounting` table (dropped by a migration); the Accounting page reads orders.
+
 Key models: `Admin`, `Customer`, `Product`, `Category`, `Order`/`OrderItem`,
-`Accounting`, `StoreSettings`, `Coupon`/`CouponUsage`, `Promotion`,
+`StoreSettings`, `Coupon`/`CouponUsage`, `Promotion`,
 `DeliveryWindow`, `DriverLoginRequest`/`DriverSession`, `PushSubscription`,
 `GoogleReview`, `AuditLog`. Schema changes go through Prisma Migrate: edit
 `schema.prisma`, then `npm run migrate:dev -- --name <what_changed>`, read the

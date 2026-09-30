@@ -9,7 +9,7 @@ const TILES = [
   { filter: 'pending_customer_approval', metric: 'pending_customer_approval', label: { de: 'Wartet auf Kunde', ar: 'بانتظار العميل' } },
   { filter: 'accepted', metric: 'accepted', labelKey: 'accepted' },
   { filter: 'preparing', metric: 'preparing', labelKey: 'preparing' },
-  { filter: 'shipped', metric: 'shipped', labelKey: 'shipped' },
+  { filter: 'out_for_delivery', metric: 'out_for_delivery', labelKey: 'outForDelivery' },
   { filter: 'delivered', metric: 'delivered', labelKey: 'delivered' },
   { filter: 'declined', metric: 'declined', labelKey: 'declined' }
 ];

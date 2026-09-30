@@ -5,8 +5,8 @@ import { useConfirm } from '../../context/FeedbackContext';
 import { Button, Card, Select, Textarea } from '../../components/ui';
 import { formatDeliverySlot, maxDeliveryDateIso, parseDeliverySlot, todayIso, windowLabel } from '../../utils/deliverySlot';
 import { parseOrderNotes } from './orderNotes';
+import { ORDER_STATUSES, allowedNextStatuses } from '../../utils/orderStatus';
 
-const STATUS_OPTIONS = ['pending', 'accepted', 'preparing', 'out_for_delivery', 'shipped', 'delivered', 'declined'];
 const money = (v) => `€${Number(v || 0).toFixed(2)}`;
 
 // Übersicht: status, driver, delivery slot, internal note and totals — all
@@ -141,10 +141,12 @@ export const OrderOverviewTab = ({ order, stale, runWrite, setDirty, actions, re
               onChange={(e) => setStatusDraft(e.target.value)}
               disabled={stale || savingStatus}
             >
-              {order.status === 'pending_customer_approval' && (
-                <option value="pending_customer_approval" disabled>{statusLabel('pending_customer_approval')}</option>
-              )}
-              {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{statusLabel(s)}</option>)}
+              {/* The current status plus the ones the server allows from it
+                  (utils/orderStatus.js); an edit awaiting the customer is
+                  answered by the customer, not picked here. */}
+              {ORDER_STATUSES.filter((s) => s === order.status || allowedNextStatuses(order.status).includes(s)).map((s) => (
+                <option key={s} value={s} disabled={s === 'pending_customer_approval'}>{statusLabel(s)}</option>
+              ))}
             </Select>
             {statusDirty && (
               <div className="flex gap-2">

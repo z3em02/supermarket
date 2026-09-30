@@ -230,12 +230,12 @@ export const OrderCard = ({
             </button>
           )}
           {currentStatus === 'preparing' && (
-            <button type="button" onClick={() => handleQuickStatusChange(order.id, 'shipped')} disabled={updating}
-              title={t('markShipped')} aria-label={t('markShipped')} className={`${quickBtn} bg-primary-600 hover:bg-primary-700`}>
-              <Truck className="w-3 h-3" aria-hidden="true" />{t('shipped')}
+            <button type="button" onClick={() => handleQuickStatusChange(order.id, 'out_for_delivery')} disabled={updating}
+              title={t('markOutForDelivery')} aria-label={t('markOutForDelivery')} className={`${quickBtn} bg-primary-600 hover:bg-primary-700`}>
+              <Truck className="w-3 h-3" aria-hidden="true" />{t('outForDelivery')}
             </button>
           )}
-          {currentStatus === 'shipped' && (
+          {currentStatus === 'out_for_delivery' && (
             <button type="button" onClick={() => handleQuickStatusChange(order.id, 'delivered')} disabled={updating}
               title={t('markDelivered')} aria-label={t('markDelivered')} className={`${quickBtn} bg-success-600 hover:bg-success-700`}>
               <CheckCircle2 className="w-3 h-3" aria-hidden="true" />{t('delivered')}

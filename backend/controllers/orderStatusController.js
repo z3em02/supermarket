@@ -12,6 +12,7 @@ const {
   concurrentUpdateError
 } = require('./orderShared');
 const { isStaleOrderVersion, STALE_ORDER_MESSAGE } = require('../utils/orderSearch');
+const { canChangeOrderStatus } = require('../utils/orderStatus');
 
 const updateOrderStatus = async (req, res) => {
   try {
@@ -26,8 +27,7 @@ const updateOrderStatus = async (req, res) => {
           include: {
             product: true
           }
-        },
-        accounting: true
+        }
       }
     });
 
@@ -52,24 +52,22 @@ const updateOrderStatus = async (req, res) => {
       return res.status(400).json({ error: 'Invalid delivery slot' });
     }
 
-    // #34 fix: whitelist every allowed status (VALID_ORDER_STATUSES lives in
-    // orderShared) — reject arbitrary strings that could corrupt
-    // stock-management logic or the accounting state machine.
-    let normalizedStatus = status ? status.toLowerCase().trim() : order.status;
-    if (normalizedStatus === 'decline') normalizedStatus = 'declined';
+    // #34 fix: only the statuses in utils/orderStatus.js exist (the database
+    // enforces the same list) — anything else is rejected, not saved.
+    const normalizedStatus = status !== undefined ? String(status).toLowerCase().trim() : order.status;
 
     if (status !== undefined && !VALID_ORDER_STATUSES.includes(normalizedStatus)) {
       return res.status(400).json({ error: `Invalid status "${normalizedStatus}". Allowed: ${VALID_ORDER_STATUSES.join(', ')}` });
     }
 
     // Drivers reach this route via driverOrAdminAuthMiddleware to update
-    // delivery progress — not to decline/cancel orders or revert them back
-    // to earlier stages, which stays admin-only. The order also has to be in
+    // delivery progress — not to decline orders or revert them back to
+    // earlier stages, which stays admin-only. The order also has to be in
     // delivery already: a driver must not skip a pending customer approval,
     // or turn a declined order back into an active one (which would deduct
-    // its stock again and reopen its accounting record).
-    const DRIVER_ALLOWED_STATUSES = ['out_for_delivery', 'shipped', 'delivered'];
-    const DRIVER_SOURCE_STATUSES = ['accepted', 'preparing', 'shipped', 'out_for_delivery'];
+    // its stock again).
+    const DRIVER_ALLOWED_STATUSES = ['out_for_delivery', 'delivered'];
+    const DRIVER_SOURCE_STATUSES = ['accepted', 'preparing', 'out_for_delivery'];
     if (req.driver) {
       if (status === undefined || !DRIVER_ALLOWED_STATUSES.includes(normalizedStatus)) {
         return res.status(403).json({ error: 'Drivers can only mark orders as out for delivery or delivered' });
@@ -77,6 +75,15 @@ const updateOrderStatus = async (req, res) => {
       if (!DRIVER_SOURCE_STATUSES.includes(order.status)) {
         return res.status(409).json({ error: `Diese Bestellung kann im aktuellen Status nicht vom Fahrer geändert werden / This order can't be updated by a driver in its current status (${order.status}).` });
       }
+    }
+
+    // Only the changes in utils/orderStatus.js (e.g. a delivered order can't
+    // go back to pending). Keeping the status (notes/slot updates) is fine.
+    if (!canChangeOrderStatus(order.status, normalizedStatus)) {
+      return res.status(400).json({
+        code: 'INVALID_STATUS_CHANGE',
+        error: `Status „${order.status}“ kann nicht zu „${normalizedStatus}“ geändert werden. / An order can't go from "${order.status}" to "${normalizedStatus}".`
+      });
     }
 
     // Drivers only report progress — the customer-facing note, the admin's
@@ -128,22 +135,6 @@ const updateOrderStatus = async (req, res) => {
 
           for (const item of order.orderItems) {
             await decrementStockOrThrow(tx, item.productId, item.quantity, item.product?.name);
-          }
-
-          if (!order.accounting) {
-            await tx.accounting.create({
-              data: {
-                orderId: id,
-                type: 'sale',
-                amount: order.totalAmount,
-                status: 'completed'
-              }
-            });
-          } else if (order.accounting.status === 'cancelled') {
-            await tx.accounting.update({
-              where: { orderId: id },
-              data: { status: 'completed' }
-            });
           }
         });
       } catch (error) {
@@ -198,13 +189,6 @@ const updateOrderStatus = async (req, res) => {
               where: { orderId: id }
             });
           }
-
-          if (order.accounting) {
-            await tx.accounting.update({
-              where: { orderId: id },
-              data: { status: 'cancelled' }
-            });
-          }
         });
       } catch (error) {
         if (error.isConcurrentUpdateError) {
@@ -239,8 +223,7 @@ const updateOrderStatus = async (req, res) => {
           include: {
             product: true
           }
-        },
-        accounting: true
+        }
       }
     }));
 
@@ -318,7 +301,6 @@ const assignOrderDriver = async (req, res) => {
       include: {
         customer: { select: CUSTOMER_PUBLIC_SELECT },
         orderItems: { include: { product: true } },
-        accounting: true,
         coupon: true
       }
     });

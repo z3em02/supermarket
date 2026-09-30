@@ -102,7 +102,7 @@ const selectBackupsToDelete = (fileNames, { now = new Date(), keepDays = 14, kee
 
 // Tables a backup must contain data for, checked against `pg_restore --list`
 // output (lines like "3471; 0 16420 TABLE DATA public Order postgres").
-const REQUIRED_TABLES = ['Order', 'OrderItem', 'Customer', 'Product', 'Accounting', 'StoreSettings'];
+const REQUIRED_TABLES = ['Order', 'OrderItem', 'Customer', 'Product', 'StoreSettings'];
 
 const missingTablesInToc = (tocText, schema = 'public', tables = REQUIRED_TABLES) => {
   const present = new Set();

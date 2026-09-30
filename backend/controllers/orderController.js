@@ -18,6 +18,7 @@ const { isValidDeliverySlot } = require('../utils/deliverySlot');
 const { calculateDeliveryDistance } = require('../utils/distanceService');
 const { parseValidDate, isCompleteDeliveryAddress } = require('../utils/validation');
 const { orderMatchesSearch } = require('../utils/orderSearch');
+const { isOrderStatus } = require('../utils/orderStatus');
 const {
   withDecryptedCustomer,
   withDecryptedCustomers,
@@ -57,9 +58,11 @@ const deliveryViewWhere = (driverName) => ({
 // Where-clause for the admin browse view's status filter. The free-text
 // search is applied separately (see searchOrderIds): customer name, phone and
 // address are encrypted at rest, so SQL can't match them.
+// null for a status that doesn't exist (the caller answers 400; passed on,
+// the enum column would make Prisma throw).
 const buildStatusWhere = (status) => {
   if (!status || status === 'all') return {};
-  return { status: status === 'declined' ? { in: DECLINED_STATUSES } : status };
+  return isOrderStatus(status) ? { status } : null;
 };
 
 // Ids (newest first) of the orders matching `search` within `where`. Loads
@@ -136,6 +139,7 @@ const getOrders = async (req, res) => {
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
     const limit = Math.min(ORDERS_PAGE_MAX, Math.max(1, parseInt(req.query.limit, 10) || ORDERS_PAGE_SIZE));
     const where = buildStatusWhere(req.query.status);
+    if (!where) return res.status(400).json({ error: 'Invalid status filter' });
     const search = typeof req.query.search === 'string' ? req.query.search.trim().slice(0, 100) : '';
 
     let total;
@@ -231,7 +235,6 @@ const getOrderById = async (req, res) => {
             product: true
           }
         },
-        accounting: true,
         coupon: true
       }
     });

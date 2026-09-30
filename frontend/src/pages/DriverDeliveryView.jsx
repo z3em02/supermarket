@@ -268,9 +268,9 @@ export const DriverDeliveryView = () => {
   const today = todayIso();
   const filteredOrders = useMemo(() => {
     return orders.filter(o => {
-      // Exclude declined/rejected orders in driver view
+      // Exclude declined orders in driver view
       const s = (o.status || '').toLowerCase();
-      if (['declined', 'rejected', 'canceled', 'cancelled'].includes(s)) {
+      if (s === 'declined') {
         return false;
       }
 
@@ -284,10 +284,10 @@ export const DriverDeliveryView = () => {
 
       // Tab filter
       if (activeTab === 'active') {
-        // Ready or on the way: accepted, preparing, out_for_delivery, shipped
-        if (!['accepted', 'preparing', 'out_for_delivery', 'shipped'].includes(s)) return false;
+        // Ready or on the way: accepted, preparing, out_for_delivery
+        if (!['accepted', 'preparing', 'out_for_delivery'].includes(s)) return false;
       } else if (activeTab === 'on_route') {
-        if (!['out_for_delivery', 'shipped'].includes(s)) return false;
+        if (s !== 'out_for_delivery') return false;
       } else if (activeTab === 'delivered') {
         if (s !== 'delivered') return false;
       }
@@ -316,8 +316,8 @@ export const DriverDeliveryView = () => {
     let delivered = 0;
     orders.forEach(o => {
       const s = (o.status || '').toLowerCase();
-      if (['accepted', 'preparing', 'out_for_delivery', 'shipped'].includes(s)) active++;
-      if (['out_for_delivery', 'shipped'].includes(s)) onRoute++;
+      if (['accepted', 'preparing', 'out_for_delivery'].includes(s)) active++;
+      if (s === 'out_for_delivery') onRoute++;
       if (s === 'delivered') delivered++;
     });
     return { active, onRoute, delivered, all: orders.length };

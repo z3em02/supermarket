@@ -45,7 +45,6 @@ const editOrder = async (req, res) => {
         orderItems: {
           include: { product: true }
         },
-        accounting: true,
         coupon: true
       }
     });
@@ -256,17 +255,6 @@ const editOrder = async (req, res) => {
             subtotal: item.subtotal
           }))
         });
-
-        // Update Accounting record
-        if (order.accounting) {
-          await tx.accounting.update({
-            where: { orderId: id },
-            data: {
-              amount: finalTotalAmount,
-              status: 'completed'
-            }
-          });
-        }
       });
     } catch (error) {
       if (error.isStockError) {
@@ -284,8 +272,7 @@ const editOrder = async (req, res) => {
         customer: { select: CUSTOMER_PUBLIC_SELECT },
         orderItems: {
           include: { product: true }
-        },
-        accounting: true
+        }
       }
     }));
 
@@ -344,8 +331,7 @@ const customerRespondToModification = async (req, res) => {
         customer: { select: CUSTOMER_PUBLIC_SELECT },
         orderItems: {
           include: { product: true }
-        },
-        accounting: true
+        }
       }
     }));
 
@@ -390,13 +376,6 @@ const customerRespondToModification = async (req, res) => {
             }
           });
           if (guarded.count === 0) throw concurrentUpdateError();
-
-          if (order.accounting) {
-            await tx.accounting.update({
-              where: { orderId: id },
-              data: { status: 'completed' }
-            });
-          }
         });
       } catch (error) {
         if (error.isConcurrentUpdateError) {
@@ -409,8 +388,7 @@ const customerRespondToModification = async (req, res) => {
         where: { id },
         include: {
           customer: { select: CUSTOMER_PUBLIC_SELECT },
-          orderItems: { include: { product: true } },
-          accounting: true
+          orderItems: { include: { product: true } }
         }
       }));
 
@@ -474,13 +452,6 @@ const customerRespondToModification = async (req, res) => {
               where: { orderId: id }
             });
           }
-
-          if (order.accounting) {
-            await tx.accounting.update({
-              where: { orderId: id },
-              data: { status: 'cancelled' }
-            });
-          }
         });
       } catch (error) {
         if (error.isConcurrentUpdateError) {
@@ -493,8 +464,7 @@ const customerRespondToModification = async (req, res) => {
         where: { id },
         include: {
           customer: { select: CUSTOMER_PUBLIC_SELECT },
-          orderItems: { include: { product: true } },
-          accounting: true
+          orderItems: { include: { product: true } }
         }
       }));
 

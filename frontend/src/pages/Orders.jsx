@@ -152,7 +152,7 @@ export const Orders = () => {
     }
   };
 
-  // One-click next step from the card (preparing / shipped / delivered).
+  // One-click next step from the card (preparing / out for delivery / delivered).
   const handleQuickStatusChange = async (orderId, newStatus) => {
     setUpdating(true);
     try {
@@ -253,7 +253,7 @@ export const Orders = () => {
           </option>
           <option value="accepted">{t('accepted')}</option>
           <option value="preparing">{t('preparing')}</option>
-          <option value="shipped">{t('shipped')}</option>
+          <option value="out_for_delivery">{t('outForDelivery')}</option>
           <option value="delivered">{t('delivered')}</option>
           <option value="declined">{t('declined')}</option>
         </Select>

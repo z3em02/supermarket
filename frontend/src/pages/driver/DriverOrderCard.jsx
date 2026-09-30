@@ -28,7 +28,7 @@ export const DriverOrderCard = ({
   setDeliveredCashCollected,
   toggleExpandItems
 }) => {
-  const isOutForDelivery = ['out_for_delivery', 'shipped'].includes((order.status || '').toLowerCase());
+  const isOutForDelivery = (order.status || '').toLowerCase() === 'out_for_delivery';
   const isDelivered = (order.status || '').toLowerCase() === 'delivered';
   // Parse customer delivery address & contact details
   const customerName = order.customerName || order.customer?.name || (isAr ? 'عميل' : 'Kunde');

@@ -29,7 +29,7 @@ const STREETS = [
 // Weighted so the list looks like a real day: mostly open and delivered.
 const STATUSES = [
   'pending', 'pending', 'pending', 'accepted', 'accepted', 'preparing', 'preparing',
-  'shipped', 'delivered', 'delivered', 'delivered', 'delivered', 'declined', 'pending_customer_approval'
+  'out_for_delivery', 'delivered', 'delivered', 'delivered', 'delivered', 'declined', 'pending_customer_approval'
 ];
 const NOTES = [null, null, null, 'Bitte 2x klingeln', 'Bitte vorher anrufen', 'Hintereingang benutzen', 'Nicht vor 17 Uhr'];
 
@@ -38,7 +38,7 @@ const between = (min, max) => min + Math.floor(Math.random() * (max - min + 1));
 const isoDate = (d) => d.toISOString().slice(0, 10);
 
 async function deleteDemoOrders() {
-  // OrderItem and Accounting rows cascade with the order.
+  // OrderItem rows cascade with the order.
   const { count } = await prisma.order.deleteMany({ where: { adminNotes: { contains: DEMO_MARKER } } });
   console.log(`Deleted ${count} demo order(s).`);
 }
@@ -78,7 +78,7 @@ async function createDemoOrders(count) {
     const [street, postal] = pick(STREETS);
     const name = `${pick(FIRST)} ${pick(LAST)}`;
     const note = pick(NOTES);
-    const hasDriver = ['accepted', 'preparing', 'shipped', 'delivered'].includes(status) && drivers.length > 0;
+    const hasDriver = ['accepted', 'preparing', 'out_for_delivery', 'delivered'].includes(status) && drivers.length > 0;
 
     await prisma.order.create({
       data: {

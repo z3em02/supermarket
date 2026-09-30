@@ -5,6 +5,7 @@ const { logAudit } = require('../lib/auditLog');
 // the decrypt field list can't drift between here and the order controllers.
 const { DECLINED_STATUSES, withDecryptedCustomer: withDecryptedOrder } = require('./orderShared');
 const { parseStartDate, parseEndDate } = require('../utils/validation');
+const { isOrderStatus } = require('../utils/orderStatus');
 
 // createdAt filter for the Accounting page's date range. A plain date covers
 // that whole day in store time, so the end date's own orders are included.
@@ -151,7 +152,11 @@ const getAccountingRecords = async (req, res) => {
     const parsedLimit = Math.min(200, Math.max(1, parseInt(limit, 10) || 20));
 
     const where = {};
-    if (status) where.status = status;
+    if (status) {
+      // An unknown status would make Prisma throw on the enum column.
+      if (!isOrderStatus(status)) return res.status(400).json({ error: 'Invalid status filter' });
+      where.status = status;
+    }
 
     const orders = (await prisma.order.findMany({
       where,
