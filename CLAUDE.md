@@ -20,11 +20,14 @@ settings. There's also a driver-facing delivery view.
 # Backend (from backend/)
 npm install
 npx prisma db push       # sync schema to DB — this project uses `db push`, NOT `prisma migrate`
-npm run prisma:seed      # seed default admin (admin@hajar.com / admin) + sample data
+npm run prisma:seed      # seed admin (SEED_ADMIN_EMAIL, default admin@hajar.local; SEED_ADMIN_PASSWORD or a printed random one) + sample data
 npm run dev               # start API on :5000 with `node --watch` (restarts on file changes)
 npm test                  # all backend unit tests (`node --test "tests/**/*.js"`)
 node --test tests/orderPricing.test.js      # a single test file
 node --test --test-name-pattern="coupon" "tests/**/*.js"   # tests matching a name
+npm run backup            # pg_dump to BACKUP_DIR + retention + off-site copy (README §4.7)
+npm run backup:restore-test   # restore newest backup into a scratch DB, check the key, drop it
+npm run key:check         # does ENCRYPTION_KEY open the data? (-- --prompt: test a pasted copy)
 
 # Frontend (from frontend/)
 npm install
@@ -40,7 +43,7 @@ npm run preview
 
 Backend tests use Node's built-in `node:test` runner (no jest/mocha). They
 cover the DB-free logic only: order pricing (`utils/orderPricing.js`),
-promotions/coupons, validation, PII crypto, delivery slots and delivery-fee
+promotions/coupons, validation, PII crypto, backup naming/retention, delivery slots and delivery-fee
 calculation (network stubbed so it uses the postal-code centroids), the
 CSRF and section-PIN middleware (`sectionUnlock.test.js` swaps `lib/prisma`
 for a fake via `require.cache`). `tests/api.test.js` starts the real
@@ -85,7 +88,8 @@ the StoreSettings defaults in `settingsShared.js`. Shared logic lives in `utils/
 - `utils/pricingService.js` — promotion & coupon price calculation (`calculatePromotionForItem`, `validateAndCalculateCoupon`).
 - `utils/orderPricing.js` — pure order math shared by `createOrder` and `editOrder` (line items, subtotals, postal-code allow-list, free delivery, totals). Change pricing here, not in the controller.
 - `utils/deliverySlot.js` — delivery window/slot logic (fee model: README §5); `utils/distanceService.js` does distance-based delivery fee/eligibility, backed by `routes/deliveryDistance.js` and `routes/deliveryWindows.js`.
-- `utils/piiCrypto.js` — field-level encryption for customer/order PII (policy: README §6 "Personal data & GDPR"); `scripts/encryptCustomerPii.js` and `scripts/encryptOrderSnapshotPii.js` are one-off migration scripts for encrypting existing rows.
+- `utils/piiCrypto.js` — field-level encryption for customer/order PII (policy: README §6 "Personal data & GDPR"); `scripts/encryptCustomerPii.js` and `scripts/encryptOrderSnapshotPii.js` are one-off migration scripts for encrypting existing rows. Never replace `ENCRYPTION_KEY` on a database with data (no key rotation).
+- `utils/backup.js` (pure, tested) and `utils/backupTools.js` — shared by `scripts/backupDatabase.js`, `scripts/restoreTest.js` and `scripts/checkEncryptionKey.js` (README §4.7). The restore test only ever drops the `supermarket_restore_test_<time>` database it created.
 - `utils/emailService.js` — Nodemailer wrapper for OTPs, order status emails, password reset; it re-exports `utils/email/` (`core.js`: transport, HTML layout, helpers; `orderEmails.js`; `accountEmails.js`). If SMTP env vars are left as placeholders, emails are skipped and logged to console instead of failing the request.
 - `utils/pushService.js` — Web Push via the `web-push` library with VAPID keys (`routes/push.js`, `PushSubscription` model).
 - `utils/whatsappService.js` — sends phone-verification codes through Meta's WhatsApp Cloud API (authentication template in production, plain text elsewhere — README §4.4); `resendOtp` with `type: 'phone'` sends, `verifyPhone` checks the code. Without `WHATSAPP_*` config it logs the code in dev and throws in production.
