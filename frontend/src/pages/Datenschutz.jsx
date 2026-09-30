@@ -116,6 +116,16 @@ export const Datenschutz = () => {
                 عند زيارتكم لموقعنا، يقوم الخادم تلقائياً بجمع وتخزين معلومات يرسلها متصفحكم في ملفات السجل الفنية لضمان أمان واستقرار النظام، وتتضمن: نوع وإصدار المتصفح، نظام التشغيل، عنوان IP للمستخدم بصيغة مشفرة/مجهولة، وقت وتاريخ الزيارة، والصفحات المطلوبة.
               </p>
               <p className="text-xs text-slate-500">الأساس القانوني: المادة 6 الفقرة 1 البند (f) من DSGVO (المصلحة المشروعة في تشغيل الموقع بأمان).</p>
+              {/* Only while the backend sends error reports (SENTRY_DSN set, README §4.8). */}
+              {settings?.errorTracking && (
+                <div className="p-3 bg-slate-50 dark:bg-gray-850 rounded-xl space-y-1.5 text-xs">
+                  <p className="font-bold text-slate-900 dark:text-white">تقارير الأخطاء (Sentry)</p>
+                  <p>
+                    عند حدوث خطأ تقني على خادمنا، يرسل الخادم تقريراً عن الخطأ إلى خدمة Sentry (شركة Functional Software, Inc.، الولايات المتحدة) لنتمكن من إصلاحه بسرعة. تُخزَّن البيانات داخل الاتحاد الأوروبي (فرانكفورت). يحتوي التقرير على معلومات تقنية فقط: رسالة الخطأ، وموضعه في شيفرة البرنامج، ووقت حدوثه، ونوع الطلب ومساره (مثل GET /api/orders). لا يحتوي على عناوين IP أو ملفات تعريف الارتباط أو البيانات المُدخلة في النماذج، ويتم إخفاء عناوين البريد الإلكتروني وأرقام الهواتف قبل الإرسال.
+                  </p>
+                  <p className="text-slate-500">الأساس القانوني: المادة 6 الفقرة 1 البند (f) من DSGVO (المصلحة المشروعة في متجر آمن يعمل بشكل سليم). أبرمنا مع Sentry اتفاقية معالجة بيانات وفقاً للمادة 28 من DSGVO.</p>
+                </div>
+              )}
             </div>
 
             {/* 3. Customer Accounts & Home Delivery */}
@@ -235,6 +245,16 @@ export const Datenschutz = () => {
                 <li>Uhrzeit und Datum der Serveranfrage</li>
               </ul>
               <p className="text-xs text-slate-500">Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an der technischen Stabilität und Sicherheit unseres Webauftritts).</p>
+              {/* Only while the backend sends error reports (SENTRY_DSN set, README §4.8). */}
+              {settings?.errorTracking && (
+                <div className="p-3 bg-slate-50 dark:bg-gray-850 rounded-xl space-y-1.5 text-xs">
+                  <p className="font-bold text-slate-900 dark:text-white">Fehlerberichte (Sentry)</p>
+                  <p>
+                    Tritt auf unserem Server ein technischer Fehler auf, sendet der Server einen Fehlerbericht an den Dienst Sentry (Functional Software, Inc., USA), damit wir den Fehler schnell beheben können. Die Daten werden in der EU (Frankfurt am Main) gespeichert. Ein Bericht enthält nur technische Angaben: die Fehlermeldung, die betroffene Stelle im Programmcode, den Zeitpunkt sowie Art und Pfad der Anfrage (z. B. „GET /api/orders“). Er enthält keine IP-Adressen, Cookies oder Formulareingaben; E-Mail-Adressen und Telefonnummern werden vor dem Versand unkenntlich gemacht.
+                  </p>
+                  <p className="text-slate-500">Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einem sicheren und funktionierenden Shop). Mit Sentry besteht ein Vertrag zur Auftragsverarbeitung (Art. 28 DSGVO).</p>
+                </div>
+              )}
             </div>
 
             {/* 3. Kundenkonto & Hauszustellung */}

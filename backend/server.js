@@ -1,10 +1,15 @@
+// .env first, then error tracking before express: Sentry (when SENTRY_DSN is
+// set) has to instrument Node's http module before anything loads it.
+// quiet: dotenv prints "injected env" via console.error, which would land in
+// the error log (and in error tracking) on every start.
+require('dotenv').config({ quiet: true });
+const errorTracking = require('./lib/errorTracking');
+
+const crypto = require('crypto');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const dotenv = require('dotenv');
 const path = require('path');
-
-dotenv.config();
 
 const prisma = require('./lib/prisma');
 
@@ -24,6 +29,28 @@ const deliveryDistanceRoutes = require('./routes/deliveryDistance');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Every response carries an X-Request-Id. Server errors (5xx) and slow
+// requests are logged with it, so a report ("it failed at 14:02") can be
+// matched to a log line. Only method + path: bodies and query strings can
+// hold personal data (search terms, addresses).
+const SLOW_REQUEST_MS = 2000;
+app.use((req, res, next) => {
+  req.id = crypto.randomUUID();
+  res.setHeader('X-Request-Id', req.id);
+  errorTracking.setRequestId(req.id);
+  const started = process.hrtime.bigint();
+  res.on('finish', () => {
+    const ms = Math.round(Number(process.hrtime.bigint() - started) / 1e6);
+    if (res.statusCode >= 500 || ms >= SLOW_REQUEST_MS) {
+      console.warn(`[request] ${req.id} ${req.method} ${req.path} -> ${res.statusCode} in ${ms} ms`);
+    }
+    // While shutting down (see shutdown below), close the connection as soon
+    // as its request is done instead of waiting for the client to close it.
+    if (shuttingDown) setImmediate(() => server.closeIdleConnections());
+  });
+  next();
+});
 
 // Middleware
 app.use(helmet({
@@ -45,8 +72,9 @@ app.use(cors({
     return callback(null, false);
   },
   credentials: true,
-  // Read by the Orders page for its incremental polling cursor (see getOrders)
-  exposedHeaders: ['X-Server-Time']
+  // X-Server-Time: the Orders page's polling cursor (see getOrders).
+  // X-Request-Id: lets the frontend show an id to quote in an error report.
+  exposedHeaders: ['X-Server-Time', 'X-Request-Id']
 }));
 
 const cookieParser = require('cookie-parser');
@@ -101,10 +129,30 @@ app.use('/api/delivery-windows', deliveryWindowRoutes);
 app.use('/api/delivery-distance', deliveryDistanceRoutes);
 
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
+// Health check for uptime monitors: 200 only when the database answers too,
+// 503 when it doesn't. /api/health is the one reachable through nginx (which
+// proxies only /api/ and /uploads/); /health is for checks on the server itself.
+const HEALTH_DB_TIMEOUT_MS = 2000;
+const healthCheck = async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  let timer;
+  try {
+    await Promise.race([
+      prisma.$queryRaw`SELECT 1`,
+      new Promise((resolve, reject) => {
+        timer = setTimeout(() => reject(new Error(`no answer within ${HEALTH_DB_TIMEOUT_MS} ms`)), HEALTH_DB_TIMEOUT_MS);
+      })
+    ]);
+    res.json({ status: 'ok', database: 'ok', timestamp: new Date().toISOString() });
+  } catch (err) {
+    console.error(`Health check: database not reachable (${String(err?.message || err).split('\n').pop().trim()})`);
+    res.status(503).json({ status: 'error', database: 'down', timestamp: new Date().toISOString() });
+  } finally {
+    clearTimeout(timer);
+  }
+};
+app.get('/health', healthCheck);
+app.get('/api/health', healthCheck);
 
 // 404 handler for unmatched API routes
 app.use('/api', (req, res) => {
@@ -120,8 +168,10 @@ app.use((err, req, res, next) => {
   if (err.expose && status >= 400 && status < 500) {
     return res.status(status).json({ error: status === 413 ? 'Request body too large' : 'Invalid request body' });
   }
-  console.error('Unhandled server error:', err.message || err);
-  res.status(500).json({ error: 'Internal server error' });
+  // The Error itself, not err.stack: console prints its stack either way, and
+  // error tracking needs the object to report it as an exception.
+  console.error(`Unhandled server error [${req.id}] ${req.method} ${req.path}:`, err);
+  res.status(500).json({ error: 'Internal server error', requestId: req.id });
 });
 
 // Start server. In production HOST=127.0.0.1 (deployment/ecosystem.config.js)
@@ -133,23 +183,33 @@ const onListening = () => {
   console.log(`Server running on ${HOST || 'all interfaces'}, port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 };
-if (HOST) {
-  app.listen(PORT, HOST, onListening);
-} else {
-  app.listen(PORT, onListening);
-}
+const server = HOST ? app.listen(PORT, HOST, onListening) : app.listen(PORT, onListening);
 
-// Graceful shutdown
-process.on('SIGTERM', async () => {
-  console.log('SIGTERM signal received: closing HTTP server');
-  await prisma.$disconnect();
-  process.exit(0);
-});
-
-process.on('SIGINT', async () => {
-  console.log('SIGINT signal received: closing HTTP server');
-  await prisma.$disconnect();
-  process.exit(0);
-});
+// Graceful shutdown. PM2 sends SIGINT when it reloads or stops a worker
+// (systemd/Docker send SIGTERM): stop taking new connections, let requests
+// already running finish, then close the database pool. Without this, every
+// deploy cut off whatever was in flight, e.g. an order being placed. PM2's
+// kill_timeout (deployment/ecosystem.config.js) is longer than this timeout.
+const SHUTDOWN_TIMEOUT_MS = 8000;
+let shuttingDown = false;
+const shutdown = (signal) => {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`${signal} received: closing HTTP server, letting open requests finish`);
+  setTimeout(() => {
+    console.warn(`Requests still open after ${SHUTDOWN_TIMEOUT_MS} ms; exiting anyway`);
+    process.exit(1);
+  }, SHUTDOWN_TIMEOUT_MS).unref();
+  server.close(async () => {
+    await prisma.$disconnect().catch(() => {});
+    await errorTracking.flush();
+    console.log('HTTP server closed');
+    process.exit(0);
+  });
+  // Idle keep-alive connections would otherwise hold close() open.
+  server.closeIdleConnections();
+};
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
 
 module.exports = app;

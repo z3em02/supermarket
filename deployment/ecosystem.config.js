@@ -14,7 +14,14 @@
       },
       watch: false,
       max_memory_restart: '500M',
-      exp_backoff_restart_delay: 100
+      exp_backoff_restart_delay: 100,
+      // server.js lets open requests finish for up to 8 s on shutdown; wait
+      // longer than that before PM2 force-kills a worker on reload/stop.
+      kill_timeout: 10000,
+      // A timestamp on every log line, and one log file for all workers.
+      // Rotation: pm2-logrotate (README §4.8).
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+      merge_logs: true
     }
   ]
 };

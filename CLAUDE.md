@@ -43,7 +43,7 @@ npm run preview
 
 Backend tests use Node's built-in `node:test` runner (no jest/mocha). They
 cover the DB-free logic only: order pricing (`utils/orderPricing.js`),
-promotions/coupons, validation, PII crypto, backup naming/retention, delivery slots and delivery-fee
+promotions/coupons, validation, PII crypto, backup naming/retention, error-report scrubbing, delivery slots and delivery-fee
 calculation (network stubbed so it uses the postal-code centroids), the
 CSRF and section-PIN middleware (`sectionUnlock.test.js` swaps `lib/prisma`
 for a fake via `require.cache`). `tests/api.test.js` starts the real
@@ -67,10 +67,16 @@ then fill in `DATABASE_URL`, `JWT_SECRET` (min 32 chars — server refuses to st
 
 ### Backend: layered Express app
 
-`server.js` wires everything: helmet, CORS (origin allow-list from
+`server.js` wires everything: first a request-id middleware (`X-Request-Id`
+on every response; logs 5xx and >2 s requests by method + path only), then
+helmet, CORS (origin allow-list from
 `FRONTEND_URL`, plus any `localhost:*` in dev), cookie-parser, a global
 100kb JSON body limit, `trust proxy` for nginx, static `/uploads` serving
 with locked-down headers, then a global `/api` rate limiter, then routes.
+`/health` and `/api/health` (the one nginx forwards) run `SELECT 1` and
+answer 503 when the database is down. SIGINT/SIGTERM trigger a graceful
+shutdown (open requests finish, up to 8 s; PM2 `kill_timeout` is 10 s).
+Monitoring and logs: README §4.8.
 
 Each feature is `routes/<name>.js` → `controllers/<name>Controller.js`,
 using Prisma directly in controllers (no repository/service layer, except
@@ -85,6 +91,7 @@ the StoreSettings defaults in `settingsShared.js`. Shared logic lives in `utils/
 
 - `lib/prisma.js` — the shared Prisma client singleton.
 - `lib/config.js`, `lib/auditLog.js` — config loading and audit-log writes (see `AuditLog` model / `/api/audit-log`).
+- `lib/errorTracking.js` — optional Sentry (only when `SENTRY_DSN` is set; required in `server.js` before express). It reports every `console.error()` that carries an `Error`, so keep logging caught errors as `console.error('…:', error)`; `utils/errorEvents.js` (pure, tested) strips personal data from each report. Don't log personal data inside error messages or `console.error` strings. `GET /api/settings` carries `errorTracking`, which shows the Sentry paragraph on `/datenschutz`.
 - `utils/pricingService.js` — promotion & coupon price calculation (`calculatePromotionForItem`, `validateAndCalculateCoupon`).
 - `utils/orderPricing.js` — pure order math shared by `createOrder` and `editOrder` (line items, subtotals, postal-code allow-list, free delivery, totals). Change pricing here, not in the controller.
 - `utils/deliverySlot.js` — delivery window/slot logic (fee model: README §5); `utils/distanceService.js` does distance-based delivery fee/eligibility, backed by `routes/deliveryDistance.js` and `routes/deliveryWindows.js`.

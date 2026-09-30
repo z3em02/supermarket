@@ -106,6 +106,7 @@ Never commit `.env` files.
 | `BACKUP_COPY_COMMAND` | Command run after each backup to copy it off the server; the file path is in `$BACKUP_FILE`. Unset → the backup stays only on the server (with a warning). |
 | `RESTORE_TEST_URL` | Optional; Postgres server for `npm run backup:restore-test` to create its scratch database on. Defaults to `DIRECT_URL`. |
 | `PG_BIN_DIR` | Optional; folder with `pg_dump` / `pg_restore` / `psql` when they aren't on `PATH` (e.g. `C:\Program Files\PostgreSQL\17\bin`). |
+| `SENTRY_DSN` / `SENTRY_ENVIRONMENT` | Optional; error tracking with Sentry ([4.8](#48-monitoring-and-logs)). Unset → off, and the Sentry library isn't loaded. `SENTRY_ENVIRONMENT` defaults to `NODE_ENV`. |
 
 **`frontend/.env`**
 
@@ -465,9 +466,93 @@ example one on your own computer), copy a backup file there, and pass its path:
    re-delete any customers who asked for deletion after that backup was taken
    ([6](#retention)).
 
-### 4.8 Go-live checklist
+### 4.8 Monitoring and logs
+
+**Is the shop up?** `GET /api/health` answers `200 {"status":"ok","database":"ok"}`
+only when both the API and the database respond. When the database doesn't, it
+answers `503 {"status":"error","database":"down"}` and logs the failure. Point
+an uptime monitor at `https://yourdomain.de/api/health` every 1–5 minutes, with
+alerts to your phone or email: for example UptimeRobot or Better Stack (both have
+free plans). The monitor only sees that URL, no customer data. `/health` is the
+same check for use on the server itself (`curl -s localhost:5000/health`),
+since nginx only forwards `/api/` and `/uploads/`.
+
+**Logs.** PM2 keeps the backend's output in `~/.pm2/logs/` (one `-out.log` and
+one `-error.log` for all workers), with a timestamp on every line:
+
+```bash
+pm2 logs supermarket-backend --lines 100   # recent lines, then keeps following
+```
+
+Server errors are logged with their stack trace. Every 5xx response and every
+request slower than 2 s also gets a line like
+`[request] <id> GET /api/orders -> 500 in 35 ms`. Only the method and path are
+logged: bodies and query strings can contain personal data. Every response has
+an `X-Request-Id` header (browser devtools → Network), and a 500 response also
+returns it as `requestId`. To find the matching log lines:
+`grep <id> ~/.pm2/logs/*.log`.
+
+**Log rotation.** PM2 never deletes old logs by itself, so install its rotation
+module once:
+
+```bash
+pm2 install pm2-logrotate
+pm2 set pm2-logrotate:max_size 10M
+pm2 set pm2-logrotate:retain 14
+pm2 set pm2-logrotate:compress true
+```
+
+That rotates daily, or at 10 MB, and keeps the last 14 files. nginx's logs in
+`/var/log/nginx/` are already rotated by Ubuntu.
+
+**Deploys without dropped requests.** Use `pm2 reload supermarket-backend`, not
+`restart`. It starts new workers first; each old worker stops taking new
+connections, lets its running requests finish (up to 8 s), then exits. After a
+change to `deployment/ecosystem.config.js` itself, re-create the process once so
+PM2 picks up the new settings (a few seconds of downtime):
+
+```bash
+pm2 delete supermarket-backend && pm2 start ../deployment/ecosystem.config.js && pm2 save
+```
+
+**Error tracking (optional, Sentry).** Off until `SENTRY_DSN` is set. Then the
+backend reports every server error and crash to [Sentry](https://sentry.io), which
+emails you about new problems. Only the backend reports; customers' browsers
+never contact Sentry, and with no `SENTRY_DSN` the Sentry library isn't even
+loaded. Before anything is sent, `backend/utils/errorEvents.js` strips personal
+data. A report keeps:
+
+- the error message, with email addresses and phone numbers masked and Prisma's
+  data dump removed;
+- the stack trace, with the surrounding lines of the shop's code;
+- the request's method and path;
+- the `request_id` tag (the response's `X-Request-Id`).
+
+It never contains query strings, headers, cookies, request bodies, IP addresses
+or earlier log lines.
+
+1. Create an account at sentry.io and choose the **EU data region** (Frankfurt)
+   when creating the organization; it can't be changed later. An EU DSN contains
+   `.de.sentry.io`.
+2. Create a project for Node.js / Express and copy its DSN.
+3. In the organization's settings, accept Sentry's Data Processing Addendum
+   (Art. 28 GDPR). Under Security & Privacy, turn on "Prevent storing of IP
+   addresses" and keep the data scrubber on as a second safety net.
+4. Check that an alert rule emails you when a new issue appears (new projects
+   have one).
+5. Put `SENTRY_DSN=…` in `backend/.env` and run `pm2 reload supermarket-backend`.
+6. The privacy policy (`/datenschutz`, section 2) now shows its "Fehlerberichte
+   (Sentry)" paragraph automatically; it's hidden while `SENTRY_DSN` is unset.
+   It says the data is stored in the EU under a processing agreement, so steps
+   1 and 3 must be done. Have the wording checked like the rest of the policy.
+
+Without Sentry, errors are only in the PM2 logs.
+
+### 4.9 Go-live checklist
 
 - [ ] `.env` files not committed; secrets freshly generated for this deployment
+- [ ] Uptime monitor on `https://<your domain>/api/health` with alerts, and `pm2-logrotate` installed ([4.8](#48-monitoring-and-logs))
+- [ ] If using Sentry: EU region, processing agreement accepted, IP storage off, the `/datenschutz` paragraph checked ([4.8](#48-monitoring-and-logs))
 - [ ] `ENCRYPTION_KEY` (or the whole `.env`) saved in a password manager with its fingerprint; `npm run key:check -- --prompt` says `OK` ([4.7](#47-backups-and-the-encryption-key))
 - [ ] Nightly backup in cron, `BACKUP_COPY_COMMAND` copies it off the server encrypted, and one `npm run backup:restore-test -- --prompt` has passed
 - [ ] `FRONTEND_URL` is the real production domain, not `localhost`
@@ -569,6 +654,7 @@ basis for each processing purpose are on `/datenschutz`
 | Name, email, phone, address | `Customer` | Email, phone and address fields AES-256-GCM encrypted (`backend/utils/piiCrypto.js`); email/phone lookups via HMAC-SHA-256 hashes |
 | Order history; customer name/phone/email and delivery address/notes as they were at order time | `Order` | Snapshot fields encrypted (`encrypt` on write, `withDecryptedCustomer` in `backend/controllers/orderShared.js` on read) |
 | Password | `Customer.password` | bcrypt hash |
+| Error reports (only when `SENTRY_DSN` is set, [4.8](#48-monitoring-and-logs)) | Sentry, EU region | Personal data stripped before sending (`backend/utils/errorEvents.js`); IP storage off in Sentry; listed in `/datenschutz` §2 while enabled |
 
 The order snapshot is deliberately separate from the `Customer` row, so
 invoices stay readable after an account is deleted. Rows created before

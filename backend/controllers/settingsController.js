@@ -3,6 +3,12 @@ const { isPrivateOrLocalHost } = require('../utils/url');
 const { downloadAndCacheLogo, deleteCachedLogo } = require('../utils/imageProxy');
 const { logAudit } = require('../lib/auditLog');
 const { PUBLIC_SETTINGS_SELECT, DEFAULT_SETTINGS, cleanString } = require('./settingsShared');
+const errorTracking = require('../lib/errorTracking');
+
+// Runtime facts the storefront needs next to the stored settings:
+// errorTracking tells the privacy page (/datenschutz) to show its
+// error-report paragraph only when reports are actually sent.
+const withRuntimeFlags = (settings) => ({ ...settings, errorTracking: errorTracking.enabled });
 
 // GET /api/settings - Public
 const getSettings = async (req, res) => {
@@ -19,7 +25,7 @@ const getSettings = async (req, res) => {
       settings = Object.fromEntries(Object.keys(PUBLIC_SETTINGS_SELECT).map((key) => [key, created[key]]));
     }
 
-    res.json(settings);
+    res.json(withRuntimeFlags(settings));
   } catch (error) {
     console.error('Get settings error:', error);
     res.status(500).json({ error: 'Failed to retrieve store settings' });
@@ -247,7 +253,7 @@ const updateSettings = async (req, res) => {
 
     res.json({
       message: 'Store settings updated successfully',
-      settings: updated
+      settings: withRuntimeFlags(updated)
     });
   } catch (error) {
     console.error('Update settings error:', error);

@@ -1,4 +1,5 @@
-require('dotenv').config();
+// quiet: dotenv's "injected env" line goes to console.error (see server.js).
+require('dotenv').config({ quiet: true });
 const { PrismaClient, Prisma } = require('@prisma/client');
 
 // Money columns are stored as DECIMAL(10,2) so amounts are exact to the cent

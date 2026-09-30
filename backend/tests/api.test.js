@@ -1,6 +1,7 @@
 // HTTP-level checks of the real server (server.js) for everything that is
 // decided before the database is touched: routing, body parsing, auth and
-// CSRF checks, input validation, logout cookies, CORS and security headers.
+// CSRF checks, input validation, logout cookies, CORS and security headers,
+// the health check's "database down" answer, request ids and shutdown.
 //
 // The server runs as a child process on a free local port with dummy
 // secrets and an unreachable DATABASE_URL, from a temp directory so no .env
@@ -54,7 +55,9 @@ before(async () => {
   server.stderr.on('data', (d) => { serverLog += d; });
 
   for (let i = 0; i < 100; i++) {
-    try { if ((await fetch(`${base}/health`)).ok) return; } catch { /* not up yet */ }
+    // Any answer means it's listening. Not /health: it waits for the
+    // (unreachable) database, up to 2 s on Windows.
+    try { await fetch(`${base}/api/does-not-exist`); return; } catch { /* not up yet */ }
     if (server.exitCode !== null) break;
     await new Promise((r) => setTimeout(r, 100));
   }
@@ -67,16 +70,31 @@ const request = (method, urlPath, { body, headers = {} } = {}) =>
   fetch(base + urlPath, { method, body, headers: { 'Content-Type': 'application/json', ...headers } });
 const json = async (res) => res.json();
 
-test('health check answers', async () => {
-  const res = await request('GET', '/health');
-  assert.strictEqual(res.status, 200);
-  assert.strictEqual((await json(res)).status, 'ok');
+test('health check reports the unreachable database as 503, on /health and /api/health', async () => {
+  for (const urlPath of ['/health', '/api/health']) {
+    const res = await request('GET', urlPath);
+    assert.strictEqual(res.status, 503, urlPath);
+    assert.strictEqual(res.headers.get('cache-control'), 'no-store');
+    const body = await json(res);
+    assert.strictEqual(body.status, 'error');
+    assert.strictEqual(body.database, 'down');
+  }
 });
 
 test('unknown API routes get a JSON 404', async () => {
   const res = await request('GET', '/api/does-not-exist');
   assert.strictEqual(res.status, 404);
   assert.strictEqual((await json(res)).error, 'Endpoint not found');
+});
+
+test('every response carries its own X-Request-Id', async () => {
+  const ids = [];
+  for (const urlPath of ['/api/does-not-exist', '/api/does-not-exist', '/uploads/none.png']) {
+    const id = (await request('GET', urlPath)).headers.get('x-request-id');
+    assert.match(id || '', /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+    ids.push(id);
+  }
+  assert.strictEqual(new Set(ids).size, ids.length);
 });
 
 test('malformed JSON is a 400, not a server error', async () => {
@@ -177,18 +195,30 @@ test('logout with a session cookie but no CSRF header is refused', async () => {
   assert.strictEqual(res.status, 403);
 });
 
-test('CORS allows the configured frontend and exposes X-Server-Time', async () => {
-  let res = await request('GET', '/health', { headers: { Origin: 'https://shop.example' } });
+test('CORS allows the configured frontend and exposes X-Server-Time and X-Request-Id', async () => {
+  let res = await request('GET', '/api/does-not-exist', { headers: { Origin: 'https://shop.example' } });
   assert.strictEqual(res.headers.get('access-control-allow-origin'), 'https://shop.example');
   assert.strictEqual(res.headers.get('access-control-allow-credentials'), 'true');
   assert.match(res.headers.get('access-control-expose-headers') || '', /X-Server-Time/i);
-  res = await request('GET', '/health', { headers: { Origin: 'https://evil.example' } });
+  assert.match(res.headers.get('access-control-expose-headers') || '', /X-Request-Id/i);
+  res = await request('GET', '/api/does-not-exist', { headers: { Origin: 'https://evil.example' } });
   assert.strictEqual(res.headers.get('access-control-allow-origin'), null);
 });
 
 test('security headers are set', async () => {
-  const res = await request('GET', '/health');
+  const res = await request('GET', '/api/does-not-exist');
   assert.strictEqual(res.headers.get('x-content-type-options'), 'nosniff');
   assert.ok(res.headers.get('x-frame-options'));
   assert.strictEqual(res.headers.get('x-powered-by'), null);
+});
+
+// Must stay the last test: it stops the shared server. Windows can't deliver
+// SIGTERM to a child process (kill() there just terminates it), so it runs on
+// Linux/macOS only (CI).
+test('SIGTERM closes the server cleanly (exit code 0)', { skip: process.platform === 'win32' && 'no POSIX signals on Windows' }, async () => {
+  const exited = new Promise((resolve) => server.once('exit', (code) => resolve(code)));
+  server.kill('SIGTERM');
+  const code = await Promise.race([exited, new Promise((resolve) => setTimeout(() => resolve('timeout'), 5000))]);
+  assert.strictEqual(code, 0, serverLog);
+  assert.match(serverLog, /HTTP server closed/);
 });
