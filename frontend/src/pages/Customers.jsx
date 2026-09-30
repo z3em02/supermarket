@@ -40,7 +40,7 @@ export const Customers = () => {
       setLoading(true);
       setError('');
       const apiUrl = getApiUrl();
-      const response = await axios.get(`${apiUrl}/api/customer-auth/customers`);
+      const response = await axios.get(`${apiUrl}/api/customers`);
       if (Array.isArray(response.data)) {
         setCustomers(response.data);
       } else {
@@ -68,7 +68,7 @@ export const Customers = () => {
     try {
       setDeletingId(id);
       const apiUrl = getApiUrl();
-      await axios.delete(`${apiUrl}/api/customer-auth/customers/${id}`);
+      await axios.delete(`${apiUrl}/api/customers/${id}`);
       setCustomers(prev => Array.isArray(prev) ? prev.filter(c => c.id !== id) : []);
       if (selectedCustomer?.id === id) {
         setSelectedCustomer(null);

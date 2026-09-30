@@ -407,7 +407,10 @@ That config handles:
 - proxying `/api/` and `/uploads/` to `127.0.0.1:5000` with `X-Forwarded-*`
   headers, which Express needs for `trust proxy`;
 - per-IP rate limits on the login, register, one-time-code, 2FA and PIN
-  endpoints (under all three customer route prefixes).
+  endpoints. `backend/tests/nginxRateLimits.test.js` fails when a backend
+  route that guards against password or code guessing has no rule here, or a
+  rule matches no route any more. After changing `deployment/nginx.conf`,
+  copy it to the server again (the commands above).
 
 After changing the CSP, complete one registration with phone verification
 with the browser console open, to check nothing the page needs is blocked.
@@ -789,7 +792,7 @@ encryption was introduced are backfilled by
 1. The customer writes to the address on `/datenschutz` (privacy policy §6,
    "Recht auf Löschung") or to the admin.
 2. The admin opens **Kunden**, finds the customer and clicks **Entfernen**
-   (`DELETE /api/customer-auth/customers/:id`).
+   (`DELETE /api/customers/:id`).
 3. The `Customer` row (name, encrypted contact data, password) is deleted.
    Past orders remain for tax purposes, unlinked, with their order-time
    snapshot.

@@ -2,12 +2,9 @@ const express = require('express');
 const router = express.Router();
 const customerAuthController = require('../controllers/customerAuthController');
 const customerProfileController = require('../controllers/customerProfileController');
-const customerAdminController = require('../controllers/customerAdminController');
 const passwordResetController = require('../controllers/passwordResetController');
 const { customerAuthMiddleware } = require('../middleware/customerAuth');
-const { authMiddleware } = require('../middleware/auth');
 const { authLimiter } = require('../middleware/rateLimiter');
-const { sectionUnlockMiddleware } = require('../middleware/sectionUnlock');
 const { clearCsrfCookieUnlessOtherSession, requireCsrfForCookieAuth } = require('../middleware/csrf');
 
 const jwt = require('jsonwebtoken');
@@ -61,10 +58,5 @@ router.post('/reset-password', authLimiter, passwordResetController.resetPasswor
 // Protected customer profile endpoints
 router.get('/profile', customerAuthMiddleware, customerProfileController.getProfile);
 router.put('/profile', customerAuthMiddleware, customerProfileController.updateProfile);
-
-// Admin customer management endpoint (Kunden — behind the section PIN)
-router.get('/customers', authMiddleware, sectionUnlockMiddleware, customerAdminController.listCustomers);
-router.get('/customers/count', authMiddleware, sectionUnlockMiddleware, customerAdminController.countCustomers);
-router.delete('/customers/:id', authMiddleware, sectionUnlockMiddleware, customerAdminController.deleteCustomer);
 
 module.exports = router;

@@ -78,7 +78,7 @@ const createRateLimiter = ({
     };
   };
 
-  return async (req, res, next) => {
+  const limiter = async (req, res, next) => {
     const ip = req.ip || 'unknown';
     const primaryKey = keyGenerator ? keyGenerator(req) : ip;
     const redisKey = `${prefix}:${primaryKey}`;
@@ -129,6 +129,9 @@ const createRateLimiter = ({
 
     next();
   };
+  // Lets tests/nginxRateLimits.test.js find the routes each limiter guards.
+  limiter.rateLimitPrefix = prefix;
+  return limiter;
 };
 
 // 15 login attempts per 10 minutes per IP. Shared by admin login and every

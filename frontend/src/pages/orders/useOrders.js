@@ -134,7 +134,7 @@ export const useOrders = () => {
       const [customersRes, productsRes] = await Promise.all([
         // The customer list sits behind the Kunden section PIN; when it's
         // locked the create form explains that instead of an empty dropdown.
-        axios.get(`${apiUrl}/api/customer-auth/customers`).catch((err) => ({
+        axios.get(`${apiUrl}/api/customers`).catch((err) => ({
           data: [],
           locked: err.response?.data?.code === 'SECTION_LOCKED'
         })),
