@@ -919,9 +919,55 @@ entry before changing a hardening measure.
 
 ## 8. Roadmap
 
+### Features
+
 - [ ] Ticket system for problems and bugs
 - [ ] Loyalty/reward points for repeat customers, building on the coupon system
 - [ ] Self-service account deletion and a deletion confirmation email ([6](#known-gaps))
+
+### Before go-live
+
+- [ ] Work through the [go-live checklist](#49-go-live-checklist) on the server:
+  the encryption key in a password manager, nightly backups with an encrypted
+  off-site copy and one restore test ([4.7](#47-backups-and-the-encryption-key)),
+  an uptime monitor on `/api/health` and `pm2-logrotate` ([4.8](#48-monitoring-and-logs)),
+  the one-time migrations baseline for a database created with `db push`, then
+  `migrate:deploy` ([4.2](#42-server-and-database)), the current
+  `deployment/nginx.conf` copied to the server, and optionally Sentry.
+
+### Tech debt
+
+From the code-health audit of September 2026, in the suggested order.
+
+- [ ] **Small fixes** (30 min): the comment in `backend/middleware/sectionUnlock.js`
+  says the PIN cache lasts 60 s (it's 5 s); the deploy steps (4.2) don't
+  install Chromium, which the Google review sync needs
+  (`backend/utils/googleScraper.js`); `backend/scripts/createTestCustomer.js`
+  should refuse `NODE_ENV=production` like `createFakeOrders.js` does.
+- [ ] **No double orders** (half a day): if the network drops right after
+  "Order", a retry creates the same order twice; only the client's
+  "submitting" flag prevents it. Give `POST /api/orders` an idempotency key
+  (sent by the cart, stored unique on `Order`) so a repeat returns the first
+  order instead of a new one.
+- [ ] **Order history by id, not by text** (half a day): the drawer's history
+  tab (`getOrderHistory`) finds audit entries by searching `AuditLog.detail`
+  for the 8-character order code. That scans the whole table, two orders can
+  share a code, and the audit log has no retention. Add a nullable, indexed
+  `AuditLog.orderId` (migration with backfill), and decide a retention period.
+- [ ] **Browser smoke test** (1–2 days): register → order → accept → deliver
+  in a real browser (e.g. Playwright) in CI, replacing the manual "one full
+  run" of the go-live checklist.
+- [ ] **Prisma 5 → 7** (1–2 days): two major versions behind; the database
+  tests now cover the order flows, which makes the upgrade safer.
+- [ ] **Tidy-ups** (1–2 days, code quality only): 22 React
+  `set-state-in-effect` lint warnings, ~100 repeated `${apiUrl}` prefixes
+  (an axios `baseURL` would do), Tailwind 3 → 4 (the colour tokens in
+  `tailwind.config.js` then move to CSS).
+
+Watch: a typed Orders search decrypts the name, phone and address of every
+order in memory, which is fine now but gets slow at around 10,000 orders.
+The fix then is to search recent orders by default, or to add HMAC
+fingerprints for exact phone matches.
 
 ## 9. Feature history
 
