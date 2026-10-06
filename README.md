@@ -245,6 +245,10 @@ request and every push to `main`.
 sudo apt update
 sudo apt install -y nodejs npm nginx postgresql-client
 sudo npm install -g pm2
+# Google Chrome for the Google review sync (backend/utils/googleScraper.js;
+# Debian's `chromium` package works too; Ubuntu's snap Chromium often fails under Puppeteer)
+wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+sudo apt install -y ./google-chrome-stable_current_amd64.deb
 git clone <your-repo-url> /var/www/supermarket
 cd /var/www/supermarket/backend
 npm install
@@ -939,30 +943,62 @@ entry before changing a hardening measure.
 
 From the code-health audit of September 2026, in the suggested order.
 
-- [ ] **Small fixes** (30 min): the comment in `backend/middleware/sectionUnlock.js`
-  says the PIN cache lasts 60 s (it's 5 s); the deploy steps (4.2) don't
-  install Chromium, which the Google review sync needs
-  (`backend/utils/googleScraper.js`); `backend/scripts/createTestCustomer.js`
-  should refuse `NODE_ENV=production` like `createFakeOrders.js` does.
-- [ ] **No double orders** (half a day): if the network drops right after
-  "Order", a retry creates the same order twice; only the client's
-  "submitting" flag prevents it. Give `POST /api/orders` an idempotency key
-  (sent by the cart, stored unique on `Order`) so a repeat returns the first
-  order instead of a new one.
-- [ ] **Order history by id, not by text** (half a day): the drawer's history
-  tab (`getOrderHistory`) finds audit entries by searching `AuditLog.detail`
-  for the 8-character order code. That scans the whole table, two orders can
-  share a code, and the audit log has no retention. Add a nullable, indexed
-  `AuditLog.orderId` (migration with backfill), and decide a retention period.
+- [x] **Small fixes** (30 min): the comment in `backend/middleware/sectionUnlock.js`
+  now says 5 s; the deploy steps (4.2) install Google Chrome, which the Google
+  review sync needs (`backend/utils/googleScraper.js`);
+  `backend/scripts/createTestCustomer.js` refuses `NODE_ENV=production` like
+  `createFakeOrders.js` does.
+- [x] **No double orders** (half a day): `POST /api/orders` takes an optional
+  `idempotencyKey` (one per checkout attempt from the cart, unique on `Order`).
+  A retry after a dropped connection returns the order already placed (200)
+  instead of creating a second one; a concurrent retry that loses the
+  unique-constraint race is recovered the same way, and a key already used by
+  another customer is rejected (409). Covered by `tests/integration/orderFlows.test.js`.
+- [x] **Order history by id, not by text** (half a day): `AuditLog` now has a
+  nullable, indexed `orderId`, set for the per-order actions
+  (`UPDATE_ORDER_STATUS`, `EDIT_ORDER`, `ASSIGN_ORDER_DRIVER`). `getOrderHistory`
+  looks up by it (falling back to the old detail-text match only for rows the
+  migration couldn't backfill), so two orders sharing an 8-char code no longer
+  bleed into each other's history. Covered by `tests/integration/orderFlows.test.js`.
+  - [ ] **Audit-log retention** still open, on purpose: deleting audit rows is
+    a GDPR/accounting-evidence decision (Austrian records-retention rules), so
+    it needs its own pass rather than a guessed cutoff. Nothing auto-deletes today.
 - [ ] **Browser smoke test** (1–2 days): register → order → accept → deliver
   in a real browser (e.g. Playwright) in CI, replacing the manual "one full
   run" of the go-live checklist.
-- [ ] **Prisma 5 → 7** (1–2 days): two major versions behind; the database
-  tests now cover the order flows, which makes the upgrade safer.
-- [ ] **Tidy-ups** (1–2 days, code quality only): 22 React
-  `set-state-in-effect` lint warnings, ~100 repeated `${apiUrl}` prefixes
-  (an axios `baseURL` would do), Tailwind 3 → 4 (the colour tokens in
-  `tailwind.config.js` then move to CSS).
+- [ ] **Prisma 5 → 7** (1–2 days): the database tests now cover the order
+  flows, which makes the upgrade safer.
+  - [x] **5 → 6** (now on 6.19.3): a near-free bump for this schema — no
+    `Bytes` fields, no `NotFoundError`, no implicit m2m, no full-text search.
+    Also removed a stray `backend/prisma.config.ts` (a Prisma-skills stub whose
+    `definePrismaConfig` import broke the 6+ CLI). All unit + DB tests pass.
+    Note: Prisma 6.19's AI-agent guard blocks `prisma migrate reset` when run
+    by an AI coding agent unless `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION`
+    is set — affects local integration runs via such an agent, not CI or
+    `migrate deploy`.
+  - [ ] **6 → 7**: its own PR — v7 drops the Rust engine and **requires driver
+    adapters** (`@prisma/adapter-pg`, reconfiguring the Supabase pooled
+    connection), a `prisma.config.ts`, and the new `prisma-client` generator
+    with an explicit `output` path. Real architectural change; scope first.
+- [ ] **Tidy-ups** (1–2 days, code quality only):
+  - [x] ~100 repeated `${apiUrl}` prefixes: `adminAxios`/`customerAxios` now
+    carry a `baseURL` (`getApiUrl()`), so calls through them use `/api/...`
+    directly. The ~20 remaining prefixes are `fetch()` calls and the plain-axios
+    login/2FA/register/password-reset calls that deliberately skip the auth
+    interceptor, plus `resolveImageUrl`.
+  - [x] Lint warnings: 37 → 1. Real fixes where safe (a missing
+    `customer.houseNumber` delivery-distance dep; `fetchOrders`/`fetchEntries`
+    wrapped in `useCallback` with honest deps; a stable `normalizeSettings`
+    dep; `Boolean(customer)` extracted). The `set-state-in-effect` rule is
+    turned off in `.oxlintrc.json` — it only flagged the accepted
+    fetch-on-mount pattern — and `only-export-components` is scoped off for
+    `src/context/**` (the provider+hook files; the alternative was splitting
+    `useLanguage` across its 79 import sites for a dev-only HMR warning). The
+    one remaining warning (`useCouponCode`) is an intentional self-updating
+    effect that would loop if the dep were added; oxlint can't inline-suppress
+    it, so it's left with a comment explaining why.
+  - [ ] Tailwind 3 → 4 (the colour tokens in `tailwind.config.js` then move to
+    CSS) — its own PR; v4-only classes silently no-op on v3.
 
 Watch: a typed Orders search decrypts the name, phone and address of every
 order in memory, which is fine now but gets slow at around 10,000 orders.

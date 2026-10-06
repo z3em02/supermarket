@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { getApiUrl } from '../../utils/api';
 import axios from '../../utils/adminAxios';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -19,8 +18,7 @@ export const useSectionPasscode = () => {
   useEffect(() => {
     const fetchPasscodeStatus = async () => {
       try {
-        const apiUrl = getApiUrl();
-        const res = await axios.get(`${apiUrl}/api/settings/passcode-status`);
+        const res = await axios.get(`/api/settings/passcode-status`);
         setPasscodeIsSet(res.data.isSet);
       } catch (err) {
         console.error('Error fetching passcode status:', err);
@@ -47,8 +45,7 @@ export const useSectionPasscode = () => {
     }
     try {
       setSavingPasscode(true);
-      const apiUrl = getApiUrl();
-      await axios.put(`${apiUrl}/api/settings/passcode`, { passcode: newPasscode, currentPasscode: passcodeIsSet ? currentPasscode : undefined });
+      await axios.put(`/api/settings/passcode`, { passcode: newPasscode, currentPasscode: passcodeIsSet ? currentPasscode : undefined });
       setPasscodeIsSet(true);
       setShowPasscodeForm(false);
       setNewPasscode('');
@@ -68,8 +65,7 @@ export const useSectionPasscode = () => {
     if (entered === null) return;
     try {
       setSavingPasscode(true);
-      const apiUrl = getApiUrl();
-      await axios.put(`${apiUrl}/api/settings/passcode`, { passcode: null, currentPasscode: entered });
+      await axios.put(`/api/settings/passcode`, { passcode: null, currentPasscode: entered });
       setPasscodeIsSet(false);
       setPasscodeMessage(language === 'ar' ? 'تمت إزالة الرمز' : 'PIN entfernt');
     } catch (err) {

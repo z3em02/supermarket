@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import customerAxios from '../utils/customerAxios';
 import { useCustomerAuth } from '../context/CustomerAuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useStoreSettings } from '../context/StoreSettingsContext';
-import { getApiUrl } from '../utils/api';
 import { printHtmlInHiddenIframe } from '../utils/printDocument';
 import { buildCustomerOrderReportHtml } from '../utils/customerOrderReport';
 import {
@@ -69,9 +68,26 @@ export const CustomerAccount = () => {
   // False while the WhatsApp code is still being sent
   const [phoneCodeSent, setPhoneCodeSent] = useState(false);
 
+  const isAuthenticated = Boolean(customer);
+
+  // Stable (closes over nothing that changes), so it's a safe effect dep.
+  const fetchOrders = useCallback(async (silent = false) => {
+    try {
+      if (!silent) setLoadingOrders(true);
+      const res = await customerAxios.get(`/api/orders/my-orders`);
+      setOrders(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      if (err.response?.status !== 401) {
+        console.error('Failed to load customer orders:', err);
+      }
+    } finally {
+      if (!silent) setLoadingOrders(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (authLoading) return; // wait for the initial session check to resolve
-    if (!customer) {
+    if (!isAuthenticated) {
       navigate('/customer/login');
       return;
     }
@@ -83,7 +99,7 @@ export const CustomerAccount = () => {
       fetchOrders(true);
     }, 15000);
     return () => clearInterval(pollId);
-  }, [authLoading, Boolean(customer)]);
+  }, [authLoading, isAuthenticated, navigate, fetchOrders]);
 
   useEffect(() => {
     if (customer) {
@@ -103,21 +119,6 @@ export const CustomerAccount = () => {
       });
     }
   }, [customer]);
-
-  const fetchOrders = async (silent = false) => {
-    try {
-      if (!silent) setLoadingOrders(true);
-      const apiUrl = getApiUrl();
-      const res = await customerAxios.get(`${apiUrl}/api/orders/my-orders`);
-      setOrders(Array.isArray(res.data) ? res.data : []);
-    } catch (err) {
-      if (err.response?.status !== 401) {
-        console.error('Failed to load customer orders:', err);
-      }
-    } finally {
-      if (!silent) setLoadingOrders(false);
-    }
-  };
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
@@ -149,9 +150,8 @@ export const CustomerAccount = () => {
     if (!order?.orderItems?.length) return;
     try {
       setReorderingOrderId(order.id);
-      const apiUrl = getApiUrl();
       // The public catalog route — /api/products itself is admin-only.
-      const catalogRes = await customerAxios.get(`${apiUrl}/api/products/catalog`);
+      const catalogRes = await customerAxios.get(`/api/products/catalog`);
       const availableProducts = Array.isArray(catalogRes.data) ? catalogRes.data : [];
       const productMap = new Map(availableProducts.map(p => [p.id, p]));
 
@@ -287,9 +287,8 @@ export const CustomerAccount = () => {
     try {
       setRespondingOrderId(orderId);
       setActionFeedback({ message: '', isError: false });
-      const apiUrl = getApiUrl();
       await customerAxios.put(
-        `${apiUrl}/api/orders/${orderId}/customer-response`,
+        `/api/orders/${orderId}/customer-response`,
         { action }
       );
       setActionFeedback({

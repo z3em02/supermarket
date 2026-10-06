@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import axios from '../utils/adminAxios';
 import { Link, useSearchParams } from 'react-router-dom';
-import { getApiUrl } from '../utils/api';
 import { useLanguage } from '../context/LanguageContext';
 import { ADMIN_BASE } from '../config/adminPath';
 import { Plus, Store, ArrowUpRight, Layers } from 'lucide-react';
@@ -46,11 +45,10 @@ export const Products = () => {
 
   const fetchData = async () => {
     try {
-      const apiUrl = getApiUrl();
 
       const [prodRes, catRes] = await Promise.all([
-        axios.get(`${apiUrl}/api/products`),
-        axios.get(`${apiUrl}/api/categories`)
+        axios.get(`/api/products`),
+        axios.get(`/api/categories`)
       ]);
       setProducts(prodRes.data);
       setCategories(catRes.data);
@@ -72,7 +70,6 @@ export const Products = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const apiUrl = getApiUrl();
 
       const payload = {
         nameDe: formData.nameDe.trim(),
@@ -89,9 +86,9 @@ export const Products = () => {
       };
 
       if (editingProduct) {
-        await axios.put(`${apiUrl}/api/products/${editingProduct.id}`, payload);
+        await axios.put(`/api/products/${editingProduct.id}`, payload);
       } else {
-        await axios.post(`${apiUrl}/api/products`, payload);
+        await axios.post(`/api/products`, payload);
       }
 
       setShowModal(false);
@@ -140,8 +137,7 @@ export const Products = () => {
     if (!(await confirm({ message: t('confirmDeleteProduct'), confirmText: t('delete'), variant: 'danger' }))) return;
 
     try {
-      const apiUrl = getApiUrl();
-      await axios.delete(`${apiUrl}/api/products/${id}`);
+      await axios.delete(`/api/products/${id}`);
       fetchData();
     } catch (error) {
       console.error('Error deleting product:', error);
@@ -162,10 +158,9 @@ export const Products = () => {
 
     setIsRestocking(true);
     try {
-      const apiUrl = getApiUrl();
       const newStock = Number(restockProduct.stock || 0) + qtyToAdd;
       await axios.patch(
-        `${apiUrl}/api/products/${restockProduct.id}/stock`,
+        `/api/products/${restockProduct.id}/stock`,
         { stock: newStock }
       );
       setRestockProduct(null);

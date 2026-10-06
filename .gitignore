@@ -10,3 +10,12 @@ backend/prisma/dev.db
 backend/prisma/dev.db-journal
 backend/firebase-service-account*.json
 backups/
+
+# Local tooling / installed skills — not part of the app, keep out of git
+.agents/
+graphify-out/
+skills-lock.json
+.claude/settings.json
+# Installed skill bundles (Google etc.); engineering skills already tracked here stay tracked
+.claude/skills/
+.agents/skills/

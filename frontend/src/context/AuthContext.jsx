@@ -26,8 +26,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const apiUrl = getApiUrl();
-    adminAxios.get(`${apiUrl}/api/auth/me`)
+    adminAxios.get(`/api/auth/me`)
       .then((res) => {
         setUser(res.data);
         localStorage.setItem('adminUser', JSON.stringify(res.data));
@@ -109,8 +108,7 @@ export const AuthProvider = ({ children }) => {
     // the HttpOnly + CSRF cookies) so a stolen cookie can't outlive logout.
     // Local state is already cleared above regardless of this succeeding.
     try {
-      const apiUrl = getApiUrl();
-      await adminAxios.post(`${apiUrl}/api/auth/logout`, {});
+      await adminAxios.post(`/api/auth/logout`, {});
     } catch {
       // Ignore — the admin is logged out locally either way.
     }

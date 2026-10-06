@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
 import axios from '../utils/adminAxios';
-import { getApiUrl } from '../utils/api';
 import { toDateInputValue } from '../utils/dates';
 import { useLanguage } from '../context/LanguageContext';
 import { Tag, Sparkles, Plus, Search } from 'lucide-react';
@@ -73,12 +72,11 @@ export const Promotions = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const apiUrl = getApiUrl();
 
       const [coupRes, promoRes, prodRes] = await Promise.all([
-        axios.get(`${apiUrl}/api/coupons`),
-        axios.get(`${apiUrl}/api/promotions`),
-        axios.get(`${apiUrl}/api/products`)
+        axios.get(`/api/coupons`),
+        axios.get(`/api/promotions`),
+        axios.get(`/api/products`)
       ]);
 
       setCoupons(coupRes.data);
@@ -148,7 +146,6 @@ export const Promotions = () => {
     setCouponError('');
 
     try {
-      const apiUrl = getApiUrl();
 
       const payload = {
         code: couponForm.code.trim().toUpperCase(),
@@ -168,9 +165,9 @@ export const Promotions = () => {
       };
 
       if (editingCoupon) {
-        await axios.put(`${apiUrl}/api/coupons/${editingCoupon.id}`, payload);
+        await axios.put(`/api/coupons/${editingCoupon.id}`, payload);
       } else {
-        await axios.post(`${apiUrl}/api/coupons`, payload);
+        await axios.post(`/api/coupons`, payload);
       }
 
       setShowCouponModal(false);
@@ -184,9 +181,8 @@ export const Promotions = () => {
 
   const handleToggleCouponStatus = async (coup) => {
     try {
-      const apiUrl = getApiUrl();
       await axios.put(
-        `${apiUrl}/api/coupons/${coup.id}`,
+        `/api/coupons/${coup.id}`,
         { isActive: !coup.isActive }
       );
       setCoupons(prev => prev.map(c => (c.id === coup.id ? { ...c, isActive: !c.isActive } : c)));
@@ -199,8 +195,7 @@ export const Promotions = () => {
   const handleDeleteCoupon = async (id) => {
     if (!(await confirm({ message: t('confirmDeleteCoupon'), confirmText: t('delete'), variant: 'danger' }))) return;
     try {
-      const apiUrl = getApiUrl();
-      await axios.delete(`${apiUrl}/api/coupons/${id}`);
+      await axios.delete(`/api/coupons/${id}`);
       setCoupons(prev => prev.filter(c => c.id !== id));
     } catch (err) {
       console.error('Delete coupon error:', err);
@@ -257,7 +252,6 @@ export const Promotions = () => {
     setOfferError('');
 
     try {
-      const apiUrl = getApiUrl();
 
       const payload = {
         productId: offerForm.productId,
@@ -276,9 +270,9 @@ export const Promotions = () => {
       };
 
       if (editingOffer) {
-        await axios.put(`${apiUrl}/api/promotions/${editingOffer.id}`, payload);
+        await axios.put(`/api/promotions/${editingOffer.id}`, payload);
       } else {
-        await axios.post(`${apiUrl}/api/promotions`, payload);
+        await axios.post(`/api/promotions`, payload);
       }
 
       setShowOfferModal(false);
@@ -292,9 +286,8 @@ export const Promotions = () => {
 
   const handleToggleOfferStatus = async (off) => {
     try {
-      const apiUrl = getApiUrl();
       await axios.put(
-        `${apiUrl}/api/promotions/${off.id}`,
+        `/api/promotions/${off.id}`,
         { isActive: !off.isActive }
       );
       setPromotions(prev => prev.map(p => (p.id === off.id ? { ...p, isActive: !p.isActive } : p)));
@@ -307,8 +300,7 @@ export const Promotions = () => {
   const handleDeleteOffer = async (id) => {
     if (!(await confirm({ message: t('confirmDeleteOffer'), confirmText: t('delete'), variant: 'danger' }))) return;
     try {
-      const apiUrl = getApiUrl();
-      await axios.delete(`${apiUrl}/api/promotions/${id}`);
+      await axios.delete(`/api/promotions/${id}`);
       setPromotions(prev => prev.filter(p => p.id !== id));
     } catch (err) {
       console.error('Delete promotion error:', err);

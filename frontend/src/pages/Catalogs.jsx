@@ -1,6 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
 import axios from '../utils/adminAxios';
-import { getApiUrl } from '../utils/api';
 import { useLanguage } from '../context/LanguageContext';
 import { 
   Layers, 
@@ -36,8 +35,7 @@ export const Catalogs = () => {
 
   const fetchCategories = async () => {
     try {
-      const apiUrl = getApiUrl();
-      const response = await axios.get(`${apiUrl}/api/categories`);
+      const response = await axios.get(`/api/categories`);
       setCategories(response.data);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -90,12 +88,11 @@ export const Catalogs = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const apiUrl = getApiUrl();
 
       if (editingCategory) {
-        await axios.put(`${apiUrl}/api/categories/${editingCategory.id}`, formData);
+        await axios.put(`/api/categories/${editingCategory.id}`, formData);
       } else {
-        await axios.post(`${apiUrl}/api/categories`, formData);
+        await axios.post(`/api/categories`, formData);
       }
 
       setShowModal(false);
@@ -112,8 +109,7 @@ export const Catalogs = () => {
     if (!(await confirm({ message: t('confirmDeleteCatalog'), confirmText: t('delete'), variant: 'danger' }))) return;
 
     try {
-      const apiUrl = getApiUrl();
-      await axios.delete(`${apiUrl}/api/categories/${cat.id}`);
+      await axios.delete(`/api/categories/${cat.id}`);
       fetchCategories();
     } catch (error) {
       console.error('Error deleting category:', error);

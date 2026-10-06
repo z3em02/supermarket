@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { getApiUrl } from '../../utils/api';
 import axios from '../../utils/adminAxios';
 import { useLanguage } from '../../context/LanguageContext';
 import { useToast, useConfirm } from '../../context/FeedbackContext';
@@ -20,8 +19,7 @@ export const useDeliveryWindows = () => {
   const fetchDeliveryWindows = async () => {
     try {
       setLoadingWindows(true);
-      const apiUrl = getApiUrl();
-      const res = await axios.get(`${apiUrl}/api/delivery-windows`);
+      const res = await axios.get(`/api/delivery-windows`);
       setDeliveryWindows(res.data);
     } catch (err) {
       console.error('Error fetching delivery windows:', err);
@@ -48,9 +46,8 @@ export const useDeliveryWindows = () => {
       return;
     }
     try {
-      const apiUrl = getApiUrl();
       await axios.post(
-        `${apiUrl}/api/delivery-windows`,
+        `/api/delivery-windows`,
         { startHour: start, endHour: end, sortOrder: deliveryWindows.length }
       );
       await fetchDeliveryWindows();
@@ -64,9 +61,8 @@ export const useDeliveryWindows = () => {
   const handleToggleDeliveryWindow = async (win) => {
     setSavingWindowId(win.id);
     try {
-      const apiUrl = getApiUrl();
       await axios.put(
-        `${apiUrl}/api/delivery-windows/${win.id}`,
+        `/api/delivery-windows/${win.id}`,
         { isActive: !win.isActive }
       );
       setDeliveryWindows((prev) => prev.map((w) => (w.id === win.id ? { ...w, isActive: !w.isActive } : w)));
@@ -80,8 +76,7 @@ export const useDeliveryWindows = () => {
   const handleDeleteDeliveryWindow = async (id) => {
     if (!(await confirm({ message: language === 'ar' ? 'هل تريد حذف هذا الوقت؟' : 'Dieses Zeitfenster löschen?', confirmText: language === 'ar' ? 'حذف' : 'Löschen', variant: 'danger' }))) return;
     try {
-      const apiUrl = getApiUrl();
-      await axios.delete(`${apiUrl}/api/delivery-windows/${id}`);
+      await axios.delete(`/api/delivery-windows/${id}`);
       setDeliveryWindows((prev) => prev.filter((w) => w.id !== id));
     } catch (err) {
       console.error('Error deleting delivery window:', err);

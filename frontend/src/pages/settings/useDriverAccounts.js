@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { getApiUrl } from '../../utils/api';
 import axios from '../../utils/adminAxios';
 import { useLanguage } from '../../context/LanguageContext';
 import { useConfirm } from '../../context/FeedbackContext';
@@ -27,8 +26,7 @@ export const useDriverAccounts = () => {
 
   const fetchDrivers = async () => {
     try {
-      const apiUrl = getApiUrl();
-      const res = await axios.get(`${apiUrl}/api/settings/drivers`);
+      const res = await axios.get(`/api/settings/drivers`);
       setDrivers(res.data);
     } catch (err) {
       console.error('Error fetching drivers:', err);
@@ -50,8 +48,7 @@ export const useDriverAccounts = () => {
     }
     try {
       setCreatingDriver(true);
-      const apiUrl = getApiUrl();
-      const res = await axios.post(`${apiUrl}/api/settings/drivers`, { name: cleanName });
+      const res = await axios.post(`/api/settings/drivers`, { name: cleanName });
       setNewDriverName('');
       await fetchDrivers();
       if (res.data.pin) {
@@ -70,8 +67,7 @@ export const useDriverAccounts = () => {
     setDriverMessage('');
     try {
       setBusyDriverId(driver.id);
-      const apiUrl = getApiUrl();
-      await axios.put(`${apiUrl}/api/settings/drivers/${driver.id}`, { active: !driver.active });
+      await axios.put(`/api/settings/drivers/${driver.id}`, { active: !driver.active });
       await fetchDrivers();
     } catch (err) {
       setDriverError(err.response?.data?.error || (language === 'ar' ? 'حدث خطأ' : 'Ein Fehler ist aufgetreten'));
@@ -85,8 +81,7 @@ export const useDriverAccounts = () => {
     setDriverMessage('');
     try {
       setBusyDriverId(driver.id);
-      const apiUrl = getApiUrl();
-      const res = await axios.post(`${apiUrl}/api/settings/drivers/${driver.id}/reset-pin`, {});
+      const res = await axios.post(`/api/settings/drivers/${driver.id}/reset-pin`, {});
       if (res.data.pin) {
         setRevealedPin({ driverId: driver.id, name: driver.name, pin: res.data.pin });
       }
@@ -107,8 +102,7 @@ export const useDriverAccounts = () => {
     setDriverMessage('');
     try {
       setBusyDriverId(driver.id);
-      const apiUrl = getApiUrl();
-      await axios.delete(`${apiUrl}/api/settings/drivers/${driver.id}`);
+      await axios.delete(`/api/settings/drivers/${driver.id}`);
       await fetchDrivers();
     } catch (err) {
       setDriverError(err.response?.data?.error || (language === 'ar' ? 'حدث خطأ' : 'Ein Fehler ist aufgetreten'));

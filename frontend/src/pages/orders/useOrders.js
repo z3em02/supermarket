@@ -1,6 +1,5 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import axios from '../../utils/adminAxios';
-import { getApiUrl } from '../../utils/api';
 import { buildDeliverySlot, fetchActiveDeliveryWindows } from '../../utils/deliverySlot';
 
 const PAGE_SIZE = 50;
@@ -41,13 +40,14 @@ export const useOrders = () => {
   const [driverAccountNames, setDriverAccountNames] = useState([]);
 
   // Latest requested filters, read by refresh()/poll without re-creating them.
+  // Intentionally written during render so reads always see the current values.
   const queryRef = useRef({ page: 1, status: 'all', search: '' });
+  // oxlint-disable-next-line react/refs
   queryRef.current = { page, status: statusFilter, search: searchTerm };
 
   const fetchMetrics = useCallback(async () => {
     try {
-      const apiUrl = getApiUrl();
-      const res = await axios.get(`${apiUrl}/api/orders/summary`);
+      const res = await axios.get(`/api/orders/summary`);
       const byStatus = res.data?.byStatus || {};
       setMetrics({
         total: res.data?.total || 0,
@@ -75,13 +75,12 @@ export const useOrders = () => {
   const refresh = useCallback(async () => {
     const seq = ++requestSeqRef.current;
     try {
-      const apiUrl = getApiUrl();
       const { page: p, status, search } = queryRef.current;
       const params = { page: p, limit: PAGE_SIZE };
       if (status && status !== 'all') params.status = status;
       if (search && search.trim()) params.search = search.trim();
       const [listRes] = await Promise.all([
-        axios.get(`${apiUrl}/api/orders`, { params }),
+        axios.get(`/api/orders`, { params }),
         fetchMetrics()
       ]);
       if (seq !== requestSeqRef.current) return;
@@ -113,9 +112,8 @@ export const useOrders = () => {
     if (!queryRef.current.search.trim() || !since) return refresh();
     const seq = requestSeqRef.current;
     try {
-      const apiUrl = getApiUrl();
       const [changedRes] = await Promise.all([
-        axios.get(`${apiUrl}/api/orders`, { params: { updatedSince: since } }),
+        axios.get(`/api/orders`, { params: { updatedSince: since } }),
         fetchMetrics()
       ]);
       // A refresh started meanwhile (new search, page, action) wins.
@@ -130,15 +128,14 @@ export const useOrders = () => {
 
   const reloadFormData = useCallback(async () => {
     try {
-      const apiUrl = getApiUrl();
       const [customersRes, productsRes] = await Promise.all([
         // The customer list sits behind the Kunden section PIN; when it's
         // locked the create form explains that instead of an empty dropdown.
-        axios.get(`${apiUrl}/api/customers`).catch((err) => ({
+        axios.get(`/api/customers`).catch((err) => ({
           data: [],
           locked: err.response?.data?.code === 'SECTION_LOCKED'
         })),
-        axios.get(`${apiUrl}/api/products`)
+        axios.get(`/api/products`)
       ]);
       setCustomers(customersRes.data);
       setCustomersLocked(Boolean(customersRes.locked));
@@ -150,8 +147,7 @@ export const useOrders = () => {
 
   const fetchActiveDrivers = useCallback(async () => {
     try {
-      const apiUrl = getApiUrl();
-      const res = await axios.get(`${apiUrl}/api/settings/driver-sessions`);
+      const res = await axios.get(`/api/settings/driver-sessions`);
       setActiveDrivers(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error('Error fetching active driver sessions:', err);
@@ -180,7 +176,7 @@ export const useOrders = () => {
   // Active driver accounts (Settings → Fahrerkonten), so the assign-driver
   // choice lists every driver, not only those online or on the current page.
   useEffect(() => {
-    axios.get(`${getApiUrl()}/api/settings/drivers/names`)
+    axios.get(`/api/settings/drivers/names`)
       .then((res) => setDriverAccountNames(Array.isArray(res.data) ? res.data : []))
       .catch((err) => console.error('Error fetching driver names:', err));
   }, []);
@@ -208,16 +204,14 @@ export const useOrders = () => {
   // --- Mutating actions -------------------------------------------------
 
   const fetchOrderById = useCallback(async (id) => {
-    const apiUrl = getApiUrl();
-    const res = await axios.get(`${apiUrl}/api/orders/${id}`);
+    const res = await axios.get(`/api/orders/${id}`);
     return res.data;
   }, []);
 
   // Loads the order's own history (status changes, edits, driver changes)
   // for the drawer's "Verlauf" tab.
   const fetchOrderHistory = useCallback(async (id) => {
-    const apiUrl = getApiUrl();
-    const res = await axios.get(`${apiUrl}/api/orders/${id}/history`);
+    const res = await axios.get(`/api/orders/${id}/history`);
     return res.data;
   }, []);
 
@@ -225,8 +219,7 @@ export const useOrders = () => {
   // server answers 409 STALE_ORDER instead of overwriting a newer change.
   // List quick actions don't, and always apply.
   const assignDriver = useCallback(async (orderId, assignedDriverName, expectedUpdatedAt) => {
-    const apiUrl = getApiUrl();
-    const res = await axios.put(`${apiUrl}/api/orders/${orderId}/assign-driver`, {
+    const res = await axios.put(`/api/orders/${orderId}/assign-driver`, {
       assignedDriverName: assignedDriverName || null,
       expectedUpdatedAt
     });
@@ -235,21 +228,18 @@ export const useOrders = () => {
   }, []);
 
   const createOrder = useCallback(async (payload) => {
-    const apiUrl = getApiUrl();
-    await axios.post(`${apiUrl}/api/orders`, payload);
+    await axios.post(`/api/orders`, payload);
     await refresh();
   }, [refresh]);
 
   const changeStatus = useCallback(async (orderId, body) => {
-    const apiUrl = getApiUrl();
-    const res = await axios.put(`${apiUrl}/api/orders/${orderId}/status`, body);
+    const res = await axios.put(`/api/orders/${orderId}/status`, body);
     await refresh();
     return res.data;
   }, [refresh]);
 
   const saveDeliverySlot = useCallback(async (orderId, date, window, expectedUpdatedAt) => {
-    const apiUrl = getApiUrl();
-    const res = await axios.put(`${apiUrl}/api/orders/${orderId}/status`, {
+    const res = await axios.put(`/api/orders/${orderId}/status`, {
       deliverySlot: buildDeliverySlot(date, window?.startHour, window?.endHour),
       expectedUpdatedAt
     });
@@ -258,8 +248,7 @@ export const useOrders = () => {
   }, [refresh]);
 
   const saveOrderEdit = useCallback(async (orderId, payload) => {
-    const apiUrl = getApiUrl();
-    const res = await axios.put(`${apiUrl}/api/orders/${orderId}/edit`, payload);
+    const res = await axios.put(`/api/orders/${orderId}/edit`, payload);
     await refresh();
     return res.data;
   }, [refresh]);

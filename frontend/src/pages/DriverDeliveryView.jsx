@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import axios from '../utils/adminAxios';
-import { getApiUrl } from '../utils/api';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -79,8 +78,7 @@ export const DriverDeliveryView = () => {
 
     try {
       setLoggingIn(true);
-      const apiUrl = getApiUrl();
-      const res = await axios.post(`${apiUrl}/api/settings/driver/login`, {
+      const res = await axios.post(`/api/settings/driver/login`, {
         driverName: inputDriverName.trim(),
         passcode: inputPasscode.trim()
       });
@@ -106,8 +104,7 @@ export const DriverDeliveryView = () => {
 
     const poll = async () => {
       try {
-        const apiUrl = getApiUrl();
-        const res = await axios.get(`${apiUrl}/api/settings/driver/login-poll/${pendingPollToken}`);
+        const res = await axios.get(`/api/settings/driver/login-poll/${pendingPollToken}`);
         if (cancelled) return;
 
         if (res.data.status === 'approved') {
@@ -144,8 +141,7 @@ export const DriverDeliveryView = () => {
     // Fire-and-forget: revokes the DriverSession row and clears the HttpOnly
     // driver_token cookie server-side (JS can't clear an HttpOnly cookie
     // itself). Local UI state is cleared immediately regardless of outcome.
-    const apiUrl = getApiUrl();
-    axios.post(`${apiUrl}/api/settings/driver/logout`).catch(() => {});
+    axios.post(`/api/settings/driver/logout`).catch(() => {});
     // Clears any leftover driver_token from before this session moved to an
     // HttpOnly cookie — harmless no-op once nothing is left to remove.
     sessionStorage.removeItem('driver_token');
@@ -165,8 +161,7 @@ export const DriverDeliveryView = () => {
     if (!isSilent) setLoading(true);
     else setRefreshing(true);
     try {
-      const apiUrl = getApiUrl();
-      const res = await axios.get(`${apiUrl}/api/orders`);
+      const res = await axios.get(`/api/orders`);
       setOrders(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error('Failed to load orders for delivery view:', err);
@@ -218,7 +213,6 @@ export const DriverDeliveryView = () => {
   const handleUpdateStatus = async (order, targetStatus, cashCollected = true, customNote = '') => {
     setUpdatingId(order.id);
     try {
-      const apiUrl = getApiUrl();
       // Only the new line is sent — the backend appends it to the order's
       // current notes, so nothing an admin added meanwhile gets overwritten.
       let driverNote = '';
@@ -243,7 +237,7 @@ export const DriverDeliveryView = () => {
         driverNote += ` - ${customNote.trim()}`;
       }
 
-      await axios.put(`${apiUrl}/api/orders/${order.id}/status`, {
+      await axios.put(`/api/orders/${order.id}/status`, {
         status: targetStatus,
         driverNote: driverNote.trim() || undefined
       });

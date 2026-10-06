@@ -303,7 +303,7 @@ const editOrder = async (req, res) => {
       console.error('Error sending order modification email:', emailErr.message || emailErr);
     }
 
-    logAudit(req.admin?.email, 'EDIT_ORDER', `Bestellung angepasst #${id.slice(0, 8).toUpperCase()}: Grund "${reason || 'Kein Grund angegeben'}", Neuer Betrag €${updatedOrder.totalAmount}`);
+    logAudit(req.admin?.email, 'EDIT_ORDER', `Bestellung angepasst #${id.slice(0, 8).toUpperCase()}: Grund "${reason || 'Kein Grund angegeben'}", Neuer Betrag €${updatedOrder.totalAmount}`, id);
 
     res.json(updatedOrder);
   } catch (error) {

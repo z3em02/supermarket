@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { getCsrfToken } from './csrf';
+import { getApiUrl } from './api';
 
 // Fired on any 401 from this instance so AuthContext can clear its `user`
 // state. AuthContext listens and ProtectedRoute (already watching `user`)
@@ -19,7 +20,9 @@ export const ADMIN_AUTH_EXPIRED_EVENT = 'admin-auth-expired';
 // actually send those cookies (and receive new ones) on cross-origin
 // requests; same-origin production deploys don't strictly need it but it's
 // harmless there.
-const adminAxios = axios.create({ withCredentials: true });
+// baseURL means call sites use '/api/...' directly; getApiUrl() resolves to
+// the backend origin in dev and '' (same-origin, nginx proxies /api) in prod.
+const adminAxios = axios.create({ baseURL: getApiUrl(), withCredentials: true });
 
 const SECTION_UNLOCK_TOKEN_KEY = 'admin_section_unlock_token';
 const SECTION_UNLOCK_FLAG_KEY = 'admin_section_unlocked';
