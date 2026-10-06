@@ -37,9 +37,14 @@ model AuditLog {
   adminEmail String
   action     String // e.g. 'VIEW_CUSTOMERS', 'EXPORT_ACCOUNTING'
   detail     String?
+  // Set for per-order actions so the order drawer's history tab can look them
+  // up by id. A plain string, not a foreign key: the audit trail must survive
+  // even if the order row is ever removed.
+  orderId    String?
   createdAt  DateTime @default(now())
 
   @@index([createdAt])
+  @@index([orderId])
 }
 
 model Category {
@@ -174,6 +179,9 @@ model Order {
   // so this is just a label the admin sets and both the admin's Orders
   // page and the driver's own delivery view can display.
   assignedDriverName  String?
+  // Sent by the checkout, one per attempt: a retried POST /api/orders with
+  // the same key gets the order it already placed instead of a second one.
+  idempotencyKey      String?     @unique
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @updatedAt
   orderItems          OrderItem[]
