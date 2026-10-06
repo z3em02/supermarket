@@ -70,6 +70,9 @@ export const CustomerCartDrawer = ({
   const [activePromos, setActivePromos] = useState([]);
   const coupon = useCouponCode({ cart, isAr });
   const { appliedCoupon, setAppliedCoupon } = coupon;
+  // One idempotency key per checkout attempt: kept across a failed retry (so a
+  // dropped connection doesn't place the order twice) and cleared on success.
+  const idempotencyKeyRef = useRef(null);
 
   // Fetch active promotions
   useEffect(() => {
@@ -277,11 +280,6 @@ export const CustomerCartDrawer = ({
   const isVerified = Boolean(customer?.emailVerified && customer?.phoneVerified);
   // No order without an address the driver can find (the server checks this too).
   const addressMissing = isAuthenticated && !isCompleteDeliveryAddress(deliveryAddress);
-
-  // One idempotency key per checkout attempt: kept across a failed retry (so
-  // a dropped connection doesn't place the order twice) and cleared only once
-  // an order actually goes through.
-  const idempotencyKeyRef = useRef(null);
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
