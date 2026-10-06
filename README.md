@@ -966,8 +966,20 @@ From the code-health audit of September 2026, in the suggested order.
 - [ ] **Browser smoke test** (1–2 days): register → order → accept → deliver
   in a real browser (e.g. Playwright) in CI, replacing the manual "one full
   run" of the go-live checklist.
-- [ ] **Prisma 5 → 7** (1–2 days): two major versions behind; the database
-  tests now cover the order flows, which makes the upgrade safer.
+- [ ] **Prisma 5 → 7** (1–2 days): the database tests now cover the order
+  flows, which makes the upgrade safer.
+  - [x] **5 → 6** (now on 6.19.3): a near-free bump for this schema — no
+    `Bytes` fields, no `NotFoundError`, no implicit m2m, no full-text search.
+    Also removed a stray `backend/prisma.config.ts` (a Prisma-skills stub whose
+    `definePrismaConfig` import broke the 6+ CLI). All unit + DB tests pass.
+    Note: Prisma 6.19's AI-agent guard blocks `prisma migrate reset` when run
+    by an AI coding agent unless `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION`
+    is set — affects local integration runs via such an agent, not CI or
+    `migrate deploy`.
+  - [ ] **6 → 7**: its own PR — v7 drops the Rust engine and **requires driver
+    adapters** (`@prisma/adapter-pg`, reconfiguring the Supabase pooled
+    connection), a `prisma.config.ts`, and the new `prisma-client` generator
+    with an explicit `output` path. Real architectural change; scope first.
 - [ ] **Tidy-ups** (1–2 days, code quality only):
   - [x] ~100 repeated `${apiUrl}` prefixes: `adminAxios`/`customerAxios` now
     carry a `baseURL` (`getApiUrl()`), so calls through them use `/api/...`
