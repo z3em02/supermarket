@@ -974,8 +974,17 @@ From the code-health audit of September 2026, in the suggested order.
     directly. The ~20 remaining prefixes are `fetch()` calls and the plain-axios
     login/2FA/register/password-reset calls that deliberately skip the auth
     interceptor, plus `resolveImageUrl`.
-  - [ ] 22 React `set-state-in-effect` lint warnings (each needs a per-case
-    look — they change render behaviour, not a mechanical fix).
+  - [x] Lint warnings: 37 → 1. Real fixes where safe (a missing
+    `customer.houseNumber` delivery-distance dep; `fetchOrders`/`fetchEntries`
+    wrapped in `useCallback` with honest deps; a stable `normalizeSettings`
+    dep; `Boolean(customer)` extracted). The `set-state-in-effect` rule is
+    turned off in `.oxlintrc.json` — it only flagged the accepted
+    fetch-on-mount pattern — and `only-export-components` is scoped off for
+    `src/context/**` (the provider+hook files; the alternative was splitting
+    `useLanguage` across its 79 import sites for a dev-only HMR warning). The
+    one remaining warning (`useCouponCode`) is an intentional self-updating
+    effect that would loop if the dep were added; oxlint can't inline-suppress
+    it, so it's left with a comment explaining why.
   - [ ] Tailwind 3 → 4 (the colour tokens in `tailwind.config.js` then move to
     CSS) — its own PR; v4-only classes silently no-op on v3.
 

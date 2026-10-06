@@ -58,7 +58,7 @@ export const StoreSettingsProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [normalizeSettings]);
 
   const fetchReviews = useCallback(async () => {
     try {
