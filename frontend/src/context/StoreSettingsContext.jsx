@@ -119,8 +119,7 @@ export const StoreSettingsProvider = ({ children }) => {
   // Update settings API call
   const updateStoreSettings = async (newSettingsData) => {
     try {
-      const apiUrl = getApiUrl();
-      const res = await adminAxios.put(`${apiUrl}/api/settings`, newSettingsData);
+      const res = await adminAxios.put(`/api/settings`, newSettingsData);
       const updated = res.data.settings || res.data;
       const normalized = normalizeSettings(updated);
       setSettings(normalized);
@@ -133,8 +132,7 @@ export const StoreSettingsProvider = ({ children }) => {
   // Add Google review
   const addReview = async (reviewData) => {
     try {
-      const apiUrl = getApiUrl();
-      const res = await adminAxios.post(`${apiUrl}/api/settings/reviews`, reviewData);
+      const res = await adminAxios.post(`/api/settings/reviews`, reviewData);
       setReviews((prev) => [res.data, ...prev]);
       return { success: true, review: res.data };
     } catch (err) {
@@ -145,8 +143,7 @@ export const StoreSettingsProvider = ({ children }) => {
   // Delete Google review
   const deleteReview = async (id) => {
     try {
-      const apiUrl = getApiUrl();
-      await adminAxios.delete(`${apiUrl}/api/settings/reviews/${id}`);
+      await adminAxios.delete(`/api/settings/reviews/${id}`);
       setReviews((prev) => prev.filter((r) => r.id !== id));
       return { success: true };
     } catch (err) {
@@ -157,8 +154,7 @@ export const StoreSettingsProvider = ({ children }) => {
   // Live Sync Google stars & reviews via backend scraper
   const syncGoogleReviews = async (googleReviewsUrl) => {
     try {
-      const apiUrl = getApiUrl();
-      const res = await adminAxios.post(`${apiUrl}/api/settings/sync-google-reviews`, { googleReviewsUrl });
+      const res = await adminAxios.post(`/api/settings/sync-google-reviews`, { googleReviewsUrl });
       const data = res.data;
       if (Array.isArray(data.reviews)) {
         setReviews(data.reviews);

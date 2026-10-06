@@ -1,6 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
 import axios from '../utils/adminAxios';
-import { getApiUrl } from '../utils/api';
 import { useLanguage } from '../context/LanguageContext';
 import {
   ScrollText,
@@ -271,8 +270,7 @@ export const AuditLog = () => {
     try {
       setLoading(true);
       setError('');
-      const apiUrl = getApiUrl();
-      const res = await axios.get(`${apiUrl}/api/audit-log?limit=200`);
+      const res = await axios.get(`/api/audit-log?limit=200`);
       setEntries(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error('Error fetching audit log:', err);
