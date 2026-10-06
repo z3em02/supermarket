@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import customerAxios from '../utils/customerAxios';
 import { useCustomerAuth } from '../context/CustomerAuthContext';
@@ -68,9 +68,26 @@ export const CustomerAccount = () => {
   // False while the WhatsApp code is still being sent
   const [phoneCodeSent, setPhoneCodeSent] = useState(false);
 
+  const isAuthenticated = Boolean(customer);
+
+  // Stable (closes over nothing that changes), so it's a safe effect dep.
+  const fetchOrders = useCallback(async (silent = false) => {
+    try {
+      if (!silent) setLoadingOrders(true);
+      const res = await customerAxios.get(`/api/orders/my-orders`);
+      setOrders(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      if (err.response?.status !== 401) {
+        console.error('Failed to load customer orders:', err);
+      }
+    } finally {
+      if (!silent) setLoadingOrders(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (authLoading) return; // wait for the initial session check to resolve
-    if (!customer) {
+    if (!isAuthenticated) {
       navigate('/customer/login');
       return;
     }
@@ -82,7 +99,7 @@ export const CustomerAccount = () => {
       fetchOrders(true);
     }, 15000);
     return () => clearInterval(pollId);
-  }, [authLoading, Boolean(customer)]);
+  }, [authLoading, isAuthenticated, navigate, fetchOrders]);
 
   useEffect(() => {
     if (customer) {
@@ -102,20 +119,6 @@ export const CustomerAccount = () => {
       });
     }
   }, [customer]);
-
-  const fetchOrders = async (silent = false) => {
-    try {
-      if (!silent) setLoadingOrders(true);
-      const res = await customerAxios.get(`/api/orders/my-orders`);
-      setOrders(Array.isArray(res.data) ? res.data : []);
-    } catch (err) {
-      if (err.response?.status !== 401) {
-        console.error('Failed to load customer orders:', err);
-      }
-    } finally {
-      if (!silent) setLoadingOrders(false);
-    }
-  };
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target;

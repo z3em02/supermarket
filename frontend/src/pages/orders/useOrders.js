@@ -40,7 +40,9 @@ export const useOrders = () => {
   const [driverAccountNames, setDriverAccountNames] = useState([]);
 
   // Latest requested filters, read by refresh()/poll without re-creating them.
+  // Intentionally written during render so reads always see the current values.
   const queryRef = useRef({ page: 1, status: 'all', search: '' });
+  // oxlint-disable-next-line react/refs
   queryRef.current = { page, status: statusFilter, search: searchTerm };
 
   const fetchMetrics = useCallback(async () => {
