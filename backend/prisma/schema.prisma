@@ -174,6 +174,9 @@ model Order {
   // so this is just a label the admin sets and both the admin's Orders
   // page and the driver's own delivery view can display.
   assignedDriverName  String?
+  // Sent by the checkout, one per attempt: a retried POST /api/orders with
+  // the same key gets the order it already placed instead of a second one.
+  idempotencyKey      String?     @unique
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @updatedAt
   orderItems          OrderItem[]

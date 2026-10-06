@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   X,
@@ -278,6 +278,11 @@ export const CustomerCartDrawer = ({
   // No order without an address the driver can find (the server checks this too).
   const addressMissing = isAuthenticated && !isCompleteDeliveryAddress(deliveryAddress);
 
+  // One idempotency key per checkout attempt: kept across a failed retry (so
+  // a dropped connection doesn't place the order twice) and cleared only once
+  // an order actually goes through.
+  const idempotencyKeyRef = useRef(null);
+
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
     if (!isAuthenticated) {
@@ -353,6 +358,9 @@ export const CustomerCartDrawer = ({
     try {
       setSubmitting(true);
       setError('');
+      if (!idempotencyKeyRef.current) {
+        idempotencyKeyRef.current = crypto.randomUUID();
+      }
       const apiUrl = getApiUrl();
       const res = await fetch(`${apiUrl}/api/orders`, {
         method: 'POST',
@@ -367,7 +375,8 @@ export const CustomerCartDrawer = ({
           deliveryAddress: deliveryAddress.trim() || undefined,
           deliveryNotes: deliveryNotes.trim() || undefined,
           notes: deliveryNotes.trim() || undefined,
-          deliverySlot: buildDeliverySlot(deliveryDate, selectedWindow?.startHour, selectedWindow?.endHour)
+          deliverySlot: buildDeliverySlot(deliveryDate, selectedWindow?.startHour, selectedWindow?.endHour),
+          idempotencyKey: idempotencyKeyRef.current
         })
       });
 
@@ -379,6 +388,7 @@ export const CustomerCartDrawer = ({
       setPlacedOrder(data);
       setAppliedCoupon(null);
       clearCart();
+      idempotencyKeyRef.current = null;
     } catch (err) {
       console.error('Order checkout error:', err);
       setError(err.message || 'Error creating order');

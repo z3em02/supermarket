@@ -43,7 +43,7 @@ const invalidateSectionPasscodeCache = () => {
 // just the regular admin JWT. Must run after authMiddleware (needs req.admin).
 const sectionUnlockMiddleware = async (req, res, next) => {
   try {
-    // #50 fix: use 60s cached passcode status instead of hitting DB on every single request
+    // #50 fix: use the 5 s cached passcode status (PASSCODE_CACHE_MS) instead of hitting DB on every single request
     const passcodeHash = await getSectionPasscodeHash();
 
     // No PIN configured at all — nothing to enforce, matches the gate's own

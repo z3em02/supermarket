@@ -256,7 +256,14 @@ const getOrderById = async (req, res) => {
   }
 };
 
+// The create/idempotency responses also carry the coupon (ORDER_INCLUDE, used
+// by the list views, omits it to keep those payloads small).
+const ORDER_INCLUDE_WITH_COUPON = { ...ORDER_INCLUDE, coupon: true };
+
 const createOrder = async (req, res) => {
+  // Hoisted so the catch can recover from the unique-constraint race below.
+  let idempotencyKey = null;
+  let idempotencyCustomerId = null;
   try {
     const { notes } = req.body;
 
@@ -300,6 +307,27 @@ const createOrder = async (req, res) => {
     }
 
     const customer = decryptCustomerPII(customerRow);
+    idempotencyCustomerId = customer.id;
+
+    // Idempotency: the cart sends one key per checkout attempt, so a retry
+    // after a dropped connection returns the order already placed instead of
+    // creating a second one. Cheap pre-check here; the unique constraint and
+    // the P2002 catch below close the concurrent-retry window.
+    idempotencyKey = typeof req.body.idempotencyKey === 'string'
+      ? req.body.idempotencyKey.trim().slice(0, 100) || null
+      : null;
+    if (idempotencyKey) {
+      const existing = await prisma.order.findUnique({
+        where: { idempotencyKey },
+        include: ORDER_INCLUDE_WITH_COUPON
+      });
+      if (existing) {
+        if (existing.customerId !== customer.id) {
+          return res.status(409).json({ error: 'Dieser Bestellschlüssel wurde bereits verwendet. / This order key has already been used.' });
+        }
+        return res.status(200).json(withDecryptedCustomer(existing));
+      }
+    }
 
     // Customer-placed orders require verified email and phone
     if (!req.admin) {
@@ -565,6 +593,7 @@ const createOrder = async (req, res) => {
           distanceDeliveryFee,
           totalAmount,
           notes: notes || null,
+          idempotencyKey,
           orderItems: {
             create: orderItemsWithDetails.map(({ productId, quantity, price, originalPrice, discountAmount, promotionType, subtotal }) => ({
               productId,
@@ -577,15 +606,7 @@ const createOrder = async (req, res) => {
             }))
           }
         },
-        include: {
-          customer: { select: CUSTOMER_PUBLIC_SELECT },
-          orderItems: {
-            include: {
-              product: true
-            }
-          },
-          coupon: true
-        }
+        include: ORDER_INCLUDE_WITH_COUPON
       });
 
       // Log coupon usage
@@ -641,6 +662,17 @@ const createOrder = async (req, res) => {
   } catch (error) {
     if (error.isStockError || error.isCouponError) {
       return res.status(400).json({ error: error.message });
+    }
+    // Concurrent retry with the same idempotency key lost the race to the
+    // unique constraint: return the order the winning request just created.
+    if (error.code === 'P2002' && idempotencyKey) {
+      const existing = await prisma.order.findUnique({
+        where: { idempotencyKey },
+        include: ORDER_INCLUDE_WITH_COUPON
+      });
+      if (existing && existing.customerId === idempotencyCustomerId) {
+        return res.status(200).json(withDecryptedCustomer(existing));
+      }
     }
     console.error('Create order error:', error);
     res.status(500).json({ error: 'Internal server error' });

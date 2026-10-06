@@ -120,6 +120,37 @@ describe('order flows (database)', { skip: h.skipReason || false }, () => {
       assert.strictEqual((await h.prisma.coupon.findUnique({ where: { id: coupon.id } })).usedCount, 1);
     });
 
+    test('a repeated idempotency key returns the first order, not a second one', async () => {
+      const milk = await h.createProduct({ name: 'Milch 1L', price: 2.5, stock: 10 });
+      const customer = await h.createCustomer();
+      const token = h.customerToken(customer);
+      const key = 'checkout-attempt-abc-123';
+
+      const first = await placeOrder(token, [[milk, 2]], { idempotencyKey: key });
+      assert.strictEqual(first.status, 201, JSON.stringify(first.body));
+
+      const retry = await placeOrder(token, [[milk, 2]], { idempotencyKey: key });
+      assert.strictEqual(retry.status, 200, JSON.stringify(retry.body));
+      assert.strictEqual(retry.body.id, first.body.id, 'the retry returns the same order');
+      assert.strictEqual(await h.prisma.order.count(), 1, 'no second order was created');
+      assert.strictEqual(await stockOf(milk), 8, 'stock was taken only once');
+    });
+
+    test('another customer cannot reuse an idempotency key', async () => {
+      const milk = await h.createProduct({ name: 'Milch 1L', price: 2.5, stock: 10 });
+      const mine = await h.createCustomer();
+      const theirs = await h.createCustomer();
+      const key = 'shared-key-xyz';
+
+      const first = await placeOrder(h.customerToken(mine), [[milk, 1]], { idempotencyKey: key });
+      assert.strictEqual(first.status, 201, JSON.stringify(first.body));
+
+      const other = await placeOrder(h.customerToken(theirs), [[milk, 1]], { idempotencyKey: key });
+      assert.strictEqual(other.status, 409, JSON.stringify(other.body));
+      assert.strictEqual(await h.prisma.order.count(), 1);
+      assert.strictEqual(await stockOf(milk), 9);
+    });
+
     test('maintenance mode blocks customer orders but not an admin taking a phone order', async () => {
       await h.prisma.storeSettings.update({ where: { id: 'default' }, data: { maintenanceMode: true } });
       const milk = await h.createProduct({ name: 'Milch 1L', price: 2.5, stock: 10 });
