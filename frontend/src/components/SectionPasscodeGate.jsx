@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import axios from '../utils/adminAxios';
-import { getApiUrl } from '../utils/api';
 import { useLanguage } from '../context/LanguageContext';
 import { Lock, AlertCircle } from 'lucide-react';
 
@@ -30,8 +29,7 @@ export const SectionPasscodeGate = ({ children }) => {
     if (unlocked) return;
     const checkStatus = async () => {
       try {
-        const apiUrl = getApiUrl();
-        const res = await axios.get(`${apiUrl}/api/settings/passcode-status`);
+        const res = await axios.get(`/api/settings/passcode-status`);
         setStatus(res.data.isSet ? 'enter' : 'setup');
       } catch (err) {
         console.error('Passcode status error:', err);
@@ -58,8 +56,7 @@ export const SectionPasscodeGate = ({ children }) => {
       }
       try {
         setSubmitting(true);
-        const apiUrl = getApiUrl();
-        const setupRes = await axios.put(`${apiUrl}/api/settings/passcode`, { passcode: pin });
+        const setupRes = await axios.put(`/api/settings/passcode`, { passcode: pin });
         if (setupRes.data.unlockToken) sessionStorage.setItem(TOKEN_KEY, setupRes.data.unlockToken);
         sessionStorage.setItem(SESSION_KEY, 'true');
         setUnlocked(true);
@@ -73,8 +70,7 @@ export const SectionPasscodeGate = ({ children }) => {
 
     try {
       setSubmitting(true);
-      const apiUrl = getApiUrl();
-      const res = await axios.post(`${apiUrl}/api/settings/passcode/verify`, { passcode: pin });
+      const res = await axios.post(`/api/settings/passcode/verify`, { passcode: pin });
       if (res.data.valid) {
         if (res.data.unlockToken) sessionStorage.setItem(TOKEN_KEY, res.data.unlockToken);
         sessionStorage.setItem(SESSION_KEY, 'true');

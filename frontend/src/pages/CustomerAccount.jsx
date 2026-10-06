@@ -4,7 +4,6 @@ import customerAxios from '../utils/customerAxios';
 import { useCustomerAuth } from '../context/CustomerAuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useStoreSettings } from '../context/StoreSettingsContext';
-import { getApiUrl } from '../utils/api';
 import { printHtmlInHiddenIframe } from '../utils/printDocument';
 import { buildCustomerOrderReportHtml } from '../utils/customerOrderReport';
 import {
@@ -107,8 +106,7 @@ export const CustomerAccount = () => {
   const fetchOrders = async (silent = false) => {
     try {
       if (!silent) setLoadingOrders(true);
-      const apiUrl = getApiUrl();
-      const res = await customerAxios.get(`${apiUrl}/api/orders/my-orders`);
+      const res = await customerAxios.get(`/api/orders/my-orders`);
       setOrders(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       if (err.response?.status !== 401) {
@@ -149,9 +147,8 @@ export const CustomerAccount = () => {
     if (!order?.orderItems?.length) return;
     try {
       setReorderingOrderId(order.id);
-      const apiUrl = getApiUrl();
       // The public catalog route — /api/products itself is admin-only.
-      const catalogRes = await customerAxios.get(`${apiUrl}/api/products/catalog`);
+      const catalogRes = await customerAxios.get(`/api/products/catalog`);
       const availableProducts = Array.isArray(catalogRes.data) ? catalogRes.data : [];
       const productMap = new Map(availableProducts.map(p => [p.id, p]));
 
@@ -287,9 +284,8 @@ export const CustomerAccount = () => {
     try {
       setRespondingOrderId(orderId);
       setActionFeedback({ message: '', isError: false });
-      const apiUrl = getApiUrl();
       await customerAxios.put(
-        `${apiUrl}/api/orders/${orderId}/customer-response`,
+        `/api/orders/${orderId}/customer-response`,
         { action }
       );
       setActionFeedback({

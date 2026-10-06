@@ -27,8 +27,7 @@ export const CustomerAuthProvider = ({ children }) => {
 
   const refreshProfile = async () => {
     try {
-      const apiUrl = getApiUrl();
-      const res = await customerAxios.get(`${apiUrl}/api/customer/profile`);
+      const res = await customerAxios.get(`/api/customer/profile`);
       setCustomer(res.data);
       localStorage.setItem('customer_user', JSON.stringify(res.data));
       return res.data;
@@ -68,8 +67,7 @@ export const CustomerAuthProvider = ({ children }) => {
   };
 
   const verifyEmail = async (code) => {
-    const apiUrl = getApiUrl();
-    const res = await customerAxios.post(`${apiUrl}/api/customer/verify-email`, {
+    const res = await customerAxios.post(`/api/customer/verify-email`, {
       code,
       customerId: customer?.id
     });
@@ -82,8 +80,7 @@ export const CustomerAuthProvider = ({ children }) => {
 
   // code is the one sent to the customer's phone via WhatsApp (resendOtp('phone')).
   const verifyPhone = async (code) => {
-    const apiUrl = getApiUrl();
-    const res = await customerAxios.post(`${apiUrl}/api/customer/verify-phone`, { code });
+    const res = await customerAxios.post(`/api/customer/verify-phone`, { code });
     if (res.data.phoneVerified) {
       setCustomer(prev => prev ? { ...prev, phoneVerified: true } : prev);
       localStorage.setItem('customer_user', JSON.stringify({ ...customer, phoneVerified: true }));
@@ -92,8 +89,7 @@ export const CustomerAuthProvider = ({ children }) => {
   };
 
   const resendOtp = async (type) => {
-    const apiUrl = getApiUrl();
-    const res = await customerAxios.post(`${apiUrl}/api/customer/resend-otp`, {
+    const res = await customerAxios.post(`/api/customer/resend-otp`, {
       type,
       customerId: customer?.id,
       email: customer?.email,
@@ -103,8 +99,7 @@ export const CustomerAuthProvider = ({ children }) => {
   };
 
   const updateProfile = async (updateData) => {
-    const apiUrl = getApiUrl();
-    const res = await customerAxios.put(`${apiUrl}/api/customer/profile`, updateData);
+    const res = await customerAxios.put(`/api/customer/profile`, updateData);
     if (res.data.customer) {
       setCustomer(res.data.customer);
       localStorage.setItem('customer_user', JSON.stringify(res.data.customer));
@@ -117,8 +112,7 @@ export const CustomerAuthProvider = ({ children }) => {
     localStorage.removeItem('customer_user');
     // Best-effort: revoke the session server-side (bumps tokenVersion, clears
     // the HttpOnly + CSRF cookies) so a stolen cookie can't outlive logout.
-    const apiUrl = getApiUrl();
-    customerAxios.post(`${apiUrl}/api/customer/logout`, {}).catch(() => {});
+    customerAxios.post(`/api/customer/logout`, {}).catch(() => {});
   };
 
   const requestPasswordReset = async (email) => {

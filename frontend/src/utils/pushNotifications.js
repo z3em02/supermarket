@@ -37,7 +37,7 @@ export const enablePushNotifications = async () => {
     });
 
     const json = subscription.toJSON();
-    await customerAxios.post(`${apiUrl}/api/push/subscribe`, { endpoint: json.endpoint, keys: json.keys });
+    await customerAxios.post(`/api/push/subscribe`, { endpoint: json.endpoint, keys: json.keys });
 
     return 'granted';
   } catch (err) {

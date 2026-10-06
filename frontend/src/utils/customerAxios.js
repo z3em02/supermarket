@@ -1,11 +1,14 @@
 import axios from 'axios';
 import { getCsrfToken } from './csrf';
+import { getApiUrl } from './api';
 
 // Shared axios instance for authenticated customer API calls. Mirrors
 // adminAxios.js — the customer session lives entirely in the HttpOnly
 // `customer_token` cookie, so there is nothing to read from localStorage or
 // attach as an Authorization header.
-const customerAxios = axios.create({ withCredentials: true });
+// baseURL means call sites use '/api/...' directly; getApiUrl() resolves to
+// the backend origin in dev and '' (same-origin, nginx proxies /api) in prod.
+const customerAxios = axios.create({ baseURL: getApiUrl(), withCredentials: true });
 
 const MUTATING_METHODS = new Set(['post', 'put', 'patch', 'delete']);
 

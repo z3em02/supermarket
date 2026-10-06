@@ -1,6 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
 import axios from '../utils/adminAxios';
-import { getApiUrl } from '../utils/api';
 import { useLanguage } from '../context/LanguageContext';
 import { Users, AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '../components/ui';
@@ -39,8 +38,7 @@ export const Customers = () => {
     try {
       setLoading(true);
       setError('');
-      const apiUrl = getApiUrl();
-      const response = await axios.get(`${apiUrl}/api/customers`);
+      const response = await axios.get(`/api/customers`);
       if (Array.isArray(response.data)) {
         setCustomers(response.data);
       } else {
@@ -67,8 +65,7 @@ export const Customers = () => {
 
     try {
       setDeletingId(id);
-      const apiUrl = getApiUrl();
-      await axios.delete(`${apiUrl}/api/customers/${id}`);
+      await axios.delete(`/api/customers/${id}`);
       setCustomers(prev => Array.isArray(prev) ? prev.filter(c => c.id !== id) : []);
       if (selectedCustomer?.id === id) {
         setSelectedCustomer(null);

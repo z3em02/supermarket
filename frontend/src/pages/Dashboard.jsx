@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import axios from '../utils/adminAxios';
-import { getApiUrl } from '../utils/api';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { ADMIN_BASE } from '../config/adminPath';
@@ -48,8 +47,7 @@ export const Dashboard = () => {
 
   const fetchPendingDriverRequests = async () => {
     try {
-      const apiUrl = getApiUrl();
-      const res = await axios.get(`${apiUrl}/api/settings/driver-login-requests`);
+      const res = await axios.get(`/api/settings/driver-login-requests`);
       setPendingDriverRequests(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
       console.error('Error fetching pending driver login requests:', error);
@@ -59,8 +57,7 @@ export const Dashboard = () => {
   const handleResolveDriverRequest = async (id, action) => {
     setResolvingRequestId(id);
     try {
-      const apiUrl = getApiUrl();
-      await axios.post(`${apiUrl}/api/settings/driver-login-requests/${id}/${action}`);
+      await axios.post(`/api/settings/driver-login-requests/${id}/${action}`);
       setPendingDriverRequests((prev) => prev.filter((r) => r.id !== id));
     } catch (error) {
       console.error(`Error ${action === 'approve' ? 'approving' : 'rejecting'} driver login:`, error);
@@ -77,8 +74,7 @@ export const Dashboard = () => {
 
   const fetchActiveDrivers = async () => {
     try {
-      const apiUrl = getApiUrl();
-      const res = await axios.get(`${apiUrl}/api/settings/driver-sessions`);
+      const res = await axios.get(`/api/settings/driver-sessions`);
       setActiveDrivers(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
       console.error('Error fetching active driver sessions:', error);
@@ -88,8 +84,7 @@ export const Dashboard = () => {
   const handleLogoutDriver = async (sessionId) => {
     setLoggingOutSessionId(sessionId);
     try {
-      const apiUrl = getApiUrl();
-      await axios.post(`${apiUrl}/api/settings/driver-sessions/${sessionId}/logout`);
+      await axios.post(`/api/settings/driver-sessions/${sessionId}/logout`);
       setActiveDrivers((prev) => prev.filter((s) => s.id !== sessionId));
     } catch (error) {
       console.error('Error logging out driver:', error);
@@ -111,7 +106,6 @@ export const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const apiUrl = getApiUrl();
 
       // customer-auth/customers and accounting/summary sit behind the
       // Kunden/Buchhaltung section PIN — fall back to a "locked" marker
@@ -120,10 +114,10 @@ export const Dashboard = () => {
       const LOCKED = { locked: true };
       // Counts only — the full customer and order lists aren't needed here.
       const [customersRes, productsRes, ordersRes, accountingRes] = await Promise.all([
-        axios.get(`${apiUrl}/api/customers/count`).catch(() => LOCKED),
-        axios.get(`${apiUrl}/api/products`),
-        axios.get(`${apiUrl}/api/orders/summary`),
-        axios.get(`${apiUrl}/api/accounting/summary`).catch(() => LOCKED)
+        axios.get(`/api/customers/count`).catch(() => LOCKED),
+        axios.get(`/api/products`),
+        axios.get(`/api/orders/summary`),
+        axios.get(`/api/accounting/summary`).catch(() => LOCKED)
       ]);
 
       setSectionLocked(customersRes.locked || accountingRes.locked);

@@ -968,10 +968,16 @@ From the code-health audit of September 2026, in the suggested order.
   run" of the go-live checklist.
 - [ ] **Prisma 5 → 7** (1–2 days): two major versions behind; the database
   tests now cover the order flows, which makes the upgrade safer.
-- [ ] **Tidy-ups** (1–2 days, code quality only): 22 React
-  `set-state-in-effect` lint warnings, ~100 repeated `${apiUrl}` prefixes
-  (an axios `baseURL` would do), Tailwind 3 → 4 (the colour tokens in
-  `tailwind.config.js` then move to CSS).
+- [ ] **Tidy-ups** (1–2 days, code quality only):
+  - [x] ~100 repeated `${apiUrl}` prefixes: `adminAxios`/`customerAxios` now
+    carry a `baseURL` (`getApiUrl()`), so calls through them use `/api/...`
+    directly. The ~20 remaining prefixes are `fetch()` calls and the plain-axios
+    login/2FA/register/password-reset calls that deliberately skip the auth
+    interceptor, plus `resolveImageUrl`.
+  - [ ] 22 React `set-state-in-effect` lint warnings (each needs a per-case
+    look — they change render behaviour, not a mechanical fix).
+  - [ ] Tailwind 3 → 4 (the colour tokens in `tailwind.config.js` then move to
+    CSS) — its own PR; v4-only classes silently no-op on v3.
 
 Watch: a typed Orders search decrypts the name, phone and address of every
 order in memory, which is fine now but gets slow at around 10,000 orders.

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import axios from '../utils/adminAxios';
 import { useLanguage } from '../context/LanguageContext';
 import { useStoreSettings } from '../context/StoreSettingsContext';
-import { getApiUrl } from '../utils/api';
 import {
   Store,
   Star,
@@ -152,8 +151,7 @@ export const Settings = () => {
       setGeocodingStore(true);
       setSuccessMessage('');
       setErrorMessage('');
-      const apiUrl = getApiUrl();
-      const res = await axios.post(`${apiUrl}/api/delivery-distance/geocode-store`, {});
+      const res = await axios.post(`/api/delivery-distance/geocode-store`, {});
       if (res.data && res.data.latitude && res.data.longitude) {
         setFormData((prev) => ({
           ...prev,
