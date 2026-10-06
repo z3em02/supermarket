@@ -181,7 +181,7 @@ export const CustomerCartDrawer = ({
     }, 450);
 
     return () => clearTimeout(timer);
-  }, [isOpen, deliveryAddress, customer?.street, customer?.postalCode, customer?.city, settings?.deliveryFee, settings?.deliveryFeePerKm, settings?.maxDeliveryDistanceKm]);
+  }, [isOpen, deliveryAddress, customer?.street, customer?.houseNumber, customer?.postalCode, customer?.city, settings?.deliveryFee, settings?.deliveryFeePerKm, settings?.maxDeliveryDistanceKm]);
 
   const promoMap = useMemo(() => {
     return new Map(activePromos.map(p => [p.productId, p]));

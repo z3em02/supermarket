@@ -55,7 +55,8 @@ export const useCouponCode = ({ cart, isAr }) => {
     setCouponError('');
   };
 
-  // Revalidate coupon when cart items change
+  // Revalidate coupon when cart items change. Reads appliedCoupon and updates
+  // it inside, so it is deliberately not a dependency (that would loop).
   useEffect(() => {
     if (appliedCoupon && cart.length > 0) {
       const apiUrl = getApiUrl();

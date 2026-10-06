@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import axios from '../utils/adminAxios';
 import { useLanguage } from '../context/LanguageContext';
 import {
@@ -266,7 +266,7 @@ export const AuditLog = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
 
-  const fetchEntries = async () => {
+  const fetchEntries = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -278,11 +278,11 @@ export const AuditLog = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isAr]);
 
   useEffect(() => {
     fetchEntries();
-  }, []);
+  }, [fetchEntries]);
 
   const filteredEntries = useMemo(() => {
     return entries.filter((entry) => {
