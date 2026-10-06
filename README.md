@@ -963,9 +963,16 @@ From the code-health audit of September 2026, in the suggested order.
   - [ ] **Audit-log retention** still open, on purpose: deleting audit rows is
     a GDPR/accounting-evidence decision (Austrian records-retention rules), so
     it needs its own pass rather than a guessed cutoff. Nothing auto-deletes today.
-- [ ] **Browser smoke test** (1–2 days): register → order → accept → deliver
-  in a real browser (e.g. Playwright) in CI, replacing the manual "one full
-  run" of the go-live checklist.
+- [x] **Browser smoke test**: `e2e/` runs the whole lifecycle in a real
+  browser with Playwright — register → verify email + phone → place an order →
+  admin logs in (2FA) → accepts (assigns a driver) → preparing → out for
+  delivery → delivered. The backend under test runs with `offline.cjs` (same
+  network stub as the DB tests), so geocoding uses the offline postal-code
+  centroids and the run is deterministic. OTP/2FA codes are read straight from
+  the database (they're stored in plaintext), so no app test-seam is needed.
+  A CI job (`e2e` in `.github/workflows/ci.yml`) runs it on a Postgres service;
+  `cd e2e && npm install && npx playwright install chromium && npm test` runs
+  it locally. This replaces the manual "one full run" of the go-live checklist.
 - [ ] **Prisma 5 → 7** (1–2 days): the database tests now cover the order
   flows, which makes the upgrade safer.
   - [x] **5 → 6** (now on 6.19.3): a near-free bump for this schema — no
