@@ -176,6 +176,22 @@ describe('order flows (database)', { skip: h.skipReason || false }, () => {
   });
 
   describe('changing the status', () => {
+    test('order history is looked up by orderId, not shared across orders', async () => {
+      const milk = await h.createProduct({ name: 'Milch 1L', price: 2.5, stock: 20 });
+      const customer = await h.createCustomer();
+      const a = await placeOrder(h.customerToken(customer), [[milk, 1]]);
+      const b = await placeOrder(h.customerToken(customer), [[milk, 1]]);
+      await setStatus(a.body.id, 'accepted');
+      await setStatus(b.body.id, 'accepted');
+
+      const history = await api('GET', `/api/orders/${a.body.id}/history`, { token: adminAuth });
+      assert.strictEqual(history.status, 200, JSON.stringify(history.body));
+      assert.ok(history.body.entries.length >= 1, 'order a has a status-change entry');
+      // Every returned entry is tied to order a, never bled in from order b.
+      const rows = await h.prisma.auditLog.findMany({ where: { id: { in: history.body.entries.map((e) => e.id) } } });
+      assert.ok(rows.every((r) => r.orderId === a.body.id), 'all entries belong to order a');
+    });
+
     test('declining gives stock and the coupon back; reactivating takes the stock again', async () => {
       const milk = await h.createProduct({ name: 'Milch 1L', price: 5, stock: 10 });
       const customer = await h.createCustomer();

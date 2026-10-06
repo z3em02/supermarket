@@ -261,7 +261,7 @@ const updateOrderStatus = async (req, res) => {
     }
 
     const actorEmail = req.admin?.email || (req.driver ? `Fahrer (${req.driver.name})` : 'System');
-    logAudit(actorEmail, 'UPDATE_ORDER_STATUS', `Bestellstatus geändert für #${id.slice(0, 8).toUpperCase()} -> ${normalizedStatus}`);
+    logAudit(actorEmail, 'UPDATE_ORDER_STATUS', `Bestellstatus geändert für #${id.slice(0, 8).toUpperCase()} -> ${normalizedStatus}`, id);
 
     res.json(updatedOrder);
   } catch (error) {
@@ -310,7 +310,8 @@ const assignOrderDriver = async (req, res) => {
       'ASSIGN_ORDER_DRIVER',
       clean
         ? `Bestellung #${id.slice(0, 8).toUpperCase()} Fahrer "${clean}" zugewiesen`
-        : `Fahrer-Zuweisung für Bestellung #${id.slice(0, 8).toUpperCase()} entfernt`
+        : `Fahrer-Zuweisung für Bestellung #${id.slice(0, 8).toUpperCase()} entfernt`,
+      id
     );
 
     res.json(withDecryptedCustomer(updated));

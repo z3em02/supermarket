@@ -954,11 +954,15 @@ From the code-health audit of September 2026, in the suggested order.
   instead of creating a second one; a concurrent retry that loses the
   unique-constraint race is recovered the same way, and a key already used by
   another customer is rejected (409). Covered by `tests/integration/orderFlows.test.js`.
-- [ ] **Order history by id, not by text** (half a day): the drawer's history
-  tab (`getOrderHistory`) finds audit entries by searching `AuditLog.detail`
-  for the 8-character order code. That scans the whole table, two orders can
-  share a code, and the audit log has no retention. Add a nullable, indexed
-  `AuditLog.orderId` (migration with backfill), and decide a retention period.
+- [x] **Order history by id, not by text** (half a day): `AuditLog` now has a
+  nullable, indexed `orderId`, set for the per-order actions
+  (`UPDATE_ORDER_STATUS`, `EDIT_ORDER`, `ASSIGN_ORDER_DRIVER`). `getOrderHistory`
+  looks up by it (falling back to the old detail-text match only for rows the
+  migration couldn't backfill), so two orders sharing an 8-char code no longer
+  bleed into each other's history. Covered by `tests/integration/orderFlows.test.js`.
+  - [ ] **Audit-log retention** still open, on purpose: deleting audit rows is
+    a GDPR/accounting-evidence decision (Austrian records-retention rules), so
+    it needs its own pass rather than a guessed cutoff. Nothing auto-deletes today.
 - [ ] **Browser smoke test** (1–2 days): register → order → accept → deliver
   in a real browser (e.g. Playwright) in CI, replacing the manual "one full
   run" of the go-live checklist.

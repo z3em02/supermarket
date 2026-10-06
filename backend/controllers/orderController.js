@@ -209,7 +209,12 @@ const getOrderHistory = async (req, res) => {
     const entries = await prisma.auditLog.findMany({
       where: {
         action: { in: ORDER_HISTORY_ACTIONS },
-        detail: { contains: `#${id.slice(0, 8).toUpperCase()}` }
+        // New rows carry orderId (exact, indexed). The detail-text match is a
+        // fallback for rows written before the migration backfilled orderId.
+        OR: [
+          { orderId: id },
+          { AND: [{ orderId: null }, { detail: { contains: `#${id.slice(0, 8).toUpperCase()}` } }] }
+        ]
       },
       select: { id: true, action: true, adminEmail: true, detail: true, createdAt: true },
       orderBy: { createdAt: 'desc' },

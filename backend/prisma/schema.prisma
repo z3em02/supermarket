@@ -37,9 +37,14 @@ model AuditLog {
   adminEmail String
   action     String // e.g. 'VIEW_CUSTOMERS', 'EXPORT_ACCOUNTING'
   detail     String?
+  // Set for per-order actions so the order drawer's history tab can look them
+  // up by id. A plain string, not a foreign key: the audit trail must survive
+  // even if the order row is ever removed.
+  orderId    String?
   createdAt  DateTime @default(now())
 
   @@index([createdAt])
+  @@index([orderId])
 }
 
 model Category {
