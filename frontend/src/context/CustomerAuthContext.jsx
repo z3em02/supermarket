@@ -78,7 +78,7 @@ export const CustomerAuthProvider = ({ children }) => {
     return res.data;
   };
 
-  // code is the one sent to the customer's phone via WhatsApp (resendOtp('phone')).
+  // code is the one sent to the customer's phone via SMS (resendOtp('phone')).
   const verifyPhone = async (code) => {
     const res = await customerAxios.post(`/api/customer/verify-phone`, { code });
     if (res.data.phoneVerified) {

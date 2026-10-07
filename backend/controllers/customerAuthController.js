@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const prisma = require('../lib/prisma');
 const { sendCustomerVerificationEmail } = require('../utils/emailService');
-const { sendWhatsAppOtp } = require('../utils/whatsappService');
+const { sendSmsOtp } = require('../utils/smsService');
 const { JWT_SECRET, SECURE_COOKIES } = require('../lib/config');
 const { isValidEmail, isValidPhone, isValidPostalCode, normalizeAustrianPhone, isStrongPassword, STRONG_PASSWORD_HINT, secureCompare, isString, firstNonStringField, clampText, FIELD_MAX } = require('../utils/validation');
 const { encrypt, decrypt, hashLookup, decryptCustomerPII } = require('../utils/piiCrypto');
@@ -421,22 +421,22 @@ const resendOtp = async (req, res) => {
 
     const customerPhone = decrypt(customer.phone);
     try {
-      await sendWhatsAppOtp(customerPhone, newCode, customer.preferredLanguage);
+      await sendSmsOtp(customerPhone, newCode, customer.preferredLanguage);
     } catch (err) {
-      console.error('WhatsApp OTP send failed:', err.message);
+      console.error('SMS OTP send failed:', err.message);
       // Clear the unsent code so the 60s cooldown doesn't block a retry.
       await prisma.customer.update({
         where: { id: customer.id },
         data: { phoneOtp: null, phoneOtpExpiry: null }
       });
       return res.status(502).json({
-        error: 'WhatsApp-Nachricht konnte nicht gesendet werden. Bitte prüfen Sie, ob die Nummer WhatsApp nutzt, und versuchen Sie es erneut / Could not send the WhatsApp message. Please check that the number uses WhatsApp and try again.'
+        error: 'SMS konnte nicht gesendet werden. Bitte prüfen Sie die Telefonnummer und versuchen Sie es erneut / Could not send the SMS. Please check the phone number and try again.'
       });
     }
     if (process.env.NODE_ENV !== 'production') {
-      console.log(`📱 WhatsApp OTP for ${customerPhone}: [ ${newCode} ]`);
+      console.log(`📱 SMS OTP for ${customerPhone}: [ ${newCode} ]`);
     }
-    return res.json({ message: 'New phone verification code sent via WhatsApp' });
+    return res.json({ message: 'New phone verification code sent via SMS' });
   } catch (error) {
     console.error('Resend OTP error:', error);
     res.status(500).json({ error: 'Failed to resend code' });

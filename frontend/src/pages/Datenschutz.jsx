@@ -178,7 +178,7 @@ export const Datenschutz = () => {
                   <strong className="text-slate-900 dark:text-white">الاستضافة وقاعدة البيانات:</strong> يتم تشغيل التطبيق وقاعدة بيانات العملاء لدى Supabase (شركة Supabase, Inc.) في مركز بيانات داخل الاتحاد الأوروبي (منطقة فرانكفورت). ولأن الشركة الأم مقرها الولايات المتحدة، فقد تحدث في حالات الدعم الفني عملية نقل للبيانات إلى دولة خارج الاتحاد الأوروبي استناداً إلى البنود التعاقدية النموذجية للاتحاد الأوروبي. ويوجد لدينا مع المزوّد اتفاقية معالجة بيانات وفقاً للمادة 28 من DSGVO. كما أن بياناتكم الشخصية (الاسم، بيانات التواصل، عنوان التوصيل) مخزّنة هناك مشفّرة على مستوى الحقول.
                 </p>
                 <p>
-                  <strong className="text-slate-900 dark:text-white">التحقق من الهاتف (WhatsApp):</strong> لتأكيد رقم هاتفكم عبر رمز لمرة واحدة (OTP) يتم إرسال رقمكم إلى خدمة WhatsApp (شركة Meta Platforms Ireland Ltd.، أيرلندا)، وقد يشمل ذلك نقلاً إلى الولايات المتحدة استناداً إلى البنود التعاقدية النموذجية للاتحاد الأوروبي. الأساس القانوني: المادة 6 الفقرة 1 البند (b) من DSGVO (تنفيذ العقد أو تدابير ما قبل التعاقد).
+                  <strong className="text-slate-900 dark:text-white">التحقق من الهاتف (SMS):</strong> لتأكيد رقم هاتفكم عبر رمز لمرة واحدة (OTP) يتم إرسال رقمكم إلى مزوّد خدمة الرسائل النصية seven communications GmbH &amp; Co. KG (seven.io)، ألمانيا، كمعالج للبيانات (المادة 28 من DSGVO). تتم المعالجة داخل الاتحاد الأوروبي ولا يحدث أي نقل إلى دولة خارج الاتحاد الأوروبي. الأساس القانوني: المادة 6 الفقرة 1 البند (b) من DSGVO (تنفيذ العقد أو تدابير ما قبل التعاقد).
                 </p>
                 <p>
                   <strong className="text-slate-900 dark:text-white">إرسال البريد الإلكتروني:</strong> لإرسال تأكيدات الطلبات ورموز التحقق نستعين بمزوّد خدمة بريد إلكتروني كمعالج للبيانات (المادة 28 من DSGVO) تُرسل إليه البيانات اللازمة لذلك (البريد الإلكتروني، الاسم، بيانات الطلب).
@@ -279,7 +279,7 @@ export const Datenschutz = () => {
                 Wenn Sie sich als Privatkunde für unseren Lieferservice registrieren oder Bestellungen aufgeben, erheben wir Ihre Kontaktdaten (Vollständiger Name, E-Mail-Adresse, Telefonnummer, genaue Lieferadresse samt Stockwerk/Türnummer sowie Hinweise für den Fahrer).
               </p>
               <p>
-                Die Verarbeitung dieser Daten ist erforderlich, um Ihre Identität per WhatsApp-/E-Mail-Code (OTP) zu verifizieren und Ihre Bestellung zuverlässig an Ihre Haustür zu liefern. Rechnungen und steuerrelevante Geschäftsunterlagen werden gemäß § 132 BAO für die gesetzliche Frist von 7 Jahren aufbewahrt.
+                Die Verarbeitung dieser Daten ist erforderlich, um Ihre Identität per SMS-/E-Mail-Code (OTP) zu verifizieren und Ihre Bestellung zuverlässig an Ihre Haustür zu liefern. Rechnungen und steuerrelevante Geschäftsunterlagen werden gemäß § 132 BAO für die gesetzliche Frist von 7 Jahren aufbewahrt.
               </p>
               <p className="text-xs text-slate-500">Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung) und Art. 6 Abs. 1 lit. c DSGVO (rechtliche Verpflichtung nach österreichischem Steuerrecht).</p>
             </div>
@@ -323,7 +323,7 @@ export const Datenschutz = () => {
                   <strong className="text-slate-900 dark:text-white">Hosting & Datenbank:</strong> Unsere Anwendung und die Kundendatenbank werden bei Supabase (Supabase, Inc.) in einem Rechenzentrum innerhalb der EU (Region Frankfurt) betrieben. Da die Muttergesellschaft ihren Sitz in den USA hat, kann im Supportfall eine Übermittlung in ein Drittland auf Grundlage der EU-Standardvertragsklauseln erfolgen. Mit dem Anbieter besteht ein Auftragsverarbeitungsvertrag gemäß Art. 28 DSGVO. Ihre personenbezogenen Daten (Name, Kontaktdaten, Lieferadresse) sind dort zusätzlich feldweise verschlüsselt gespeichert.
                 </p>
                 <p>
-                  <strong className="text-slate-900 dark:text-white">Telefon-Verifizierung (WhatsApp):</strong> Zur Bestätigung Ihrer Telefonnummer per Einmalcode (OTP) wird Ihre Nummer an WhatsApp (Meta Platforms Ireland Ltd., Irland) übermittelt; dabei kann eine Übermittlung in die USA auf Basis der EU-Standardvertragsklauseln stattfinden. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung bzw. vorvertragliche Maßnahmen).
+                  <strong className="text-slate-900 dark:text-white">Telefon-Verifizierung (SMS):</strong> Zur Bestätigung Ihrer Telefonnummer per Einmalcode (OTP) wird Ihre Nummer an unseren SMS-Dienstleister seven communications GmbH &amp; Co. KG (seven.io), Deutschland, als Auftragsverarbeiter (Art. 28 DSGVO) übermittelt. Die Verarbeitung erfolgt innerhalb der EU; eine Übermittlung in ein Drittland findet nicht statt. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung bzw. vorvertragliche Maßnahmen).
                 </p>
                 <p>
                   <strong className="text-slate-900 dark:text-white">E-Mail-Versand:</strong> Für Bestellbestätigungen und Verifizierungscodes setzen wir einen E-Mail-Dienstleister als Auftragsverarbeiter (Art. 28 DSGVO) ein, an den die hierfür erforderlichen Daten (E-Mail-Adresse, Name, Bestelldaten) übermittelt werden.

@@ -51,7 +51,7 @@ export const CustomerRegister = () => {
   const [phoneCode, setPhoneCode] = useState('');
   const [emailVerified, setEmailVerified] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
-  // True once a WhatsApp code has been sent, to show the code input
+  // True once an SMS code has been sent, to show the code input
   const [phoneCodeSent, setPhoneCodeSent] = useState(false);
   const [sendingPhoneCode, setSendingPhoneCode] = useState(false);
 
@@ -116,14 +116,14 @@ export const CustomerRegister = () => {
     }
   };
 
-  // The backend sends the code to the account's phone number via WhatsApp.
+  // The backend sends the code to the account's phone number via SMS.
   const handleSendPhoneCode = async () => {
     try {
       setSendingPhoneCode(true);
       setError('');
       await resendOtp('phone');
       setPhoneCodeSent(true);
-      setSuccessMsg(isAr ? 'تم إرسال الرمز عبر واتساب' : 'Code wurde per WhatsApp gesendet');
+      setSuccessMsg(isAr ? 'تم إرسال الرمز عبر رسالة نصية' : 'Code wurde per SMS gesendet');
     } catch (err) {
       setError(resolvePhoneError(err));
     } finally {
@@ -505,7 +505,7 @@ export const CustomerRegister = () => {
                     <div className="flex items-center gap-2 min-w-0">
                       <Phone className="w-4 h-4 text-brand-600 shrink-0" />
                       <span className="font-bold text-xs sm:text-sm text-slate-800 dark:text-gray-200 truncate">
-                        {isAr ? 'رمز تأكيد رقم الهاتف (واتساب)' : 'Telefon-Bestätigungscode (WhatsApp)'}
+                        {isAr ? 'رمز تأكيد رقم الهاتف (SMS)' : 'Telefon-Bestätigungscode (SMS)'}
                       </span>
                     </div>
                     {phoneVerified ? (
@@ -554,7 +554,7 @@ export const CustomerRegister = () => {
                       >
                         {sendingPhoneCode
                           ? (isAr ? 'جارٍ الإرسال...' : 'Wird gesendet...')
-                          : (isAr ? 'إرسال الرمز عبر واتساب' : 'Code per WhatsApp senden')}
+                          : (isAr ? 'إرسال الرمز عبر رسالة نصية' : 'Code per SMS senden')}
                       </button>
                     )
                   ) : (
