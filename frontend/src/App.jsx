@@ -9,6 +9,7 @@ import { StoreSettingsProvider } from './context/StoreSettingsContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { SectionPasscodeGate } from './components/SectionPasscodeGate';
 import { Layout } from './components/Layout';
+import { LegalConsentModal } from './components/LegalConsentModal';
 import { ADMIN_BASE } from './config/adminPath';
 import { useStoreSettings } from './context/StoreSettingsContext';
 
@@ -133,6 +134,7 @@ function App() {
                 {/* Fallback to main catalog */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
+              <LegalConsentModal />
             </Router>
               </FeedbackProvider>
           </CustomerAuthProvider>

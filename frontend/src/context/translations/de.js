@@ -431,5 +431,10 @@ export const de = {
     promotionalSavings: "Aktions-Ersparnis",
     enterCouponCode: "Gutscheincode eingeben...",
     twoPlusOneBadge: "2+1 Gratis",
-    totalSavings: "Sie sparen"
+    totalSavings: "Sie sparen",
+    legalConsentTitle: "Bevor es losgeht",
+    legalConsentBody: "Mit der Nutzung dieses Online-Shops stimmen Sie unseren Allgemeinen Geschäftsbedingungen (AGB) und unserer Datenschutzerklärung zu. Bitte lesen und bestätigen Sie diese, um fortzufahren.",
+    legalConsentReadAgb: "AGB lesen",
+    legalConsentReadDatenschutz: "Datenschutzerklärung lesen",
+    legalConsentAccept: "Akzeptieren & fortfahren"
 };

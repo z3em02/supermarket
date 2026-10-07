@@ -431,5 +431,10 @@ export const ar = {
     promotionalSavings: "توفير العروض",
     enterCouponCode: "أدخل رمز الكوبون...",
     twoPlusOneBadge: "2+1 مجاناً",
-    totalSavings: "وفرت"
+    totalSavings: "وفرت",
+    legalConsentTitle: "قبل أن نبدأ",
+    legalConsentBody: "باستخدامك لهذا المتجر الإلكتروني فإنك توافق على شروطنا وأحكامنا العامة (AGB) وسياسة الخصوصية الخاصة بنا. يرجى الاطلاع عليها وتأكيدها للمتابعة.",
+    legalConsentReadAgb: "قراءة الشروط والأحكام",
+    legalConsentReadDatenschutz: "قراءة سياسة الخصوصية",
+    legalConsentAccept: "أوافق والمتابعة"
 };
