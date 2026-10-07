@@ -1,0 +1,5 @@
+# Files consumed on the Linux server must stay LF regardless of the OS the
+# editor runs on. A CRLF (or BOM) in nginx.conf makes nginx refuse to start
+# ("unknown directive"); CRLF in a shell script breaks the shebang.
+*.sh      text eol=lf
+*.conf    text eol=lf

@@ -21,6 +21,15 @@ test.afterAll(async () => { await db.prisma.$disconnect().catch(() => {}); });
 test('register -> order -> accept -> deliver', async ({ page }) => {
   const { customer, admin, product, driverName } = FIXTURES;
 
+  // The first-visit legal-consent modal (components/LegalConsentModal.jsx)
+  // overlays the storefront (fixed inset-0 z-50) and would intercept clicks on
+  // /register and /shop. Mark it already accepted so it never renders.
+  // addInitScript runs before the app's scripts on every navigation, so the
+  // key (mirrors LegalConsentModal's STORAGE_KEY) is set before React reads it.
+  await page.addInitScript(() => {
+    try { localStorage.setItem('hajar.legalConsent.v1', '1'); } catch {}
+  });
+
   // --- Register (step 1 of the register page) ---------------------------
   await test.step('register a new customer', async () => {
     await page.goto('/register');
