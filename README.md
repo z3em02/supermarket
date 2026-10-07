@@ -983,10 +983,18 @@ From the code-health audit of September 2026, in the suggested order.
     by an AI coding agent unless `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION`
     is set — affects local integration runs via such an agent, not CI or
     `migrate deploy`.
-  - [ ] **6 → 7**: its own PR — v7 drops the Rust engine and **requires driver
-    adapters** (`@prisma/adapter-pg`, reconfiguring the Supabase pooled
-    connection), a `prisma.config.ts`, and the new `prisma-client` generator
-    with an explicit `output` path. Real architectural change; scope first.
+  - [ ] **6 → 7**: **investigated 2026-10, deferred — blocked on CommonJS.**
+    v7 drops the Rust engine and requires driver adapters
+    (`@prisma/adapter-pg` + Supabase pooling reconfig), a `prisma.config.ts`,
+    and the new `prisma-client` generator with an explicit `output` path. The
+    blocker: that generator emits **ESM-only** `import`/`export` source —
+    `moduleFormat = "cjs"` only switches internal `__dirname`/`import.meta`, not
+    the module syntax — so this all-CommonJS backend (no build step, by design)
+    can't `require()` it. Finishing 6 → 7 needs either an ESM migration of the
+    whole backend or a transpile/build step for the generated client; both are
+    disproportionate for now. Prisma 6.19.3 is current, supported and merged,
+    so we stay there. (Prisma 8 is already in RC; revisit when the CJS story
+    matures or an ESM move is wanted deliberately.)
 - [ ] **Tidy-ups** (1–2 days, code quality only):
   - [x] ~100 repeated `${apiUrl}` prefixes: `adminAxios`/`customerAxios` now
     carry a `baseURL` (`getApiUrl()`), so calls through them use `/api/...`
