@@ -56,7 +56,7 @@ test('register -> order -> accept -> deliver', async ({ page }) => {
 
   await test.step('verify phone', async () => {
     // Phone code is only sent on request (WhatsApp); send it, then read it.
-    await page.getByRole('button', { name: /Code per WhatsApp senden|Erneut senden/i }).first().click();
+    await page.getByRole('button', { name: /Code per SMS senden|Erneut senden/i }).first().click();
     const code = await waitForOtp(db.phoneOtp, customer.email);
     // Email is verified now, so the remaining 123456 input is the phone one.
     await page.locator('input[placeholder="123456"]').first().fill(code);

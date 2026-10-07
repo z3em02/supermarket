@@ -65,7 +65,7 @@ export const CustomerAccount = () => {
   const [verifyingType, setVerifyingType] = useState(null); // 'email' | 'phone' | null
   const [otpInput, setOtpInput] = useState('');
   const [verifyingLoading, setVerifyingLoading] = useState(false);
-  // False while the WhatsApp code is still being sent
+  // False while the SMS code is still being sent
   const [phoneCodeSent, setPhoneCodeSent] = useState(false);
 
   const isAuthenticated = Boolean(customer);
@@ -235,7 +235,7 @@ export const CustomerAccount = () => {
       return;
     }
 
-    // Phone: the backend sends the code via WhatsApp.
+    // Phone: the backend sends the code via SMS.
     setVerifyingType('phone');
     setPhoneCodeSent(false);
     setVerifyingLoading(true);
@@ -244,7 +244,7 @@ export const CustomerAccount = () => {
       setPhoneCodeSent(true);
     } catch (err) {
       setVerifyingType(null);
-      setProfileError(err.response?.data?.error || (isAr ? 'تعذر إرسال الرمز عبر واتساب' : 'Code konnte nicht per WhatsApp gesendet werden'));
+      setProfileError(err.response?.data?.error || (isAr ? 'تعذر إرسال الرمز عبر رسالة نصية' : 'Code konnte nicht per SMS gesendet werden'));
     } finally {
       setVerifyingLoading(false);
     }

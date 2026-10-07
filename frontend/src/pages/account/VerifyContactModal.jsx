@@ -38,7 +38,7 @@ export const VerifyContactModal = ({
       {verifyingType === 'phone' && !phoneCodeSent ? (
         <p className="text-xs text-warning-700 dark:text-warning-300">
           {verifyingLoading
-            ? (isAr ? 'جارٍ إرسال الرمز عبر واتساب...' : 'Code wird per WhatsApp gesendet...')
+            ? (isAr ? 'جارٍ إرسال الرمز عبر رسالة نصية...' : 'Code wird per SMS gesendet...')
             : (isAr ? 'تعذر إرسال الرمز.' : 'Code konnte nicht gesendet werden.')}
         </p>
       ) : (
