@@ -154,15 +154,22 @@ const sendPasswordResetEmail = async (customerEmail, customerName, resetToken, l
 /**
  * Send Admin Login 2FA Code
  *
- * Always logs the code to the server console too (not just when SMTP is
- * unconfigured, unlike the customer-facing sends above) — this is the sole
- * admin account's login path, so a silent email-delivery failure must not
- * be able to lock them out entirely.
+ * This is the sole admin account's login path, so a silent email-delivery
+ * failure must not lock them out entirely — but we must NOT print the live
+ * code into server/PM2 logs on every login (anyone with log access could then
+ * bypass 2FA). So the code only ever hits the console as a last-resort
+ * fallback: when SMTP is unconfigured outside production, or when a configured
+ * send actually throws. On the normal production path only "email sent" logs.
  */
 const sendAdminLoginOtpEmail = async (adminEmail, adminName, code) => {
-  console.log(`[Admin login 2FA] code for ${adminEmail}: ${code} (valid 10 minutes)`);
-
-  if (!isEmailConfigured()) return;
+  if (!isEmailConfigured()) {
+    if (process.env.NODE_ENV === 'production') {
+      console.warn(`[Admin login 2FA] SMTP not configured — cannot deliver code to ${adminEmail}. Set EMAIL_* env vars.`);
+    } else {
+      console.log(`[Admin login 2FA] code for ${adminEmail}: ${code} (valid 10 minutes)`);
+    }
+    return;
+  }
 
   try {
     const transporter = getTransporter();
@@ -206,6 +213,10 @@ const sendAdminLoginOtpEmail = async (adminEmail, adminName, code) => {
     console.log(`Admin login 2FA email sent to ${adminEmail}`);
   } catch (error) {
     console.error('Error sending admin login 2FA email:', error.message || error);
+    // Delivery failed for the sole admin account: fall back to the console so
+    // a broken SMTP can't lock them out. Only happens on an actual send
+    // failure, not on every login.
+    console.warn(`[Admin login 2FA] email delivery failed — fallback code for ${adminEmail}: ${code} (valid 10 minutes)`);
   }
 };
 
