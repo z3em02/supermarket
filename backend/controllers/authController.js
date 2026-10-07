@@ -17,6 +17,12 @@ const TOO_MANY_2FA_ATTEMPTS = 'Zu viele fehlerhafte Versuche. Bitte melden Sie s
 
 const generateOTP = () => crypto.randomInt(100000, 1000000).toString();
 
+// A precomputed bcrypt hash compared against on the "no such admin" login path
+// so its response time matches a real password check — otherwise skipping
+// bcrypt.compare when no admin matches lets an attacker distinguish a valid
+// admin email from an invalid one by timing alone.
+const DUMMY_PASSWORD_HASH = bcrypt.hashSync('timing-equalizer-not-a-real-password', 10);
+
 const issuePendingToken = (adminId) =>
   jwt.sign({ adminId, scope: PENDING_2FA_SCOPE }, JWT_SECRET, { expiresIn: '10m' });
 
@@ -37,6 +43,9 @@ const login = async (req, res) => {
 
     const admin = await prisma.admin.findUnique({ where: { email } });
     if (!admin) {
+      // Equalize timing with the real path so a 401 can't reveal whether this
+      // email is a registered admin (see DUMMY_PASSWORD_HASH).
+      await bcrypt.compare(password, DUMMY_PASSWORD_HASH);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
