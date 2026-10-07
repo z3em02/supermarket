@@ -12,6 +12,12 @@ const { generateCsrfToken, setCsrfCookie } = require('../middleware/csrf');
 // Helper to generate 6-digit numeric OTP code
 const generateOTP = () => crypto.randomInt(100000, 1000000).toString();
 
+// A precomputed bcrypt hash compared against on the "no such account" login
+// path, so the response takes the same ~time as a real password check. Without
+// it, skipping bcrypt.compare when no customer matches makes a registered
+// email/phone distinguishable from an unregistered one by timing alone.
+const DUMMY_PASSWORD_HASH = bcrypt.hashSync('timing-equalizer-not-a-real-password', 10);
+
 /**
  * Register a new customer
  */
@@ -468,6 +474,9 @@ const login = async (req, res) => {
     });
 
     if (!customer) {
+      // Equalize timing with the real path so a 401 can't reveal whether this
+      // email/phone is registered (see DUMMY_PASSWORD_HASH).
+      await bcrypt.compare(password, DUMMY_PASSWORD_HASH);
       return res.status(401).json({ error: 'Invalid email/phone or password' });
     }
 
