@@ -113,7 +113,7 @@ export const Datenschutz = () => {
                 <span>2. ملفات تسجيل الخادم (Server-Logfiles)</span>
               </h2>
               <p>
-                عند زيارتكم لموقعنا، يقوم الخادم تلقائياً بجمع وتخزين معلومات يرسلها متصفحكم في ملفات السجل الفنية لضمان أمان واستقرار النظام، وتتضمن: نوع وإصدار المتصفح، نظام التشغيل، عنوان IP للمستخدم بصيغة مشفرة/مجهولة، وقت وتاريخ الزيارة، والصفحات المطلوبة.
+                عند زيارتكم لموقعنا، يقوم الخادم تلقائياً بجمع وتخزين معلومات يرسلها متصفحكم في ملفات السجل الفنية لضمان أمان واستقرار النظام، وتتضمن: نوع وإصدار المتصفح، نظام التشغيل، عنوان IP للجهاز الزائر (يُخزَّن لفترة قصيرة لأغراض أمن النظام ومكافحة إساءة الاستخدام)، وقت وتاريخ الزيارة، والصفحات المطلوبة.
               </p>
               <p className="text-xs text-slate-500">الأساس القانوني: المادة 6 الفقرة 1 البند (f) من DSGVO (المصلحة المشروعة في تشغيل الموقع بأمان).</p>
               {/* Only while the backend sends error reports (SENTRY_DSN set, README §4.8). */}
@@ -163,7 +163,7 @@ export const Datenschutz = () => {
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <MapPin className="w-5 h-5 text-danger-600 dark:text-danger-400" />
-                <span>5. خرائط جوجل وتقييمات Google</span>
+                <span>5. الخدمات الخارجية والاستضافة ومعالجو البيانات</span>
               </h2>
               <p>
                 يستخدم موقعنا خدمة خرائط Google Maps المقدمة من Google Ireland Limited لتسهيل تحديد موقع المتجر وإيجاد مسار الوصول. عند التفاعل مع الخريطة، قد تقوم Google بمعالجة عنوان IP الخاص بك وفقاً لسياسة خصوصية Google.
@@ -172,6 +172,18 @@ export const Datenschutz = () => {
                 يتم جلب تقييمات العملاء الموثقة عبر خادمنا بصورة آمنة دون إرسال بيانات متصفحي الموقع الشخصية لجهات خارجية.
               </p>
               <p className="text-xs text-slate-500">الأساس القانوني: المادة 6 الفقرة 1 البند (f) من DSGVO (المصلحة المشروعة في تقديم موقع جذاب وتسهيل الوصول لمقرنا).</p>
+
+              <div className="pt-3 space-y-3 border-t border-slate-200/70 dark:border-gray-800">
+                <p className="pt-1">
+                  <strong className="text-slate-900 dark:text-white">الاستضافة وقاعدة البيانات:</strong> يتم تشغيل التطبيق وقاعدة بيانات العملاء لدى Supabase (شركة Supabase, Inc.) في مركز بيانات داخل الاتحاد الأوروبي (منطقة فرانكفورت). ولأن الشركة الأم مقرها الولايات المتحدة، فقد تحدث في حالات الدعم الفني عملية نقل للبيانات إلى دولة خارج الاتحاد الأوروبي استناداً إلى البنود التعاقدية النموذجية للاتحاد الأوروبي. ويوجد لدينا مع المزوّد اتفاقية معالجة بيانات وفقاً للمادة 28 من DSGVO. كما أن بياناتكم الشخصية (الاسم، بيانات التواصل، عنوان التوصيل) مخزّنة هناك مشفّرة على مستوى الحقول.
+                </p>
+                <p>
+                  <strong className="text-slate-900 dark:text-white">التحقق من الهاتف (WhatsApp):</strong> لتأكيد رقم هاتفكم عبر رمز لمرة واحدة (OTP) يتم إرسال رقمكم إلى خدمة WhatsApp (شركة Meta Platforms Ireland Ltd.، أيرلندا)، وقد يشمل ذلك نقلاً إلى الولايات المتحدة استناداً إلى البنود التعاقدية النموذجية للاتحاد الأوروبي. الأساس القانوني: المادة 6 الفقرة 1 البند (b) من DSGVO (تنفيذ العقد أو تدابير ما قبل التعاقد).
+                </p>
+                <p>
+                  <strong className="text-slate-900 dark:text-white">إرسال البريد الإلكتروني:</strong> لإرسال تأكيدات الطلبات ورموز التحقق نستعين بمزوّد خدمة بريد إلكتروني كمعالج للبيانات (المادة 28 من DSGVO) تُرسل إليه البيانات اللازمة لذلك (البريد الإلكتروني، الاسم، بيانات الطلب).
+                </p>
+              </div>
             </div>
 
             {/* 6. User Rights */}
@@ -241,7 +253,7 @@ export const Datenschutz = () => {
                 <li>Browsertyp und Browserversion</li>
                 <li>Verwendetes Betriebssystem</li>
                 <li>Referrer URL (die zuvor besuchte Seite)</li>
-                <li>Hostname des zugreifenden Rechners / anonymisierte IP-Adresse</li>
+                <li>IP-Adresse des zugreifenden Geräts (zur Gewährleistung der Systemsicherheit und zur Missbrauchsabwehr kurzfristig gespeichert)</li>
                 <li>Uhrzeit und Datum der Serveranfrage</li>
               </ul>
               <p className="text-xs text-slate-500">Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an der technischen Stabilität und Sicherheit unseres Webauftritts).</p>
@@ -293,7 +305,7 @@ export const Datenschutz = () => {
             <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 shadow-sm space-y-3">
               <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <MapPin className="w-5 h-5 text-danger-600 dark:text-danger-400" />
-                <span>5. Google Maps & Google Reviews</span>
+                <span>5. Externe Dienste, Hosting & Auftragsverarbeiter</span>
               </h2>
               <p>
                 Diese Website nutzt Google Maps zur visuellen Darstellung von Kartenmaterial und unseres Firmenstandorts. Dienstanbieter ist die Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland.
@@ -305,6 +317,18 @@ export const Datenschutz = () => {
                 Die auf der Seite dargestellten Google-Bewertungen werden über ein geschütztes Backend synchronisiert. Es findet keine Übermittlung persönlicher Trackingdaten unserer Websitebesucher an Dritte statt.
               </p>
               <p className="text-xs text-slate-500">Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einer ansprechenden Darstellung unseres Standorts und leichter Auffindbarkeit).</p>
+
+              <div className="pt-3 space-y-3 border-t border-slate-200/70 dark:border-gray-800">
+                <p className="pt-1">
+                  <strong className="text-slate-900 dark:text-white">Hosting & Datenbank:</strong> Unsere Anwendung und die Kundendatenbank werden bei Supabase (Supabase, Inc.) in einem Rechenzentrum innerhalb der EU (Region Frankfurt) betrieben. Da die Muttergesellschaft ihren Sitz in den USA hat, kann im Supportfall eine Übermittlung in ein Drittland auf Grundlage der EU-Standardvertragsklauseln erfolgen. Mit dem Anbieter besteht ein Auftragsverarbeitungsvertrag gemäß Art. 28 DSGVO. Ihre personenbezogenen Daten (Name, Kontaktdaten, Lieferadresse) sind dort zusätzlich feldweise verschlüsselt gespeichert.
+                </p>
+                <p>
+                  <strong className="text-slate-900 dark:text-white">Telefon-Verifizierung (WhatsApp):</strong> Zur Bestätigung Ihrer Telefonnummer per Einmalcode (OTP) wird Ihre Nummer an WhatsApp (Meta Platforms Ireland Ltd., Irland) übermittelt; dabei kann eine Übermittlung in die USA auf Basis der EU-Standardvertragsklauseln stattfinden. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung bzw. vorvertragliche Maßnahmen).
+                </p>
+                <p>
+                  <strong className="text-slate-900 dark:text-white">E-Mail-Versand:</strong> Für Bestellbestätigungen und Verifizierungscodes setzen wir einen E-Mail-Dienstleister als Auftragsverarbeiter (Art. 28 DSGVO) ein, an den die hierfür erforderlichen Daten (E-Mail-Adresse, Name, Bestelldaten) übermittelt werden.
+                </p>
+              </div>
             </div>
 
             {/* 6. Rechte der betroffenen Person */}
