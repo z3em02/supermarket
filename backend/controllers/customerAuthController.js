@@ -264,17 +264,20 @@ const OTP_CHANNELS = {
     expiryField: 'emailOtpExpiry',
     attemptsField: 'otpAttempts',
     verifiedField: 'emailVerified',
-    ttlMs: 15 * 60 * 1000
+    ttlMs: 15 * 60 * 1000,
+    // Minimum gap between resends. Email is free, so a short cooldown is fine.
+    resendCooldownMs: 60 * 1000
   },
   phone: {
     codeField: 'phoneOtp',
     expiryField: 'phoneOtpExpiry',
     attemptsField: 'phoneOtpAttempts',
     verifiedField: 'phoneVerified',
-    ttlMs: 10 * 60 * 1000
+    ttlMs: 10 * 60 * 1000,
+    // Each SMS is billed (seven.io), so a longer cooldown limits cost/abuse.
+    resendCooldownMs: 5 * 60 * 1000
   }
 };
-const OTP_RESEND_COOLDOWN_MS = 60 * 1000;
 const MAX_OTP_ATTEMPTS = 5;
 
 /**
@@ -391,11 +394,16 @@ const resendOtp = async (req, res) => {
       return res.status(400).json({ error: type === 'email' ? 'Email is already verified' : 'Phone number is already verified' });
     }
 
-    // Rate-limit resend: the previous code must be at least 60s old
-    // (it was issued at expiry - ttl).
+    // Rate-limit resend: the previous code must be older than the channel's
+    // cooldown (it was issued at expiry - ttl). Phone (SMS) has a longer
+    // cooldown than email because each SMS is billed.
     const previousExpiry = customer[channel.expiryField];
-    if (previousExpiry && previousExpiry.getTime() - channel.ttlMs + OTP_RESEND_COOLDOWN_MS > Date.now()) {
-      return res.status(429).json({ error: 'Please wait at least 60 seconds before requesting a new code.' });
+    if (previousExpiry) {
+      const waitMs = previousExpiry.getTime() - channel.ttlMs + channel.resendCooldownMs - Date.now();
+      if (waitMs > 0) {
+        const waitSec = Math.ceil(waitMs / 1000);
+        return res.status(429).json({ error: `Please wait ${waitSec} seconds before requesting a new code.` });
+      }
     }
 
     const newCode = generateOTP();
