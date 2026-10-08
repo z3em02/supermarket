@@ -165,6 +165,21 @@ describe('order flows (database)', { skip: h.skipReason || false }, () => {
       assert.strictEqual(await stockOf(milk), 9);
     });
 
+    test('paused orders block customers but not an admin taking a phone order', async () => {
+      await h.prisma.storeSettings.update({ where: { id: 'default' }, data: { ordersPaused: true } });
+      const milk = await h.createProduct({ name: 'Milch 1L', price: 2.5, stock: 10 });
+      const customer = await h.createCustomer();
+
+      const byCustomer = await placeOrder(h.customerToken(customer), [[milk, 1]]);
+      assert.strictEqual(byCustomer.status, 503);
+      assert.strictEqual(byCustomer.body.ordersPaused, true);
+      assert.strictEqual(await stockOf(milk), 10);
+
+      const byAdmin = await placeOrder(adminAuth, [[milk, 1]], { customerId: customer.id });
+      assert.strictEqual(byAdmin.status, 201, JSON.stringify(byAdmin.body));
+      assert.strictEqual(await stockOf(milk), 9);
+    });
+
     test('a customer without a verified phone number cannot order', async () => {
       const milk = await h.createProduct({ name: 'Milch 1L', price: 2.5, stock: 10 });
       const customer = await h.createCustomer({ phoneVerified: false });

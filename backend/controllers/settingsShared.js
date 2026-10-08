@@ -36,7 +36,8 @@ const DEFAULT_SETTINGS = {
   isKleinunternehmer: true,
   vatId: '',
   businessPurposeDe: 'Groß- und Einzelhandel mit Lebensmitteln und orientalischen Spezialitäten',
-  businessPurposeAr: 'تجارة الجملة والتجزئة للمواد الغذائية والمنتجات الاستهلاكية'
+  businessPurposeAr: 'تجارة الجملة والتجزئة للمواد الغذائية والمنتجات الاستهلاكية',
+  ordersPaused: false
 };
 
 // Fields safe to expose on the public settings endpoint.
@@ -70,7 +71,8 @@ const PUBLIC_SETTINGS_SELECT = {
   vatId: true,
   businessPurposeDe: true,
   businessPurposeAr: true,
-  maintenanceMode: true
+  maintenanceMode: true,
+  ordersPaused: true
 };
 
 module.exports = {

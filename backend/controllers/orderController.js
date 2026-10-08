@@ -279,12 +279,19 @@ const createOrder = async (req, res) => {
     if (!req.admin) {
       const storeSettings = await prisma.storeSettings.findUnique({
         where: { id: 'default' },
-        select: { maintenanceMode: true }
+        select: { maintenanceMode: true, ordersPaused: true }
       });
       if (storeSettings?.maintenanceMode) {
         return res.status(503).json({
           error: 'Der Shop ist aktuell wegen Wartungsarbeiten nicht erreichbar. Bitte versuchen Sie es später erneut. / The store is temporarily down for maintenance. Please try again later.',
           maintenanceMode: true
+        });
+      }
+      // Orders paused: storefront stays browsable, but checkout is closed.
+      if (storeSettings?.ordersPaused) {
+        return res.status(503).json({
+          error: 'Wir nehmen derzeit keine Bestellungen an. Bitte versuchen Sie es später erneut. / We are not accepting orders right now. Please try again later.',
+          ordersPaused: true
         });
       }
     }
