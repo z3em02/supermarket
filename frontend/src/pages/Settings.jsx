@@ -62,7 +62,9 @@ export const Settings = () => {
     isKleinunternehmer: true,
     vatId: '',
     businessPurposeDe: '',
-    businessPurposeAr: ''
+    businessPurposeAr: '',
+    openingHoursDe: '',
+    openingHoursAr: ''
   });
 
   const [saving, setSaving] = useState(false);
@@ -109,7 +111,9 @@ export const Settings = () => {
         isKleinunternehmer: settings.isKleinunternehmer !== false,
         vatId: (settings.vatId && settings.vatId !== 'null') ? settings.vatId : '',
         businessPurposeDe: settings.businessPurposeDe || '',
-        businessPurposeAr: settings.businessPurposeAr || ''
+        businessPurposeAr: settings.businessPurposeAr || '',
+        openingHoursDe: settings.openingHoursDe || '',
+        openingHoursAr: settings.openingHoursAr || ''
       });
       setLogoPreviewError(false);
     }
@@ -228,7 +232,9 @@ export const Settings = () => {
         isKleinunternehmer: formData.isKleinunternehmer,
         vatId: formData.vatId.trim() || null,
         businessPurposeDe: formData.businessPurposeDe.trim() || null,
-        businessPurposeAr: formData.businessPurposeAr.trim() || null
+        businessPurposeAr: formData.businessPurposeAr.trim() || null,
+        openingHoursDe: formData.openingHoursDe.trim(),
+        openingHoursAr: formData.openingHoursAr.trim()
       };
 
       const res = await updateStoreSettings(payload);

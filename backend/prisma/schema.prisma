@@ -261,6 +261,11 @@ model StoreSettings {
   // maintenanceMode for pausing ordering (e.g. store closed, at capacity)
   // while customers can still browse. Admin-placed orders still go through.
   ordersPaused          Boolean  @default(false)
+  // Store opening hours shown on the storefront contact section, free-text per
+  // language (e.g. "Mo – Sa: 08:00 – 19:00 Uhr"). Empty falls back to the
+  // bundled default translation.
+  openingHoursDe        String?
+  openingHoursAr        String?
   updatedAt             DateTime @updatedAt
 }
 
