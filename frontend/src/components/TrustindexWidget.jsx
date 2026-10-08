@@ -1,14 +1,19 @@
 import React from 'react';
 import { Star, CheckCircle2, ExternalLink, ShieldCheck } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { Skeleton } from './ui';
 
-export default function TrustindexWidget({ 
-  settings = {}, 
-  reviews = [] 
+export default function TrustindexWidget({
+  settings = {},
+  reviews = [],
+  reviewsLoading = false
 }) {
   const { language, t } = useLanguage();
 
   const countNum = settings?.googleReviewCount || 0;
+  // Reserve the grid with as many skeletons as reviews we expect (capped), so
+  // the section doesn't grow when the cards arrive after the initial paint (CLS).
+  const skeletonCount = Math.min(countNum, 6);
   // Only trust a rating number when there's at least one real review behind
   // it — a bare `|| 5.0` fallback used to show a "perfect" 5.0★ badge with
   // "0 reviews" next to it, which reads as a fabricated/gamed rating to a
@@ -91,7 +96,28 @@ export default function TrustindexWidget({
       </div>
 
       {/* Review Cards Grid */}
-      {reviews && reviews.length > 0 && (
+      {reviewsLoading && skeletonCount > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" role="status" aria-live="polite">
+          <span className="sr-only">{language === 'ar' ? 'جارٍ التحميل…' : 'Wird geladen…'}</span>
+          {Array.from({ length: skeletonCount }).map((_, i) => (
+            <div key={i} className="bg-white dark:bg-gray-850 rounded-2xl p-4 sm:p-6 border border-slate-200/80 dark:border-gray-850 space-y-4" aria-hidden="true">
+              <div className="flex items-center gap-3">
+                <Skeleton className="w-11 h-11 rounded-full" />
+                <div className="flex-1 space-y-1.5">
+                  <Skeleton className="h-3.5 w-1/2" />
+                  <Skeleton className="h-3 w-1/3" />
+                </div>
+              </div>
+              <Skeleton className="h-3 w-24" />
+              <div className="space-y-2">
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-5/6" />
+                <Skeleton className="h-3 w-2/3" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : reviews && reviews.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {reviews.map((review) => {
             const reviewText = language === 'ar'
@@ -185,7 +211,7 @@ export default function TrustindexWidget({
             );
           })}
         </div>
-      )}
+      ) : null}
 
       {/* Bottom Action Buttons */}
   
