@@ -490,7 +490,6 @@ export const CustomerCartDrawer = ({
                 <DeliveryDetailsForm
                   addressMissing={addressMissing}
                   allowedPostalCodes={allowedPostalCodes}
-                  deliveryAddress={deliveryAddress}
                   deliveryDate={deliveryDate}
                   deliveryNotes={deliveryNotes}
                   deliveryWindows={deliveryWindows}
@@ -499,7 +498,6 @@ export const CustomerCartDrawer = ({
                   isPostalCodeAllowed={isPostalCodeAllowed}
                   onClose={onClose}
                   selectedWindow={selectedWindow}
-                  setDeliveryAddress={setDeliveryAddress}
                   setDeliveryDate={setDeliveryDate}
                   setDeliveryNotes={setDeliveryNotes}
                   setSelectedWindow={setSelectedWindow}
