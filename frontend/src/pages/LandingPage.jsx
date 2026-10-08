@@ -22,7 +22,7 @@ import { LandingHeader } from './landing/LandingHeader';
 
 export const LandingPage = () => {
   const { t, direction, language } = useLanguage();
-  const { settings, reviews } = useStoreSettings();
+  const { settings, reviews, reviewsLoading } = useStoreSettings();
 
   const [cart, setCart] = useState(() => {
     try {
@@ -374,6 +374,7 @@ export const LandingPage = () => {
             <TrustindexWidget
               settings={settings}
               reviews={reviews}
+              reviewsLoading={reviewsLoading}
             />
           </div>
         </section>
