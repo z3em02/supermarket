@@ -256,6 +256,11 @@ model StoreSettings {
   // login/dashboard and the driver portal stay reachable so staff can
   // finish deliveries already in progress and turn this back off.
   maintenanceMode       Boolean  @default(false)
+  // When true, the storefront stays browsable but new customer orders are
+  // rejected server-side (checkout disabled) — a lighter switch than
+  // maintenanceMode for pausing ordering (e.g. store closed, at capacity)
+  // while customers can still browse. Admin-placed orders still go through.
+  ordersPaused          Boolean  @default(false)
   updatedAt             DateTime @updatedAt
 }
 

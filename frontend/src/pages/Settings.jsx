@@ -48,6 +48,7 @@ export const Settings = () => {
     googleReviewsUrl: '',
     showGoogleReviews: true,
     maintenanceMode: false,
+    ordersPaused: false,
     minOrderValue: '',
     deliveryFee: '',
     deliveryFeePerKm: '',
@@ -94,6 +95,7 @@ export const Settings = () => {
         googleReviewsUrl: settings.googleReviewsUrl || '',
         showGoogleReviews: settings.showGoogleReviews !== false,
         maintenanceMode: settings.maintenanceMode === true,
+        ordersPaused: settings.ordersPaused === true,
         minOrderValue: settings.minOrderValue ?? 0,
         deliveryFee: settings.deliveryFee ?? 2.0,
         deliveryFeePerKm: settings.deliveryFeePerKm ?? 0.10,
@@ -146,6 +148,29 @@ export const Settings = () => {
     setSavingMaintenanceMode(false);
   };
 
+  // Pausing orders applies immediately on click (its own API call), like
+  // maintenance — meant for "stop taking orders now" without waiting for the
+  // general Speichern button or being blocked by an unrelated form error.
+  const [savingOrdersPaused, setSavingOrdersPaused] = useState(false);
+  const [ordersPausedMessage, setOrdersPausedMessage] = useState('');
+  const handleToggleOrdersPaused = async () => {
+    const next = !formData.ordersPaused;
+    setSavingOrdersPaused(true);
+    setOrdersPausedMessage('');
+    const res = await updateStoreSettings({ ordersPaused: next });
+    if (res.success) {
+      setFormData((prev) => ({ ...prev, ordersPaused: next }));
+      setOrdersPausedMessage(
+        next
+          ? (language === 'ar' ? 'تم إيقاف استقبال الطلبات — لا يمكن للعملاء الطلب' : 'Bestellannahme pausiert — Kunden können nicht bestellen')
+          : (language === 'ar' ? 'تم استئناف استقبال الطلبات' : 'Bestellannahme wieder aktiv')
+      );
+    } else {
+      setOrdersPausedMessage(res.error || (language === 'ar' ? 'حدث خطأ' : 'Ein Fehler ist aufgetreten'));
+    }
+    setSavingOrdersPaused(false);
+  };
+
   const handleGeocodeStoreAddress = async () => {
     try {
       setGeocodingStore(true);
@@ -189,6 +214,7 @@ export const Settings = () => {
         googleReviewsUrl: formData.googleReviewsUrl.trim() || null,
         showGoogleReviews: formData.showGoogleReviews,
         maintenanceMode: formData.maintenanceMode,
+        ordersPaused: formData.ordersPaused,
         minOrderValue: formData.minOrderValue !== '' ? parseFloat(formData.minOrderValue) : 0,
         deliveryFee: formData.deliveryFee !== '' ? parseFloat(formData.deliveryFee) : 0,
         deliveryFeePerKm: formData.deliveryFeePerKm !== '' ? parseFloat(formData.deliveryFeePerKm) : 0,
@@ -365,9 +391,12 @@ export const Settings = () => {
             formData={formData}
             handleChange={handleChange}
             handleToggleMaintenanceMode={handleToggleMaintenanceMode}
+            handleToggleOrdersPaused={handleToggleOrdersPaused}
             logoPreviewError={logoPreviewError}
             maintenanceMessage={maintenanceMessage}
+            ordersPausedMessage={ordersPausedMessage}
             savingMaintenanceMode={savingMaintenanceMode}
+            savingOrdersPaused={savingOrdersPaused}
             sectionPasscode={sectionPasscode}
             setLogoPreviewError={setLogoPreviewError}
           />

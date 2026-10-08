@@ -6,7 +6,8 @@ const TONES = {
   success: 'bg-success-500',
   primary: 'bg-primary-600',
   brand: 'bg-brand-600',
-  danger: 'bg-danger-600'
+  danger: 'bg-danger-600',
+  warning: 'bg-warning-500'
 };
 
 export const Switch = ({ checked, onChange, label, tone = 'success', disabled = false, className = '', ...props }) => (

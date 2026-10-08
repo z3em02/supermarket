@@ -6,7 +6,8 @@ import {
   Phone,
   Mail,
   MapPin,
-  Sparkles
+  Sparkles,
+  ShoppingCart
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { resolveImageUrl } from '../../utils/api';
@@ -19,9 +20,12 @@ export const GeneralTab = ({
   formData,
   handleChange,
   handleToggleMaintenanceMode,
+  handleToggleOrdersPaused,
   logoPreviewError,
   maintenanceMessage,
+  ordersPausedMessage,
   savingMaintenanceMode,
+  savingOrdersPaused,
   sectionPasscode,
   setLogoPreviewError
 }) => {
@@ -74,6 +78,53 @@ export const GeneralTab = ({
         {maintenanceMessage && (
           <p className={`mt-3 text-xs font-semibold ${formData.maintenanceMode ? 'text-danger-700 dark:text-danger-400' : 'text-success-600 dark:text-success-400'}`}>
             {maintenanceMessage}
+          </p>
+        )}
+      </Card>
+
+      {/* Pause ordering — lighter than maintenance: the shop stays browsable,
+          only checkout is closed. Applies immediately, independent of the
+          "Speichern" button below. */}
+      <Card className={formData.ordersPaused ? '!bg-warning-50 dark:!bg-warning-950/30 !border-warning-300 dark:!border-warning-800' : ''}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+          <div className="flex items-center gap-3">
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+              formData.ordersPaused
+                ? 'bg-warning-100 dark:bg-warning-950/60 text-warning-600 dark:text-warning-400'
+                : 'bg-slate-100 dark:bg-gray-800 text-slate-500 dark:text-slate-400'
+            }`}>
+              <ShoppingCart className="w-4 h-4" aria-hidden="true" />
+            </div>
+            <div>
+              <h2 className="text-heading-md">
+                {language === 'ar' ? 'إيقاف استقبال الطلبات' : 'Bestellannahme pausieren'}
+              </h2>
+              <p className="text-caption max-w-md">
+                {language === 'ar'
+                  ? 'عند التفعيل، يبقى المتجر قابلاً للتصفح لكن لا يمكن للعملاء إتمام الطلب (الكاسة معطّلة). يمكن للمشرف تسجيل الطلبات يدوياً.'
+                  : 'Wenn aktiv, bleibt der Shop sichtbar, aber Kunden können nicht bestellen (Kasse deaktiviert). Admin-Bestellungen bleiben möglich.'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+            <span className={`text-xs font-bold ${formData.ordersPaused ? 'text-warning-700 dark:text-warning-400' : 'text-slate-500 dark:text-slate-400'}`}>
+              {formData.ordersPaused
+                ? (language === 'ar' ? 'مفعّل' : 'Aktiv')
+                : (language === 'ar' ? 'غير مفعّل' : 'Inaktiv')}
+            </span>
+            <Switch
+              checked={formData.ordersPaused}
+              onChange={handleToggleOrdersPaused}
+              disabled={savingOrdersPaused}
+              tone="warning"
+              label={language === 'ar' ? 'إيقاف استقبال الطلبات' : 'Bestellannahme pausieren'}
+            />
+          </div>
+        </div>
+        {ordersPausedMessage && (
+          <p className={`mt-3 text-xs font-semibold ${formData.ordersPaused ? 'text-warning-700 dark:text-warning-400' : 'text-success-600 dark:text-success-400'}`}>
+            {ordersPausedMessage}
           </p>
         )}
       </Card>

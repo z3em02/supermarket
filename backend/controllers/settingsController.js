@@ -63,7 +63,8 @@ const updateSettings = async (req, res) => {
       vatId,
       businessPurposeDe,
       businessPurposeAr,
-      maintenanceMode
+      maintenanceMode,
+      ordersPaused
     } = req.body;
 
     const data = {};
@@ -73,6 +74,9 @@ const updateSettings = async (req, res) => {
     }
     if (maintenanceMode !== undefined) {
       data.maintenanceMode = Boolean(maintenanceMode);
+    }
+    if (ordersPaused !== undefined) {
+      data.ordersPaused = Boolean(ordersPaused);
     }
 
     if (storeName !== undefined) {
@@ -248,6 +252,16 @@ const updateSettings = async (req, res) => {
         req.admin?.email,
         updated.maintenanceMode ? 'ENABLE_MAINTENANCE_MODE' : 'DISABLE_MAINTENANCE_MODE',
         updated.maintenanceMode ? 'Wartungsmodus aktiviert — Shop für Kunden gesperrt' : 'Wartungsmodus deaktiviert — Shop wieder erreichbar'
+      );
+    }
+
+    // Own audit entry — pausing orders stops all customer checkouts, worth
+    // finding quickly in the trail rather than lumped with routine edits.
+    if (ordersPaused !== undefined) {
+      logAudit(
+        req.admin?.email,
+        updated.ordersPaused ? 'PAUSE_ORDERS' : 'RESUME_ORDERS',
+        updated.ordersPaused ? 'Bestellannahme pausiert — Kunden können nicht bestellen' : 'Bestellannahme wieder aktiv'
       );
     }
 

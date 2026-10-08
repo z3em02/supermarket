@@ -7,6 +7,7 @@ import {
   Truck
 } from 'lucide-react';
 import { useCustomerAuth } from '../../context/CustomerAuthContext';
+import { useStoreSettings } from '../../context/StoreSettingsContext';
 
 export const CartCheckoutFooter = ({
   ArrowIcon,
@@ -30,6 +31,8 @@ export const CartCheckoutFooter = ({
   totalPromoSavings
 }) => {
   const { isAuthenticated } = useCustomerAuth();
+  const { settings } = useStoreSettings();
+  const ordersPaused = settings?.ordersPaused === true;
   const {
     appliedCoupon,
     showCouponField,
@@ -211,14 +214,27 @@ export const CartCheckoutFooter = ({
         {isAr ? 'شامل الضريبة، والدفع نقداً أو بالبطاقة عند الباب' : 'inkl. MwSt., Zahlung bar oder mit Karte beim Fahrer'}
       </p>
 
+      {ordersPaused && (
+        <div className="flex items-start gap-2 rounded-xl bg-warning-50 dark:bg-warning-950/30 border border-warning-200 dark:border-warning-800 px-3 py-2.5 text-xs font-semibold text-warning-700 dark:text-warning-400">
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
+          <span>
+            {isAr
+              ? 'لا نستقبل الطلبات حالياً. يمكنك التصفّح والمحاولة لاحقاً.'
+              : 'Wir nehmen derzeit keine Bestellungen an. Sie können weiter stöbern und es später erneut versuchen.'}
+          </span>
+        </div>
+      )}
+
       <button
         type="button"
         onClick={handlePlaceOrder}
-        disabled={submitting || (isAuthenticated && (!isVerified || belowMinOrder || addressMissing))}
+        disabled={ordersPaused || submitting || (isAuthenticated && (!isVerified || belowMinOrder || addressMissing))}
         className="w-full py-4 px-6 rounded-2xl bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-black text-sm shadow-lg shadow-brand-600/25 transition flex items-center justify-center gap-2 cursor-pointer"
       >
         {submitting ? (
           <span>{isAr ? 'جارٍ إرسال الطلب...' : 'Bestellung wird gesendet...'}</span>
+        ) : ordersPaused ? (
+          <span>{isAr ? 'استقبال الطلبات متوقّف مؤقتاً' : 'Bestellannahme pausiert'}</span>
         ) : (
           <>
             <Truck className="w-5 h-5" />
