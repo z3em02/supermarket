@@ -7,7 +7,8 @@ import {
   Mail,
   MapPin,
   Sparkles,
-  ShoppingCart
+  ShoppingCart,
+  Clock
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { resolveImageUrl } from '../../utils/api';
@@ -227,6 +228,22 @@ export const GeneralTab = ({
               placeholder={t('addressPlaceholder')}
             />
           </div>
+          <Input
+            label={language === 'ar' ? 'ساعات العمل (ألماني)' : 'Öffnungszeiten (Deutsch)'}
+            icon={Clock}
+            type="text"
+            value={formData.openingHoursDe}
+            onChange={(e) => handleChange('openingHoursDe', e.target.value)}
+            placeholder="Mo – Sa: 08:00 – 19:00 Uhr"
+          />
+          <Input
+            label={language === 'ar' ? 'ساعات العمل (عربي)' : 'Öffnungszeiten (Arabisch)'}
+            icon={Clock}
+            type="text"
+            value={formData.openingHoursAr}
+            onChange={(e) => handleChange('openingHoursAr', e.target.value)}
+            placeholder="الإثنين - السبت: ٠٨:٠٠ - ١٩:٠٠"
+          />
         </div>
       </Card>
 

@@ -37,7 +37,9 @@ const DEFAULT_SETTINGS = {
   vatId: '',
   businessPurposeDe: 'Groß- und Einzelhandel mit Lebensmitteln und orientalischen Spezialitäten',
   businessPurposeAr: 'تجارة الجملة والتجزئة للمواد الغذائية والمنتجات الاستهلاكية',
-  ordersPaused: false
+  ordersPaused: false,
+  openingHoursDe: '',
+  openingHoursAr: ''
 };
 
 // Fields safe to expose on the public settings endpoint.
@@ -72,7 +74,9 @@ const PUBLIC_SETTINGS_SELECT = {
   businessPurposeDe: true,
   businessPurposeAr: true,
   maintenanceMode: true,
-  ordersPaused: true
+  ordersPaused: true,
+  openingHoursDe: true,
+  openingHoursAr: true
 };
 
 module.exports = {

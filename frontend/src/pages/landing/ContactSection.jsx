@@ -67,7 +67,7 @@ export const ContactSection = () => {
               <Clock className="w-5 h-5 text-brand-500 shrink-0 mt-0.5" />
               <div>
                 <span className="block font-bold text-slate-900 dark:text-white">{t('businessHours')}</span>
-                <span>{t('businessHoursValue')}</span>
+                <span className="whitespace-pre-line">{(language === 'ar' ? settings?.openingHoursAr : settings?.openingHoursDe) || t('businessHoursValue')}</span>
               </div>
             </div>
           </div>

@@ -64,7 +64,9 @@ const updateSettings = async (req, res) => {
       businessPurposeDe,
       businessPurposeAr,
       maintenanceMode,
-      ordersPaused
+      ordersPaused,
+      openingHoursDe,
+      openingHoursAr
     } = req.body;
 
     const data = {};
@@ -77,6 +79,12 @@ const updateSettings = async (req, res) => {
     }
     if (ordersPaused !== undefined) {
       data.ordersPaused = Boolean(ordersPaused);
+    }
+    if (openingHoursDe !== undefined) {
+      data.openingHoursDe = String(openingHoursDe).trim();
+    }
+    if (openingHoursAr !== undefined) {
+      data.openingHoursAr = String(openingHoursAr).trim();
     }
 
     if (storeName !== undefined) {
