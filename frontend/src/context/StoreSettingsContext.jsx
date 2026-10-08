@@ -166,7 +166,7 @@ export const StoreSettingsProvider = ({ children }) => {
           googleReviewCount: data.user_ratings_total !== undefined ? data.user_ratings_total : prev.googleReviewCount
         }));
       }
-      return { success: true, message: data.message, synced: data.synced };
+      return { success: true, message: data.message, synced: data.synced, rating: data.rating, reviewCount: data.user_ratings_total };
     } catch (err) {
       return { success: false, error: err.response?.data?.error || err.message };
     }
