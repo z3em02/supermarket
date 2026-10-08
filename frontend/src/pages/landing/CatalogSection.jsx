@@ -10,6 +10,7 @@ import { ProductCompactView } from './ProductCompactView';
 import { ProductListView } from './ProductListView';
 import { ProductGridView } from './ProductGridView';
 import { CatalogFilters } from './CatalogFilters';
+import { Skeleton } from '../../components/ui';
 
 export const CatalogSection = ({
   addToCart,
@@ -121,11 +122,28 @@ export const CatalogSection = ({
         stockFilter={stockFilter}
       />
 
-      {/* Loading State */}
+      {/* Loading State — skeleton cards in the real grid layout, so the catalog
+          reserves its height while products load. A bare spinner here let the
+          page grow from almost nothing to the full grid once products arrived,
+          shoving the reviews/contact/footer down (big CLS). The skeletons keep
+          the footer below the fold from first paint. */}
       {loading && (
-        <div className="flex flex-col items-center justify-center py-20">
-          <div className="w-12 h-12 border-4 border-brand-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">{t('loading')}</p>
+        <div
+          role="status"
+          aria-live="polite"
+          className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4"
+        >
+          <span className="sr-only">{t('loading')}</span>
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className="bg-white dark:bg-gray-900 rounded-xl sm:rounded-2xl border border-slate-200/80 dark:border-gray-850 overflow-hidden flex flex-col">
+              <div className="aspect-[4/3] bg-slate-200/80 dark:bg-gray-800 animate-pulse" />
+              <div className="p-3 space-y-2">
+                <Skeleton className="h-3.5 w-3/4" />
+                <Skeleton className="h-3 w-1/2" />
+                <Skeleton className="h-8 w-full rounded-lg" />
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
