@@ -6,7 +6,7 @@ const { sendCustomerVerificationEmail } = require('../utils/emailService');
 const { sendSmsOtp } = require('../utils/smsService');
 const { JWT_SECRET, SECURE_COOKIES } = require('../lib/config');
 const { isValidEmail, isValidPhone, isValidPostalCode, normalizeAustrianPhone, isStrongPassword, STRONG_PASSWORD_HINT, secureCompare, isString, firstNonStringField, clampText, FIELD_MAX } = require('../utils/validation');
-const { encrypt, decrypt, hashLookup, decryptCustomerPII } = require('../utils/piiCrypto');
+const { encrypt, decrypt, hashLookup, otpAtRest, decryptCustomerPII } = require('../utils/piiCrypto');
 const { generateCsrfToken, setCsrfCookie } = require('../middleware/csrf');
 
 // Helper to generate 6-digit numeric OTP code
@@ -102,7 +102,7 @@ const register = async (req, res) => {
         email: encrypt(trimmedEmail),
         emailHash,
         emailVerified: false,
-        emailOtp,
+        emailOtp: otpAtRest(emailOtp),
         emailOtpExpiry: otpExpiry,
         phone: encrypt(trimmedPhone),
         phoneHash,
@@ -220,7 +220,7 @@ const verifyEmail = async (req, res) => {
       return res.status(429).json({ error: 'Zu viele fehlerhafte Versuche. Bitte fordern Sie einen neuen Code an / Too many incorrect attempts. Please request a new code.' });
     }
 
-    if (!secureCompare(customer.emailOtp, String(code).trim())) {
+    if (!secureCompare(customer.emailOtp, otpAtRest(code))) {
       const lockedOut = customer.otpAttempts + 1 >= 5;
       if (lockedOut) {
         await prisma.customer.update({
@@ -321,7 +321,7 @@ const verifyPhone = async (req, res) => {
       return res.status(429).json({ error: 'Zu viele fehlerhafte Versuche. Bitte fordern Sie einen neuen Code an / Too many incorrect attempts. Please request a new code.' });
     }
 
-    if (!secureCompare(customer.phoneOtp, String(code).trim())) {
+    if (!secureCompare(customer.phoneOtp, otpAtRest(code))) {
       const lockedOut = customer.phoneOtpAttempts + 1 >= MAX_OTP_ATTEMPTS;
       if (lockedOut) {
         await prisma.customer.update({
@@ -404,7 +404,7 @@ const resendOtp = async (req, res) => {
     await prisma.customer.update({
       where: { id: customer.id },
       data: {
-        [channel.codeField]: newCode,
+        [channel.codeField]: otpAtRest(newCode),
         [channel.expiryField]: expiry,
         [channel.attemptsField]: 0
       }

@@ -7,6 +7,7 @@ const { sendAdminLoginOtpEmail } = require('../utils/emailService');
 const { generateCsrfToken, setCsrfCookie } = require('../middleware/csrf');
 const { logAudit } = require('../lib/auditLog');
 const { secureCompare, isString } = require('../utils/validation');
+const { otpAtRest } = require('../utils/piiCrypto');
 
 const PENDING_2FA_SCOPE = 'admin-2fa-pending';
 const SESSION_TTL = '24h'; // #22 fix: limit admin JWT lifetime to 24h (previously 30d)
@@ -58,7 +59,7 @@ const login = async (req, res) => {
     await prisma.admin.update({
       where: { id: admin.id },
       data: {
-        twoFactorOtp: code,
+        twoFactorOtp: otpAtRest(code),
         twoFactorOtpExpiry: new Date(Date.now() + OTP_TTL_MS),
         twoFactorAttempts: 0
       }
@@ -107,7 +108,7 @@ const verify2FA = async (req, res) => {
       return res.status(429).json({ error: TOO_MANY_2FA_ATTEMPTS });
     }
 
-    if (!secureCompare(admin.twoFactorOtp, String(code).trim())) {
+    if (!secureCompare(admin.twoFactorOtp, otpAtRest(code))) {
       return res.status(400).json({ error: 'Invalid code' });
     }
 
@@ -187,7 +188,7 @@ const resend2FA = async (req, res) => {
     await prisma.admin.update({
       where: { id: admin.id },
       data: {
-        twoFactorOtp: code,
+        twoFactorOtp: otpAtRest(code),
         twoFactorOtpExpiry: new Date(Date.now() + OTP_TTL_MS)
       }
     });

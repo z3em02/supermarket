@@ -83,6 +83,19 @@ const hashLookup = (value) => {
   return crypto.createHash('sha256').update(normalized).digest('hex');
 };
 
+// How a short OTP/2FA code is stored on the row. In production it's a keyed
+// HMAC (via hashLookup) so a database leak can't reveal active codes — a bare
+// SHA of a 6-digit code would be trivially brute-forced, the HMAC key prevents
+// that. Apply the SAME function to the submitted code before comparing, so the
+// two match. In dev/test it stays plaintext, so local tooling and the e2e suite
+// (which read codes straight from the DB) keep working. The value the customer
+// receives by email/SMS is always the plaintext code — only the stored copy is
+// hashed.
+const otpAtRest = (code) => {
+  const v = String(code ?? '').trim();
+  return process.env.NODE_ENV === 'production' ? hashLookup(v) : v;
+};
+
 const CUSTOMER_PII_FIELDS = ['email', 'phone', 'street', 'houseNumber', 'postalCode', 'city', 'floorApartment', 'deliveryNotes'];
 
 // Returns a shallow copy of a customer record (or plain object with a subset
@@ -97,4 +110,4 @@ const decryptCustomerPII = (customer) => {
   return out;
 };
 
-module.exports = { encrypt, decrypt, canDecrypt, keyFingerprint, hashLookup, decryptCustomerPII, CUSTOMER_PII_FIELDS };
+module.exports = { encrypt, decrypt, canDecrypt, keyFingerprint, hashLookup, otpAtRest, decryptCustomerPII, CUSTOMER_PII_FIELDS };
