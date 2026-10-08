@@ -4,7 +4,7 @@ const crypto = require('node:crypto');
 
 // piiCrypto reads the key at require time; each test file runs in its own process.
 process.env.ENCRYPTION_KEY = crypto.randomBytes(32).toString('hex');
-const { encrypt, decrypt, canDecrypt, keyFingerprint, hashLookup, decryptCustomerPII } = require('../utils/piiCrypto');
+const { encrypt, decrypt, canDecrypt, keyFingerprint, hashLookup, otpAtRest, decryptCustomerPII } = require('../utils/piiCrypto');
 
 test('encrypt/decrypt round-trips and uses a fresh IV each time', () => {
   const a = encrypt('Hauptstraße 5, 1100 Wien');
@@ -58,4 +58,30 @@ test('decryptCustomerPII only touches PII fields that are present', () => {
   const row = { id: 'c1', name: 'Name', email: encrypt('kunde@example.at'), city: encrypt('Wien') };
   assert.deepStrictEqual(decryptCustomerPII(row), { id: 'c1', name: 'Name', email: 'kunde@example.at', city: 'Wien' });
   assert.strictEqual(decryptCustomerPII(null), null);
+});
+
+test('otpAtRest hashes codes (keyed) in production and matches symmetrically', () => {
+  const orig = process.env.NODE_ENV;
+  try {
+    process.env.NODE_ENV = 'production';
+    const stored = otpAtRest('123456');
+    assert.notStrictEqual(stored, '123456');          // plaintext never stored
+    assert.match(stored, /^[0-9a-f]{64}$/);           // keyed HMAC digest
+    assert.strictEqual(otpAtRest('123456'), stored);  // same code -> same hash (verify matches)
+    assert.strictEqual(otpAtRest(' 123456 '), stored); // trimmed first
+    assert.notStrictEqual(otpAtRest('654321'), stored); // wrong code -> different hash
+  } finally {
+    process.env.NODE_ENV = orig;
+  }
+});
+
+test('otpAtRest stays plaintext outside production (dev tooling/e2e read it)', () => {
+  const orig = process.env.NODE_ENV;
+  try {
+    process.env.NODE_ENV = 'development';
+    assert.strictEqual(otpAtRest('123456'), '123456');
+    assert.strictEqual(otpAtRest(' 123456 '), '123456');
+  } finally {
+    process.env.NODE_ENV = orig;
+  }
 });
