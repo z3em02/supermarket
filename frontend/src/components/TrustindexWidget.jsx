@@ -91,7 +91,7 @@ export default function TrustindexWidget({
       </div>
 
       {/* Review Cards Grid */}
-      {reviews && reviews.length > 0 ? (
+      {reviews && reviews.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {reviews.map((review) => {
             const reviewText = language === 'ar'
@@ -184,14 +184,6 @@ export default function TrustindexWidget({
               </div>
             );
           })}
-        </div>
-      ) : (
-        <div className="py-12 px-4 text-center bg-white dark:bg-gray-850 rounded-2xl border border-dashed border-slate-200 dark:border-gray-800 max-w-2xl mx-auto">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            {language === 'ar'
-              ? 'لا توجد تقييمات معروضة حالياً. يمكنك مزامنتها مباشرة من لوحة التحكم.'
-              : 'Aktuell sind noch keine Bewertungen synchronisiert. Sie können diese über das Admin-Dashboard mit einem Klick von Google abrufen.'}
-          </p>
         </div>
       )}
 
