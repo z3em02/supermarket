@@ -261,8 +261,8 @@ export const Settings = () => {
         setSyncFeedback({
           type: 'success',
           text: language === 'ar'
-            ? `تم جلب التقييمات بنجاح! النجوم: ${res.data.googleRating?.toFixed(1) || '5.0'} (${res.data.googleReviewCount || 0} تقييم)`
-            : `Erfolgreich synchronisiert! Sterne: ${res.data.googleRating?.toFixed(1) || '5.0'} (${res.data.googleReviewCount || 0} Bewertungen)`
+            ? `تم جلب التقييمات بنجاح! النجوم: ${res.rating?.toFixed(1) || '5.0'} (${res.reviewCount || 0} تقييم)`
+            : `Erfolgreich synchronisiert! Sterne: ${res.rating?.toFixed(1) || '5.0'} (${res.reviewCount || 0} Bewertungen)`
         });
       } else {
         setSyncFeedback({
